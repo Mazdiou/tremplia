@@ -1,9 +1,14 @@
 import { notFound } from "next/navigation";
 import { requireMember } from "@/lib/auth/require-member";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { formatSize } from "@/lib/documents";
 import { getCase } from "../get-case";
-import { DocumentsPanel, type DocItem } from "./documents-panel";
+import {
+  DocumentsPanel,
+  type DocItem,
+  type FolderItem,
+} from "./documents-panel";
 
 const dateFormat = new Intl.DateTimeFormat("fr-FR", {
   day: "numeric",
@@ -17,6 +22,7 @@ type Row = {
   name: string;
   size_bytes: number;
   uploaded_by: string;
+  folder_id: string | null;
   locked_at: string | null;
   created_at: string;
 };
@@ -32,11 +38,38 @@ export default async function DocumentsPage({
   const caller = await requireMember();
   const isOwner = caller?.profile.role === "owner";
 
+  // Les 4 dossiers de départ sont créés une seule fois par dossier candidat
+  // (la fonction SQL est sans effet si c'est déjà fait). Un échec ne bloque
+  // pas la page : les documents restent visibles dans « Sans dossier ».
+  if (caller) {
+    const { error: initError } = await createAdminClient().rpc(
+      "ensure_default_document_folders",
+      {
+        p_case_id: id,
+        p_agency_id: caller.profile.agency_id,
+        p_actor_id: caller.user.id,
+      },
+    );
+    if (initError) {
+      console.error("[documents folders init]", initError.message);
+    }
+  }
+
   // Lecture via le RLS : seuls les documents de l'agence reviennent.
   const supabase = await createClient();
+
+  const { data: folderRows } = await supabase
+    .from("document_folders")
+    .select("id, name")
+    .eq("case_id", id)
+    .order("created_at", { ascending: true });
+  const folders = (folderRows ?? []) as FolderItem[];
+
   const { data } = await supabase
     .from("documents")
-    .select("id, name, size_bytes, uploaded_by, locked_at, created_at")
+    .select(
+      "id, name, size_bytes, uploaded_by, folder_id, locked_at, created_at",
+    )
     .eq("case_id", id)
     .order("created_at", { ascending: false });
   const rows = (data ?? []) as Row[];
@@ -60,7 +93,15 @@ export default async function DocumentsPage({
     uploadedBy: names.get(r.uploaded_by) ?? "un ancien membre",
     dateLabel: dateFormat.format(new Date(r.created_at)),
     locked: r.locked_at !== null,
+    folderId: r.folder_id,
   }));
 
-  return <DocumentsPanel caseId={id} docs={docs} isOwner={isOwner} />;
+  return (
+    <DocumentsPanel
+      caseId={id}
+      docs={docs}
+      folders={folders}
+      isOwner={isOwner}
+    />
+  );
 }

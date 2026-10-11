@@ -18,6 +18,10 @@ const ACTION_LABELS: Record<string, string> = {
   "document.deleted": "a supprimé un document",
   "document.locked": "a verrouillé un document",
   "document.unlocked": "a déverrouillé un document",
+  "document.moved": "a déplacé un document",
+  "folder.created": "a créé un dossier de documents",
+  "folder.renamed": "a renommé un dossier de documents",
+  "folder.deleted": "a supprimé un dossier de documents",
 };
 
 const dateFormat = new Intl.DateTimeFormat("fr-FR", {

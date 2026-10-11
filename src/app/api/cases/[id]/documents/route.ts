@@ -20,6 +20,8 @@ const schema = z.object({
   documentId: z.string().uuid(),
   name: documentNameSchema,
   originalFileName: z.string().trim().min(1).max(255),
+  // Dossier de rangement (absent ou null : « Sans dossier »)
+  folderId: z.string().uuid().nullish(),
 });
 
 export async function POST(
@@ -35,7 +37,7 @@ export async function POST(
     if (body === null) return fail("Requête invalide", 400);
     const parsed = schema.safeParse(body);
     if (!parsed.success) return validationError(parsed.error);
-    const { documentId, name, originalFileName } = parsed.data;
+    const { documentId, name, originalFileName, folderId } = parsed.data;
 
     // Le chemin est recalculé ici avec l'agence de la session
     const path = documentPath(auth.agencyId, id, documentId);
@@ -67,6 +69,7 @@ export async function POST(
       storage_path: path,
       size_bytes: blob.size,
       uploaded_by: auth.caller.user.id,
+      folder_id: folderId ?? null,
     });
 
     if (insertError) {
@@ -74,6 +77,11 @@ export async function POST(
       // on ne le supprime surtout pas.
       if (insertError.code === "23505") {
         return fail("Ce document est déjà ajouté", 409);
+      }
+      // 23503 : le dossier de rangement n'est pas un dossier de ce candidat
+      if (insertError.code === "23503") {
+        await storage.remove([path]);
+        return fail("Dossier introuvable", 404);
       }
       console.error("[documents add]", insertError.message);
       await storage.remove([path]);
