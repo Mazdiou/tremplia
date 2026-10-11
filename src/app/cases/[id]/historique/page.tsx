@@ -22,6 +22,9 @@ const ACTION_LABELS: Record<string, string> = {
   "folder.created": "a créé un dossier de documents",
   "folder.renamed": "a renommé un dossier de documents",
   "folder.deleted": "a supprimé un dossier de documents",
+  "note.created": "a ajouté une note",
+  "note.updated": "a modifié une note",
+  "note.deleted": "a supprimé une note",
 };
 
 const dateFormat = new Intl.DateTimeFormat("fr-FR", {
