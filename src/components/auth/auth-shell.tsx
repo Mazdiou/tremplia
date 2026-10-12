@@ -12,7 +12,7 @@ const POINTS = [
   {
     icon: FolderKanban,
     title: "Tous vos dossiers au même endroit",
-    text: "Une campagne par pays, des dossiers classés comme vous le voulez.",
+    text: "Vos documents classés comme vous le voulez.",
   },
   {
     icon: FileText,
@@ -47,7 +47,13 @@ export function LogoMark({ className }: { className?: string }) {
 
 // Page d'authentification : panneau de présentation à gauche (écrans larges),
 // formulaire à droite. Sur mobile, seul le formulaire est affiché.
-export function AuthShell({ children }: { children: ReactNode }) {
+export function AuthShell({
+  children,
+  compact = false,
+}: {
+  children: ReactNode;
+  compact?: boolean;
+}) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
       <aside className="relative hidden overflow-hidden bg-linear-to-br from-[oklch(0.5_0.24_263)] via-[oklch(0.44_0.23_268)] to-[oklch(0.3_0.16_275)] p-12 text-white lg:flex lg:flex-col">
@@ -107,7 +113,11 @@ export function AuthShell({ children }: { children: ReactNode }) {
         </p>
       </aside>
 
-      <main className="relative flex min-h-dvh flex-col bg-background px-5 py-6 sm:px-10">
+      <main
+        className={`relative flex min-h-dvh flex-col bg-background px-5 sm:px-10 ${
+          compact ? "py-2" : "py-6"
+        }`}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5 lg:invisible">
             <LogoMark />
@@ -118,7 +128,11 @@ export function AuthShell({ children }: { children: ReactNode }) {
           <ThemeToggle className="size-9 rounded-xl text-muted-foreground" />
         </div>
 
-        <div className="mx-auto flex w-full max-w-100 flex-1 flex-col justify-center py-10">
+        <div
+          className={`mx-auto flex w-full max-w-100 flex-1 flex-col justify-center ${
+            compact ? "py-2" : "py-10"
+          }`}
+        >
           {children}
         </div>
       </main>

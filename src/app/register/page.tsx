@@ -148,7 +148,7 @@ export default function RegisterPage() {
 
   if (done) {
     return (
-      <AuthShell>
+      <AuthShell compact>
         <div className="text-center">
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-success-bg text-success">
             <CircleCheck className="size-7" strokeWidth={1.8} />
@@ -173,7 +173,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthShell>
+    <AuthShell compact>
       <Link
         href="/login"
         className="mb-6 inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
