@@ -10,6 +10,7 @@ import { LEVEL_LABELS, LEVEL_ORDER, displayName } from "@/lib/case-labels";
 import Link from "next/link";
 
 const ACTIVITY_LABELS: Record<string, string> = {
+  "agency.created": "a créé une agence",
   "case.created": "a créé un dossier",
   "case.updated": "a modifié un dossier",
   "case.assigned": "a changé le responsable d'un dossier",
