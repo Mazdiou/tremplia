@@ -1,5 +1,5 @@
 begin;
-select plan(12);
+select plan(15);
 
 insert into auth.users (id, email) values
   ('11111111-1111-1111-1111-111111111111', 'a1@test.local'),
@@ -21,17 +21,31 @@ insert into public.profiles (id, agency_id, first_name, last_name, role, is_acti
 select '44444444-4444-4444-4444-444444444444', agency_id, 'Ancien', 'A', 'employee', false
 from public.profiles where id = '11111111-1111-1111-1111-111111111111';
 
+-- Les dossiers appartiennent à une campagne de LEUR agence
+insert into public.campaigns (id, agency_id, name, created_by)
+select 'a0000000-0000-0000-0000-00000000ca01', agency_id, 'Campagne A', id
+from public.profiles where id = '11111111-1111-1111-1111-111111111111';
+insert into public.campaigns (id, agency_id, name, created_by)
+select 'b0000000-0000-0000-0000-00000000cb01', agency_id, 'Campagne B', id
+from public.profiles where id = '33333333-3333-3333-3333-333333333333';
+insert into public.campaigns (agency_id, name, status, archived_at, created_by)
+select agency_id, 'Archivee A', 'archived', now(), id
+from public.profiles where id = '11111111-1111-1111-1111-111111111111';
+
 create temp table ctx as
 select
   (select agency_id from public.profiles
     where id = '11111111-1111-1111-1111-111111111111') as agency_a,
-  (select id from public.campaigns where is_current) as campaign;
+  (select id from public.campaigns where name = 'Campagne A') as campaign,
+  (select id from public.campaigns where name = 'Campagne B') as campaign_b,
+  (select id from public.campaigns where name = 'Archivee A') as campaign_archived;
 
 -- Création avec compte existant, mot de passe chiffré et responsable
 select lives_ok(
   $$select public.create_case(
       'aaaaaaaa-0000-0000-0000-000000000001'::uuid,
       (select agency_a from ctx),
+      (select campaign from ctx),
       '11111111-1111-1111-1111-111111111111'::uuid,
       '22222222-2222-2222-2222-222222222222'::uuid,
       'Karim', 'Test', '2004-05-01'::date, '0555111111', null,
@@ -47,7 +61,7 @@ select is(
 select is(
   (select campaign_id from public.cases
    where id = 'aaaaaaaa-0000-0000-0000-000000000001'),
-  (select campaign from ctx), 'le dossier est rattaché à la campagne en cours');
+  (select campaign from ctx), 'le dossier est rattaché à la campagne choisie');
 
 select is(
   (select assigned_to from public.cases
@@ -60,6 +74,7 @@ select throws_ok(
   $$select public.create_case(
       'aaaaaaaa-0000-0000-0000-000000000005'::uuid,
       (select agency_a from ctx),
+      (select campaign from ctx),
       '11111111-1111-1111-1111-111111111111'::uuid,
       '44444444-4444-4444-4444-444444444444'::uuid,
       'X', 'Y', '2004-01-01'::date, '0555', null,
@@ -72,6 +87,7 @@ select throws_ok(
   $$select public.create_case(
       'aaaaaaaa-0000-0000-0000-000000000006'::uuid,
       (select agency_a from ctx),
+      (select campaign from ctx),
       '11111111-1111-1111-1111-111111111111'::uuid,
       '33333333-3333-3333-3333-333333333333'::uuid,
       'X', 'Y', '2004-01-01'::date, '0555', null,
@@ -84,6 +100,7 @@ select throws_ok(
   $$select public.create_case(
       'aaaaaaaa-0000-0000-0000-000000000002'::uuid,
       (select agency_a from ctx),
+      (select campaign from ctx),
       '11111111-1111-1111-1111-111111111111'::uuid,
       null::uuid,
       'X', 'Y', '2004-01-01'::date, '0555', null,
@@ -96,6 +113,7 @@ select throws_ok(
   $$select public.create_case(
       'aaaaaaaa-0000-0000-0000-000000000003'::uuid,
       (select agency_a from ctx),
+      (select campaign from ctx),
       '33333333-3333-3333-3333-333333333333'::uuid,
       null::uuid,
       'X', 'Y', '2004-01-01'::date, '0555', null,
@@ -108,6 +126,7 @@ select lives_ok(
   $$select public.create_case(
       'aaaaaaaa-0000-0000-0000-000000000004'::uuid,
       (select agency_a from ctx),
+      (select campaign from ctx),
       '11111111-1111-1111-1111-111111111111'::uuid,
       null::uuid,
       'Sans', 'Pastel', '2005-03-03'::date, '0555222222', null,
@@ -120,6 +139,45 @@ select is(
    where case_id = 'aaaaaaaa-0000-0000-0000-000000000004'),
   0::bigint, 'aucune ligne de secret pour un compte à créer');
 
+-- Campagne d'une autre agence
+select throws_ok(
+  $$select public.create_case(
+      'aaaaaaaa-0000-0000-0000-000000000007'::uuid,
+      (select agency_a from ctx),
+      (select campaign_b from ctx),
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      null::uuid,
+      'X', 'Y', '2004-01-01'::date, '0555', null,
+      'l3', 'dap', false, 'both', 'to_create', null,
+      array[]::text[], array[]::text[], null, 1::smallint)$$,
+  'P0002', null, 'la campagne d''une autre agence est refusée');
+
+-- Campagne archivée
+select throws_ok(
+  $$select public.create_case(
+      'aaaaaaaa-0000-0000-0000-000000000008'::uuid,
+      (select agency_a from ctx),
+      (select campaign_archived from ctx),
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      null::uuid,
+      'X', 'Y', '2004-01-01'::date, '0555', null,
+      'l3', 'dap', false, 'both', 'to_create', null,
+      array[]::text[], array[]::text[], null, 1::smallint)$$,
+  'P0002', null, 'une campagne archivée n''accepte plus de dossier');
+
+-- Campagne inexistante
+select throws_ok(
+  $$select public.create_case(
+      'aaaaaaaa-0000-0000-0000-000000000009'::uuid,
+      (select agency_a from ctx),
+      gen_random_uuid(),
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      null::uuid,
+      'X', 'Y', '2004-01-01'::date, '0555', null,
+      'l3', 'dap', false, 'both', 'to_create', null,
+      array[]::text[], array[]::text[], null, 1::smallint)$$,
+  'P0002', null, 'une campagne inexistante est refusée');
+
 -- Appel direct interdit aux utilisateurs connectés et aux visiteurs
 select set_config('request.jwt.claims',
   '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
@@ -127,7 +185,7 @@ set local role authenticated;
 
 select throws_ok(
   $$select public.create_case(
-      gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), null::uuid,
+      gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), null::uuid,
       'X', 'Y', '2004-01-01'::date, '0555', null,
       'l3', 'dap', false, 'both', 'to_create', null,
       array[]::text[], array[]::text[], null, 1::smallint)$$,
@@ -138,7 +196,7 @@ set local role anon;
 
 select throws_ok(
   $$select public.create_case(
-      gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), null::uuid,
+      gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), null::uuid,
       'X', 'Y', '2004-01-01'::date, '0555', null,
       'l3', 'dap', false, 'both', 'to_create', null,
       array[]::text[], array[]::text[], null, 1::smallint)$$,

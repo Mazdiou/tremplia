@@ -16,13 +16,22 @@ insert into public.profiles (id, agency_id, first_name, last_name, role)
 select '22222222-2222-2222-2222-222222222222', agency_id, 'Employe', 'A', 'employee'
 from public.profiles where id = '11111111-1111-1111-1111-111111111111';
 
+-- Les dossiers appartiennent à une campagne de LEUR agence
+insert into public.campaigns (id, agency_id, name, created_by)
+select 'a0000000-0000-0000-0000-00000000ca01', agency_id, 'Campagne A', id
+from public.profiles where id = '11111111-1111-1111-1111-111111111111';
+insert into public.campaigns (id, agency_id, name, created_by)
+select 'b0000000-0000-0000-0000-00000000cb01', agency_id, 'Campagne B', id
+from public.profiles where id = '33333333-3333-3333-3333-333333333333';
+
 create temp table ctx as
 select
   (select agency_id from public.profiles
     where id = '11111111-1111-1111-1111-111111111111') as agency_a,
   (select agency_id from public.profiles
     where id = '33333333-3333-3333-3333-333333333333') as agency_b,
-  (select id from public.campaigns where is_current) as campaign;
+  (select id from public.campaigns where name = 'Campagne A') as campaign,
+  (select id from public.campaigns where name = 'Campagne B') as campaign_b;
 
 -- Un dossier par agence
 insert into public.cases (agency_id, campaign_id, created_by, first_name, last_name,
@@ -33,7 +42,7 @@ from ctx;
 
 insert into public.cases (agency_id, campaign_id, created_by, first_name, last_name,
   birth_date, phone, education_level, main_track, scope, pastel_account)
-select agency_b, campaign, '33333333-3333-3333-3333-333333333333',
+select agency_b, campaign_b, '33333333-3333-3333-3333-333333333333',
   'Sara', 'B-case', '2005-02-10', '0555222222', 'l1', 'dap', 'application', 'to_create'
 from ctx;
 
