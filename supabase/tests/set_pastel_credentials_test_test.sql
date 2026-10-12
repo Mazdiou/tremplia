@@ -17,18 +17,13 @@ insert into public.profiles (id, agency_id, first_name, last_name, role, is_acti
 select '44444444-4444-4444-4444-444444444444', agency_id, 'Ancien', 'A', 'employee', false
 from public.profiles where id = '11111111-1111-1111-1111-111111111111';
 
--- Les dossiers appartiennent à une campagne de LEUR agence
-insert into public.campaigns (id, agency_id, name, created_by)
-select 'a0000000-0000-0000-0000-00000000ca01', agency_id, 'Campagne A', id
-from public.profiles where id = '11111111-1111-1111-1111-111111111111';
-
 create temp table ctx as
 select
   (select agency_id from public.profiles
     where id = '11111111-1111-1111-1111-111111111111') as agency_a,
   (select agency_id from public.profiles
     where id = '33333333-3333-3333-3333-333333333333') as agency_b,
-  (select id from public.campaigns where name = 'Campagne A') as campaign;
+  (select id from public.campaigns where is_current) as campaign;
 
 -- 0001 : compte à créer ; 0003 : compte à créer (tests d'échec)
 insert into public.cases (id, agency_id, campaign_id, created_by, first_name, last_name,
