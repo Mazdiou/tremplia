@@ -12,6 +12,10 @@ import {
 } from "@/features/cases/labels";
 import { displayName } from "@/lib/names";
 import Link from "next/link";
+import { CalendarRange } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { buttonVariants } from "@/components/ui/button";
+import { CampaignSelect } from "@/features/dashboard/components/campaign-select";
 
 const dayFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIMEZONE });
 const timeFmt = new Intl.DateTimeFormat("fr-FR", {
@@ -44,18 +48,53 @@ function activityWhen(iso: string) {
   return diff === "aujourd'hui" ? timeFmt.format(new Date(iso)) : diff;
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ campaign?: string }>;
+}) {
   const u = await getShellUser();
   const supabase = await createClient();
   const today = todayInAppTimezone();
 
-  // Toutes les campagnes actives (le choix d'une campagne arrive au Lot 5)
-  const campaigns = (await listCampaigns()).filter((c) => c.status === "active");
+  // Toutes les campagnes actives, ou celle choisie dans le sélecteur
+  const allActive = (await listCampaigns()).filter((c) => c.status === "active");
+  const wanted = (await searchParams).campaign;
+  const selected = allActive.find((c) => c.id === wanted) ?? null;
+  const campaigns = selected ? [selected] : allActive;
   const ids = campaigns.map((c) => c.id);
-  const hasCampaigns = ids.length > 0;
+
+  if (ids.length === 0) {
+    return (
+      <AppShell>
+        <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-8">
+          <PageHeader title={`Bonjour ${u.member.firstName}`} />
+          <EmptyState
+            icon={CalendarRange}
+            title="Bienvenue dans StudyFlow"
+            description={
+              u.member.isOwner
+                ? "Commencez par créer une campagne ou importer un modèle (Campus France, par exemple) : vous pourrez ensuite y ajouter vos dossiers."
+                : "Aucune campagne active pour le moment. Prévenez le patron : il doit créer une campagne avant que vous puissiez ajouter des dossiers."
+            }
+          />
+          {u.member.isOwner && (
+            <div className="flex justify-center gap-2">
+              <Link href="/campaigns#modeles" className={buttonVariants({ variant: "outline" })}>
+                Importer un modèle
+              </Link>
+              <Link href="/campaigns/new" className={buttonVariants()}>
+                Créer une campagne
+              </Link>
+            </div>
+          )}
+        </div>
+      </AppShell>
+    );
+  }
 
   const count = (build: (q: ReturnType<typeof base>) => unknown) =>
-    hasCampaigns ? (build(base()) as PromiseLike<{ count: number | null }>) : null;
+    build(base()) as PromiseLike<{ count: number | null }>;
   const base = () =>
     supabase
       .from("cases")
@@ -65,27 +104,23 @@ export default async function DashboardPage() {
   const weekStart = new Date();
   weekStart.setDate(weekStart.getDate() - 7);
   const weekAgo = weekStart.toISOString();
-  const [active, mine, week, ended, ...levels] = hasCampaigns
-    ? await Promise.all([
-        count((q) => q.eq("status", "active")),
-        count((q) => q.eq("status", "active").eq("assigned_to", u.member.userId)),
-        count((q) => q.gte("created_at", weekAgo)),
-        count((q) => q.in("status", ["closed", "abandoned"])),
-        ...EDUCATION_LEVELS.map((l) =>
-          count((q) => q.eq("status", "active").eq("education_level", l)),
-        ),
-      ])
-    : [];
-  const n = (r: { count: number | null } | null | undefined) => r?.count ?? 0;
+  const [active, mine, week, ended, ...levels] = await Promise.all([
+    count((q) => q.eq("status", "active")),
+    count((q) => q.eq("status", "active").eq("assigned_to", u.member.userId)),
+    count((q) => q.gte("created_at", weekAgo)),
+    count((q) => q.in("status", ["closed", "abandoned"])),
+    ...EDUCATION_LEVELS.map((l) =>
+      count((q) => q.eq("status", "active").eq("education_level", l)),
+    ),
+  ]);
+  const n = (r: { count: number | null } | undefined) => r?.count ?? 0;
 
-  const { data: recent } = hasCampaigns
-    ? await supabase
-        .from("cases")
-        .select("id, first_name, last_name, education_level, created_at")
-        .in("campaign_id", ids)
-        .order("created_at", { ascending: false })
-        .limit(5)
-    : { data: [] };
+  const { data: recent } = await supabase
+    .from("cases")
+    .select("id, first_name, last_name, education_level, created_at")
+    .in("campaign_id", ids)
+    .order("created_at", { ascending: false })
+    .limit(5);
 
   // Journal : lisible par le patron seulement (règle RLS)
   const { data: activity } = u.member.isOwner
@@ -110,7 +145,30 @@ export default async function DashboardPage() {
     : { data: [] };
   const actorName = new Map((actors ?? []).map((a) => [a.id, a.first_name]));
 
-  const next = nextDeadline(await listCampaignDates(campaigns), today);
+  const dates = await listCampaignDates(campaigns);
+  const next = nextDeadline(dates, today);
+
+  // Vue « toutes les campagnes » : une carte par campagne
+  const cards =
+    !selected && campaigns.length > 1
+      ? await Promise.all(
+          campaigns.map(async (c) => {
+            const { count: activeCount } = await supabase
+              .from("cases")
+              .select("id", { count: "exact", head: true })
+              .eq("campaign_id", c.id)
+              .eq("status", "active");
+            return {
+              ...c,
+              activeCount: activeCount ?? 0,
+              next: nextDeadline(
+                dates.filter((d) => d.campaignId === c.id),
+                today,
+              ),
+            };
+          }),
+        )
+      : [];
   // Les niveaux sans dossier ne s'affichent que s'ils sont courants
   const levelRows = EDUCATION_LEVELS.map((l, i) => ({ l, n: n(levels[i]) })).filter(
     (r) => r.n > 0 || ["terminale", "l1", "l2", "l3", "m1"].includes(r.l),
@@ -122,13 +180,40 @@ export default async function DashboardPage() {
       <div className="mx-auto max-w-6xl p-4 md:p-8">
         <PageHeader
           title={`Bonjour ${u.member.firstName}`}
-          subtitle={
-            hasCampaigns
-              ? `${campaigns.length > 1 ? `${campaigns.length} campagnes actives` : campaigns[0].name}${u.member.isOwner ? " · vue du patron" : ""}`
-              : "Aucune campagne active"
+          subtitle={`${selected ? selected.name : campaigns.length > 1 ? `${campaigns.length} campagnes actives` : campaigns[0].name}${u.member.isOwner ? " · vue du patron" : ""}`}
+          actions={
+            <div className="flex flex-wrap items-center gap-3">
+              {allActive.length > 1 && (
+                <CampaignSelect campaigns={allActive} value={selected?.id ?? ""} />
+              )}
+              <NewCaseLink className="max-md:hidden" />
+            </div>
           }
-          actions={<NewCaseLink className="max-md:hidden" />}
         />
+
+        {cards.length > 0 && (
+          <ul className="mb-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {cards.map((c) => (
+              <li key={c.id}>
+                <Link
+                  href={`/dashboard?campaign=${c.id}`}
+                  className="block rounded-2xl border bg-card px-5 py-4 hover:bg-muted/40"
+                >
+                  <p className="font-semibold">{c.name}</p>
+                  <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+                    {c.activeCount} dossier{c.activeCount > 1 ? "s" : ""} actif
+                    {c.activeCount > 1 ? "s" : ""}
+                  </p>
+                  <p className="mt-1 text-sm">
+                    {c.next
+                      ? `${c.next.label} · ${countdownLabel(c.next.days)}`
+                      : "Aucune échéance à venir"}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard label="Dossiers actifs" value={n(active)} />

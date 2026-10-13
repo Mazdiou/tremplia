@@ -11,7 +11,9 @@ export type Member = {
 };
 
 // Membre ACTIF connecté, ou null. Le RLS ne renvoie aucun profil à un compte
-// désactivé. L'agence vient toujours d'ici, jamais de la requête.
+// désactivé. Un compte qui doit encore remplacer son mot de passe temporaire
+// n'a accès à rien d'autre (la page de changement n'utilise pas ce contrôle).
+// L'agence vient toujours d'ici, jamais de la requête.
 export async function requireMember(): Promise<Member | null> {
   const supabase = await createClient();
   const {
@@ -21,11 +23,11 @@ export async function requireMember(): Promise<Member | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("agency_id, role, is_active, first_name, last_name")
+    .select("agency_id, role, is_active, must_change_password, first_name, last_name")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (!profile || !profile.is_active) return null;
+  if (!profile || !profile.is_active || profile.must_change_password) return null;
   return {
     userId: user.id,
     agencyId: profile.agency_id as string,

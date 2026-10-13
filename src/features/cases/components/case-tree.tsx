@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ChevronDown,
   ChevronRight,
@@ -20,7 +20,7 @@ import {
   educationRank,
   labelOf,
 } from "@/features/cases/labels";
-import { displayName, normalizeName } from "@/lib/names";
+import { displayName } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import { useUiPrefs } from "@/lib/ui-prefs";
 import { createClient } from "@/lib/supabase/client";
@@ -30,6 +30,8 @@ import {
   type TreeCase,
 } from "@/features/cases/fetch-campaign-cases";
 import { buildCampaignBranches, type TreeGroup } from "@/features/cases/tree";
+import { TreeSearchResults } from "./tree-search-results";
+import { CampaignMenu, GroupActions, InlineNameInput, groupApi } from "./tree-actions";
 
 export type TreeCampaign = { id: string; name: string; status: string };
 
@@ -80,11 +82,15 @@ export function CaseTree({
 }) {
   const params = useParams<{ id?: string }>();
   const selectedId = params?.id;
+  const router = useRouter();
   const [prefs, setPrefs] = useUiPrefs();
 
   const [query, setQuery] = useState("");
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Saisie en cours d'un nouveau groupe (id de campagne) ou d'un renommage
+  const [addingGroupFor, setAddingGroupFor] = useState<string | null>(null);
+  const [renamingGroup, setRenamingGroup] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Ctrl+B (ou Cmd+B) : replier / ouvrir le panneau, comme dans VS Code
@@ -161,11 +167,9 @@ export function CaseTree({
     })();
   }, [selectedId, cases]);
 
-  // --- Recherche et filtres (côté client, sur les dossiers déjà chargés) ---
-  const q = normalizeName(query);
-  const searching = q !== "";
+  // --- Recherche globale (serveur) et filtres (sur les dossiers chargés) ---
+  const searching = query.trim() !== "";
   const filtersActive = Boolean(prefs.level || prefs.responsible || prefs.mine);
-  const anyActive = searching || filtersActive;
 
   const activeCampaigns = campaigns.filter((c) => c.status === "active");
   // Campagnes archivées masquées, sauf réglage ou dossier ouvert dedans
@@ -178,7 +182,6 @@ export function CaseTree({
   );
 
   function isCampOpen(camp: TreeCampaign) {
-    if (searching) return true;
     return (
       prefs.open[camp.id] ??
       ((activeCampaigns.length === 1 && activeCampaigns[0].id === camp.id) ||
@@ -191,8 +194,6 @@ export function CaseTree({
     .filter((c) => !(c.id in initialData) && isCampOpen(c))
     .map((c) => c.id)
     .join(",");
-  const waiting = shownCampaigns.some((c) => !isLoaded(c.id) && !errors[c.id]);
-  const failed = shownCampaigns.some((c) => errors[c.id]);
 
   useEffect(() => {
     const ids = wantedKey
@@ -204,13 +205,6 @@ export function CaseTree({
   }, [wantedKey, extra, errors, load]);
 
   function matches(c: TreeCase) {
-    if (
-      searching &&
-      !normalizeName(`${c.last_name} ${c.first_name}`).includes(q) &&
-      !normalizeName(`${c.first_name} ${c.last_name}`).includes(q)
-    ) {
-      return false;
-    }
     if (prefs.level && c.education_level !== prefs.level) return false;
     if (prefs.responsible && c.assigned_to !== prefs.responsible) return false;
     if (prefs.mine && c.assigned_to !== currentUserId) return false;
@@ -222,9 +216,15 @@ export function CaseTree({
   const mineCount = cases.filter(
     (c) => c.status === "active" && c.assigned_to === currentUserId,
   ).length;
-  const resultCount = found.filter(
-    (c) => searching || c.status === "active",
-  ).length;
+  const resultCount = found.filter((c) => c.status === "active").length;
+
+  async function afterGroupChange(failure: string | null) {
+    if (failure) return failure;
+    setAddingGroupFor(null);
+    setRenamingGroup(null);
+    router.refresh();
+    return null;
+  }
 
   // Responsables proposés : membres actifs, et inactifs seulement s'ils ont des dossiers
   const withCases = new Set(cases.map((c) => c.assigned_to));
@@ -375,8 +375,8 @@ export function CaseTree({
               onKeyDown={(e) => {
                 if (e.key === "Escape") setQuery("");
               }}
-              placeholder="Rechercher"
-              aria-label="Rechercher un dossier"
+              placeholder="Rechercher un candidat"
+              aria-label="Rechercher un candidat dans toutes les campagnes"
               className="h-10 w-full rounded-lg border bg-card pr-16 pl-9 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
             />
             {!query && (
@@ -399,14 +399,6 @@ export function CaseTree({
             )}
           </div>
         </div>
-
-        {searching && (waiting || failed) && (
-          <p className="px-3 pt-2 text-xs text-muted-foreground" role="status">
-            {waiting
-              ? "Recherche dans les autres campagnes..."
-              : "Certaines campagnes n'ont pas pu être chargées : résultats incomplets."}
-          </p>
-        )}
 
         {/* Filtres */}
         <div className="flex flex-wrap items-center gap-1.5 px-4 pt-3 pb-2">
@@ -466,11 +458,11 @@ export function CaseTree({
           )}
         </div>
 
-        {anyActive && (
+        {filtersActive && !searching && (
           <div className="flex items-center justify-between border-y bg-muted/50 px-3 py-1.5 text-xs">
             <span aria-live="polite">
-              {resultCount} dossier{resultCount > 1 ? "s" : ""}
-              {filtersActive ? " · filtres actifs" : ""}
+              {resultCount} dossier{resultCount > 1 ? "s" : ""} actif
+              {resultCount > 1 ? "s" : ""} · filtres actifs
             </span>
             <button
               type="button"
@@ -482,165 +474,226 @@ export function CaseTree({
           </div>
         )}
 
-        {/* Arbre */}
+        {/* Arbre, ou résultats de la recherche globale */}
         <nav
           aria-label="Dossiers"
           className="min-h-0 flex-1 overflow-y-auto py-1"
         >
-          {shownCampaigns.length === 0 && (
-            <p className="px-3 py-2 text-sm text-muted-foreground">
-              Aucune campagne active.
-            </p>
-          )}
-          {anyActive && found.length === 0 && (
-            <p className="px-3 py-3 text-sm text-muted-foreground">
-              Aucun dossier ne correspond. Modifiez la recherche ou
-              réinitialisez les filtres.
-            </p>
-          )}
+          {searching ? (
+            <TreeSearchResults
+              query={query}
+              selectedId={selectedId}
+              showLevel={prefs.showLevel}
+            />
+          ) : (
+            <>
+              {shownCampaigns.length === 0 && (
+                <p className="px-3 py-2 text-sm text-muted-foreground">
+                  Aucune campagne active.
+                </p>
+              )}
+              {filtersActive && found.length === 0 && cases.length > 0 && (
+                <p className="px-3 py-3 text-sm text-muted-foreground">
+                  Aucun dossier ne correspond. Modifiez ou réinitialisez les filtres.
+                </p>
+              )}
 
-          {shownCampaigns.map((camp) => {
-            const campCases = found.filter((c) => c.campaign_id === camp.id);
-            if (searching && campCases.length === 0) return null;
-            const campOpen = isCampOpen(camp);
+              {shownCampaigns.map((camp) => {
+                const campCases = found.filter((c) => c.campaign_id === camp.id);
+                const campOpen = isCampOpen(camp);
+                const campActive = camp.status === "active";
 
-            return (
-              <div key={camp.id}>
-                <button
-                  type="button"
-                  aria-expanded={campOpen}
-                  onClick={() =>
-                    setPrefs((p) => ({
-                      open: { ...p.open, [camp.id]: !campOpen },
-                    }))
-                  }
-                  className="flex w-full items-center gap-1 px-3 py-2 text-left text-[11px] font-medium tracking-wide text-muted-foreground uppercase hover:bg-muted/60"
-                >
-                  {campOpen ? (
-                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                  )}
-                  <span className="truncate">{camp.name}</span>
-                  {camp.status === "archived" && (
-                    <span className="shrink-0 normal-case">(archivée)</span>
-                  )}
-                </button>
-
-                {campOpen && !isLoaded(camp.id) && (
-                  <div className="py-1 pr-3 pl-9 text-sm text-muted-foreground">
-                    {errors[camp.id] ? (
+                return (
+                  <div key={camp.id}>
+                    <div className="flex items-center pr-2 hover:bg-muted/60">
                       <button
                         type="button"
+                        aria-expanded={campOpen}
                         onClick={() =>
-                          setErrors((e) => ({ ...e, [camp.id]: false }))
+                          setPrefs((p) => ({
+                            open: { ...p.open, [camp.id]: !campOpen },
+                          }))
                         }
-                        className="underline-offset-2 hover:underline"
+                        className="flex min-w-0 flex-1 items-center gap-1 px-3 py-2 text-left text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
                       >
-                        Chargement impossible. Réessayer
+                        {campOpen ? (
+                          <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                        )}
+                        <span className="truncate">{camp.name}</span>
+                        {!campActive && (
+                          <span className="shrink-0 normal-case">(archivée)</span>
+                        )}
                       </button>
-                    ) : (
-                      "Chargement..."
+                      <CampaignMenu
+                        campaignId={camp.id}
+                        campaignName={camp.name}
+                        active={campActive}
+                        onAddGroup={() => {
+                          setPrefs((p) => ({ open: { ...p.open, [camp.id]: true } }));
+                          setAddingGroupFor(camp.id);
+                        }}
+                      />
+                    </div>
+
+                    {addingGroupFor === camp.id && (
+                      <InlineNameInput
+                        label="Nom du nouveau groupe"
+                        onCancel={() => setAddingGroupFor(null)}
+                        onSubmit={async (name) =>
+                          afterGroupChange(await groupApi.create(camp.id, name))
+                        }
+                      />
                     )}
-                  </div>
-                )}
 
-                {campOpen &&
-                  isLoaded(camp.id) &&
-                  buildCampaignBranches(camp.id, groups, campCases, caseGroups).map(
-                    (branch) => {
-                      const key = branch.key;
-                      if (searching && branch.cases.length === 0) return null;
-                      // Pendant une recherche, tout ce qui correspond est compté
-                      const count = branch.cases.filter(
-                        (c) => searching || c.status === "active",
-                      ).length;
-                      const branchOpen = searching
-                        ? true
-                        : (prefs.open[key] ??
-                          branch.cases.some((c) => c.id === selectedId));
-                      // Le dossier sélectionné reste visible même s'il est clos
-                      const visible = branch.cases
-                        .filter(
-                          (c) =>
-                            searching ||
-                            prefs.showClosed ||
-                            c.status === "active" ||
-                            c.id === selectedId,
-                        )
-                        .sort(prefs.sortBy === "level" ? byLevel : byName);
-
-                      return (
-                        <div key={key}>
+                    {campOpen && !isLoaded(camp.id) && (
+                      <div className="py-1 pr-3 pl-9 text-sm text-muted-foreground">
+                        {errors[camp.id] ? (
                           <button
                             type="button"
-                            aria-expanded={branchOpen}
                             onClick={() =>
-                              setPrefs((p) => ({
-                                open: { ...p.open, [key]: !branchOpen },
-                              }))
+                              setErrors((e) => ({ ...e, [camp.id]: false }))
                             }
-                            className={cn(
-                              "flex w-full items-center gap-1 py-1.5 pr-4 pl-4 text-left text-sm font-medium hover:bg-muted/60",
-                              branch.groupId === null && "text-muted-foreground",
-                            )}
+                            className="underline-offset-2 hover:underline"
                           >
-                            {branchOpen ? (
-                              <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                            ) : (
-                              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                            )}
-                            <span className="truncate">{branch.label}</span>
-                            <span className="ml-auto text-xs text-muted-foreground tabular-nums">
-                              {count}
-                            </span>
+                            Chargement impossible. Réessayer
                           </button>
+                        ) : (
+                          "Chargement..."
+                        )}
+                      </div>
+                    )}
 
-                          {branchOpen &&
-                            visible.map((c) => {
-                              const isSelected = c.id === selectedId;
-                              const suffix = STATUS_SUFFIX[c.status];
-                              return (
-                                <Link
-                                  key={c.id}
-                                  href={`/cases/${c.id}`}
-                                  aria-current={isSelected ? "page" : undefined}
+                    {campOpen &&
+                      isLoaded(camp.id) &&
+                      buildCampaignBranches(camp.id, groups, campCases, caseGroups).map(
+                        (branch) => {
+                          const key = branch.key;
+                          const groupId = branch.groupId;
+                          const count = branch.cases.filter(
+                            (c) => c.status === "active",
+                          ).length;
+                          const branchOpen =
+                            prefs.open[key] ??
+                            branch.cases.some((c) => c.id === selectedId);
+                          // Le dossier sélectionné reste visible même s'il est clos
+                          const visible = branch.cases
+                            .filter(
+                              (c) =>
+                                prefs.showClosed ||
+                                c.status === "active" ||
+                                c.id === selectedId,
+                            )
+                            .sort(prefs.sortBy === "level" ? byLevel : byName);
+
+                          if (groupId && renamingGroup === groupId) {
+                            return (
+                              <InlineNameInput
+                                key={key}
+                                label={`Nouveau nom du groupe ${branch.label}`}
+                                initial={branch.label}
+                                onCancel={() => setRenamingGroup(null)}
+                                onSubmit={async (name) =>
+                                  afterGroupChange(
+                                    await groupApi.rename(camp.id, groupId, name),
+                                  )
+                                }
+                              />
+                            );
+                          }
+
+                          return (
+                            <div key={key}>
+                              <div className="group flex items-center pr-2 hover:bg-muted/60">
+                                <button
+                                  type="button"
+                                  aria-expanded={branchOpen}
+                                  onClick={() =>
+                                    setPrefs((p) => ({
+                                      open: { ...p.open, [key]: !branchOpen },
+                                    }))
+                                  }
                                   className={cn(
-                                    "mx-3 flex items-center gap-2 rounded-lg py-1.5 pr-2 pl-8 text-sm hover:bg-muted/60",
-                                    isSelected &&
-                                      "bg-accent font-medium text-accent-foreground",
-                                    c.status !== "active" &&
-                                      "text-muted-foreground",
+                                    "flex min-w-0 flex-1 items-center gap-1 py-1.5 pr-2 pl-4 text-left text-sm font-medium",
+                                    groupId === null && "text-muted-foreground",
                                   )}
                                 >
-                                  <span className="truncate">
-                                    {displayName(c.first_name, c.last_name)}
+                                  {branchOpen ? (
+                                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                                  )}
+                                  <span className="truncate">{branch.label}</span>
+                                  <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                                    {count}
                                   </span>
-                                  {suffix && (
-                                    <span className="shrink-0 text-xs">
-                                      ({suffix})
-                                    </span>
-                                  )}
-                                  {prefs.showLevel && (
-                                    <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-                                      {labelOf(EDUCATION_LEVEL_LABELS, c.education_level)}
-                                    </span>
-                                  )}
-                                </Link>
-                              );
-                            })}
-                        </div>
-                      );
-                    },
-                  )}
-              </div>
-            );
-          })}
+                                </button>
+                                {groupId && campActive && (
+                                  <GroupActions
+                                    campaignId={camp.id}
+                                    groupId={groupId}
+                                    groupName={branch.label}
+                                    onRename={() => setRenamingGroup(groupId)}
+                                    className="opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
+                                  />
+                                )}
+                              </div>
+
+                              {branchOpen &&
+                                visible.map((c) => {
+                                  const isSelected = c.id === selectedId;
+                                  const suffix = STATUS_SUFFIX[c.status];
+                                  return (
+                                    <Link
+                                      key={c.id}
+                                      href={`/cases/${c.id}`}
+                                      aria-current={isSelected ? "page" : undefined}
+                                      className={cn(
+                                        "mx-3 flex items-center gap-2 rounded-lg py-1.5 pr-2 pl-8 text-sm hover:bg-muted/60",
+                                        isSelected &&
+                                          "bg-accent font-medium text-accent-foreground",
+                                        c.status !== "active" &&
+                                          "text-muted-foreground",
+                                      )}
+                                    >
+                                      <span className="truncate">
+                                        {displayName(c.first_name, c.last_name)}
+                                      </span>
+                                      {suffix && (
+                                        <span className="shrink-0 text-xs">
+                                          ({suffix})
+                                        </span>
+                                      )}
+                                      {prefs.showLevel && (
+                                        <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                                          {labelOf(EDUCATION_LEVEL_LABELS, c.education_level)}
+                                        </span>
+                                      )}
+                                    </Link>
+                                  );
+                                })}
+                            </div>
+                          );
+                        },
+                      )}
+                  </div>
+                );
+              })}
+            </>
+          )}
         </nav>
 
         {/* Pied */}
         <div className="p-4">
-          <Link href="/cases/new" className={cn(buttonVariants(), "w-full")}>
+          <Link
+            href={
+              selectedCase
+                ? `/cases/new?campaign=${selectedCase.campaign_id}`
+                : "/cases/new"
+            }
+            className={cn(buttonVariants(), "w-full")}
+          >
             <Plus /> Nouveau dossier
           </Link>
         </div>

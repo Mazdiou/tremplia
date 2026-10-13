@@ -69,6 +69,16 @@ export function AppRail({
         <span className="group-hover:hidden">{initials}</span>
         <LogOut className="hidden size-4 group-hover:block" />
       </button>
+      {/* Téléphone : pas de survol, donc une icône explicite */}
+      <button
+        type="button"
+        onClick={logout}
+        aria-label="Se déconnecter"
+        title="Se déconnecter"
+        className="grid h-11 w-16 place-items-center rounded-xl text-muted-foreground hover:bg-muted md:hidden"
+      >
+        <LogOut className="size-5" strokeWidth={1.6} />
+      </button>
     </nav>
   );
 }

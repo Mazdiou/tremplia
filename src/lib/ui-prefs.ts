@@ -36,12 +36,16 @@ const listeners = new Set<() => void>();
 let cache: UiPrefs = DEFAULT_PREFS;
 let loaded = false;
 
-function sanitize(raw: unknown): UiPrefs {
+// Valeurs mémorisées par un ancien code ou modifiées à la main : tout ce qui
+// est inattendu revient à la valeur par défaut.
+export function sanitize(raw: unknown): UiPrefs {
   const r = (raw && typeof raw === "object" ? raw : {}) as Partial<UiPrefs>;
   const d = DEFAULT_PREFS;
   return {
     width:
-      typeof r.width === "number" ? Math.min(520, Math.max(220, r.width)) : d.width,
+      Number.isFinite(r.width)
+        ? Math.min(520, Math.max(220, r.width as number))
+        : d.width,
     collapsed: r.collapsed === true,
     open: r.open && typeof r.open === "object" ? r.open : d.open,
     showLevel: r.showLevel === true,

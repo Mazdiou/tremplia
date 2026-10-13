@@ -388,7 +388,8 @@ select is(
 reset role;
 set local role service_role;
 
-select is((select count(*) from public.external_account_secrets), 2::bigint,
+select is((select count(*) from public.external_account_secrets
+           where agency_id = (select agency_a from ctx)), 2::bigint,
   'le serveur lit les mots de passe chiffrés (pour un affichage journalisé)');
 select throws_ok(
   $$delete from public.cases$$,
