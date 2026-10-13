@@ -90,25 +90,6 @@ export default async function CaseInfoPage({
             </Row>
           </dl>
         </Panel>
-
-        {(c.study_project || c.career_project) && (
-          <Panel title="Projet">
-            <div className="space-y-3 px-[18px] py-3 text-sm">
-              {c.study_project && (
-                <div>
-                  <p className="text-muted-foreground">Projet d&apos;études</p>
-                  <p className="mt-0.5 whitespace-pre-line">{c.study_project}</p>
-                </div>
-              )}
-              {c.career_project && (
-                <div>
-                  <p className="text-muted-foreground">Projet professionnel</p>
-                  <p className="mt-0.5 whitespace-pre-line">{c.career_project}</p>
-                </div>
-              )}
-            </div>
-          </Panel>
-        )}
       </div>
     </div>
   );

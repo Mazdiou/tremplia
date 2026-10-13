@@ -53,8 +53,6 @@ const EMPTY_FIELDS: CaseFieldsDraft = {
   currentInstitution: "",
   diplomas: [],
   languageTests: [],
-  studyProject: "",
-  careerProject: "",
 };
 
 // Champs envoyés à l'API : années en nombres, le reste tel quel (le serveur
@@ -345,13 +343,6 @@ export function CaseForm(
           <DiplomasEditor value={fields.diplomas} onChange={set("diplomas")} errors={e} />
           <LanguageTestsEditor value={fields.languageTests} onChange={set("languageTests")}
             errors={e} />
-        </Section>
-
-        <Section title="Projet">
-          <TextAreaField id="studyProject" label="Projet d'études" maxLength={2000}
-            value={fields.studyProject} onChange={set("studyProject")} error={e.studyProject} />
-          <TextAreaField id="careerProject" label="Projet professionnel" maxLength={2000}
-            value={fields.careerProject} onChange={set("careerProject")} error={e.careerProject} />
         </Section>
 
         <Section title="Suivi">

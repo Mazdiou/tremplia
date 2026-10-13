@@ -32,8 +32,6 @@ export type CaseFieldsRecord = {
   current_institution: string | null;
   diplomas: DiplomaRecord[];
   language_tests: LanguageTestRecord[];
-  study_project: string | null;
-  career_project: string | null;
 };
 
 export const CASE_FIELD_COLUMNS = [
@@ -51,8 +49,6 @@ export const CASE_FIELD_COLUMNS = [
   "current_institution",
   "diplomas",
   "language_tests",
-  "study_project",
-  "career_project",
 ] as const satisfies readonly (keyof CaseFieldsRecord)[];
 
 export function toCaseRecord(f: CaseFields): CaseFieldsRecord {
@@ -80,8 +76,6 @@ export function toCaseRecord(f: CaseFields): CaseFieldsRecord {
       result: t.result ?? null,
       date: t.date ?? null,
     })),
-    study_project: f.studyProject ?? null,
-    career_project: f.careerProject ?? null,
   };
 }
 
@@ -102,8 +96,6 @@ export type CaseFieldsDraft = {
   currentInstitution: string;
   diplomas: { type: string; title: string; year: string }[];
   languageTests: { test: string; otherName: string; result: string; date: string }[];
-  studyProject: string;
-  careerProject: string;
 };
 
 export function toCaseDraft(r: CaseFieldsRecord): CaseFieldsDraft {
@@ -131,7 +123,5 @@ export function toCaseDraft(r: CaseFieldsRecord): CaseFieldsDraft {
       result: t.result ?? "",
       date: t.date ?? "",
     })),
-    studyProject: r.study_project ?? "",
-    careerProject: r.career_project ?? "",
   };
 }

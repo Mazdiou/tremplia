@@ -84,8 +84,6 @@ export const caseFieldsShape = {
   languageTests: z
     .array(languageTestSchema)
     .max(MAX_LANGUAGE_TESTS, `${MAX_LANGUAGE_TESTS} tests au maximum`),
-  studyProject: optionalText(2000),
-  careerProject: optionalText(2000),
 };
 
 // Contact secondaire : nom et téléphone, ou aucun des deux

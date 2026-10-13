@@ -17,8 +17,6 @@ const base: CaseFieldsRecord = {
   current_institution: null,
   diplomas: [{ type: "baccalaureate", title: null, year: 2020 }],
   language_tests: [],
-  study_project: null,
-  career_project: null,
 };
 
 describe("diffCase", () => {
@@ -56,7 +54,7 @@ describe("diffCase", () => {
       phone: "0666111111",
       email: "autre@example.com",
       birth_date: "2001-01-01",
-      study_project: "Master en IA",
+      current_institution: "Université d'Alger",
       education_level: "l3",
     };
     const { fields, changes } = diffCase(base, next);
@@ -65,10 +63,10 @@ describe("diffCase", () => {
       "phone",
       "email",
       "education_level",
-      "study_project",
+      "current_institution",
     ]);
     expect(changes).toEqual({ education_level_from: "l2", education_level_to: "l3" });
-    for (const secret of ["0666111111", "autre@example.com", "2001-01-01", "Master en IA"]) {
+    for (const secret of ["0666111111", "autre@example.com", "2001-01-01", "Université d'Alger"]) {
       expect(JSON.stringify(changes)).not.toContain(secret);
     }
   });

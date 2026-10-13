@@ -71,10 +71,6 @@ create table public.cases (
   language_tests jsonb not null default '[]'
     check (public.is_json_object_list(language_tests, 10)),
 
-  -- Projet (texte libre sur plusieurs lignes)
-  study_project text check (study_project ~ '\S' and length(study_project) <= 2000),
-  career_project text check (career_project ~ '\S' and length(career_project) <= 2000),
-
   status text not null default 'active'
     check (status in ('active', 'closed', 'abandoned')),
   -- Dossiers de documents de départ déjà créés (voir documents)
@@ -347,7 +343,7 @@ begin
       'first_name', 'last_name', 'birth_date', 'phone', 'email', 'city',
       'nationality', 'secondary_contact_name', 'secondary_contact_phone',
       'education_level', 'current_field', 'current_institution', 'diplomas',
-      'language_tests', 'study_project', 'career_project'
+      'language_tests'
     ])
   ) then
     raise exception 'Champs du dossier invalides' using errcode = '22023';
@@ -513,16 +509,14 @@ begin
     id, agency_id, campaign_id, created_by, assigned_to,
     first_name, last_name, birth_date, phone, email, city, nationality,
     secondary_contact_name, secondary_contact_phone,
-    education_level, current_field, current_institution, diplomas, language_tests,
-    study_project, career_project
+    education_level, current_field, current_institution, diplomas, language_tests
   ) values (
     p_case_id, p_agency_id, p_campaign_id, p_actor_id, p_assigned_to,
     v_case.first_name, v_case.last_name, v_case.birth_date, v_case.phone,
     v_case.email, v_case.city, v_case.nationality,
     v_case.secondary_contact_name, v_case.secondary_contact_phone,
     v_case.education_level, v_case.current_field, v_case.current_institution,
-    coalesce(v_case.diplomas, '[]'), coalesce(v_case.language_tests, '[]'),
-    v_case.study_project, v_case.career_project
+    coalesce(v_case.diplomas, '[]'), coalesce(v_case.language_tests, '[]')
   );
 
   -- Les clés composites refusent un groupe d'une autre campagne ou agence
@@ -595,9 +589,7 @@ begin
       current_field = v_new.current_field,
       current_institution = v_new.current_institution,
       diplomas = v_new.diplomas,
-      language_tests = v_new.language_tests,
-      study_project = v_new.study_project,
-      career_project = v_new.career_project
+      language_tests = v_new.language_tests
   where id = p_case_id and agency_id = p_agency_id;
 end;
 $$;
