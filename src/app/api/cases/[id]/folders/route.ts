@@ -1,13 +1,8 @@
 import { z } from "zod";
-import { MAX_FOLDERS_PER_CASE, folderNameSchema } from "@/lib/documents";
-import {
-  authorizeCase,
-  fail,
-  ok,
-  readJson,
-  validationError,
-} from "@/lib/documents-api";
-import { logActivity } from "@/lib/audit";
+import { MAX_FOLDERS_PER_CASE, folderNameSchema } from "@/features/documents/schemas";
+import { authorizeCase } from "@/features/cases/server/authorize-case";
+import { fail, ok, readJson, validationError } from "@/lib/api-errors";
+import { logActivity } from "@/lib/audit/log-activity";
 
 // Créer un dossier de rangement pour les documents (tout membre actif).
 export async function POST(

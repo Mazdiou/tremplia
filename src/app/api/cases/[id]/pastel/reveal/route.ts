@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireMember } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptSecret } from "@/lib/crypto/secrets";
-import { logActivity } from "@/lib/audit";
+import { logActivity } from "@/lib/audit/log-activity";
 
 // Réponses toujours sans cache : le mot de passe ne doit rester nulle part.
 const NO_STORE = { "Cache-Control": "no-store" };

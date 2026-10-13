@@ -1,13 +1,8 @@
 import { z } from "zod";
-import { folderNameSchema } from "@/lib/documents";
-import {
-  authorizeCase,
-  fail,
-  ok,
-  readJson,
-  validationError,
-} from "@/lib/documents-api";
-import { logActivity } from "@/lib/audit";
+import { folderNameSchema } from "@/features/documents/schemas";
+import { authorizeCase } from "@/features/cases/server/authorize-case";
+import { fail, ok, readJson, validationError } from "@/lib/api-errors";
+import { logActivity } from "@/lib/audit/log-activity";
 
 type Ctx = { params: Promise<{ id: string; folderId: string }> };
 

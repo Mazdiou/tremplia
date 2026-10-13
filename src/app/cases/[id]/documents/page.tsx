@@ -2,20 +2,14 @@ import { notFound } from "next/navigation";
 import { requireMember } from "@/lib/auth/require-member";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { formatSize } from "@/lib/documents";
-import { getCase } from "../get-case";
+import { formatSize } from "@/features/documents/format";
+import { shortDateFormat } from "@/lib/dates";
+import { getCase } from "@/features/cases/server/get-case";
 import {
   DocumentsPanel,
   type DocItem,
   type FolderItem,
-} from "./documents-panel";
-
-const dateFormat = new Intl.DateTimeFormat("fr-FR", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "Africa/Algiers",
-});
+} from "@/features/documents/components/documents-panel";
 
 type Row = {
   id: string;
@@ -91,7 +85,7 @@ export default async function DocumentsPage({
     name: r.name,
     sizeLabel: formatSize(r.size_bytes),
     uploadedBy: names.get(r.uploaded_by) ?? "un ancien membre",
-    dateLabel: dateFormat.format(new Date(r.created_at)),
+    dateLabel: shortDateFormat.format(new Date(r.created_at)),
     locked: r.locked_at !== null,
     folderId: r.folder_id,
   }));

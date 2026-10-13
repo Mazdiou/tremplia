@@ -14,12 +14,13 @@ import {
   X,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { LEVEL_LABELS, LEVEL_ORDER, displayName } from "@/lib/case-labels";
+import { LEVEL_LABELS, LEVEL_ORDER, labelOf } from "@/features/cases/labels";
+import { displayName } from "@/lib/names";
 import { normalizeName } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import { useUiPrefs } from "@/lib/ui-prefs";
 import { createClient } from "@/lib/supabase/client";
-import { fetchCampaignCases, type TreeCase } from "@/lib/case-tree-data";
+import { fetchCampaignCases, type TreeCase } from "@/features/cases/fetch-campaign-cases";
 
 export type { TreeCase };
 
@@ -606,8 +607,7 @@ export function CaseTree({
                                 )}
                                 {prefs.showLevel && (
                                   <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-                                    {LEVEL_LABELS[c.education_level] ??
-                                      c.education_level}
+                                    {labelOf(LEVEL_LABELS, c.education_level)}
                                   </span>
                                 )}
                               </Link>

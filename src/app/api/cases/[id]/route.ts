@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireMember } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { logActivity } from "@/lib/audit";
-import { updateCaseSchema } from "@/lib/validation/case";
-import { diffCase, type CaseEditable } from "@/lib/case-diff";
+import { logActivity } from "@/lib/audit/log-activity";
+import { updateCaseSchema } from "@/features/cases/schemas";
+import { diffCase, type CaseEditable } from "@/features/cases/case-diff";
 
 async function updateCase(request: Request, id: string) {
   const caller = await requireMember();
@@ -173,7 +173,7 @@ export async function PATCH(
     const { id } = await params;
     return await updateCase(request, id);
   } catch (e) {
-    console.error("[cases PATCH]", e instanceof Error ? e.message : e);
+    console.error("[cases PATCH]", e instanceof Error ? e.name : "erreur");
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

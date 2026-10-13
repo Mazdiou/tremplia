@@ -1,13 +1,11 @@
 import { z } from "zod";
-import { noteContentSchema } from "@/lib/notes";
+import { noteContentSchema } from "@/features/notes/schemas";
 import {
   authorizeCase,
-  fail,
-  ok,
-  readJson,
-  validationError,
-} from "@/lib/documents-api";
-import { logActivity } from "@/lib/audit";
+  type AuthorizedCase,
+} from "@/features/cases/server/authorize-case";
+import { fail, ok, readJson, validationError } from "@/lib/api-errors";
+import { logActivity } from "@/lib/audit/log-activity";
 
 type Ctx = { params: Promise<{ id: string; noteId: string }> };
 
@@ -15,7 +13,7 @@ type Ctx = { params: Promise<{ id: string; noteId: string }> };
 // appliquée par les fonctions SQL update_case_note et delete_case_note ;
 // les routes ne font que vérifier que la note appartient bien à ce dossier.
 async function noteInCase(
-  auth: Extract<Awaited<ReturnType<typeof authorizeCase>>, { ok: true }>,
+  auth: AuthorizedCase,
   caseId: string,
   noteId: string,
 ) {

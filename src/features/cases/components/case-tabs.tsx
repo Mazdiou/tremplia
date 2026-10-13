@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { suffix: "", label: "Informations", ownerOnly: false },
   { suffix: "/documents", label: "Documents", ownerOnly: false },
+  { suffix: "/programs", label: "Formations", ownerOnly: false },
   { suffix: "/notes", label: "Notes", ownerOnly: false },
-  { suffix: "/formations", label: "Formations", ownerOnly: false },
-  { suffix: "/historique", label: "Historique", ownerOnly: true },
+  { suffix: "/history", label: "Historique", ownerOnly: true },
 ];
 
 export function CaseTabs({ id, isOwner }: { id: string; isOwner: boolean }) {

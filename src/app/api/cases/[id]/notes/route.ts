@@ -1,13 +1,8 @@
 import { z } from "zod";
-import { noteContentSchema } from "@/lib/notes";
-import {
-  authorizeCase,
-  fail,
-  ok,
-  readJson,
-  validationError,
-} from "@/lib/documents-api";
-import { logActivity } from "@/lib/audit";
+import { noteContentSchema } from "@/features/notes/schemas";
+import { authorizeCase } from "@/features/cases/server/authorize-case";
+import { fail, ok, readJson, validationError } from "@/lib/api-errors";
+import { logActivity } from "@/lib/audit/log-activity";
 
 // Ajouter une note (tout membre actif). Le contenu n'est jamais écrit dans
 // le journal ni dans les logs du serveur.

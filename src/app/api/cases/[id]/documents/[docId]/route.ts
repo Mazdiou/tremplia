@@ -1,13 +1,8 @@
 import { z } from "zod";
-import { DOCUMENTS_BUCKET, documentNameSchema } from "@/lib/documents";
-import {
-  authorizeCase,
-  fail,
-  ok,
-  readJson,
-  validationError,
-} from "@/lib/documents-api";
-import { logActivity } from "@/lib/audit";
+import { DOCUMENTS_BUCKET, documentNameSchema } from "@/features/documents/schemas";
+import { authorizeCase } from "@/features/cases/server/authorize-case";
+import { fail, ok, readJson, validationError } from "@/lib/api-errors";
+import { logActivity } from "@/lib/audit/log-activity";
 
 type Ctx = { params: Promise<{ id: string; docId: string }> };
 
@@ -62,7 +57,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
 
     return ok();
   } catch (e) {
-    console.error("[documents rename]", e instanceof Error ? e.message : e);
+    console.error("[documents rename]", e instanceof Error ? e.name : "erreur");
     return fail("Erreur serveur", 500);
   }
 }
@@ -127,7 +122,7 @@ export async function DELETE(_request: Request, { params }: Ctx) {
 
     return ok();
   } catch (e) {
-    console.error("[documents delete]", e instanceof Error ? e.message : e);
+    console.error("[documents delete]", e instanceof Error ? e.name : "erreur");
     return fail("Erreur serveur", 500);
   }
 }

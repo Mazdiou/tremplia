@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireMember } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { logActivity } from "@/lib/audit";
+import { logActivity } from "@/lib/audit/log-activity";
+import { CASE_STATUSES } from "@/features/cases/labels";
 
-const schema = z.object({ status: z.enum(["active", "closed", "abandoned"]) });
+const schema = z.object({ status: z.enum(CASE_STATUSES) });
 
 const ACTIONS = {
   active: "case.reopened",
@@ -98,7 +99,7 @@ export async function PATCH(
     const { id } = await params;
     return await changeStatus(request, id);
   } catch (e) {
-    console.error("[cases status]", e instanceof Error ? e.message : e);
+    console.error("[cases status]", e instanceof Error ? e.name : "erreur");
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { PageHeader, Panel, StatusPill } from "@/components/page-ui";
-import { DeleteEmployeeButton } from "./delete-employee-button";
+import { DeleteEmployeeButton } from "@/features/team/components/delete-employee-button";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireOwner } from "@/lib/auth/require-owner";
-import { AddEmployeeForm } from "./add-employee-form";
-import { ToggleActiveButton } from "./toggle-active-button";
+import { AddEmployeeForm } from "@/features/team/components/add-employee-form";
+import { ToggleActiveButton } from "@/features/team/components/toggle-active-button";
 
 export default async function TeamPage() {
   const caller = await requireOwner();

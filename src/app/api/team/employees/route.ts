@@ -3,7 +3,7 @@ import { randomInt } from "node:crypto";
 import { z } from "zod";
 import { requireOwner } from "@/lib/auth/require-owner";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { logActivity } from "@/lib/audit";
+import { logActivity } from "@/lib/audit/log-activity";
 import { safely } from "@/lib/api-errors";
 
 const schema = z.object({

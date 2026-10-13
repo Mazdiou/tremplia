@@ -3,8 +3,8 @@ import { randomUUID } from "node:crypto";
 import { requireMember } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encryptSecret } from "@/lib/crypto/secrets";
-import { logActivity } from "@/lib/audit";
-import { createCaseSchema } from "@/lib/validation/case";
+import { logActivity } from "@/lib/audit/log-activity";
+import { createCaseSchema } from "@/features/cases/schemas";
 
 async function createCase(request: Request) {
   const caller = await requireMember();
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
   try {
     return await createCase(request);
   } catch (e) {
-    console.error("[cases POST]", e instanceof Error ? e.message : e);
+    console.error("[cases POST]", e instanceof Error ? e.name : "erreur");
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

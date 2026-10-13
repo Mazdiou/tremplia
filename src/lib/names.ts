@@ -3,8 +3,13 @@
 export function normalizeName(s: string) {
   return s
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/\s+/g, " ")
     .trim();
+}
+
+// « NOM Prénom », partout dans l'interface
+export function displayName(firstName: string, lastName: string) {
+  return `${lastName.toLocaleUpperCase("fr")} ${firstName}`;
 }

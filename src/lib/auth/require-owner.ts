@@ -1,19 +1,8 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { requireMember } from "@/lib/auth/require-member";
 
 export async function requireOwner() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, agency_id, role, is_active")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || !profile.is_active || profile.role !== "owner") return null;
-  return { user, profile };
+  const caller = await requireMember();
+  if (!caller || caller.profile.role !== "owner") return null;
+  return caller;
 }

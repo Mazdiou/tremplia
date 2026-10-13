@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { DOCUMENTS_BUCKET, MAX_DOCUMENT_BYTES } from "@/lib/documents";
-import { useDragAutoScroll } from "@/lib/drag-autoscroll";
+import { DOCUMENTS_BUCKET, MAX_DOCUMENT_BYTES } from "@/features/documents/schemas";
+import { useDragAutoScroll } from "@/features/documents/drag-autoscroll";
 import { cn } from "@/lib/utils";
 
 export type DocItem = {

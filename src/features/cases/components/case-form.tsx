@@ -7,30 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LEVEL_LABELS, STATUS_LABELS } from "@/lib/case-labels";
+import {
+  DIPLOMAS,
+  DIPLOMA_LABELS,
+  LANGUAGE_TESTS,
+  LANGUAGE_TEST_LABELS,
+  LEVEL_LABELS,
+  LEVEL_ORDER,
+  STATUS_LABELS,
+  labelOf,
+} from "@/features/cases/labels";
 
 const selectClass =
   "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50";
-
-const LEVELS = [
-  ["terminale", "Terminale"],
-  ["l1", "L1"],
-  ["l2", "L2"],
-  ["l3", "L3"],
-  ["m1", "M1"],
-  ["m2", "M2"],
-] as const;
-
-const LANGUAGE_TESTS = [
-  ["fr", "Test de français"],
-  ["en", "Test d'anglais"],
-] as const;
-
-const DIPLOMAS = [
-  ["bac", "Baccalauréat"],
-  ["licence", "Licence"],
-  ["master", "Master"],
-] as const;
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
@@ -305,9 +294,9 @@ export function CaseForm({
                 <option value="" disabled>
                   Choisir...
                 </option>
-                {LEVELS.map(([value, label]) => (
+                {LEVEL_ORDER.map((value) => (
                   <option key={value} value={value}>
-                    {label}
+                    {LEVEL_LABELS[value]}
                   </option>
                 ))}
               </select>
@@ -398,7 +387,7 @@ export function CaseForm({
           <CardContent className="grid gap-6 sm:grid-cols-2">
             <fieldset className="space-y-2">
               <legend className="text-sm font-medium">Diplômes obtenus</legend>
-              {DIPLOMAS.map(([value, label]) => (
+              {DIPLOMAS.map((value) => (
                 <div key={value} className="flex items-center gap-2">
                   <input
                     id={`diploma-${value}`}
@@ -408,7 +397,9 @@ export function CaseForm({
                     defaultChecked={init?.diplomas.includes(value) ?? false}
                     className="size-4"
                   />
-                  <Label htmlFor={`diploma-${value}`}>{label}</Label>
+                  <Label htmlFor={`diploma-${value}`}>
+                    {DIPLOMA_LABELS[value]}
+                  </Label>
                 </div>
               ))}
               <p className="text-sm text-muted-foreground">
@@ -418,7 +409,7 @@ export function CaseForm({
             </fieldset>
             <fieldset className="space-y-2">
               <legend className="text-sm font-medium">Tests de langue</legend>
-              {LANGUAGE_TESTS.map(([value, label]) => (
+              {LANGUAGE_TESTS.map((value) => (
                 <div key={value} className="flex items-center gap-2">
                   <input
                     id={`test-${value}`}
@@ -430,7 +421,9 @@ export function CaseForm({
                     }
                     className="size-4"
                   />
-                  <Label htmlFor={`test-${value}`}>{label}</Label>
+                  <Label htmlFor={`test-${value}`}>
+                    {LANGUAGE_TEST_LABELS[value]}
+                  </Label>
                 </div>
               ))}
               <FieldError message={fieldErrors.languageTests} />
@@ -651,8 +644,8 @@ function ImportPanel({ onImport }: { onImport: (m: ImportMatch) => void }) {
                 <span>
                   {m.lastName.toLocaleUpperCase("fr")} {m.firstName} · Campagne{" "}
                   {m.campaignLabel} ·{" "}
-                  {LEVEL_LABELS[m.educationLevel] ?? m.educationLevel} ·{" "}
-                  {STATUS_LABELS[m.status] ?? m.status}
+                  {labelOf(LEVEL_LABELS, m.educationLevel)} ·{" "}
+                  {labelOf(STATUS_LABELS, m.status)}
                 </span>
                 {m.isCurrent ? (
                   <span className="flex items-center gap-2">

@@ -5,14 +5,15 @@ import { requireMember } from "@/lib/auth/require-member";
 import {
   LEVEL_LABELS,
   STATUS_LABELS,
-  displayName,
+  labelOf,
   procedureLabel,
-} from "@/lib/case-labels";
+} from "@/features/cases/labels";
+import { displayName } from "@/lib/names";
 import { cn } from "@/lib/utils";
-import { getCase } from "./get-case";
-import { PastelPinned } from "./pastel-pinned";
-import { StatusButtons } from "./status-buttons";
-import { CaseTabs } from "./case-tabs";
+import { getCase } from "@/features/cases/server/get-case";
+import { PastelPinned } from "@/features/cases/components/pastel-pinned";
+import { CaseStatusButtons } from "@/features/cases/components/case-status-buttons";
+import { CaseTabs } from "@/features/cases/components/case-tabs";
 
 const BADGE: Record<string, string> = {
   active: "bg-success-bg text-success",
@@ -36,7 +37,7 @@ export default async function CaseLayout({
   const { c, responsible, campaignLabel } = data;
 
   const summary = [
-    LEVEL_LABELS[c.education_level] ?? c.education_level,
+    labelOf(LEVEL_LABELS, c.education_level),
     procedureLabel(c.main_track, c.schools),
     responsible ? `Responsable : ${responsible}` : "Sans responsable",
     campaignLabel ? `Campagne ${campaignLabel}` : null,
@@ -67,7 +68,7 @@ export default async function CaseLayout({
                     BADGE[c.status],
                   )}
                 >
-                  {STATUS_LABELS[c.status] ?? c.status}
+                  {labelOf(STATUS_LABELS, c.status)}
                 </span>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
@@ -79,7 +80,7 @@ export default async function CaseLayout({
               >
                 Modifier
               </Link>
-              <StatusButtons id={c.id} status={c.status} />
+              <CaseStatusButtons id={c.id} status={c.status} />
             </div>
           </div>
 

@@ -4,15 +4,10 @@ import {
   DOCUMENTS_BUCKET,
   MAX_DOCUMENT_BYTES,
   documentNameSchema,
-  documentPath,
-} from "@/lib/documents";
-import {
-  authorizeCase,
-  fail,
-  ok,
-  readJson,
-  validationError,
-} from "@/lib/documents-api";
+} from "@/features/documents/schemas";
+import { documentPath } from "@/features/documents/format";
+import { authorizeCase } from "@/features/cases/server/authorize-case";
+import { fail, ok, readJson, validationError } from "@/lib/api-errors";
 
 // Étape 1 de l'envoi : le serveur contrôle la demande et renvoie une URL
 // signée. Le navigateur envoie ensuite le PDF directement au stockage
@@ -59,7 +54,7 @@ export async function POST(
 
     return ok({ documentId, path: data.path, token: data.token });
   } catch (e) {
-    console.error("[documents upload-url]", e instanceof Error ? e.message : e);
+    console.error("[documents upload-url]", e instanceof Error ? e.name : "erreur");
     return fail("Erreur serveur", 500);
   }
 }

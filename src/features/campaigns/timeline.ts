@@ -1,3 +1,5 @@
+import { daysUntil } from "@/lib/dates";
+
 export const CAMPAIGN_DATES = [
   { key: "opens_on", label: "Ouverture des candidatures" },
   { key: "deadline_non_dap", label: "Date limite hors-DAP" },
@@ -16,20 +18,6 @@ type DateKey = (typeof CAMPAIGN_DATES)[number]["key"];
 export type CampaignRow = { label: string } & Partial<
   Record<DateKey, string | null>
 >;
-
-// Date du jour en Algérie, au format AAAA-MM-JJ
-export function todayInAlgiers(now = new Date()) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Africa/Algiers",
-  }).format(now);
-}
-
-export function daysUntil(dateISO: string, todayISO: string) {
-  return Math.round(
-    (Date.parse(`${dateISO}T00:00:00Z`) - Date.parse(`${todayISO}T00:00:00Z`)) /
-      86_400_000,
-  );
-}
 
 export function campaignTimeline(campaign: CampaignRow, todayISO: string) {
   const items = CAMPAIGN_DATES.flatMap(({ key, label }) => {

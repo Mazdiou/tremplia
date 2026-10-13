@@ -1,12 +1,7 @@
 import { z } from "zod";
-import {
-  authorizeCase,
-  fail,
-  ok,
-  readJson,
-  validationError,
-} from "@/lib/documents-api";
-import { logActivity } from "@/lib/audit";
+import { authorizeCase } from "@/features/cases/server/authorize-case";
+import { fail, ok, readJson, validationError } from "@/lib/api-errors";
+import { logActivity } from "@/lib/audit/log-activity";
 
 // Déplacer un document vers un dossier (folderId) ou vers « Sans dossier »
 // (folderId = null). Tout membre actif ; un document verrouillé ne bouge pas

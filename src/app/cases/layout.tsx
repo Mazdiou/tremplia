@@ -1,14 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
-import { fetchCampaignCases } from "@/lib/case-tree-data";
+import { fetchCampaignCases } from "@/features/cases/fetch-campaign-cases";
 import { AppRail } from "@/components/shell/app-rail";
 import { getShellUser } from "@/components/shell/app-shell";
-import { CasesContent } from "./cases-content";
+import { CasesContent } from "@/features/cases/components/cases-content";
 import {
   CaseTree,
   type TreeCampaign,
   type TreeCase,
   type TreeMember,
-} from "./case-tree";
+} from "@/features/cases/components/case-tree";
 
 export default async function CasesLayout({
   children,
@@ -45,7 +45,7 @@ export default async function CasesLayout({
   try {
     if (current) cases = await fetchCampaignCases(supabase, current.id);
   } catch (e) {
-    console.error("[cases layout] dossiers", e instanceof Error ? e.message : e);
+    console.error("[cases layout] dossiers", e instanceof Error ? e.name : "erreur");
   }
 
   return (

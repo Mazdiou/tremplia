@@ -4,10 +4,11 @@ import {
   LANGUAGE_TEST_LABELS,
   LEVEL_LABELS,
   SCOPE_LABELS,
+  labelOf,
   procedureLabel,
-} from "@/lib/case-labels";
+} from "@/features/cases/labels";
 import { KeyRow, Panel } from "@/components/page-ui";
-import { getCase } from "./get-case";
+import { getCase } from "@/features/cases/server/get-case";
 
 function Block({
   title,
@@ -57,7 +58,7 @@ export default async function CaseInfoPage({
       </Block>
 
       <Block title="Dossier">
-        <Row label="Prestation">{SCOPE_LABELS[c.scope] ?? c.scope}</Row>
+        <Row label="Prestation">{labelOf(SCOPE_LABELS, c.scope)}</Row>
         <Row label="Procédure">{procedureLabel(c.main_track, c.schools)}</Row>
         <Row label="Responsable">{responsible ?? "—"}</Row>
         <Row label="Créé le">{createdAt}</Row>
@@ -66,7 +67,7 @@ export default async function CaseInfoPage({
 
       <Block title="Parcours">
         <Row label="Niveau d'études actuel">
-          {LEVEL_LABELS[c.education_level] ?? c.education_level}
+          {labelOf(LEVEL_LABELS, c.education_level)}
         </Row>
         <Row label="Diplômes obtenus">
           {listOrNone(c.diplomas, DIPLOMA_LABELS)}

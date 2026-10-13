@@ -39,7 +39,13 @@ const ACTIONS: Record<Status, Action[]> = {
   ],
 };
 
-export function StatusButtons({ id, status }: { id: string; status: Status }) {
+export function CaseStatusButtons({
+  id,
+  status,
+}: {
+  id: string;
+  status: Status;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState<Action | null>(null);

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireMember } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encryptSecret } from "@/lib/crypto/secrets";
-import { logActivity } from "@/lib/audit";
+import { logActivity } from "@/lib/audit/log-activity";
 
 const emptyToUndefined = (v: unknown) =>
   typeof v === "string" && v.trim() === "" ? undefined : v;

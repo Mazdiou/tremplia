@@ -3,16 +3,11 @@ import {
   DOCUMENTS_BUCKET,
   MAX_DOCUMENT_BYTES,
   documentNameSchema,
-  documentPath,
-} from "@/lib/documents";
-import {
-  authorizeCase,
-  fail,
-  ok,
-  readJson,
-  validationError,
-} from "@/lib/documents-api";
-import { logActivity } from "@/lib/audit";
+} from "@/features/documents/schemas";
+import { documentPath } from "@/features/documents/format";
+import { authorizeCase } from "@/features/cases/server/authorize-case";
+import { fail, ok, readJson, validationError } from "@/lib/api-errors";
+import { logActivity } from "@/lib/audit/log-activity";
 
 // Étape 2 de l'envoi : le serveur vérifie le fichier réellement envoyé
 // (présent, taille, signature PDF) avant de créer la ligne.
@@ -100,7 +95,7 @@ export async function POST(
 
     return ok({ id: documentId }, 201);
   } catch (e) {
-    console.error("[documents add]", e instanceof Error ? e.message : e);
+    console.error("[documents add]", e instanceof Error ? e.name : "erreur");
     return fail("Erreur serveur", 500);
   }
 }

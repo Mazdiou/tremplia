@@ -1,38 +1,11 @@
 import { notFound } from "next/navigation";
 import { requireMember } from "@/lib/auth/require-member";
 import { createClient } from "@/lib/supabase/server";
-import { getCase } from "../get-case";
+import { getCase } from "@/features/cases/server/get-case";
+import { activityLabel } from "@/features/history/labels";
+import { dateTimeFormat } from "@/lib/dates";
 
-// Libellés lisibles. Le champ `details` du journal n'est jamais lu ni affiché.
-const ACTION_LABELS: Record<string, string> = {
-  "case.created": "a créé le dossier",
-  "case.updated": "a modifié le dossier",
-  "case.assigned": "a changé le responsable",
-  "case.closed": "a clos le dossier",
-  "case.abandoned": "a marqué le dossier comme abandonné",
-  "case.reopened": "a rouvert le dossier",
-  "pastel.credentials_updated": "a modifié le compte Pastel",
-  "pastel.password_viewed": "a affiché le mot de passe Pastel",
-  "document.added": "a ajouté un document",
-  "document.renamed": "a renommé un document",
-  "document.deleted": "a supprimé un document",
-  "document.locked": "a verrouillé un document",
-  "document.unlocked": "a déverrouillé un document",
-  "document.moved": "a déplacé un document",
-  "folder.created": "a créé un dossier de documents",
-  "folder.renamed": "a renommé un dossier de documents",
-  "folder.deleted": "a supprimé un dossier de documents",
-  "note.created": "a ajouté une note",
-  "note.updated": "a modifié une note",
-  "note.deleted": "a supprimé une note",
-};
-
-const dateFormat = new Intl.DateTimeFormat("fr-FR", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "Africa/Algiers",
-});
-
+// Le champ `details` du journal n'est jamais lu ni affiché.
 type LogRow = { id: string; actor_id: string | null; action: string; created_at: string };
 
 export default async function HistoryPage({
@@ -97,13 +70,13 @@ export default async function HistoryPage({
             <span className="font-medium">
               {(r.actor_id && names.get(r.actor_id)) || "Un ancien membre"}
             </span>{" "}
-            {ACTION_LABELS[r.action] ?? "a effectué une action"}
+            {activityLabel(r.action, "case")}
           </span>
           <time
             dateTime={r.created_at}
             className="text-xs text-muted-foreground"
           >
-            {dateFormat.format(new Date(r.created_at))}
+            {dateTimeFormat.format(new Date(r.created_at))}
           </time>
         </li>
       ))}

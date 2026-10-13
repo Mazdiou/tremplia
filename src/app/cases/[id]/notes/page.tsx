@@ -1,14 +1,9 @@
 import { notFound } from "next/navigation";
 import { requireMember } from "@/lib/auth/require-member";
 import { createClient } from "@/lib/supabase/server";
-import { getCase } from "../get-case";
-import { NotesPanel, type NoteItem } from "./notes-panel";
-
-const dateFormat = new Intl.DateTimeFormat("fr-FR", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "Africa/Algiers",
-});
+import { getCase } from "@/features/cases/server/get-case";
+import { dateTimeFormat } from "@/lib/dates";
+import { NotesPanel, type NoteItem } from "@/features/notes/components/notes-panel";
 
 const PAGE_SIZE = 200;
 
@@ -70,7 +65,7 @@ export default async function NotesPage({
     const mine = r.author_id === caller.user.id;
     let editedLabel: string | null = null;
     if (r.edited_at && r.edited_by) {
-      const when = dateFormat.format(new Date(r.edited_at));
+      const when = dateTimeFormat.format(new Date(r.edited_at));
       editedLabel =
         r.edited_by === r.author_id
           ? `modifiée le ${when}`
@@ -80,7 +75,7 @@ export default async function NotesPage({
       id: r.id,
       authorName: nameOf(r.author_id),
       content: r.content,
-      dateLabel: dateFormat.format(new Date(r.created_at)),
+      dateLabel: dateTimeFormat.format(new Date(r.created_at)),
       editedLabel,
       // Affichage seulement : la vraie règle est appliquée par la base
       canManage: isOwner || mine,

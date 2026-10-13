@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { DOCUMENTS_BUCKET } from "@/lib/documents";
-import { authorizeCase, fail, ok } from "@/lib/documents-api";
+import { DOCUMENTS_BUCKET } from "@/features/documents/schemas";
+import { authorizeCase } from "@/features/cases/server/authorize-case";
+import { fail, ok } from "@/lib/api-errors";
 
 // Lien signé valable une minute, jamais mis en cache.
 export async function POST(
@@ -38,7 +39,7 @@ export async function POST(
 
     return ok({ url: data.signedUrl });
   } catch (e) {
-    console.error("[documents open]", e instanceof Error ? e.message : e);
+    console.error("[documents open]", e instanceof Error ? e.name : "erreur");
     return fail("Erreur serveur", 500);
   }
 }

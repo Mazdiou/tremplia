@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  DIPLOMAS,
+  LANGUAGE_TESTS,
+  LEVEL_ORDER,
+  SCOPES,
+  TRACKS,
+} from "./labels";
 
 const emptyToUndefined = (v: unknown) =>
   typeof v === "string" && v.trim() === "" ? undefined : v;
@@ -27,16 +34,16 @@ const caseShape = {
     ),
   phone: z.string().trim().min(6).max(30),
   email: optionalEmail,
-  educationLevel: z.enum(["terminale", "l1", "l2", "l3", "m1", "m2"]),
+  educationLevel: z.enum(LEVEL_ORDER),
   mainTrack: z.preprocess(
     emptyToUndefined,
-    z.enum(["dap", "non_dap"]).optional(),
+    z.enum(TRACKS).optional(),
   ),
   schools: z.boolean(),
-  scope: z.enum(["application", "visa", "both"]),
+  scope: z.enum(SCOPES),
   assignedTo: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
-  languageTests: z.array(z.enum(["fr", "en"])).max(2),
-  diplomas: z.array(z.enum(["bac", "licence", "master"])).max(3),
+  languageTests: z.array(z.enum(LANGUAGE_TESTS)).max(LANGUAGE_TESTS.length),
+  diplomas: z.array(z.enum(DIPLOMAS)).max(DIPLOMAS.length),
 };
 
 function checkTrack(

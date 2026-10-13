@@ -1,18 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import {
   campaignTimeline,
-  todayInAlgiers,
   type CampaignRow,
-} from "@/lib/campaign-dates";
-
-function formatDate(value: string) {
-  return new Date(`${value}T00:00:00Z`).toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
+} from "@/features/campaigns/timeline";
+import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 
 function relative(days: number) {
   if (days < 0) return "passée";
@@ -30,7 +21,7 @@ export default async function CasesHomePage() {
     .maybeSingle();
   const campaign = data as CampaignRow | null;
   const timeline = campaign
-    ? campaignTimeline(campaign, todayInAlgiers())
+    ? campaignTimeline(campaign, todayInAppTimezone())
     : null;
 
   return (
@@ -64,7 +55,7 @@ export default async function CasesHomePage() {
                         )}
                       </span>
                       <span>
-                        {formatDate(item.date)}{" "}
+                        {formatLongDate(item.date)}{" "}
                         <span className="text-xs font-normal text-muted-foreground">
                           ({relative(item.days)})
                         </span>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireMember } from "@/lib/auth/require-member";
-import { NewCaseForm } from "./new-case-form";
+import { CaseForm } from "@/features/cases/components/case-form";
 
 export default async function NewCasePage() {
   const caller = await requireMember();
@@ -36,7 +36,8 @@ export default async function NewCasePage() {
           Retour au tableau de bord
         </Link>
       </div>
-      <NewCaseForm
+      <CaseForm
+        mode="create"
         members={members}
         currentUserId={caller.user.id}
         isOwner={isOwner}

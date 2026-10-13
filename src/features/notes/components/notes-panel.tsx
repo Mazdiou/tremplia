@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Pencil, StickyNote, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MAX_NOTE_LENGTH } from "@/lib/notes";
+import { MAX_NOTE_LENGTH } from "@/features/notes/schemas";
 import { cn } from "@/lib/utils";
 
 export type NoteItem = {

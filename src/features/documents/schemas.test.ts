@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { folderNameSchema } from "./documents";
+import { folderNameSchema } from "./schemas";
 
 describe("folderNameSchema", () => {
   it("retire les espaces autour du nom", () => {

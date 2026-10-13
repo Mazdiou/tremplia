@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_NOTE_LENGTH, noteContentSchema } from "./notes";
+import { MAX_NOTE_LENGTH, noteContentSchema } from "./schemas";
 
 describe("noteContentSchema", () => {
   it("retire les espaces et sauts de ligne autour du texte", () => {

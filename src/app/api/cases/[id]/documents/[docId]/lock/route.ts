@@ -1,12 +1,7 @@
 import { z } from "zod";
-import {
-  authorizeCase,
-  fail,
-  ok,
-  readJson,
-  validationError,
-} from "@/lib/documents-api";
-import { logActivity } from "@/lib/audit";
+import { authorizeCase } from "@/features/cases/server/authorize-case";
+import { fail, ok, readJson, validationError } from "@/lib/api-errors";
+import { logActivity } from "@/lib/audit/log-activity";
 
 // Verrouiller / déverrouiller : patron seulement. La fonction SQL
 // set_document_lock revérifie le rôle côté base.
@@ -65,7 +60,7 @@ export async function POST(
 
     return ok();
   } catch (e) {
-    console.error("[documents lock]", e instanceof Error ? e.message : e);
+    console.error("[documents lock]", e instanceof Error ? e.name : "erreur");
     return fail("Erreur serveur", 500);
   }
 }

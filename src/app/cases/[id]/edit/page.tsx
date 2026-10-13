@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireMember } from "@/lib/auth/require-member";
-import { CaseForm, type Member } from "../../case-form";
-import { getCase } from "../get-case";
+import { CaseForm, type Member } from "@/features/cases/components/case-form";
+import { getCase } from "@/features/cases/server/get-case";
 
 export default async function EditCasePage({
   params,

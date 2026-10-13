@@ -1,10 +1,11 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ActivityAction } from "./actions";
 
 type Entry = {
   agencyId: string;
   actorId: string | null;
-  action: string;
+  action: ActivityAction;
   targetType?: string;
   targetId?: string;
   caseId?: string;
@@ -29,7 +30,7 @@ export async function logActivity(
     details: e.details ?? {},
   });
   if (error) {
-    console.error("[activity_log]", error.message);
+    console.error("[activity_log]", error.code);
     return false;
   }
   return true;

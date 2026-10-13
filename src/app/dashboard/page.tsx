@@ -3,39 +3,24 @@ import { AppShell, getShellUser } from "@/components/shell/app-shell";
 import { NewCaseLink, PageHeader, Panel, StatCard } from "@/components/page-ui";
 import {
   campaignTimeline,
-  todayInAlgiers,
   type CampaignRow,
-} from "@/lib/campaign-dates";
-import { LEVEL_LABELS, LEVEL_ORDER, displayName } from "@/lib/case-labels";
+} from "@/features/campaigns/timeline";
+import { activityLabel } from "@/features/history/labels";
+import { APP_TIMEZONE, formatLongDate, todayInAppTimezone } from "@/lib/dates";
+import { LEVEL_LABELS, LEVEL_ORDER, labelOf } from "@/features/cases/labels";
+import { displayName } from "@/lib/names";
 import Link from "next/link";
 
-const ACTIVITY_LABELS: Record<string, string> = {
-  "agency.created": "a créé une agence",
-  "case.created": "a créé un dossier",
-  "case.updated": "a modifié un dossier",
-  "case.assigned": "a changé le responsable d'un dossier",
-  "case.closed": "a clos un dossier",
-  "case.abandoned": "a marqué un dossier comme abandonné",
-  "case.reopened": "a rouvert un dossier",
-  "pastel.password_viewed": "a affiché le mot de passe Pastel",
-  "pastel.credentials_updated": "a modifié les accès Pastel",
-  "document.added": "a ajouté un document",
-  "document.renamed": "a renommé un document",
-  "document.deleted": "a supprimé un document",
-  "document.locked": "a verrouillé un document",
-  "document.unlocked": "a déverrouillé un document",
-};
-
-const dayFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: "Africa/Algiers" });
+const dayFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIMEZONE });
 const timeFmt = new Intl.DateTimeFormat("fr-FR", {
-  timeZone: "Africa/Algiers",
+  timeZone: APP_TIMEZONE,
   hour: "2-digit",
   minute: "2-digit",
 });
 
 function dayKey(d: Date) {
   return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Africa/Algiers",
+    timeZone: APP_TIMEZONE,
   }).format(d);
 }
 
@@ -60,7 +45,7 @@ function activityWhen(iso: string) {
 export default async function DashboardPage() {
   const u = await getShellUser();
   const supabase = await createClient();
-  const today = todayInAlgiers();
+  const today = todayInAppTimezone();
 
   const { data: campaignData } = await supabase
     .from("campaigns")
@@ -170,15 +155,7 @@ export default async function DashboardPage() {
                 <>
                   <p className="text-lg font-semibold">{next.label}</p>
                   <p className="mt-0.5 text-muted-foreground">
-                    {new Date(`${next.date}T00:00:00Z`).toLocaleDateString(
-                      "fr-FR",
-                      {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                        timeZone: "UTC",
-                      },
-                    )}
+                    {formatLongDate(next.date)}
                   </p>
                   <p className="mt-1.5 text-sm text-accent-foreground">
                     {next.days === 0
@@ -233,7 +210,7 @@ export default async function DashboardPage() {
                         {displayName(c.first_name, c.last_name)}
                         <span className="text-muted-foreground">
                           {" · "}
-                          {LEVEL_LABELS[c.education_level] ?? c.education_level}
+                          {labelOf(LEVEL_LABELS, c.education_level)}
                         </span>
                       </span>
                       <span className="shrink-0 text-muted-foreground">
@@ -266,7 +243,7 @@ export default async function DashboardPage() {
                     <span>
                       {(a.actor_id ? actorName.get(a.actor_id) : null) ??
                         "Quelqu'un"}{" "}
-                      {ACTIVITY_LABELS[a.action] ?? a.action}
+                      {activityLabel(a.action, "agency")}
                     </span>
                     <span className="text-muted-foreground">
                       {activityWhen(a.created_at)}
