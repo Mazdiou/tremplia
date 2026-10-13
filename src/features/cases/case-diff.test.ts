@@ -1,43 +1,75 @@
 import { describe, expect, it } from "vitest";
-import { diffCase, type CaseEditable } from "./case-diff";
+import { diffCase } from "./case-diff";
+import type { CaseFieldsRecord } from "./case-record";
 
-const base: CaseEditable = {
+const base: CaseFieldsRecord = {
   first_name: "Sara",
   last_name: "Benali",
   birth_date: "2002-04-01",
   phone: "0555000000",
   email: "sara@example.com",
+  city: "Alger",
+  nationality: null,
+  secondary_contact_name: null,
+  secondary_contact_phone: null,
   education_level: "l2",
-  main_track: "dap",
-  schools: false,
-  scope: "both",
-  language_tests: ["fr", "en"],
-  diplomas: ["bac"],
-  assigned_to: null,
+  current_field: "Informatique",
+  current_institution: null,
+  diplomas: [{ type: "baccalaureate", title: null, year: 2020 }],
+  language_tests: [],
+  study_project: null,
+  career_project: null,
 };
 
 describe("diffCase", () => {
   it("ne signale rien quand rien ne change", () => {
-    expect(diffCase(base, { ...base }).fields).toEqual([]);
+    expect(diffCase(base, structuredClone(base)).fields).toEqual([]);
   });
 
-  it("ignore l'ordre et les doublons des listes", () => {
-    const next = { ...base, language_tests: ["en", "fr", "fr"] };
-    expect(diffCase(base, next).fields).toEqual([]);
+  // Non-régression : la base rend les clés JSON dans un autre ordre, ce qui
+  // faisait croire à une modification des diplômes à chaque enregistrement.
+  it("ignore l'ordre des clés des objets JSON", () => {
+    const fromDb = {
+      ...base,
+      diplomas: [{ year: 2020, type: "baccalaureate", title: null }],
+    };
+    expect(diffCase(fromDb, base).fields).toEqual([]);
   });
 
-  it("garde le nom du champ mais jamais la valeur du téléphone, de l'e-mail ni de la date de naissance", () => {
+  it("traite une valeur absente comme vide", () => {
+    expect(diffCase({ ...base, email: null }, { ...base, email: null }).fields).toEqual([]);
+  });
+
+  it("détecte un changement à l'intérieur d'une liste", () => {
+    const next = {
+      ...base,
+      diplomas: [{ type: "baccalaureate", title: null, year: 2021 }],
+    };
+    const { fields, patch } = diffCase(base, next);
+    expect(fields).toEqual(["diplomas"]);
+    expect(patch).toEqual({ diplomas: next.diplomas });
+  });
+
+  it("garde le nom du champ mais jamais une valeur personnelle", () => {
     const next = {
       ...base,
       phone: "0666111111",
       email: "autre@example.com",
       birth_date: "2001-01-01",
+      study_project: "Master en IA",
       education_level: "l3",
     };
     const { fields, changes } = diffCase(base, next);
-    expect(fields).toEqual(["birth_date", "phone", "email", "education_level"]);
-    expect(Object.keys(changes)).toEqual(["education_level"]);
-    expect(JSON.stringify(changes)).not.toContain("0666111111");
-    expect(JSON.stringify(changes)).not.toContain("autre@example.com");
+    expect(fields).toEqual([
+      "birth_date",
+      "phone",
+      "email",
+      "education_level",
+      "study_project",
+    ]);
+    expect(changes).toEqual({ education_level_from: "l2", education_level_to: "l3" });
+    for (const secret of ["0666111111", "autre@example.com", "2001-01-01", "Master en IA"]) {
+      expect(JSON.stringify(changes)).not.toContain(secret);
+    }
   });
 });

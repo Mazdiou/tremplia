@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireMember } from "@/lib/auth/require-member";
+import { toCaseDraft } from "@/features/cases/case-record";
 import { CaseForm, type Member } from "@/features/cases/components/case-form";
 import { getCase } from "@/features/cases/server/get-case";
 
@@ -9,56 +10,49 @@ export default async function EditCasePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const caller = await requireMember();
-  if (!caller) redirect("/login");
+  const member = await requireMember();
+  if (!member) redirect("/login");
 
   const { id } = await params;
   const data = await getCase(id);
-  if (!data) notFound();
-  const { c } = data;
-
-  const isOwner = caller.profile.role === "owner";
+  if (!data || !data.campaign) notFound();
+  const { c, campaign, campaignGroups, groups } = data;
 
   // Seul le patron choisit le responsable. Le responsable actuel est
   // toujours dans la liste, même s'il est devenu inactif.
   let members: Member[] = [];
-  if (isOwner) {
+  if (member.isOwner) {
     const supabase = await createClient();
-    const filter = c.assigned_to
-      ? `is_active.eq.true,id.eq.${c.assigned_to}`
-      : "is_active.eq.true";
     const { data: list } = await supabase
       .from("profiles")
-      .select("id, first_name, last_name, role, is_active")
-      .or(filter)
+      .select("id, first_name, last_name, is_active")
       .order("first_name");
-    members = (list ?? []) as Member[];
+    members = ((list ?? []) as Member[]).filter(
+      (m) => m.is_active || m.id === c.assigned_to,
+    );
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-6">
       <h2 className="text-lg font-semibold">Modifier le dossier</h2>
       <CaseForm
         key={c.id}
         mode="edit"
         caseId={c.id}
+        campaign={{
+          id: campaign.id,
+          name: campaign.name,
+          groups: campaignGroups,
+          suggestedPlatforms: campaign.suggested_platforms,
+        }}
         initial={{
-          firstName: c.first_name,
-          lastName: c.last_name,
-          birthDate: c.birth_date,
-          phone: c.phone,
-          email: c.email ?? "",
-          educationLevel: c.education_level,
-          mainTrack: c.main_track ?? "",
-          schools: c.schools,
-          scope: c.scope,
-          assignedTo: c.assigned_to ?? null,
-          diplomas: c.diplomas,
-          languageTests: c.language_tests,
+          fields: toCaseDraft(c),
+          groupIds: groups.map((g) => g.id),
+          assignedTo: c.assigned_to,
         }}
         members={members}
-        currentUserId={caller.user.id}
-        isOwner={isOwner}
+        isOwner={member.isOwner}
+        currentUserId={member.userId}
       />
     </div>
   );

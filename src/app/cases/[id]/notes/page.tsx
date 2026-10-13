@@ -26,7 +26,7 @@ export default async function NotesPage({
 
   const caller = await requireMember();
   if (!caller) notFound();
-  const isOwner = caller.profile.role === "owner";
+  const isOwner = caller.isOwner;
 
   // Lecture via le RLS : seules les notes de l'agence reviennent.
   const supabase = await createClient();
@@ -62,7 +62,7 @@ export default async function NotesPage({
   const nameOf = (userId: string) => names.get(userId) ?? "un ancien membre";
 
   const notes: NoteItem[] = rows.map((r) => {
-    const mine = r.author_id === caller.user.id;
+    const mine = r.author_id === caller.userId;
     let editedLabel: string | null = null;
     if (r.edited_at && r.edited_by) {
       const when = dateTimeFormat.format(new Date(r.edited_at));

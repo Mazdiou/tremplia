@@ -1,13 +1,13 @@
 import { z } from "zod";
+import { ApiError, dbError, ok, parseBody, safely } from "@/lib/api-errors";
+import { logActivity } from "@/lib/audit/log-activity";
+import { authorizeCase } from "@/features/cases/server/authorize-case";
+import { documentPath } from "@/features/documents/format";
 import {
   DOCUMENTS_BUCKET,
   MAX_DOCUMENT_BYTES,
   documentNameSchema,
 } from "@/features/documents/schemas";
-import { documentPath } from "@/features/documents/format";
-import { authorizeCase } from "@/features/cases/server/authorize-case";
-import { fail, ok, readJson, validationError } from "@/lib/api-errors";
-import { logActivity } from "@/lib/audit/log-activity";
 
 // Étape 2 de l'envoi : le serveur vérifie le fichier réellement envoyé
 // (présent, taille, signature PDF) avant de créer la ligne.
@@ -19,20 +19,11 @@ const schema = z.object({
   folderId: z.string().uuid().nullish(),
 });
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
+export function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  return safely("documents add", async () => {
     const { id } = await params;
     const auth = await authorizeCase(id);
-    if (!auth.ok) return auth.response;
-
-    const body = await readJson(request);
-    if (body === null) return fail("Requête invalide", 400);
-    const parsed = schema.safeParse(body);
-    if (!parsed.success) return validationError(parsed.error);
-    const { documentId, name, originalFileName, folderId } = parsed.data;
+    const { documentId, name, originalFileName, folderId } = await parseBody(request, schema);
 
     // Le chemin est recalculé ici avec l'agence de la session
     const path = documentPath(auth.agencyId, id, documentId);
@@ -40,22 +31,22 @@ export async function POST(
 
     const { data: blob, error: downloadError } = await storage.download(path);
     if (downloadError || !blob) {
-      return fail("Le fichier n'a pas été reçu. Réessayez l'envoi.", 400);
+      throw new ApiError(400, "Le fichier n'a pas été reçu. Réessayez l'envoi.");
     }
 
     const head = new Uint8Array(await blob.slice(0, 5).arrayBuffer());
     const isPdf = new TextDecoder().decode(head) === "%PDF-";
     if (blob.size < 1 || blob.size > MAX_DOCUMENT_BYTES || !isPdf) {
       await storage.remove([path]);
-      return fail(
+      throw new ApiError(
+        400,
         blob.size > MAX_DOCUMENT_BYTES
           ? "Le fichier dépasse 10 Mo"
           : "Ce fichier n'est pas un PDF valide",
-        400,
       );
     }
 
-    const { error: insertError } = await auth.admin.from("documents").insert({
+    const { error } = await auth.admin.from("documents").insert({
       id: documentId,
       agency_id: auth.agencyId,
       case_id: id,
@@ -63,39 +54,31 @@ export async function POST(
       original_file_name: originalFileName,
       storage_path: path,
       size_bytes: blob.size,
-      uploaded_by: auth.caller.user.id,
+      uploaded_by: auth.member.userId,
       folder_id: folderId ?? null,
     });
 
-    if (insertError) {
+    if (error) {
       // 23505 : déjà enregistré. Le fichier appartient alors à ce document :
       // on ne le supprime surtout pas.
-      if (insertError.code === "23505") {
-        return fail("Ce document est déjà ajouté", 409);
-      }
-      // 23503 : le dossier de rangement n'est pas un dossier de ce candidat
-      if (insertError.code === "23503") {
-        await storage.remove([path]);
-        return fail("Dossier introuvable", 404);
-      }
-      console.error("[documents add]", insertError.message);
-      await storage.remove([path]);
-      return fail("Impossible d'ajouter le document", 500);
+      if (error.code !== "23505") await storage.remove([path]);
+      throw dbError("documents add", error, {
+        "23505": "Ce document est déjà ajouté",
+        // Le dossier de rangement n'est pas un dossier de ce candidat
+        "23503": "Dossier introuvable",
+      });
     }
 
     await logActivity(auth.admin, {
       agencyId: auth.agencyId,
-      actorId: auth.caller.user.id,
+      actorId: auth.member.userId,
       action: "document.added",
       targetType: "document",
       targetId: documentId,
       caseId: id,
-      details: { name, size_bytes: blob.size },
+      details: { size_bytes: blob.size, folder_id: folderId ?? null },
     });
 
     return ok({ id: documentId }, 201);
-  } catch (e) {
-    console.error("[documents add]", e instanceof Error ? e.name : "erreur");
-    return fail("Erreur serveur", 500);
-  }
+  });
 }

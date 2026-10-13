@@ -17,7 +17,7 @@ export default async function HistoryPage({
   if (!(await getCase(id))) notFound();
 
   const caller = await requireMember();
-  if (caller?.profile.role !== "owner") {
+  if (!caller?.isOwner) {
     return (
       <p className="rounded-xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
         L&apos;historique est réservé au patron de l&apos;agence.

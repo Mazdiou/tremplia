@@ -1,8 +1,7 @@
 import "server-only";
-import { requireMember } from "@/lib/auth/require-member";
+import { requireMember, type Member } from "@/lib/auth/require-member";
 
-export async function requireOwner() {
-  const caller = await requireMember();
-  if (!caller || caller.profile.role !== "owner") return null;
-  return caller;
+export async function requireOwner(): Promise<Member | null> {
+  const member = await requireMember();
+  return member?.isOwner ? member : null;
 }

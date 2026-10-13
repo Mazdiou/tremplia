@@ -5,11 +5,11 @@ import { serverEnv } from "@/lib/env-server";
 const KEY_VERSION = 1;
 
 function getKey(): Buffer {
-  return serverEnv().pastelKey;
+  return serverEnv().externalAccountsKey;
 }
 
-// `aad` lie le texte chiffré à son dossier : une valeur copiée dans la ligne
-// d'un autre dossier ne se déchiffre pas.
+// `aad` lie le texte chiffré à son compte (agence:compte) : une valeur copiée
+// dans la ligne d'un autre compte ne se déchiffre pas.
 export function encryptSecret(plain: string, aad: string) {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", getKey(), iv);

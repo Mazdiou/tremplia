@@ -4,7 +4,7 @@ import { envError, publicEnv } from "@/lib/env";
 
 const serverSchema = z.object({
   SUPABASE_SECRET_KEY: z.string().min(1),
-  PASTEL_ENCRYPTION_KEY: z
+  EXTERNAL_ACCOUNTS_ENCRYPTION_KEY: z
     .string()
     .refine(
       (v) => Buffer.from(v, "base64").length === 32,
@@ -17,12 +17,15 @@ const serverSchema = z.object({
 export function serverEnv() {
   const parsed = serverSchema.safeParse({
     SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
-    PASTEL_ENCRYPTION_KEY: process.env.PASTEL_ENCRYPTION_KEY,
+    EXTERNAL_ACCOUNTS_ENCRYPTION_KEY: process.env.EXTERNAL_ACCOUNTS_ENCRYPTION_KEY,
   });
   if (!parsed.success) throw envError(parsed.error);
   return {
     ...publicEnv(),
     secretKey: parsed.data.SUPABASE_SECRET_KEY,
-    pastelKey: Buffer.from(parsed.data.PASTEL_ENCRYPTION_KEY, "base64"),
+    externalAccountsKey: Buffer.from(
+      parsed.data.EXTERNAL_ACCOUNTS_ENCRYPTION_KEY,
+      "base64",
+    ),
   };
 }

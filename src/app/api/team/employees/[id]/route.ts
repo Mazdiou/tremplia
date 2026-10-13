@@ -1,85 +1,51 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { requireOwner } from "@/lib/auth/require-owner";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { ApiError, dbError, ok, parseId, safely } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
-import { safely } from "@/lib/api-errors";
+import { requireApiOwner } from "@/lib/auth/require-member";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-async function removeEmployee(params: Promise<{ id: string }>) {
-  const caller = await requireOwner();
-  if (!caller) {
-    return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
-  }
+// Supprimer un employé désactivé : patron seulement. La base refuse
+// d'elle-même un patron, un compte actif, ou un compte qui a un historique
+// (dossiers, documents, notes…) : il reste alors désactivé.
+export function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  return safely("team delete", async () => {
+    const member = await requireApiOwner();
+    const id = parseId((await params).id);
+    if (id === member.userId) {
+      throw new ApiError(400, "Vous ne pouvez pas supprimer votre propre compte");
+    }
 
-  const { id } = await params;
-  if (!z.string().uuid().safeParse(id).success) {
-    return NextResponse.json(
-      { error: "Identifiant invalide" },
-      { status: 400 },
-    );
-  }
+    const admin = createAdminClient();
+    const { data: target, error: readError } = await admin
+      .from("profiles")
+      .select("role, is_active")
+      .eq("id", id)
+      .eq("agency_id", member.agencyId)
+      .maybeSingle();
+    if (readError) throw dbError("team delete read", readError);
+    if (!target) throw new ApiError(404, "Employé introuvable");
+    if (target.role !== "employee") {
+      throw new ApiError(400, "Seuls les comptes employés peuvent être supprimés");
+    }
+    if (target.is_active) {
+      throw new ApiError(400, "Désactivez d'abord ce compte avant de le supprimer");
+    }
 
-  if (id === caller.user.id) {
-    return NextResponse.json(
-      { error: "Vous ne pouvez pas supprimer votre propre compte" },
-      { status: 400 },
-    );
-  }
+    // Supprime le compte Auth ; le profil part en cascade
+    const { error } = await admin.auth.admin.deleteUser(id);
+    if (error) {
+      throw new ApiError(
+        409,
+        "Suppression impossible : ce compte a un historique. Gardez-le désactivé.",
+      );
+    }
 
-  const admin = createAdminClient();
-
-  // La cible doit appartenir à l'agence de l'appelant
-  const { data: target } = await admin
-    .from("profiles")
-    .select("id, role, is_active, first_name, last_name")
-    .eq("id", id)
-    .eq("agency_id", caller.profile.agency_id)
-    .single();
-
-  if (!target) {
-    return NextResponse.json({ error: "Employé introuvable" }, { status: 404 });
-  }
-  if (target.role !== "employee") {
-    return NextResponse.json(
-      { error: "Seuls les comptes employés peuvent être supprimés" },
-      { status: 400 },
-    );
-  }
-  if (target.is_active) {
-    return NextResponse.json(
-      { error: "Désactivez d'abord ce compte avant de le supprimer" },
-      { status: 400 },
-    );
-  }
-
-  // Supprime le compte Auth ; le profil est supprimé en cascade.
-  // Si le compte a de l'historique (phases suivantes), la base refuse.
-  const { error } = await admin.auth.admin.deleteUser(id);
-  if (error) {
-    return NextResponse.json(
-      {
-        error:
-          "Suppression impossible : ce compte a peut-être un historique. Gardez-le désactivé.",
-      },
-      { status: 409 },
-    );
-  }
-
-  await logActivity(admin, {
-    agencyId: caller.profile.agency_id,
-    actorId: caller.user.id,
-    action: "employee.deleted",
-    targetType: "profile",
-    targetId: id,
-    details: { first_name: target.first_name, last_name: target.last_name },
+    await logActivity(admin, {
+      agencyId: member.agencyId,
+      actorId: member.userId,
+      action: "employee.deleted",
+      targetType: "profile",
+      targetId: id,
+    });
+    return ok();
   });
-
-  return NextResponse.json({ ok: true });
-}
-
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  return safely("team delete", () => removeEmployee(params));
 }

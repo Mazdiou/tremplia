@@ -1,13 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { AppShell, getShellUser } from "@/components/shell/app-shell";
 import { NewCaseLink, PageHeader, Panel, StatCard } from "@/components/page-ui";
-import {
-  campaignTimeline,
-  type CampaignRow,
-} from "@/features/campaigns/timeline";
+import { countdownLabel, nextDeadline } from "@/features/campaigns/timeline";
+import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
 import { activityLabel } from "@/features/history/labels";
 import { APP_TIMEZONE, formatLongDate, todayInAppTimezone } from "@/lib/dates";
-import { LEVEL_LABELS, LEVEL_ORDER, labelOf } from "@/features/cases/labels";
+import {
+  EDUCATION_LEVELS,
+  EDUCATION_LEVEL_LABELS,
+  labelOf,
+} from "@/features/cases/labels";
 import { displayName } from "@/lib/names";
 import Link from "next/link";
 
@@ -47,51 +49,46 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const today = todayInAppTimezone();
 
-  const { data: campaignData } = await supabase
-    .from("campaigns")
-    .select("*")
-    .eq("is_current", true)
-    .maybeSingle();
-  const campaign = campaignData as (CampaignRow & { id: string }) | null;
-  const cid = campaign?.id;
+  // Toutes les campagnes actives (le choix d'une campagne arrive au Lot 5)
+  const campaigns = (await listCampaigns()).filter((c) => c.status === "active");
+  const ids = campaigns.map((c) => c.id);
+  const hasCampaigns = ids.length > 0;
 
   const count = (build: (q: ReturnType<typeof base>) => unknown) =>
-    cid ? (build(base()) as PromiseLike<{ count: number | null }>) : null;
+    hasCampaigns ? (build(base()) as PromiseLike<{ count: number | null }>) : null;
   const base = () =>
     supabase
       .from("cases")
       .select("id", { count: "exact", head: true })
-      .eq("campaign_id", cid!);
+      .in("campaign_id", ids);
 
   const weekStart = new Date();
   weekStart.setDate(weekStart.getDate() - 7);
   const weekAgo = weekStart.toISOString();
-  const [active, mine, week, ended, ...levels] = cid
+  const [active, mine, week, ended, ...levels] = hasCampaigns
     ? await Promise.all([
         count((q) => q.eq("status", "active")),
-        count((q) =>
-          q.eq("status", "active").eq("assigned_to", u.caller.user.id),
-        ),
+        count((q) => q.eq("status", "active").eq("assigned_to", u.member.userId)),
         count((q) => q.gte("created_at", weekAgo)),
         count((q) => q.in("status", ["closed", "abandoned"])),
-        ...LEVEL_ORDER.map((l) =>
+        ...EDUCATION_LEVELS.map((l) =>
           count((q) => q.eq("status", "active").eq("education_level", l)),
         ),
       ])
     : [];
   const n = (r: { count: number | null } | null | undefined) => r?.count ?? 0;
 
-  const { data: recent } = cid
+  const { data: recent } = hasCampaigns
     ? await supabase
         .from("cases")
         .select("id, first_name, last_name, education_level, created_at")
-        .eq("campaign_id", cid)
+        .in("campaign_id", ids)
         .order("created_at", { ascending: false })
         .limit(5)
     : { data: [] };
 
   // Journal : lisible par le patron seulement (règle RLS)
-  const { data: activity } = u.isOwner
+  const { data: activity } = u.member.isOwner
     ? await supabase
         .from("activity_log")
         .select("id, actor_id, action, created_at")
@@ -113,9 +110,9 @@ export default async function DashboardPage() {
     : { data: [] };
   const actorName = new Map((actors ?? []).map((a) => [a.id, a.first_name]));
 
-  const timeline = campaign ? campaignTimeline(campaign, today) : null;
-  const next = timeline?.items.find((i) => i.key === timeline.nextKey) ?? null;
-  const levelRows = LEVEL_ORDER.map((l, i) => ({ l, n: n(levels[i]) })).filter(
+  const next = nextDeadline(await listCampaignDates(campaigns), today);
+  // Les niveaux sans dossier ne s'affichent que s'ils sont courants
+  const levelRows = EDUCATION_LEVELS.map((l, i) => ({ l, n: n(levels[i]) })).filter(
     (r) => r.n > 0 || ["terminale", "l1", "l2", "l3", "m1"].includes(r.l),
   );
   const maxLevel = Math.max(1, ...levelRows.map((r) => r.n));
@@ -124,11 +121,11 @@ export default async function DashboardPage() {
     <AppShell>
       <div className="mx-auto max-w-6xl p-4 md:p-8">
         <PageHeader
-          title={`Bonjour ${u.firstName}`}
+          title={`Bonjour ${u.member.firstName}`}
           subtitle={
-            campaign
-              ? `Campagne ${campaign.label}${u.isOwner ? " · vue du patron" : ""}`
-              : "Aucune campagne en cours"
+            hasCampaigns
+              ? `${campaigns.length > 1 ? `${campaigns.length} campagnes actives` : campaigns[0].name}${u.member.isOwner ? " · vue du patron" : ""}`
+              : "Aucune campagne active"
           }
           actions={<NewCaseLink className="max-md:hidden" />}
         />
@@ -156,13 +153,10 @@ export default async function DashboardPage() {
                   <p className="text-lg font-semibold">{next.label}</p>
                   <p className="mt-0.5 text-muted-foreground">
                     {formatLongDate(next.date)}
+                    {campaigns.length > 1 ? ` · ${next.campaignName}` : ""}
                   </p>
                   <p className="mt-1.5 text-sm text-accent-foreground">
-                    {next.days === 0
-                      ? "aujourd'hui"
-                      : next.days === 1
-                        ? "demain"
-                        : `dans ${next.days} jours`}
+                    {countdownLabel(next.days)}
                   </p>
                 </>
               ) : (
@@ -181,7 +175,7 @@ export default async function DashboardPage() {
                   className="grid grid-cols-[5rem_1fr_1.5rem] items-center gap-3 text-sm"
                 >
                   <span className="text-muted-foreground">
-                    {LEVEL_LABELS[l]}
+                    {EDUCATION_LEVEL_LABELS[l]}
                   </span>
                   <span
                     className="h-1.5 rounded-full bg-primary"
@@ -210,7 +204,7 @@ export default async function DashboardPage() {
                         {displayName(c.first_name, c.last_name)}
                         <span className="text-muted-foreground">
                           {" · "}
-                          {labelOf(LEVEL_LABELS, c.education_level)}
+                          {labelOf(EDUCATION_LEVEL_LABELS, c.education_level)}
                         </span>
                       </span>
                       <span className="shrink-0 text-muted-foreground">
@@ -224,7 +218,7 @@ export default async function DashboardPage() {
           </Panel>
         </div>
 
-        {u.isOwner && (
+        {u.member.isOwner && (
           <Panel
             title="Activité récente de l'agence"
             className="mt-5 max-md:hidden"

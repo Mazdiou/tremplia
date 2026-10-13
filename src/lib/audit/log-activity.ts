@@ -1,21 +1,25 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ActivityAction } from "./actions";
+import type { ActivityAction, ActivityTarget } from "./actions";
+
+// `details` : jamais de donnée personnelle ni de secret, seulement des
+// identifiants, des noms de champs, des statuts et des nombres.
+type Detail = string | number | boolean | null | string[];
 
 type Entry = {
   agencyId: string;
   actorId: string | null;
   action: ActivityAction;
-  targetType?: string;
+  targetType?: ActivityTarget;
   targetId?: string;
   caseId?: string;
-  details?: Record<string, unknown>;
+  details?: Record<string, Detail>;
 };
 
 // Renvoie true si la ligne de journal est bien enregistrée.
-// Les appelants existants peuvent ignorer le résultat : un échec du journal
-// n'annule pas l'action déjà réussie, mais il se voit dans les logs du serveur.
-// Une action sensible (afficher un mot de passe) vérifie le résultat AVANT d'agir.
+// Un échec du journal n'annule pas une action déjà réussie (il se voit dans
+// les logs du serveur). Une action sensible (afficher un mot de passe)
+// vérifie le résultat AVANT d'agir.
 export async function logActivity(
   admin: SupabaseClient,
   e: Entry,

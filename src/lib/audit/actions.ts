@@ -6,26 +6,45 @@ export const ACTIVITY_ACTIONS = [
   "employee.deactivated",
   "employee.reactivated",
   "employee.deleted",
+  "campaign.created",
+  "campaign.imported",
+  "campaign.updated",
+  "campaign.archived",
+  "campaign.unarchived",
+  "campaign.deleted",
+  "group.created",
+  "group.renamed",
+  "group.deleted",
   "case.created",
   "case.updated",
   "case.assigned",
-  "case.closed",
-  "case.abandoned",
-  "case.reopened",
-  "pastel.credentials_updated",
-  "pastel.password_viewed",
+  "case.status_changed",
+  "case.groups_updated",
+  "external_account.saved",
+  "external_account.password_viewed",
   "document.added",
   "document.renamed",
   "document.deleted",
   "document.locked",
   "document.unlocked",
   "document.moved",
-  "folder.created",
-  "folder.renamed",
-  "folder.deleted",
+  "document_folder.created",
+  "document_folder.renamed",
+  "document_folder.deleted",
   "note.created",
   "note.updated",
   "note.deleted",
 ] as const;
 
 export type ActivityAction = (typeof ACTIVITY_ACTIONS)[number];
+
+export type ActivityTarget =
+  | "agency"
+  | "profile"
+  | "campaign"
+  | "campaign_group"
+  | "case"
+  | "external_account"
+  | "document"
+  | "document_folder"
+  | "case_note";

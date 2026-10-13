@@ -70,7 +70,7 @@ export default async function TeamPage() {
                     </StatusPill>
                   </span>
                   <div className="flex min-w-44 justify-end gap-2 max-md:w-full max-md:justify-start">
-                    {m.id !== caller.user.id && (
+                    {m.id !== caller.userId && (
                       <>
                         {m.role === "employee" && !m.is_active && (
                           <DeleteEmployeeButton

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FolderOpen, LayoutGrid, LogOut, Users } from "lucide-react";
+import { CalendarRange, FolderOpen, LayoutGrid, LogOut, Users } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 const ITEMS = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutGrid, ownerOnly: false },
   { href: "/cases", label: "Dossiers", icon: FolderOpen, ownerOnly: false },
+  { href: "/campaigns", label: "Campagnes", icon: CalendarRange, ownerOnly: false },
   { href: "/team", label: "Équipe", icon: Users, ownerOnly: true },
 ];
 

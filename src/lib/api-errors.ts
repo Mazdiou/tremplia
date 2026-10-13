@@ -1,40 +1,108 @@
 import "server-only";
 import { NextResponse } from "next/server";
-import type { z } from "zod";
+import { z } from "zod";
 
 // Réponses sans cache : elles peuvent contenir un lien signé ou un secret.
 const NO_STORE = { "Cache-Control": "no-store" };
 
-export function fail(error: string, status: number, fields?: unknown) {
-  return NextResponse.json(
-    fields ? { error, fields } : { error },
-    { status, headers: NO_STORE },
-  );
+type FieldError = { path: string; message: string };
+
+// Erreur prévue, au message français prêt à afficher (jamais de donnée
+// personnelle ni de message SQL). Levée par les fonctions serveur, changée
+// en réponse JSON par safely().
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+    readonly extra?: { code?: string; fields?: FieldError[] } & Record<
+      string,
+      unknown
+    >,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+export function fail(
+  error: string,
+  status: number,
+  extra?: Record<string, unknown>,
+) {
+  return NextResponse.json({ error, ...extra }, { status, headers: NO_STORE });
 }
 
 export function ok(body: Record<string, unknown> = { ok: true }, status = 200) {
   return NextResponse.json(body, { status, headers: NO_STORE });
 }
 
-export async function readJson(request: Request): Promise<unknown | null> {
+// Corps JSON validé par le schéma, sinon erreur 400 avec le détail par champ
+export async function parseBody<T extends z.ZodType>(
+  request: Request,
+  schema: T,
+): Promise<z.infer<T>> {
+  let body: unknown;
   try {
-    return await request.json();
+    body = await request.json();
   } catch {
-    return null;
+    throw new ApiError(400, "Requête invalide");
   }
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    const fields = parsed.error.issues.map((i) => ({
+      path: i.path.join("."),
+      message: i.message,
+    }));
+    throw new ApiError(400, fields[0]?.message ?? "Données invalides", {
+      fields,
+    });
+  }
+  return parsed.data;
 }
 
-export function validationError(error: z.ZodError) {
-  const fields = error.issues.map((i) => ({
-    path: i.path.join("."),
-    message: i.message,
-  }));
-  return fail(fields[0]?.message ?? "Données invalides", 400, fields);
+const uuid = z.string().uuid();
+
+export function parseId(value: string): string {
+  if (!uuid.safeParse(value).success) {
+    throw new ApiError(400, "Identifiant invalide");
+  }
+  return value;
 }
 
-// Enveloppe une route : toute exception devient une réponse JSON propre
-// (500 « Erreur serveur »). Seul le nom de l'erreur est écrit dans les logs,
-// jamais son message, qui pourrait contenir une donnée personnelle.
+// Codes d'erreur levés par la base (contraintes et fonctions SQL)
+const DB_ERRORS: Record<string, [number, string]> = {
+  "42501": [403, "Accès refusé"],
+  P0002: [404, "Élément introuvable"],
+  "23505": [409, "Ce nom est déjà utilisé"],
+  "55000": [409, "Campagne archivée : réactivez-la d'abord"],
+  "55006": [409, "Élément verrouillé par le patron"],
+  "2BP01": [409, "Cette campagne contient des dossiers : archivez-la plutôt"],
+  "54000": [409, "Limite atteinte"],
+  "23514": [400, "Données invalides"],
+  "23503": [400, "Données invalides"],
+  "22023": [400, "Données invalides"],
+  "22007": [400, "Date invalide"],
+  "22008": [400, "Date invalide"],
+};
+
+// Erreur de la base → ApiError au message français. `messages` précise le
+// message selon le contexte. Seul le code est écrit dans les logs.
+export function dbError(
+  label: string,
+  error: { code?: string },
+  messages: Partial<Record<string, string>> = {},
+): ApiError {
+  const known = error.code ? DB_ERRORS[error.code] : undefined;
+  if (!known) {
+    console.error(`[${label}]`, error.code ?? "erreur");
+    return new ApiError(500, "Erreur serveur");
+  }
+  return new ApiError(known[0], messages[error.code!] ?? known[1]);
+}
+
+// Enveloppe une route : une ApiError devient sa réponse, toute autre
+// exception une réponse 500. Seul le nom de l'erreur est écrit dans les
+// logs, jamais son message, qui pourrait contenir une donnée personnelle.
 export async function safely(
   label: string,
   run: () => Promise<Response>,
@@ -42,7 +110,8 @@ export async function safely(
   try {
     return await run();
   } catch (e) {
+    if (e instanceof ApiError) return fail(e.message, e.status, e.extra);
     console.error(`[${label}]`, e instanceof Error ? e.name : "erreur");
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    return fail("Erreur serveur", 500);
   }
 }

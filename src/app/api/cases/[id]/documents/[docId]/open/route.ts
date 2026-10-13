@@ -1,20 +1,16 @@
-import { z } from "zod";
-import { DOCUMENTS_BUCKET } from "@/features/documents/schemas";
+import { ApiError, dbError, ok, parseId, safely } from "@/lib/api-errors";
 import { authorizeCase } from "@/features/cases/server/authorize-case";
-import { fail, ok } from "@/lib/api-errors";
+import { DOCUMENTS_BUCKET } from "@/features/documents/schemas";
 
 // Lien signé valable une minute, jamais mis en cache.
-export async function POST(
+export function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string; docId: string }> },
 ) {
-  try {
+  return safely("documents open", async () => {
     const { id, docId } = await params;
     const auth = await authorizeCase(id);
-    if (!auth.ok) return auth.response;
-    if (!z.string().uuid().safeParse(docId).success) {
-      return fail("Identifiant invalide", 400);
-    }
+    parseId(docId);
 
     const { data: doc, error: readError } = await auth.admin
       .from("documents")
@@ -23,23 +19,17 @@ export async function POST(
       .eq("case_id", id)
       .eq("agency_id", auth.agencyId)
       .maybeSingle();
-    if (readError) {
-      console.error("[documents open] lecture", readError.message);
-      return fail("Erreur serveur", 500);
-    }
-    if (!doc) return fail("Document introuvable", 404);
+    if (readError) throw dbError("documents open read", readError);
+    if (!doc) throw new ApiError(404, "Document introuvable");
 
     const { data, error } = await auth.admin.storage
       .from(DOCUMENTS_BUCKET)
-      .createSignedUrl(doc.storage_path, 60);
+      .createSignedUrl(doc.storage_path as string, 60);
     if (error || !data) {
-      console.error("[documents open]", error?.message);
-      return fail("Impossible d'ouvrir le document", 500);
+      console.error("[documents open]", error?.name ?? "erreur");
+      throw new ApiError(500, "Impossible d'ouvrir le document");
     }
 
     return ok({ url: data.signedUrl });
-  } catch (e) {
-    console.error("[documents open]", e instanceof Error ? e.name : "erreur");
-    return fail("Erreur serveur", 500);
-  }
+  });
 }

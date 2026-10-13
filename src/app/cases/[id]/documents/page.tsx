@@ -30,7 +30,7 @@ export default async function DocumentsPage({
   if (!(await getCase(id))) notFound();
 
   const caller = await requireMember();
-  const isOwner = caller?.profile.role === "owner";
+  const isOwner = caller?.isOwner === true;
 
   // Les 4 dossiers de départ sont créés une seule fois par dossier candidat
   // (la fonction SQL est sans effet si c'est déjà fait). Un échec ne bloque
@@ -40,8 +40,8 @@ export default async function DocumentsPage({
       "ensure_default_document_folders",
       {
         p_case_id: id,
-        p_agency_id: caller.profile.agency_id,
-        p_actor_id: caller.user.id,
+        p_agency_id: caller.agencyId,
+        p_actor_id: caller.userId,
       },
     );
     if (initError) {

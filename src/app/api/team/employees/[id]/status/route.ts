@@ -1,107 +1,63 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireOwner } from "@/lib/auth/require-owner";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { ApiError, dbError, ok, parseBody, parseId, safely } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
-import { safely } from "@/lib/api-errors";
+import { requireApiOwner } from "@/lib/auth/require-member";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({ isActive: z.boolean() });
 
-async function setActive(request: Request, params: Promise<{ id: string }>) {
-  const caller = await requireOwner();
-  if (!caller) {
-    return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
-  }
+// Désactiver / réactiver un employé : patron seulement, jamais lui-même
+// (règles revérifiées par set_employee_active).
+export function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  return safely("team status", async () => {
+    const member = await requireApiOwner();
+    const id = parseId((await params).id);
+    const { isActive } = await parseBody(request, schema);
+    if (id === member.userId) {
+      throw new ApiError(400, "Vous ne pouvez pas modifier votre propre statut");
+    }
 
-  const { id } = await params;
-  if (!z.string().uuid().safeParse(id).success) {
-    return NextResponse.json(
-      { error: "Identifiant invalide" },
-      { status: 400 },
-    );
-  }
+    const admin = createAdminClient();
+    const { data: target, error: readError } = await admin
+      .from("profiles")
+      .select("is_active, role")
+      .eq("id", id)
+      .eq("agency_id", member.agencyId)
+      .maybeSingle();
+    if (readError) throw dbError("team status read", readError);
+    if (!target) throw new ApiError(404, "Employé introuvable");
+    if (target.role !== "employee") {
+      throw new ApiError(400, "Seul un compte employé peut être désactivé");
+    }
+    if (target.is_active === isActive) return ok();
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
-  }
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Données invalides" }, { status: 400 });
-  }
-  const { isActive } = parsed.data;
-
-  // Un patron ne peut pas se désactiver lui-même : l'agence garde
-  // donc toujours au moins un patron actif (l'appelant).
-  if (id === caller.user.id) {
-    return NextResponse.json(
-      { error: "Vous ne pouvez pas modifier votre propre statut" },
-      { status: 400 },
-    );
-  }
-
-  const admin = createAdminClient();
-
-  // La cible doit appartenir à l'agence de l'appelant
-  const { data: target } = await admin
-    .from("profiles")
-    .select("id, is_active, first_name, last_name")
-    .eq("id", id)
-    .eq("agency_id", caller.profile.agency_id)
-    .single();
-
-  if (!target) {
-    return NextResponse.json({ error: "Employé introuvable" }, { status: 404 });
-  }
-  if (target.is_active === isActive) {
-    return NextResponse.json({ ok: true });
-  }
-
-  // 1. Bloquer ou débloquer le compte côté Auth
-  const { error: banError } = await admin.auth.admin.updateUserById(id, {
-    ban_duration: isActive ? "none" : "876000h",
-  });
-  if (banError) {
-    return NextResponse.json(
-      { error: "Opération impossible" },
-      { status: 500 },
-    );
-  }
-
-  // 2. Mettre à jour le profil (annule le blocage Auth si ça échoue)
-  const { error: updateError } = await admin
-    .from("profiles")
-    .update({ is_active: isActive })
-    .eq("id", id)
-    .eq("agency_id", caller.profile.agency_id);
-
-  if (updateError) {
-    await admin.auth.admin.updateUserById(id, {
-      ban_duration: isActive ? "876000h" : "none",
+    // 1. Bloquer ou débloquer le compte côté Auth
+    const { error: banError } = await admin.auth.admin.updateUserById(id, {
+      ban_duration: isActive ? "none" : "876000h",
     });
-    return NextResponse.json(
-      { error: "Opération impossible" },
-      { status: 500 },
-    );
-  }
+    if (banError) throw new ApiError(500, "Opération impossible");
 
-  await logActivity(admin, {
-    agencyId: caller.profile.agency_id,
-    actorId: caller.user.id,
-    action: isActive ? "employee.reactivated" : "employee.deactivated",
-    targetType: "profile",
-    targetId: id,
-    details: { first_name: target.first_name, last_name: target.last_name },
+    // 2. Mettre à jour le profil (annule le blocage Auth si ça échoue)
+    const { error } = await admin.rpc("set_employee_active", {
+      p_agency_id: member.agencyId,
+      p_actor_id: member.userId,
+      p_employee_id: id,
+      p_active: isActive,
+    });
+    if (error) {
+      await admin.auth.admin.updateUserById(id, {
+        ban_duration: isActive ? "876000h" : "none",
+      });
+      throw dbError("team status", error, { P0002: "Employé introuvable" });
+    }
+
+    await logActivity(admin, {
+      agencyId: member.agencyId,
+      actorId: member.userId,
+      action: isActive ? "employee.reactivated" : "employee.deactivated",
+      targetType: "profile",
+      targetId: id,
+    });
+    return ok();
   });
-
-  return NextResponse.json({ ok: true });
-}
-
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  return safely("team status", () => setActive(request, params));
 }

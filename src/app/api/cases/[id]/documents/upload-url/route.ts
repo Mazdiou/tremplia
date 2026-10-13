@@ -1,13 +1,13 @@
-import { z } from "zod";
 import { randomUUID } from "node:crypto";
+import { z } from "zod";
+import { ApiError, ok, parseBody, safely } from "@/lib/api-errors";
+import { authorizeCase } from "@/features/cases/server/authorize-case";
+import { documentPath } from "@/features/documents/format";
 import {
   DOCUMENTS_BUCKET,
   MAX_DOCUMENT_BYTES,
   documentNameSchema,
 } from "@/features/documents/schemas";
-import { documentPath } from "@/features/documents/format";
-import { authorizeCase } from "@/features/cases/server/authorize-case";
-import { fail, ok, readJson, validationError } from "@/lib/api-errors";
 
 // Étape 1 de l'envoi : le serveur contrôle la demande et renvoie une URL
 // signée. Le navigateur envoie ensuite le PDF directement au stockage
@@ -27,34 +27,21 @@ const schema = z.object({
     .max(MAX_DOCUMENT_BYTES, "Le fichier dépasse 10 Mo"),
 });
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
+export function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  return safely("documents upload-url", async () => {
     const { id } = await params;
     const auth = await authorizeCase(id);
-    if (!auth.ok) return auth.response;
-
-    const body = await readJson(request);
-    if (body === null) return fail("Requête invalide", 400);
-    const parsed = schema.safeParse(body);
-    if (!parsed.success) return validationError(parsed.error);
+    await parseBody(request, schema);
 
     const documentId = randomUUID();
-    const path = documentPath(auth.agencyId, id, documentId);
-
     const { data, error } = await auth.admin.storage
       .from(DOCUMENTS_BUCKET)
-      .createSignedUploadUrl(path);
+      .createSignedUploadUrl(documentPath(auth.agencyId, id, documentId));
     if (error || !data) {
-      console.error("[documents upload-url]", error?.message);
-      return fail("Impossible de préparer l'envoi", 500);
+      console.error("[documents upload-url]", error?.name ?? "erreur");
+      throw new ApiError(500, "Impossible de préparer l'envoi");
     }
 
     return ok({ documentId, path: data.path, token: data.token });
-  } catch (e) {
-    console.error("[documents upload-url]", e instanceof Error ? e.name : "erreur");
-    return fail("Erreur serveur", 500);
-  }
+  });
 }

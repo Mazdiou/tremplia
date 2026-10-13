@@ -5,39 +5,59 @@ export type TreeCase = {
   campaign_id: string;
   first_name: string;
   last_name: string;
-  phone: string;
   education_level: string;
-  main_track: string | null;
-  schools: boolean;
   status: string;
   assigned_to: string | null;
 };
 
-const COLUMNS =
-  "id, campaign_id, first_name, last_name, phone, education_level, main_track, schools, status, assigned_to";
+export type TreeCaseGroup = { case_id: string; group_id: string };
+
+export type CampaignCases = { cases: TreeCase[]; caseGroups: TreeCaseGroup[] };
+
+const CASE_COLUMNS =
+  "id, campaign_id, first_name, last_name, education_level, status, assigned_to";
 
 // Supabase renvoie au plus 1000 lignes par requête (réglage max_rows). On lit
 // donc par pages de 500, triées sur une colonne stable, jusqu'à la dernière.
-// Utilisé par le serveur (campagne en cours) et par le navigateur (autres
-// campagnes, à l'ouverture). Lecture via le RLS dans les deux cas.
+// Utilisé par le serveur (campagne ouverte par défaut) et par le navigateur
+// (autres campagnes, à l'ouverture). Lecture via le RLS dans les deux cas.
 const PAGE_SIZE = 500;
+
+async function readAll<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: unknown; error: { message: string } | null }>,
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await page(from, from + PAGE_SIZE - 1);
+    if (error) throw new Error("lecture impossible");
+    const batch = (data ?? []) as T[];
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) return rows;
+  }
+}
 
 export async function fetchCampaignCases(
   supabase: SupabaseClient,
   campaignId: string,
-): Promise<TreeCase[]> {
-  const rows: TreeCase[] = [];
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await supabase
-      .from("cases")
-      .select(COLUMNS)
-      .eq("campaign_id", campaignId)
-      .order("id")
-      .range(from, from + PAGE_SIZE - 1);
-    if (error) throw new Error(error.message);
-    const page = (data ?? []) as TreeCase[];
-    rows.push(...page);
-    if (page.length < PAGE_SIZE) break;
-  }
-  return rows;
+): Promise<CampaignCases> {
+  const [cases, caseGroups] = await Promise.all([
+    readAll<TreeCase>((from, to) =>
+      supabase
+        .from("cases")
+        .select(CASE_COLUMNS)
+        .eq("campaign_id", campaignId)
+        .order("id")
+        .range(from, to),
+    ),
+    readAll<TreeCaseGroup>((from, to) =>
+      supabase
+        .from("case_groups")
+        .select("case_id, group_id")
+        .eq("campaign_id", campaignId)
+        .order("case_id")
+        .order("group_id")
+        .range(from, to),
+    ),
+  ]);
+  return { cases, caseGroups };
 }

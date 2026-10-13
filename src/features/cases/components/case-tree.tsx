@@ -14,17 +14,24 @@ import {
   X,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { LEVEL_LABELS, LEVEL_ORDER, labelOf } from "@/features/cases/labels";
-import { displayName } from "@/lib/names";
-import { normalizeName } from "@/lib/names";
+import {
+  EDUCATION_LEVELS,
+  EDUCATION_LEVEL_LABELS,
+  educationRank,
+  labelOf,
+} from "@/features/cases/labels";
+import { displayName, normalizeName } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import { useUiPrefs } from "@/lib/ui-prefs";
 import { createClient } from "@/lib/supabase/client";
-import { fetchCampaignCases, type TreeCase } from "@/features/cases/fetch-campaign-cases";
+import {
+  fetchCampaignCases,
+  type CampaignCases,
+  type TreeCase,
+} from "@/features/cases/fetch-campaign-cases";
+import { buildCampaignBranches, type TreeGroup } from "@/features/cases/tree";
 
-export type { TreeCase };
-
-export type TreeCampaign = { id: string; label: string; is_current: boolean };
+export type TreeCampaign = { id: string; name: string; status: string };
 
 export type TreeMember = {
   id: string;
@@ -32,17 +39,6 @@ export type TreeMember = {
   last_name: string;
   is_active: boolean;
 };
-
-// Un candidat peut apparaître dans deux dossiers (ex. DAP et École).
-const FOLDERS = [
-  { key: "dap", label: "DAP", match: (c: TreeCase) => c.main_track === "dap" },
-  {
-    key: "non_dap",
-    label: "Hors-DAP",
-    match: (c: TreeCase) => c.main_track === "non_dap",
-  },
-  { key: "schools", label: "École", match: (c: TreeCase) => c.schools },
-];
 
 const STATUS_SUFFIX: Record<string, string> = {
   closed: "clos",
@@ -58,14 +54,10 @@ function byName(a: TreeCase, b: TreeCase) {
   );
 }
 
-function levelRank(level: string) {
-  const i = LEVEL_ORDER.indexOf(level as (typeof LEVEL_ORDER)[number]);
-  return i === -1 ? 99 : i;
-}
-
 function byLevel(a: TreeCase, b: TreeCase) {
   return (
-    levelRank(a.education_level) - levelRank(b.education_level) || byName(a, b)
+    educationRank(a.education_level) - educationRank(b.education_level) ||
+    byName(a, b)
   );
 }
 
@@ -74,15 +66,15 @@ const selectClass =
 
 export function CaseTree({
   campaigns,
-  cases: initialCases,
-  loadedCampaignIds,
+  groups,
+  initialData,
   members,
   currentUserId,
 }: {
   campaigns: TreeCampaign[];
-  // Dossiers des campagnes déjà chargées par le serveur (la campagne en cours)
-  cases: TreeCase[];
-  loadedCampaignIds: string[];
+  groups: TreeGroup[];
+  // Dossiers déjà chargés par le serveur (campagne ouverte par défaut)
+  initialData: Record<string, CampaignCases>;
   members: TreeMember[];
   currentUserId: string;
 }) {
@@ -115,7 +107,7 @@ export function CaseTree({
   const width = dragWidth ?? prefs.width;
 
   // --- Autres campagnes : chargées à l'ouverture (ou pendant une recherche) ---
-  const [extra, setExtra] = useState<Record<string, TreeCase[]>>({});
+  const [extra, setExtra] = useState<Record<string, CampaignCases>>({});
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
     null,
@@ -128,9 +120,9 @@ export function CaseTree({
     if (inflight.current.has(id)) return;
     inflight.current.add(id);
     try {
-      const rows = await fetchCampaignCases(createClient(), id);
+      const data = await fetchCampaignCases(createClient(), id);
       loaded.current.add(id);
-      setExtra((e) => ({ ...e, [id]: rows }));
+      setExtra((e) => ({ ...e, [id]: data }));
       setErrors((e) => (e[id] ? { ...e, [id]: false } : e));
     } catch {
       setErrors((e) => ({ ...e, [id]: true }));
@@ -139,16 +131,19 @@ export function CaseTree({
     }
   }, []);
 
-  const cases = useMemo(
-    () => [...initialCases, ...Object.values(extra).flat()],
-    [initialCases, extra],
-  );
+  const { cases, caseGroups } = useMemo(() => {
+    const all = [...Object.values(initialData), ...Object.values(extra)];
+    return {
+      cases: all.flatMap((d) => d.cases),
+      caseGroups: all.flatMap((d) => d.caseGroups),
+    };
+  }, [initialData, extra]);
   const selectedCase = cases.find((c) => c.id === selectedId);
 
   // Après un router.refresh(), les campagnes déjà chargées sont relues
   useEffect(() => {
     for (const id of loaded.current) void load(id);
-  }, [initialCases, load]);
+  }, [initialData, load]);
 
   // Dossier ouvert dont la campagne n'est pas chargée (lien direct) : on
   // cherche sa campagne pour la charger et l'ouvrir
@@ -168,28 +163,36 @@ export function CaseTree({
 
   // --- Recherche et filtres (côté client, sur les dossiers déjà chargés) ---
   const q = normalizeName(query);
-  const qDigits = query.replace(/\D/g, "");
   const searching = q !== "";
   const filtersActive = Boolean(prefs.level || prefs.responsible || prefs.mine);
   const anyActive = searching || filtersActive;
+
+  const activeCampaigns = campaigns.filter((c) => c.status === "active");
+  // Campagnes archivées masquées, sauf réglage ou dossier ouvert dedans
+  const shownCampaigns = campaigns.filter(
+    (c) =>
+      c.status === "active" ||
+      prefs.showArchived ||
+      selectedCase?.campaign_id === c.id ||
+      selectedCampaignId === c.id,
+  );
 
   function isCampOpen(camp: TreeCampaign) {
     if (searching) return true;
     return (
       prefs.open[camp.id] ??
-      (camp.is_current ||
+      ((activeCampaigns.length === 1 && activeCampaigns[0].id === camp.id) ||
         selectedCase?.campaign_id === camp.id ||
         selectedCampaignId === camp.id)
     );
   }
-  const serverLoaded = new Set(loadedCampaignIds);
-  const isLoaded = (id: string) => serverLoaded.has(id) || id in extra;
-  const wantedKey = campaigns
-    .filter((c) => !serverLoaded.has(c.id) && isCampOpen(c))
+  const isLoaded = (id: string) => id in initialData || id in extra;
+  const wantedKey = shownCampaigns
+    .filter((c) => !(c.id in initialData) && isCampOpen(c))
     .map((c) => c.id)
     .join(",");
-  const waiting = campaigns.some((c) => !isLoaded(c.id) && !errors[c.id]);
-  const failed = campaigns.some((c) => errors[c.id]);
+  const waiting = shownCampaigns.some((c) => !isLoaded(c.id) && !errors[c.id]);
+  const failed = shownCampaigns.some((c) => errors[c.id]);
 
   useEffect(() => {
     const ids = wantedKey
@@ -201,13 +204,12 @@ export function CaseTree({
   }, [wantedKey, extra, errors, load]);
 
   function matches(c: TreeCase) {
-    if (searching) {
-      const byText =
-        normalizeName(`${c.last_name} ${c.first_name}`).includes(q) ||
-        normalizeName(`${c.first_name} ${c.last_name}`).includes(q);
-      const byPhone =
-        qDigits.length >= 3 && c.phone.replace(/\D/g, "").includes(qDigits);
-      if (!byText && !byPhone) return false;
+    if (
+      searching &&
+      !normalizeName(`${c.last_name} ${c.first_name}`).includes(q) &&
+      !normalizeName(`${c.first_name} ${c.last_name}`).includes(q)
+    ) {
+      return false;
     }
     if (prefs.level && c.education_level !== prefs.level) return false;
     if (prefs.responsible && c.assigned_to !== prefs.responsible) return false;
@@ -338,6 +340,14 @@ export function CaseTree({
               />
               Afficher clos et abandonnés
             </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={prefs.showArchived}
+                onChange={(e) => setPrefs({ showArchived: e.target.checked })}
+              />
+              Afficher les campagnes archivées
+            </label>
             <label className="flex items-center justify-between gap-2">
               Trier par
               <select
@@ -432,9 +442,9 @@ export function CaseTree({
             className={selectClass}
           >
             <option value="">Tous niveaux</option>
-            {LEVEL_ORDER.map((l) => (
+            {EDUCATION_LEVELS.map((l) => (
               <option key={l} value={l}>
-                {LEVEL_LABELS[l]}
+                {EDUCATION_LEVEL_LABELS[l]}
               </option>
             ))}
           </select>
@@ -477,9 +487,9 @@ export function CaseTree({
           aria-label="Dossiers"
           className="min-h-0 flex-1 overflow-y-auto py-1"
         >
-          {campaigns.length === 0 && (
+          {shownCampaigns.length === 0 && (
             <p className="px-3 py-2 text-sm text-muted-foreground">
-              Aucune campagne.
+              Aucune campagne active.
             </p>
           )}
           {anyActive && found.length === 0 && (
@@ -489,7 +499,7 @@ export function CaseTree({
             </p>
           )}
 
-          {campaigns.map((camp) => {
+          {shownCampaigns.map((camp) => {
             const campCases = found.filter((c) => c.campaign_id === camp.id);
             if (searching && campCases.length === 0) return null;
             const campOpen = isCampOpen(camp);
@@ -511,7 +521,10 @@ export function CaseTree({
                   ) : (
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   )}
-                  <span className="truncate">Campagne {camp.label}</span>
+                  <span className="truncate">{camp.name}</span>
+                  {camp.status === "archived" && (
+                    <span className="shrink-0 normal-case">(archivée)</span>
+                  )}
                 </button>
 
                 {campOpen && !isLoaded(camp.id) && (
@@ -534,88 +547,92 @@ export function CaseTree({
 
                 {campOpen &&
                   isLoaded(camp.id) &&
-                  FOLDERS.map((folder) => {
-                    const key = `${camp.id}:${folder.key}`;
-                    const inFolder = campCases.filter(folder.match);
-                    if (searching && inFolder.length === 0) return null;
-                    // Pendant une recherche, tout ce qui correspond est compté
-                    const count = inFolder.filter(
-                      (c) => searching || c.status === "active",
-                    ).length;
-                    const folderOpen = searching
-                      ? true
-                      : (prefs.open[key] ??
-                        inFolder.some((c) => c.id === selectedId));
-                    // Le dossier sélectionné reste visible même s'il est clos
-                    const visible = inFolder
-                      .filter(
-                        (c) =>
-                          searching ||
-                          prefs.showClosed ||
-                          c.status === "active" ||
-                          c.id === selectedId,
-                      )
-                      .sort(prefs.sortBy === "level" ? byLevel : byName);
+                  buildCampaignBranches(camp.id, groups, campCases, caseGroups).map(
+                    (branch) => {
+                      const key = branch.key;
+                      if (searching && branch.cases.length === 0) return null;
+                      // Pendant une recherche, tout ce qui correspond est compté
+                      const count = branch.cases.filter(
+                        (c) => searching || c.status === "active",
+                      ).length;
+                      const branchOpen = searching
+                        ? true
+                        : (prefs.open[key] ??
+                          branch.cases.some((c) => c.id === selectedId));
+                      // Le dossier sélectionné reste visible même s'il est clos
+                      const visible = branch.cases
+                        .filter(
+                          (c) =>
+                            searching ||
+                            prefs.showClosed ||
+                            c.status === "active" ||
+                            c.id === selectedId,
+                        )
+                        .sort(prefs.sortBy === "level" ? byLevel : byName);
 
-                    return (
-                      <div key={key}>
-                        <button
-                          type="button"
-                          aria-expanded={folderOpen}
-                          onClick={() =>
-                            setPrefs((p) => ({
-                              open: { ...p.open, [key]: !folderOpen },
-                            }))
-                          }
-                          className="flex w-full items-center gap-1 py-1.5 pr-4 pl-4 text-left text-sm font-medium hover:bg-muted/60"
-                        >
-                          {folderOpen ? (
-                            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                          )}
-                          <span className="truncate">{folder.label}</span>
-                          <span className="ml-auto text-xs text-muted-foreground tabular-nums">
-                            {count}
-                          </span>
-                        </button>
+                      return (
+                        <div key={key}>
+                          <button
+                            type="button"
+                            aria-expanded={branchOpen}
+                            onClick={() =>
+                              setPrefs((p) => ({
+                                open: { ...p.open, [key]: !branchOpen },
+                              }))
+                            }
+                            className={cn(
+                              "flex w-full items-center gap-1 py-1.5 pr-4 pl-4 text-left text-sm font-medium hover:bg-muted/60",
+                              branch.groupId === null && "text-muted-foreground",
+                            )}
+                          >
+                            {branchOpen ? (
+                              <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                            ) : (
+                              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                            )}
+                            <span className="truncate">{branch.label}</span>
+                            <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                              {count}
+                            </span>
+                          </button>
 
-                        {folderOpen &&
-                          visible.map((c) => {
-                            const isSelected = c.id === selectedId;
-                            const suffix = STATUS_SUFFIX[c.status];
-                            return (
-                              <Link
-                                key={c.id}
-                                href={`/cases/${c.id}`}
-                                aria-current={isSelected ? "page" : undefined}
-                                className={cn(
-                                  "mx-3 flex items-center gap-2 rounded-lg py-1.5 pr-2 pl-8 text-sm hover:bg-muted/60",
-                                  isSelected &&
-                                    "bg-accent font-medium text-accent-foreground",
-                                  c.status !== "active" &&
-                                    "text-muted-foreground",
-                                )}
-                              >
-                                <span className="truncate">
-                                  {displayName(c.first_name, c.last_name)}
-                                </span>
-                                {suffix && (
-                                  <span className="shrink-0 text-xs">
-                                    ({suffix})
+                          {branchOpen &&
+                            visible.map((c) => {
+                              const isSelected = c.id === selectedId;
+                              const suffix = STATUS_SUFFIX[c.status];
+                              return (
+                                <Link
+                                  key={c.id}
+                                  href={`/cases/${c.id}`}
+                                  aria-current={isSelected ? "page" : undefined}
+                                  className={cn(
+                                    "mx-3 flex items-center gap-2 rounded-lg py-1.5 pr-2 pl-8 text-sm hover:bg-muted/60",
+                                    isSelected &&
+                                      "bg-accent font-medium text-accent-foreground",
+                                    c.status !== "active" &&
+                                      "text-muted-foreground",
+                                  )}
+                                >
+                                  <span className="truncate">
+                                    {displayName(c.first_name, c.last_name)}
                                   </span>
-                                )}
-                                {prefs.showLevel && (
-                                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-                                    {labelOf(LEVEL_LABELS, c.education_level)}
-                                  </span>
-                                )}
-                              </Link>
-                            );
-                          })}
-                      </div>
-                    );
-                  })}
+                                  {suffix && (
+                                    <span className="shrink-0 text-xs">
+                                      ({suffix})
+                                    </span>
+                                  )}
+                                  {prefs.showLevel && (
+                                    <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                                      {labelOf(EDUCATION_LEVEL_LABELS, c.education_level)}
+                                    </span>
+                                  )}
+                                </Link>
+                              );
+                            })}
+                        </div>
+                      );
+                    },
+                  )}
               </div>
             );
           })}

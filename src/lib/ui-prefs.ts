@@ -11,6 +11,7 @@ export type UiPrefs = {
   open: Record<string, boolean>;
   showLevel: boolean;
   showClosed: boolean;
+  showArchived: boolean;
   sortBy: "name" | "level";
   level: string;
   responsible: string;
@@ -23,6 +24,7 @@ export const DEFAULT_PREFS: UiPrefs = {
   open: {},
   showLevel: false,
   showClosed: false,
+  showArchived: false,
   sortBy: "name",
   level: "",
   responsible: "",
@@ -44,6 +46,7 @@ function sanitize(raw: unknown): UiPrefs {
     open: r.open && typeof r.open === "object" ? r.open : d.open,
     showLevel: r.showLevel === true,
     showClosed: r.showClosed === true,
+    showArchived: r.showArchived === true,
     sortBy: r.sortBy === "level" ? "level" : "name",
     level: typeof r.level === "string" ? r.level : "",
     responsible: typeof r.responsible === "string" ? r.responsible : "",

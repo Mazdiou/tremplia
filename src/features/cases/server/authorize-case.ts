@@ -1,43 +1,26 @@
 import "server-only";
-import { z } from "zod";
-import { requireMember } from "@/lib/auth/require-member";
+import { ApiError, dbError, parseId } from "@/lib/api-errors";
+import { requireApiMember } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { fail } from "@/lib/api-errors";
 
 // Vérifie l'appelant, l'identifiant et que le dossier est bien celui de son
 // agence. La clé secrète contourne le RLS : tout filtre sur agency_id vient
 // de la session, jamais de la requête.
 export async function authorizeCase(caseId: string) {
-  const caller = await requireMember();
-  if (!caller) return { ok: false as const, response: fail("Accès refusé", 403) };
+  const member = await requireApiMember();
+  parseId(caseId);
 
-  if (!z.string().uuid().safeParse(caseId).success) {
-    return {
-      ok: false as const,
-      response: fail("Identifiant invalide", 400),
-    };
-  }
-
-  const agencyId = caller.profile.agency_id as string;
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("cases")
     .select("id")
     .eq("id", caseId)
-    .eq("agency_id", agencyId)
+    .eq("agency_id", member.agencyId)
     .maybeSingle();
 
-  if (error) {
-    console.error("[authorize case] lecture du dossier", error.code);
-    return { ok: false as const, response: fail("Erreur serveur", 500) };
-  }
-  if (!data) {
-    return { ok: false as const, response: fail("Dossier introuvable", 404) };
-  }
-  return { ok: true as const, caller, agencyId, admin };
+  if (error) throw dbError("authorize case", error);
+  if (!data) throw new ApiError(404, "Dossier introuvable");
+  return { member, admin, agencyId: member.agencyId };
 }
 
-export type AuthorizedCase = Extract<
-  Awaited<ReturnType<typeof authorizeCase>>,
-  { ok: true }
->;
+export type AuthorizedCase = Awaited<ReturnType<typeof authorizeCase>>;

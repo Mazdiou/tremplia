@@ -1,7 +1,7 @@
 # StudyFlow
 
-CRM pour les agences de démarches Campus France : dossiers d'étudiants,
-documents PDF et compte Pastel.
+CRM pour les agences de démarches d'études à l'étranger : campagnes,
+dossiers d'étudiants, documents PDF et comptes sur les plateformes externes.
 
 Next.js (App Router), React, TypeScript, Tailwind, shadcn/ui, Supabase.
 
@@ -28,8 +28,8 @@ npx supabase test db  # tests de la base (pgTAP)
 ## Variables d'environnement
 
 Voir `.env.example`. Aucune variable ne doit jamais être commitée.
-Sans `PASTEL_ENCRYPTION_KEY`, les mots de passe Pastel ne peuvent ni être
-enregistrés ni affichés ; sauvegardez cette clé hors du dépôt.
+Sans `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY`, les mots de passe des comptes externes
+ne peuvent ni être enregistrés ni affichés ; sauvegardez cette clé hors du dépôt.
 
 ## Règles du projet
 

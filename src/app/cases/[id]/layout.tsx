@@ -3,15 +3,15 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { requireMember } from "@/lib/auth/require-member";
 import {
-  LEVEL_LABELS,
+  EDUCATION_LEVEL_LABELS,
   STATUS_LABELS,
   labelOf,
-  procedureLabel,
 } from "@/features/cases/labels";
 import { displayName } from "@/lib/names";
+import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import { getCase } from "@/features/cases/server/get-case";
-import { PastelPinned } from "@/features/cases/components/pastel-pinned";
+import { ExternalAccountsPinned } from "@/features/cases/components/external-accounts-pinned";
 import { CaseStatusButtons } from "@/features/cases/components/case-status-buttons";
 import { CaseTabs } from "@/features/cases/components/case-tabs";
 
@@ -21,6 +21,27 @@ const BADGE: Record<string, string> = {
   abandoned: "bg-red-500/10 text-red-700 dark:text-red-400",
 };
 
+// Plateformes proposées pour un nouveau compte : celles suggérées par la
+// campagne, puis celles déjà utilisées dans l'agence (lecture via le RLS).
+async function platformSuggestions(fromCampaign: string[]) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("case_external_accounts")
+    .select("platform")
+    .order("updated_at", { ascending: false })
+    .limit(200);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const p of [...fromCampaign, ...(data ?? []).map((r) => r.platform as string)]) {
+    const key = p.toLocaleLowerCase("fr");
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(p);
+    }
+  }
+  return out;
+}
+
 export default async function CaseLayout({
   children,
   params,
@@ -28,19 +49,19 @@ export default async function CaseLayout({
   children: React.ReactNode;
   params: Promise<{ id: string }>;
 }) {
-  const caller = await requireMember();
-  if (!caller) redirect("/login");
+  const member = await requireMember();
+  if (!member) redirect("/login");
 
   const { id } = await params;
   const data = await getCase(id);
   if (!data) notFound();
-  const { c, responsible, campaignLabel } = data;
+  const { c, responsible, campaign, groups, externalAccounts } = data;
+  const suggestions = await platformSuggestions(campaign?.suggested_platforms ?? []);
 
   const summary = [
-    labelOf(LEVEL_LABELS, c.education_level),
-    procedureLabel(c.main_track, c.schools),
+    campaign?.name,
+    labelOf(EDUCATION_LEVEL_LABELS, c.education_level),
     responsible ? `Responsable : ${responsible}` : "Sans responsable",
-    campaignLabel ? `Campagne ${campaignLabel}` : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -72,6 +93,18 @@ export default async function CaseLayout({
                 </span>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
+              {groups.length > 0 && (
+                <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Groupes">
+                  {groups.map((g) => (
+                    <li
+                      key={g.id}
+                      className="rounded-full border bg-card px-2 py-0.5 text-xs"
+                    >
+                      {g.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Link
@@ -84,14 +117,14 @@ export default async function CaseLayout({
             </div>
           </div>
 
-          <PastelPinned
+          <ExternalAccountsPinned
             key={c.id}
             caseId={c.id}
-            account={c.pastel_account}
-            email={c.pastel_email}
+            accounts={externalAccounts}
+            suggestions={suggestions}
           />
 
-          <CaseTabs id={c.id} isOwner={caller.profile.role === "owner"} />
+          <CaseTabs id={c.id} isOwner={member.isOwner} />
         </div>
       </header>
 

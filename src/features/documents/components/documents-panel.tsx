@@ -73,7 +73,7 @@ export function DocumentsPanel({
 }) {
   const router = useRouter();
   const base = `/api/cases/${caseId}/documents`;
-  const foldersBase = `/api/cases/${caseId}/folders`;
+  const foldersBase = `/api/cases/${caseId}/document-folders`;
   const inputRef = useRef<HTMLInputElement>(null);
   // La page défile quand on glisse près du haut ou du bas du contenu
   const rootRef = useRef<HTMLDivElement>(null);

@@ -1,30 +1,39 @@
 import { daysUntil } from "@/lib/dates";
 
-export const CAMPAIGN_DATES = [
-  { key: "opens_on", label: "Ouverture des candidatures" },
-  { key: "deadline_non_dap", label: "Date limite hors-DAP" },
-  { key: "deadline_dap", label: "Date limite DAP" },
-  {
-    key: "deadline_pro",
-    label: "Date limite licences professionnelles et BUT",
-  },
-  { key: "interviews_end_on", label: "Fin des entretiens" },
-  { key: "institutions_answer_deadline", label: "Réponses des établissements" },
-  { key: "final_choice_deadline", label: "Choix définitif" },
-] as const;
+export type CampaignDate = {
+  campaignId: string;
+  campaignName: string;
+  label: string;
+  date: string; // AAAA-MM-JJ
+};
 
-type DateKey = (typeof CAMPAIGN_DATES)[number]["key"];
+export type TimelineItem = CampaignDate & { days: number };
 
-export type CampaignRow = { label: string } & Partial<
-  Record<DateKey, string | null>
->;
+// Dates triées (puis par libellé), avec le nombre de jours restants
+// (négatif une fois la date passée).
+export function timeline(dates: CampaignDate[], todayISO: string): TimelineItem[] {
+  return dates
+    .map((d) => ({ ...d, days: daysUntil(d.date, todayISO) }))
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) ||
+        a.campaignName.localeCompare(b.campaignName, "fr") ||
+        a.label.localeCompare(b.label, "fr"),
+    );
+}
 
-export function campaignTimeline(campaign: CampaignRow, todayISO: string) {
-  const items = CAMPAIGN_DATES.flatMap(({ key, label }) => {
-    const date = campaign[key];
-    return date ? [{ key, label, date, days: daysUntil(date, todayISO) }] : [];
-  }).sort((a, b) => a.date.localeCompare(b.date));
+// Prochaine échéance (aujourd'hui compris) parmi toutes les campagnes données
+export function nextDeadline(
+  dates: CampaignDate[],
+  todayISO: string,
+): TimelineItem | null {
+  return timeline(dates, todayISO).find((d) => d.days >= 0) ?? null;
+}
 
-  const nextKey = items.find((i) => i.days >= 0)?.key ?? null;
-  return { items, nextKey };
+// « aujourd'hui », « demain », « J-12 », « passée »
+export function countdownLabel(days: number) {
+  if (days < 0) return "passée";
+  if (days === 0) return "aujourd'hui";
+  if (days === 1) return "demain";
+  return `J-${days}`;
 }

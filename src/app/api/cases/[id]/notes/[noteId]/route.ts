@@ -1,22 +1,16 @@
 import { z } from "zod";
-import { noteContentSchema } from "@/features/notes/schemas";
-import {
-  authorizeCase,
-  type AuthorizedCase,
-} from "@/features/cases/server/authorize-case";
-import { fail, ok, readJson, validationError } from "@/lib/api-errors";
+import { ApiError, dbError, ok, parseBody, parseId, safely } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
+import { authorizeCase, type AuthorizedCase } from "@/features/cases/server/authorize-case";
+import { noteContentSchema } from "@/features/notes/schemas";
 
 type Ctx = { params: Promise<{ id: string; noteId: string }> };
 
 // Modifier ou supprimer : l'auteur de la note, ou un patron. La règle est
 // appliquée par les fonctions SQL update_case_note et delete_case_note ;
-// les routes ne font que vérifier que la note appartient bien à ce dossier.
-async function noteInCase(
-  auth: AuthorizedCase,
-  caseId: string,
-  noteId: string,
-) {
+// les routes vérifient seulement que la note appartient bien à ce dossier.
+async function assertNoteInCase(auth: AuthorizedCase, caseId: string, noteId: string) {
+  parseId(noteId);
   const { data, error } = await auth.admin
     .from("case_notes")
     .select("id")
@@ -24,104 +18,69 @@ async function noteInCase(
     .eq("case_id", caseId)
     .eq("agency_id", auth.agencyId)
     .maybeSingle();
-  return { found: !!data, error };
+  if (error) throw dbError("notes read", error);
+  if (!data) throw new ApiError(404, "Note introuvable");
 }
 
-export async function PATCH(request: Request, { params }: Ctx) {
-  try {
+export function PATCH(request: Request, { params }: Ctx) {
+  return safely("notes update", async () => {
     const { id, noteId } = await params;
     const auth = await authorizeCase(id);
-    if (!auth.ok) return auth.response;
-    if (!z.string().uuid().safeParse(noteId).success) {
-      return fail("Identifiant invalide", 400);
-    }
-
-    const body = await readJson(request);
-    if (body === null) return fail("Requête invalide", 400);
-    const parsed = z.object({ content: noteContentSchema }).safeParse(body);
-    if (!parsed.success) return validationError(parsed.error);
-
-    const check = await noteInCase(auth, id, noteId);
-    if (check.error) {
-      console.error("[notes update] lecture", check.error.code);
-      return fail("Erreur serveur", 500);
-    }
-    if (!check.found) return fail("Note introuvable", 404);
+    const { content } = await parseBody(request, z.object({ content: noteContentSchema }));
+    await assertNoteInCase(auth, id, noteId);
 
     const { error } = await auth.admin.rpc("update_case_note", {
       p_note_id: noteId,
       p_agency_id: auth.agencyId,
-      p_actor_id: auth.caller.user.id,
-      p_content: parsed.data.content,
+      p_actor_id: auth.member.userId,
+      p_content: content,
     });
     if (error) {
-      if (error.code === "42501") {
-        return fail("Vous ne pouvez modifier que vos propres notes", 403);
-      }
-      if (error.code === "P0002") return fail("Note introuvable", 404);
-      if (error.code === "23514") return fail("Note invalide", 400);
-      console.error("[notes update]", error.code);
-      return fail("Impossible de modifier la note", 500);
+      throw dbError("notes update", error, {
+        "42501": "Vous ne pouvez modifier que vos propres notes",
+        P0002: "Note introuvable",
+        "23514": "Note invalide",
+      });
     }
 
     await logActivity(auth.admin, {
       agencyId: auth.agencyId,
-      actorId: auth.caller.user.id,
+      actorId: auth.member.userId,
       action: "note.updated",
       targetType: "case_note",
       targetId: noteId,
       caseId: id,
     });
-
     return ok();
-  } catch (e) {
-    console.error("[notes update]", e instanceof Error ? e.name : "erreur");
-    return fail("Erreur serveur", 500);
-  }
+  });
 }
 
-export async function DELETE(_request: Request, { params }: Ctx) {
-  try {
+export function DELETE(_request: Request, { params }: Ctx) {
+  return safely("notes delete", async () => {
     const { id, noteId } = await params;
     const auth = await authorizeCase(id);
-    if (!auth.ok) return auth.response;
-    if (!z.string().uuid().safeParse(noteId).success) {
-      return fail("Identifiant invalide", 400);
-    }
-
-    const check = await noteInCase(auth, id, noteId);
-    if (check.error) {
-      console.error("[notes delete] lecture", check.error.code);
-      return fail("Erreur serveur", 500);
-    }
-    if (!check.found) return fail("Note introuvable", 404);
+    await assertNoteInCase(auth, id, noteId);
 
     const { error } = await auth.admin.rpc("delete_case_note", {
       p_note_id: noteId,
       p_agency_id: auth.agencyId,
-      p_actor_id: auth.caller.user.id,
+      p_actor_id: auth.member.userId,
     });
     if (error) {
-      if (error.code === "42501") {
-        return fail("Vous ne pouvez supprimer que vos propres notes", 403);
-      }
-      if (error.code === "P0002") return fail("Note introuvable", 404);
-      console.error("[notes delete]", error.code);
-      return fail("Impossible de supprimer la note", 500);
+      throw dbError("notes delete", error, {
+        "42501": "Vous ne pouvez supprimer que vos propres notes",
+        P0002: "Note introuvable",
+      });
     }
 
     await logActivity(auth.admin, {
       agencyId: auth.agencyId,
-      actorId: auth.caller.user.id,
+      actorId: auth.member.userId,
       action: "note.deleted",
       targetType: "case_note",
       targetId: noteId,
       caseId: id,
     });
-
     return ok();
-  } catch (e) {
-    console.error("[notes delete]", e instanceof Error ? e.name : "erreur");
-    return fail("Erreur serveur", 500);
-  }
+  });
 }

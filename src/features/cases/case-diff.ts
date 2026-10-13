@@ -1,58 +1,41 @@
+import { CASE_FIELD_COLUMNS, type CaseFieldsRecord } from "./case-record";
+
 // Compare un dossier et ses nouvelles valeurs : ne renvoie que ce qui change.
 // Fonction pure, sans accès à la base.
 
-export type CaseEditable = {
-  first_name: string;
-  last_name: string;
-  birth_date: string;
-  phone: string;
-  email: string | null;
-  education_level: string;
-  main_track: string | null;
-  schools: boolean;
-  scope: string;
-  language_tests: string[];
-  diplomas: string[];
-  assigned_to: string | null;
-};
+// Seuls ces champs gardent leur ancienne et nouvelle valeur dans le journal.
+// Pour tous les autres (identité, contact, parcours, projets), le journal ne
+// garde que le nom du champ, jamais la valeur.
+const LOGGABLE_VALUES = new Set<string>(["education_level"]);
 
-const KEYS = [
-  "first_name",
-  "last_name",
-  "birth_date",
-  "phone",
-  "email",
-  "education_level",
-  "main_track",
-  "schools",
-  "scope",
-  "language_tests",
-  "diplomas",
-  "assigned_to",
-] as const satisfies readonly (keyof CaseEditable)[];
+// Texte comparable d'une valeur JSON, quel que soit l'ordre des clés des
+// objets : la base (jsonb) ne rend pas les clés dans l'ordre où on les écrit.
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${canonical((value as Record<string, unknown>)[k])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value ?? null);
+}
 
-// Pour ces champs, le journal garde le nom du champ mais jamais la valeur.
-const PERSONAL = new Set<string>(["birth_date", "phone", "email"]);
-
-const norm = (a: string[]) => [...new Set(a)].sort();
-
-export function diffCase(current: CaseEditable, next: CaseEditable) {
-  const patch: Record<string, unknown> = {};
+export function diffCase(current: CaseFieldsRecord, next: CaseFieldsRecord) {
+  const patch: Partial<CaseFieldsRecord> = {};
   const fields: string[] = [];
-  const changes: Record<string, { from: unknown; to: unknown }> = {};
+  const changes: Record<string, string | null> = {};
 
-  for (const k of KEYS) {
-    const a = current[k];
-    const b = next[k];
-    const same =
-      Array.isArray(a) && Array.isArray(b)
-        ? norm(a).join("|") === norm(b).join("|")
-        : a === b;
-    if (same) continue;
+  for (const k of CASE_FIELD_COLUMNS) {
+    // Les listes JSON se comparent par leur contenu (ordre des éléments compris)
+    if (canonical(current[k]) === canonical(next[k])) continue;
 
-    patch[k] = Array.isArray(b) ? norm(b) : b;
+    Object.assign(patch, { [k]: next[k] });
     fields.push(k);
-    if (!PERSONAL.has(k)) changes[k] = { from: a, to: b };
+    if (LOGGABLE_VALUES.has(k)) {
+      changes[`${k}_from`] = current[k] as string;
+      changes[`${k}_to`] = next[k] as string;
+    }
   }
 
   return { patch, fields, changes };

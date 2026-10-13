@@ -74,7 +74,6 @@ async function register(request: Request) {
     action: "agency.created",
     targetType: "agency",
     targetId: agencyId as string,
-    details: { agency_name: d.agencyName },
   });
 
   return NextResponse.json({ ok: true }, { status: 201 });
