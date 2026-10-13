@@ -1,10 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  experimental: {
-    agentFeedback: true,
-  },
+  // Pas de fichier AGENTS.md généré à la racine quand un assistant IA lance
+  // `next dev`.
+  agentRules: false,
   turbopack: {
     rules: {
       "*.css": {

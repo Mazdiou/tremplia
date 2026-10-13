@@ -29,3 +29,20 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+
+  # Tests de la base (pgTAP) sur un Supabase local démarré dans la CI :
+  # migrations, droits, RLS et règles patron / employé.
+  base:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Démarrer Supabase
+        run: npx supabase start
+      - name: Tests pgTAP
+        run: npx supabase test db
