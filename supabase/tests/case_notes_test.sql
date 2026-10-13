@@ -29,14 +29,17 @@ select
   (select agency_id from public.profiles
     where id = '11111111-1111-1111-1111-111111111111') as agency_a,
   (select agency_id from public.profiles
-    where id = '33333333-3333-3333-3333-333333333333') as agency_b,
-  (select id from public.campaigns where is_current) as campaign;
+    where id = '33333333-3333-3333-3333-333333333333') as agency_b;
+grant select on ctx to public;
 
-insert into public.cases (id, agency_id, campaign_id, created_by, first_name, last_name,
-  birth_date, phone, education_level, main_track, scope, pastel_account)
-select 'cccccccc-cccc-cccc-cccc-cccccccccccc', agency_a, campaign,
+select public.create_case('cccccccc-cccc-cccc-cccc-cccccccccccc', agency_a,
   '11111111-1111-1111-1111-111111111111',
-  'Karim', 'A-case', '2004-05-01', '0555111111', 'l3', 'non_dap', 'both', 'to_create'
+  public.create_campaign(agency_a, '11111111-1111-1111-1111-111111111111',
+    'Campagne A', null, '{}', '[]', '[]', '{}'),
+  null,
+  '{"first_name": "Karim", "last_name": "A-case", "birth_date": "2004-05-01",
+    "phone": "0555111111", "education_level": "l3"}',
+  null, null, null)
 from ctx;
 
 -- Ajouter une note

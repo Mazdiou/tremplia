@@ -1,10 +1,10 @@
 -- Migration : case_notes
 -- Notes internes d'un dossier candidat (visibles par toute l'agence).
--- Lecture : utilisateurs actifs de l'agence (RLS).
--- Écriture : uniquement par les fonctions ci-dessous (routes serveur).
+-- Lecture : membres actifs de l'agence (RLS).
+-- Écriture : uniquement par les fonctions ci-dessous (routes serveur, et
+-- create_case pour la note initiale).
 -- Règle : un employé ne modifie et ne supprime que SES notes ; un patron
--- actif de l'agence peut tout modifier et tout supprimer. La règle est
--- vérifiée ici, dans la base, pas seulement dans les routes.
+-- actif de l'agence peut tout modifier et tout supprimer.
 -- Suppression définitive ; la trace reste dans le journal (sans le contenu).
 
 create table public.case_notes (
@@ -13,19 +13,18 @@ create table public.case_notes (
   case_id uuid not null,
   author_id uuid not null,
 
-  -- Au moins un caractère visible, 5000 au maximum
+  -- Au moins un caractère visible, 5000 au plus
   content text not null check (content ~ '\S' and length(content) <= 5000),
 
-  -- Renseignés dès que la note a été modifiée (par l'auteur ou par un patron)
+  -- Renseignés dès que la note a été modifiée (par l'auteur ou un patron)
   edited_at timestamptz,
   edited_by uuid,
 
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
 
-  -- Le dossier et les profils appartiennent à la même agence que la note.
-  -- Pas de suppression en cascade : un employé qui a écrit ou modifié une note
-  -- ne peut plus être supprimé (désactivation seulement).
+  -- Dossier et profils de la même agence que la note. Pas de cascade : un
+  -- employé qui a écrit ou modifié une note ne peut plus être supprimé.
   constraint case_notes_case_fk foreign key (case_id, agency_id)
     references public.cases (id, agency_id),
   constraint case_notes_author_fk foreign key (author_id, agency_id)
@@ -37,13 +36,15 @@ create table public.case_notes (
     check ((edited_at is null) = (edited_by is null))
 );
 
+-- Notes d'un dossier, de la plus récente à la plus ancienne
 create index case_notes_case_idx
   on public.case_notes (agency_id, case_id, created_at desc);
+-- Clés étrangères vers profiles
 create index case_notes_author_idx on public.case_notes (author_id);
 create index case_notes_edited_by_idx on public.case_notes (edited_by);
 
 -- Colonnes non modifiables, date de modification
-create or replace function public.case_notes_before_update()
+create function public.case_notes_before_update()
 returns trigger
 language plpgsql
 set search_path = ''
@@ -69,17 +70,10 @@ create trigger case_notes_before_update
 
 alter table public.case_notes enable row level security;
 
-revoke all on public.case_notes from anon, authenticated;
-grant select on public.case_notes to authenticated;
--- Le serveur lit ; il écrit seulement par les trois fonctions plus bas.
-grant select on public.case_notes to service_role;
+-- Fonctions (serveur seulement) ---------------------------------------------
 
-create policy "case_notes_select_same_agency" on public.case_notes
-  for select to authenticated
-  using (agency_id = public.current_agency_id());
-
--- Ajouter une note : tout utilisateur actif de l'agence --------------------
-create or replace function public.create_case_note(
+-- Ajouter une note : tout membre actif de l'agence
+create function public.create_case_note(
   p_case_id uuid,
   p_agency_id uuid,
   p_actor_id uuid,
@@ -93,12 +87,7 @@ as $$
 declare
   v_id uuid;
 begin
-  if not exists (
-    select 1 from public.profiles
-    where id = p_actor_id and agency_id = p_agency_id and is_active
-  ) then
-    raise exception 'Utilisateur invalide' using errcode = '42501';
-  end if;
+  perform public.require_active_member(p_actor_id, p_agency_id);
 
   if not exists (
     select 1 from public.cases
@@ -115,52 +104,9 @@ begin
 end;
 $$;
 
--- Modifier une note : son auteur, ou un patron actif de l'agence ------------
-create or replace function public.update_case_note(
-  p_note_id uuid,
-  p_agency_id uuid,
-  p_actor_id uuid,
-  p_content text
-)
-returns void
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_role text;
-  v_author uuid;
-begin
-  select role into v_role
-  from public.profiles
-  where id = p_actor_id and agency_id = p_agency_id and is_active;
-  if not found then
-    raise exception 'Utilisateur invalide' using errcode = '42501';
-  end if;
-
-  select author_id into v_author
-  from public.case_notes
-  where id = p_note_id and agency_id = p_agency_id
-  for update;
-  if not found then
-    raise exception 'Note introuvable' using errcode = 'P0002';
-  end if;
-
-  if v_author <> p_actor_id and v_role <> 'owner' then
-    raise exception 'Vous ne pouvez modifier que vos propres notes'
-      using errcode = '42501';
-  end if;
-
-  update public.case_notes
-  set content = p_content,
-      edited_at = now(),
-      edited_by = p_actor_id
-  where id = p_note_id and agency_id = p_agency_id;
-end;
-$$;
-
--- Supprimer une note : son auteur, ou un patron actif de l'agence -----------
-create or replace function public.delete_case_note(
+-- Vérifie que l'acteur peut modifier ou supprimer la note (son auteur, ou
+-- un patron) et la verrouille jusqu'à la fin de la transaction.
+create function public.lock_case_note_for(
   p_note_id uuid,
   p_agency_id uuid,
   p_actor_id uuid
@@ -174,12 +120,7 @@ declare
   v_role text;
   v_author uuid;
 begin
-  select role into v_role
-  from public.profiles
-  where id = p_actor_id and agency_id = p_agency_id and is_active;
-  if not found then
-    raise exception 'Utilisateur invalide' using errcode = '42501';
-  end if;
+  v_role := public.require_active_member(p_actor_id, p_agency_id);
 
   select author_id into v_author
   from public.case_notes
@@ -190,24 +131,68 @@ begin
   end if;
 
   if v_author <> p_actor_id and v_role <> 'owner' then
-    raise exception 'Vous ne pouvez supprimer que vos propres notes'
+    raise exception 'Vous ne pouvez modifier ou supprimer que vos propres notes'
       using errcode = '42501';
   end if;
+end;
+$$;
+
+-- Modifier une note : son auteur, ou un patron actif de l'agence
+create function public.update_case_note(
+  p_note_id uuid,
+  p_agency_id uuid,
+  p_actor_id uuid,
+  p_content text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.lock_case_note_for(p_note_id, p_agency_id, p_actor_id);
+
+  update public.case_notes
+  set content = p_content,
+      edited_at = now(),
+      edited_by = p_actor_id
+  where id = p_note_id and agency_id = p_agency_id;
+end;
+$$;
+
+-- Supprimer une note : son auteur, ou un patron actif de l'agence
+create function public.delete_case_note(
+  p_note_id uuid,
+  p_agency_id uuid,
+  p_actor_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.lock_case_note_for(p_note_id, p_agency_id, p_actor_id);
 
   delete from public.case_notes
   where id = p_note_id and agency_id = p_agency_id;
 end;
 $$;
 
-revoke all on function public.create_case_note(uuid, uuid, uuid, text)
-  from public, anon, authenticated;
-revoke all on function public.update_case_note(uuid, uuid, uuid, text)
-  from public, anon, authenticated;
-revoke all on function public.delete_case_note(uuid, uuid, uuid)
-  from public, anon, authenticated;
+-- Droits --------------------------------------------------------------------
+
+revoke execute on all functions in schema public from public;
+
 grant execute on function public.create_case_note(uuid, uuid, uuid, text)
   to service_role;
 grant execute on function public.update_case_note(uuid, uuid, uuid, text)
   to service_role;
 grant execute on function public.delete_case_note(uuid, uuid, uuid)
   to service_role;
+
+-- Lecture seule : le serveur écrit seulement par les fonctions ci-dessus
+grant select on public.case_notes to authenticated, service_role;
+
+create policy "case_notes_select_same_agency" on public.case_notes
+  for select to authenticated
+  using (agency_id = public.current_agency_id());
