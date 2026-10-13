@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, X } from "lucide-react";
+import { CheckCircle2, Plus, Trash2, X } from "lucide-react";
+import { FormActions, FormSection } from "@/components/page-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FieldError, TextField } from "@/features/cases/components/form-fields";
+import { FieldError, ListHeader, TextField } from "@/features/cases/components/form-fields";
 import {
   MAX_CAMPAIGN_DATES,
   MAX_CAMPAIGN_GROUPS,
@@ -20,6 +21,25 @@ export type CampaignSettingsDraft = {
   infos: { label: string; value: string }[];
   suggestedPlatforms: string[];
 };
+
+const DATE_GRID = "sm:grid-cols-[1fr_11rem_2.5rem]";
+const INFO_GRID = "sm:grid-cols-[1fr_2fr_2.5rem]";
+
+function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      aria-label={label}
+      title={label}
+      className="text-muted-foreground hover:text-destructive max-sm:mt-6"
+      onClick={onClick}
+    >
+      <Trash2 />
+    </Button>
+  );
+}
 
 // Création (avec les groupes de départ) ou modification des réglages d'une
 // campagne. Réservé au patron ; la base le revérifie.
@@ -89,55 +109,116 @@ export function CampaignSettingsForm({
   }
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-6">
-      <TextField
-        id="campaign-name"
-        label="Nom de la campagne"
-        required
-        maxLength={100}
-        value={draft.name}
-        onChange={(name) => patch({ name })}
-        error={errors.name}
-      />
+    <form onSubmit={submit} noValidate className="space-y-8">
+      <FormSection
+        title="Général"
+        description="Le nom de la campagne et les plateformes proposées pour les comptes des candidats."
+      >
+        <TextField
+          id="campaign-name"
+          label="Nom de la campagne"
+          required
+          maxLength={100}
+          placeholder="Campus France 2026/2027"
+          value={draft.name}
+          onChange={(name) => patch({ name })}
+          error={errors.name}
+        />
 
-      <fieldset className="space-y-3">
-        <legend className="text-sm font-medium">Dates</legend>
-        {draft.dates.map((d, i) => (
-          <div key={i} className="grid items-start gap-3 sm:grid-cols-[1fr_10rem_auto]">
-            <TextField
-              id={`date-${i}-label`}
-              label="Libellé"
-              required
-              maxLength={100}
-              value={d.label}
-              onChange={(label) =>
-                patch({ dates: draft.dates.map((x, j) => (j === i ? { ...x, label } : x)) })
-              }
-              error={errors[`dates.${i}.label`]}
-            />
-            <TextField
-              id={`date-${i}-date`}
-              label="Date"
-              type="date"
-              required
-              value={d.date}
-              onChange={(date) =>
-                patch({ dates: draft.dates.map((x, j) => (j === i ? { ...x, date } : x)) })
-              }
-              error={errors[`dates.${i}.date`]}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="mt-6"
-              aria-label={`Retirer la date ${i + 1}`}
-              onClick={() => patch({ dates: draft.dates.filter((_, j) => j !== i) })}
-            >
-              <Trash2 />
-            </Button>
+        <div className="space-y-2">
+          <Label htmlFor="platform-new">Plateformes suggérées</Label>
+          {draft.suggestedPlatforms.length > 0 && (
+            <ul className="flex flex-wrap gap-1.5">
+              {draft.suggestedPlatforms.map((p) => (
+                <li
+                  key={p}
+                  className="flex items-center gap-1 rounded-full border bg-muted/50 py-0.5 pr-1 pl-3 text-sm"
+                >
+                  {p}
+                  <button
+                    type="button"
+                    aria-label={`Retirer ${p}`}
+                    className="grid size-5 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                    onClick={() =>
+                      patch({
+                        suggestedPlatforms: draft.suggestedPlatforms.filter((x) => x !== p),
+                      })
+                    }
+                  >
+                    <X className="size-3" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {draft.suggestedPlatforms.length < MAX_SUGGESTED_PLATFORMS && (
+            <div className="flex max-w-sm gap-2">
+              <Input
+                id="platform-new"
+                placeholder="Pastel, Parcoursup…"
+                value={platformInput}
+                maxLength={80}
+                onChange={(e) => setPlatformInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addPlatform();
+                  }
+                }}
+              />
+              <Button type="button" variant="outline" onClick={addPlatform}>
+                Ajouter
+              </Button>
+            </div>
+          )}
+          <FieldError message={errors.suggestedPlatforms} />
+        </div>
+      </FormSection>
+
+      <FormSection
+        title="Dates"
+        description="Échéances de la campagne : la plus proche s'affiche sur le tableau de bord."
+      >
+        {draft.dates.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aucune date pour le moment.</p>
+        ) : (
+          <div className="space-y-3">
+            <ListHeader columns={["Libellé", "Date", ""]} className={DATE_GRID} />
+            {draft.dates.map((d, i) => (
+              <div key={i} className={`grid items-start gap-3 ${DATE_GRID}`}>
+                <TextField
+                  id={`date-${i}-label`}
+                  label="Libellé"
+                  hideLabel
+                  required
+                  maxLength={100}
+                  placeholder="Date limite…"
+                  value={d.label}
+                  onChange={(label) =>
+                    patch({ dates: draft.dates.map((x, j) => (j === i ? { ...x, label } : x)) })
+                  }
+                  error={errors[`dates.${i}.label`]}
+                />
+                <TextField
+                  id={`date-${i}-date`}
+                  label="Date"
+                  hideLabel
+                  type="date"
+                  required
+                  value={d.date}
+                  onChange={(date) =>
+                    patch({ dates: draft.dates.map((x, j) => (j === i ? { ...x, date } : x)) })
+                  }
+                  error={errors[`dates.${i}.date`]}
+                />
+                <RemoveButton
+                  label={`Retirer la date ${i + 1}`}
+                  onClick={() => patch({ dates: draft.dates.filter((_, j) => j !== i) })}
+                />
+              </div>
+            ))}
           </div>
-        ))}
+        )}
         {draft.dates.length < MAX_CAMPAIGN_DATES && (
           <Button
             type="button"
@@ -148,46 +229,53 @@ export function CampaignSettingsForm({
             <Plus /> Ajouter une date
           </Button>
         )}
-      </fieldset>
+      </FormSection>
 
-      <fieldset className="space-y-3">
-        <legend className="text-sm font-medium">Informations</legend>
-        {draft.infos.map((info, i) => (
-          <div key={i} className="grid items-start gap-3 sm:grid-cols-[1fr_2fr_auto]">
-            <TextField
-              id={`info-${i}-label`}
-              label="Libellé"
-              required
-              maxLength={100}
-              value={info.label}
-              onChange={(label) =>
-                patch({ infos: draft.infos.map((x, j) => (j === i ? { ...x, label } : x)) })
-              }
-              error={errors[`infos.${i}.label`]}
-            />
-            <TextField
-              id={`info-${i}-value`}
-              label="Valeur"
-              required
-              maxLength={500}
-              value={info.value}
-              onChange={(value) =>
-                patch({ infos: draft.infos.map((x, j) => (j === i ? { ...x, value } : x)) })
-              }
-              error={errors[`infos.${i}.value`]}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="mt-6"
-              aria-label={`Retirer l'information ${i + 1}`}
-              onClick={() => patch({ infos: draft.infos.filter((_, j) => j !== i) })}
-            >
-              <Trash2 />
-            </Button>
+      <FormSection
+        title="Informations"
+        description="Ce qu'il faut savoir sur la campagne : pays, consulat, frais…"
+      >
+        {draft.infos.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Aucune information pour le moment.</p>
+        ) : (
+          <div className="space-y-3">
+            <ListHeader columns={["Libellé", "Valeur", ""]} className={INFO_GRID} />
+            {draft.infos.map((info, i) => (
+              <div key={i} className={`grid items-start gap-3 ${INFO_GRID}`}>
+                <TextField
+                  id={`info-${i}-label`}
+                  label="Libellé"
+                  hideLabel
+                  required
+                  maxLength={100}
+                  placeholder="Pays"
+                  value={info.label}
+                  onChange={(label) =>
+                    patch({ infos: draft.infos.map((x, j) => (j === i ? { ...x, label } : x)) })
+                  }
+                  error={errors[`infos.${i}.label`]}
+                />
+                <TextField
+                  id={`info-${i}-value`}
+                  label="Valeur"
+                  hideLabel
+                  required
+                  maxLength={500}
+                  placeholder="France"
+                  value={info.value}
+                  onChange={(value) =>
+                    patch({ infos: draft.infos.map((x, j) => (j === i ? { ...x, value } : x)) })
+                  }
+                  error={errors[`infos.${i}.value`]}
+                />
+                <RemoveButton
+                  label={`Retirer l'information ${i + 1}`}
+                  onClick={() => patch({ infos: draft.infos.filter((_, j) => j !== i) })}
+                />
+              </div>
+            ))}
           </div>
-        ))}
+        )}
         {draft.infos.length < MAX_CAMPAIGN_INFOS && (
           <Button
             type="button"
@@ -198,65 +286,20 @@ export function CampaignSettingsForm({
             <Plus /> Ajouter une information
           </Button>
         )}
-      </fieldset>
-
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">Plateformes suggérées</legend>
-        <p className="text-xs text-muted-foreground">
-          Proposées lors de l&apos;ajout d&apos;un compte externe à un dossier.
-        </p>
-        <ul className="flex flex-wrap gap-1.5">
-          {draft.suggestedPlatforms.map((p) => (
-            <li key={p} className="flex items-center gap-1 rounded-full border bg-card py-0.5 pr-1 pl-2.5 text-sm">
-              {p}
-              <button
-                type="button"
-                aria-label={`Retirer ${p}`}
-                className="grid size-5 place-items-center rounded-full hover:bg-muted"
-                onClick={() =>
-                  patch({ suggestedPlatforms: draft.suggestedPlatforms.filter((x) => x !== p) })
-                }
-              >
-                <X className="size-3" />
-              </button>
-            </li>
-          ))}
-        </ul>
-        {draft.suggestedPlatforms.length < MAX_SUGGESTED_PLATFORMS && (
-          <div className="flex max-w-sm gap-2">
-            <Label htmlFor="platform-new" className="sr-only">
-              Nouvelle plateforme
-            </Label>
-            <Input
-              id="platform-new"
-              placeholder="Pastel, Parcoursup…"
-              value={platformInput}
-              maxLength={80}
-              onChange={(e) => setPlatformInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addPlatform();
-                }
-              }}
-            />
-            <Button type="button" variant="outline" size="sm" onClick={addPlatform}>
-              Ajouter
-            </Button>
-          </div>
-        )}
-        <FieldError message={errors.suggestedPlatforms} />
-      </fieldset>
+      </FormSection>
 
       {!isEdit && (
-        <fieldset className="space-y-2">
-          <legend className="text-sm font-medium">Groupes de départ</legend>
-          <p className="text-xs text-muted-foreground">
-            Pour ranger les dossiers (DAP, Hors-DAP, École…). Vous pourrez en
-            ajouter, en renommer et en supprimer ensuite.
-          </p>
+        <FormSection
+          title="Groupes de départ"
+          description="Pour ranger les dossiers (DAP, Hors-DAP, École…). Modifiables ensuite."
+        >
+          {groups.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Sans groupe, tous les dossiers sont « Non classés ».
+            </p>
+          )}
           {groups.map((g, i) => (
-            <div key={i} className="flex max-w-sm items-start gap-2">
+            <div key={i} className="flex max-w-md items-start gap-2">
               <Label htmlFor={`group-${i}`} className="sr-only">
                 Groupe {i + 1}
               </Label>
@@ -264,13 +307,15 @@ export function CampaignSettingsForm({
                 id={`group-${i}`}
                 value={g}
                 maxLength={80}
+                placeholder="Nom du groupe"
                 onChange={(e) => setGroups(groups.map((x, j) => (j === i ? e.target.value : x)))}
               />
               <Button
                 type="button"
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 aria-label={`Retirer le groupe ${i + 1}`}
+                className="text-muted-foreground hover:text-destructive"
                 onClick={() => setGroups(groups.filter((_, j) => j !== i))}
               >
                 <Trash2 />
@@ -283,22 +328,24 @@ export function CampaignSettingsForm({
             </Button>
           )}
           <FieldError message={errors.groups} />
-        </fieldset>
+        </FormSection>
       )}
 
-      {error && (
-        <p className="text-sm text-red-600" role="alert">
-          {error}
-        </p>
-      )}
-      {saved && (
-        <p className="text-sm text-success" role="status">
-          Modifications enregistrées.
-        </p>
-      )}
-      <Button type="submit" disabled={saving}>
-        {saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer la campagne"}
-      </Button>
+      <FormActions>
+        {error && (
+          <p className="mr-auto text-sm font-medium text-destructive" role="alert">
+            {error}
+          </p>
+        )}
+        {saved && (
+          <p className="mr-auto flex items-center gap-1.5 text-sm text-success" role="status">
+            <CheckCircle2 className="size-4" aria-hidden /> Modifications enregistrées
+          </p>
+        )}
+        <Button type="submit" disabled={saving}>
+          {saving ? "Enregistrement..." : isEdit ? "Enregistrer les réglages" : "Créer la campagne"}
+        </Button>
+      </FormActions>
     </form>
   );
 }

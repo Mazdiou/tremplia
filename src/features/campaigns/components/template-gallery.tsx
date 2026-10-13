@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatLongDate } from "@/lib/dates";
 import type { CampaignTemplate } from "@/config/campaign-templates";
@@ -40,46 +41,56 @@ export function TemplateGallery({
   return (
     <div className="space-y-3">
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm font-medium text-destructive" role="alert">
           {error}
         </p>
       )}
-      <ul className="grid gap-4 md:grid-cols-2">
+      <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {templates.map((t) => {
           const imported = importedKeys.includes(t.key);
           return (
-            <li key={t.key} className="flex flex-col rounded-2xl border bg-card p-5">
-              <h3 className="font-semibold">{t.name}</h3>
-              {t.description && (
-                <p className="mt-1 text-sm text-muted-foreground">{t.description}</p>
-              )}
-              {t.groups.length > 0 && (
-                <p className="mt-3 text-sm">
-                  <span className="text-muted-foreground">Groupes : </span>
-                  {t.groups.join(", ")}
-                </p>
-              )}
+            <li key={t.key} className="flex flex-col rounded-2xl border bg-card">
+              <div className="space-y-1 p-5 pb-4">
+                <h3 className="font-semibold">{t.name}</h3>
+                {t.description && (
+                  <p className="text-sm text-muted-foreground">{t.description}</p>
+                )}
+                {t.groups.length > 0 && (
+                  <ul className="flex flex-wrap gap-1.5 pt-2" aria-label="Groupes">
+                    {t.groups.map((g) => (
+                      <li key={g} className="rounded-full border px-2 py-0.5 text-xs">
+                        {g}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               {t.dates.length > 0 && (
-                <ul className="mt-3 space-y-1 text-sm">
+                <ul className="mx-5 space-y-1.5 border-t py-3 text-sm">
                   {t.dates.map((d) => (
                     <li key={`${d.label}-${d.date}`} className="flex justify-between gap-3">
                       <span className="text-muted-foreground">{d.label}</span>
-                      <span className="shrink-0">{formatLongDate(d.date)}</span>
+                      <span className="shrink-0 tabular-nums">{formatLongDate(d.date)}</span>
                     </li>
                   ))}
                 </ul>
               )}
-              <div className="mt-4 pt-1">
+              <div className="mt-auto border-t p-4">
                 <Button
-                  size="sm"
+                  className="w-full"
+                  variant={imported ? "outline" : "default"}
                   disabled={imported || pending !== null}
                   onClick={() => importTemplate(t.key)}
                 >
-                  {imported
-                    ? "Déjà importé"
-                    : pending === t.key
-                      ? "Import..."
-                      : "Importer ce modèle"}
+                  {imported ? (
+                    <>
+                      <Check /> Déjà importé
+                    </>
+                  ) : (
+                    <>
+                      <Download /> {pending === t.key ? "Import..." : "Importer ce modèle"}
+                    </>
+                  )}
                 </Button>
               </div>
             </li>

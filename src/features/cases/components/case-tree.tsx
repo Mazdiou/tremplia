@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   ChevronDown,
   ChevronRight,
@@ -30,6 +30,7 @@ import {
   type TreeCase,
 } from "@/features/cases/fetch-campaign-cases";
 import { buildCampaignBranches, type TreeGroup } from "@/features/cases/tree";
+import { isCasesIndex } from "./cases-content";
 import { TreeSearchResults } from "./tree-search-results";
 import { CampaignMenu, GroupActions, InlineNameInput, groupApi } from "./tree-actions";
 
@@ -83,6 +84,7 @@ export function CaseTree({
   const params = useParams<{ id?: string }>();
   const selectedId = params?.id;
   const router = useRouter();
+  const pathname = usePathname();
   const [prefs, setPrefs] = useUiPrefs();
 
   const [query, setQuery] = useState("");
@@ -217,6 +219,9 @@ export function CaseTree({
     (c) => c.status === "active" && c.assigned_to === currentUserId,
   ).length;
   const resultCount = found.filter((c) => c.status === "active").length;
+  // Les compteurs ne portent que sur les dossiers chargés : on ne les montre
+  // que lorsque toutes les campagnes actives le sont (sinon « 0 » trompeur).
+  const allLoaded = activeCampaigns.every((c) => isLoaded(c.id));
 
   async function afterGroupChange(failure: string | null) {
     if (failure) return failure;
@@ -287,7 +292,7 @@ export function CaseTree({
         style={{ "--tree-w": `${width}px` } as React.CSSProperties}
         className={cn(
           "relative flex h-full w-full shrink-0 flex-col bg-sidebar md:w-(--tree-w)",
-          selectedId && "max-md:hidden",
+          !isCasesIndex(pathname) && "max-md:hidden",
         )}
       >
         {/* En-tête */}
@@ -423,7 +428,8 @@ export function CaseTree({
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {opt.label} <span className="tabular-nums">{opt.n}</span>
+                {opt.label}{" "}
+                {allLoaded && <span className="tabular-nums">{opt.n}</span>}
               </button>
             ))}
           </div>

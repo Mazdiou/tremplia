@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { requireMember } from "@/lib/auth/require-member";
 import {
@@ -78,40 +79,48 @@ export default async function CaseLayout({
             ← Dossiers
           </Link>
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="truncate text-[22px] font-semibold tracking-tight">
-                  {displayName(c.first_name, c.last_name)}
-                </h1>
-                <span
-                  className={cn(
-                    "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
-                    BADGE[c.status],
-                  )}
-                >
-                  {labelOf(STATUS_LABELS, c.status)}
-                </span>
+            <div className="flex min-w-0 items-start gap-3">
+              <span
+                aria-hidden
+                className="mt-0.5 grid size-11 shrink-0 place-items-center rounded-full bg-accent text-sm font-semibold text-accent-foreground max-sm:hidden"
+              >
+                {`${c.first_name[0] ?? ""}${c.last_name[0] ?? ""}`.toUpperCase()}
+              </span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h1 className="truncate text-[22px] font-semibold tracking-tight">
+                    {displayName(c.first_name, c.last_name)}
+                  </h1>
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
+                      BADGE[c.status],
+                    )}
+                  >
+                    {labelOf(STATUS_LABELS, c.status)}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
+                {groups.length > 0 && (
+                  <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Groupes">
+                    {groups.map((g) => (
+                      <li
+                        key={g.id}
+                        className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground"
+                      >
+                        {g.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
-              {groups.length > 0 && (
-                <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Groupes">
-                  {groups.map((g) => (
-                    <li
-                      key={g.id}
-                      className="rounded-full border bg-card px-2 py-0.5 text-xs"
-                    >
-                      {g.name}
-                    </li>
-                  ))}
-                </ul>
-              )}
             </div>
             <div className="flex items-center gap-2">
               <Link
                 href={`/cases/${c.id}/edit`}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
+                className={buttonVariants({ variant: "outline" })}
               >
-                Modifier
+                <Pencil /> Modifier
               </Link>
               <CaseStatusButtons id={c.id} status={c.status} />
             </div>

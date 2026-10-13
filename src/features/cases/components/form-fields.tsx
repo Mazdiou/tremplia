@@ -4,19 +4,56 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-// Petits champs de formulaire partagés par le formulaire du dossier :
-// un libellé toujours lié à son champ, et l'erreur juste en dessous.
+// Petits champs de formulaire partagés : un libellé toujours lié à son champ
+// (masqué visuellement dans les lignes de liste, où une ligne d'en-tête
+// nomme les colonnes), et l'erreur juste en dessous.
 
+// Même apparence que <Input> : hauteur, bordure, fond, focus
 export const selectClass =
-  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60";
+  "h-10 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive dark:bg-input/30";
 
 const textareaClass =
-  "min-h-20 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+  "min-h-24 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive dark:bg-input/30";
 
 export function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-sm text-red-600">{message}</p>;
+  return <p className="text-xs font-medium text-destructive">{message}</p>;
 }
+
+function FieldLabel({
+  htmlFor,
+  label,
+  required,
+  hidden,
+}: {
+  htmlFor: string;
+  label: string;
+  required?: boolean;
+  hidden?: boolean;
+}) {
+  return (
+    <Label htmlFor={htmlFor} className={cn("gap-0.5", hidden && "sm:sr-only")}>
+      {label}
+      {required && (
+        <span aria-hidden className="text-destructive">
+          *
+        </span>
+      )}
+    </Label>
+  );
+}
+
+type Common = {
+  id: string;
+  label: string;
+  error?: string;
+  required?: boolean;
+  className?: string;
+  // Libellé masqué à partir de la largeur tablette (une ligne d'en-tête
+  // nomme alors les colonnes), toujours lu par les lecteurs d'écran
+  hideLabel?: boolean;
+  hint?: string;
+};
 
 export function TextField({
   id,
@@ -29,24 +66,20 @@ export function TextField({
   maxLength,
   className,
   autoComplete,
-}: {
-  id: string;
-  label: string;
+  hideLabel,
+  hint,
+  placeholder,
+}: Common & {
   value: string;
   onChange: (value: string) => void;
-  error?: string;
-  required?: boolean;
   type?: string;
   maxLength?: number;
-  className?: string;
   autoComplete?: string;
+  placeholder?: string;
 }) {
   return (
-    <div className={cn("space-y-1", className)}>
-      <Label htmlFor={id}>
-        {label}
-        {required && <span aria-hidden> *</span>}
-      </Label>
+    <div className={cn("space-y-1.5", className)}>
+      <FieldLabel htmlFor={id} label={label} required={required} hidden={hideLabel} />
       <Input
         id={id}
         type={type}
@@ -55,8 +88,10 @@ export function TextField({
         required={required}
         maxLength={maxLength}
         autoComplete={autoComplete}
+        placeholder={placeholder}
         aria-invalid={error ? true : undefined}
       />
+      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
       <FieldError message={error} />
     </div>
   );
@@ -73,24 +108,18 @@ export function SelectField({
   placeholder,
   disabled,
   className,
-}: {
-  id: string;
-  label: string;
+  hideLabel,
+  hint,
+}: Common & {
   value: string;
   onChange: (value: string) => void;
   options: readonly { value: string; label: string }[];
-  error?: string;
-  required?: boolean;
   placeholder?: string;
   disabled?: boolean;
-  className?: string;
 }) {
   return (
-    <div className={cn("space-y-1", className)}>
-      <Label htmlFor={id}>
-        {label}
-        {required && <span aria-hidden> *</span>}
-      </Label>
+    <div className={cn("space-y-1.5", className)}>
+      <FieldLabel htmlFor={id} label={label} required={required} hidden={hideLabel} />
       <select
         id={id}
         value={value}
@@ -111,6 +140,7 @@ export function SelectField({
           </option>
         ))}
       </select>
+      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
       <FieldError message={error} />
     </div>
   );
@@ -124,23 +154,22 @@ export function TextAreaField({
   error,
   maxLength,
   className,
-}: {
-  id: string;
-  label: string;
+  placeholder,
+}: Common & {
   value: string;
   onChange: (value: string) => void;
-  error?: string;
   maxLength: number;
-  className?: string;
+  placeholder?: string;
 }) {
   return (
-    <div className={cn("space-y-1", className)}>
-      <Label htmlFor={id}>{label}</Label>
+    <div className={cn("space-y-1.5", className)}>
+      <FieldLabel htmlFor={id} label={label} />
       <textarea
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         maxLength={maxLength}
+        placeholder={placeholder}
         className={textareaClass}
         aria-invalid={error ? true : undefined}
       />
@@ -150,6 +179,30 @@ export function TextAreaField({
           {value.length}/{maxLength}
         </span>
       </div>
+    </div>
+  );
+}
+
+// En-tête des colonnes d'une liste répétable (dates, diplômes…) : affiché
+// une seule fois au lieu de répéter les libellés sur chaque ligne.
+export function ListHeader({
+  columns,
+  className,
+}: {
+  columns: string[];
+  className: string;
+}) {
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        "hidden gap-3 px-1 text-xs font-medium text-muted-foreground sm:grid",
+        className,
+      )}
+    >
+      {columns.map((c, i) => (
+        <span key={i}>{c}</span>
+      ))}
     </div>
   );
 }

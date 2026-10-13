@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
-import { PageHeader, Panel, StatusPill } from "@/components/page-ui";
+import { PageContainer, PageHeader, Panel, StatusPill } from "@/components/page-ui";
 import { DeleteEmployeeButton } from "@/features/team/components/delete-employee-button";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -33,19 +33,22 @@ export default async function TeamPage() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-4xl p-4 md:p-8">
+      <PageContainer>
         <PageHeader
           title="Équipe"
-          subtitle={`${list.length} membre${list.length > 1 ? "s" : ""}`}
+          subtitle={`${list.length} membre${list.length > 1 ? "s" : ""} · seul le patron gère l'équipe`}
         />
 
         <div className="space-y-5">
-          <Panel title="Membres">
+          <Panel
+            title="Membres"
+            description="Un employé qui a créé des dossiers, documents ou notes se désactive : il ne peut plus être supprimé."
+          >
             <ul>
               {list.map((m) => (
                 <li
                   key={m.id}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-[18px] py-3 last:border-b-0"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-5 py-3 last:border-b-0"
                 >
                   <span
                     aria-hidden
@@ -87,11 +90,14 @@ export default async function TeamPage() {
             </ul>
           </Panel>
 
-          <Panel title="Ajouter un employé">
+          <Panel
+            title="Ajouter un employé"
+            description="Un mot de passe temporaire est créé : l'employé le remplace à sa première connexion."
+          >
             <AddEmployeeForm />
           </Panel>
         </div>
-      </div>
+      </PageContainer>
     </AppShell>
   );
 }

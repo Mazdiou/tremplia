@@ -3,7 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Check, Info, TriangleAlert } from "lucide-react";
+import { FormActions, FormSection } from "@/components/page-ui";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { CaseFieldsDraft } from "@/features/cases/case-record";
 import {
   EDUCATION_LEVELS,
@@ -67,15 +70,6 @@ function toPayload(f: CaseFieldsDraft) {
   };
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-4 rounded-2xl border bg-card p-5">
-      <h2 className="text-base font-semibold">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
 export function CaseForm(
   props:
     | {
@@ -130,7 +124,7 @@ export function CaseForm(
   // Aucune campagne active : rien à créer
   if (!isEdit && campaigns.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
+      <p className="rounded-2xl border border-dashed bg-card px-6 py-12 text-center text-sm text-muted-foreground">
         Aucune campagne active.{" "}
         {props.isOwner ? (
           <>
@@ -228,7 +222,7 @@ export function CaseForm(
   const levelOptions = optionsOf(EDUCATION_LEVELS, EDUCATION_LEVEL_LABELS);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
       {!isEdit && (
         <ImportPanel
           sources={props.sources.filter((s) => s.id !== campaignId)}
@@ -237,12 +231,15 @@ export function CaseForm(
       )}
 
       {imported && (
-        <div className="rounded-xl border border-blue-300 bg-blue-50 p-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
-          <p className="font-medium">Données importées de « {imported.name} ».</p>
-          <p className="mt-1">
-            Vérifiez-les et modifiez ce qui a changé (le niveau d&apos;études,
-            par exemple). Les mots de passe des comptes sont à ressaisir.
-          </p>
+        <div className="flex gap-3 rounded-xl border border-primary/30 bg-highlight p-4 text-sm">
+          <Info className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+          <div>
+            <p className="font-medium">Données importées de « {imported.name} »</p>
+            <p className="mt-1 text-muted-foreground">
+              Vérifiez-les et modifiez ce qui a changé (le niveau d&apos;études,
+              par exemple). Les mots de passe des comptes sont à ressaisir.
+            </p>
+          </div>
         </div>
       )}
 
@@ -251,10 +248,17 @@ export function CaseForm(
           ev.preventDefault();
           void submit();
         }}
-        className="space-y-5"
+        className="space-y-8"
         noValidate
       >
-        <Section title="Rattachement">
+        <FormSection
+          title="Rattachement"
+          description={
+            isEdit
+              ? "Un dossier ne change jamais de campagne. Ses groupes restent modifiables."
+              : "La campagne du dossier, et ses groupes de rangement."
+          }
+        >
           <SelectField
             id="campaignId"
             label="Campagne"
@@ -272,31 +276,45 @@ export function CaseForm(
           />
           {campaign && campaign.groups.length > 0 && (
             <fieldset className="space-y-2">
-              <legend className="text-sm font-medium">Groupes (facultatif)</legend>
-              <div className="flex flex-wrap gap-x-5 gap-y-2">
-                {campaign.groups.map((g) => (
-                  <label key={g.id} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      className="size-4"
-                      checked={groupIds.includes(g.id)}
-                      onChange={(ev) =>
-                        setGroupIds((ids) =>
-                          ev.target.checked
-                            ? [...ids, g.id]
-                            : ids.filter((x) => x !== g.id),
-                        )
-                      }
-                    />
-                    {g.name}
-                  </label>
-                ))}
+              <legend className="text-sm font-medium">
+                Groupes <span className="font-normal text-muted-foreground">(facultatif)</span>
+              </legend>
+              <div className="flex flex-wrap gap-2">
+                {campaign.groups.map((g) => {
+                  const checked = groupIds.includes(g.id);
+                  return (
+                    <label
+                      key={g.id}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
+                        checked
+                          ? "border-primary/40 bg-accent text-accent-foreground"
+                          : "bg-card hover:bg-muted",
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={checked}
+                        onChange={(ev) =>
+                          setGroupIds((ids) =>
+                            ev.target.checked
+                              ? [...ids, g.id]
+                              : ids.filter((x) => x !== g.id),
+                          )
+                        }
+                      />
+                      {checked && <Check className="size-3.5" aria-hidden />}
+                      {g.name}
+                    </label>
+                  );
+                })}
               </div>
             </fieldset>
           )}
-        </Section>
+        </FormSection>
 
-        <Section title="Identité">
+        <FormSection title="Identité" description="Coordonnées du candidat et d'un proche à contacter.">
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField id="lastName" label="Nom" required maxLength={100}
               value={fields.lastName} onChange={set("lastName")} error={e.lastName} />
@@ -313,39 +331,52 @@ export function CaseForm(
             <TextField id="nationality" label="Nationalité" maxLength={100}
               value={fields.nationality} onChange={set("nationality")} error={e.nationality} />
           </div>
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium">
-              Contact secondaire (un parent, par exemple)
-            </legend>
+          <fieldset className="space-y-3 border-t pt-5">
+            <legend className="sr-only">Contact secondaire</legend>
+            <p className="text-sm font-medium">
+              Contact secondaire{" "}
+              <span className="font-normal text-muted-foreground">(un parent, par exemple)</span>
+            </p>
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextField id="secondaryContactName" label="Nom" maxLength={100}
+              <TextField id="secondaryContactName" label="Nom du contact" maxLength={100}
                 value={fields.secondaryContactName} onChange={set("secondaryContactName")}
                 error={e.secondaryContactName} />
-              <TextField id="secondaryContactPhone" label="Téléphone" type="tel" maxLength={30}
+              <TextField id="secondaryContactPhone" label="Téléphone du contact" type="tel" maxLength={30}
                 value={fields.secondaryContactPhone} onChange={set("secondaryContactPhone")}
                 error={e.secondaryContactPhone} />
             </div>
           </fieldset>
-        </Section>
+        </FormSection>
 
-        <Section title="Parcours">
+        <FormSection title="Parcours" description="Niveau atteint, formation actuelle, diplômes et tests de langue.">
           <div className="grid gap-4 sm:grid-cols-2">
             <SelectField id="educationLevel" label="Niveau d'études atteint" required
               value={fields.educationLevel} onChange={set("educationLevel")}
-              options={levelOptions} placeholder="Choisir..." error={e.educationLevel} />
-            <span aria-hidden className="max-sm:hidden" />
+              options={levelOptions} placeholder="Choisir..." error={e.educationLevel}
+              className="sm:col-span-2" />
             <TextField id="currentField" label="Filière ou spécialité actuelle" maxLength={150}
               value={fields.currentField} onChange={set("currentField")} error={e.currentField} />
             <TextField id="currentInstitution" label="Établissement actuel" maxLength={150}
               value={fields.currentInstitution} onChange={set("currentInstitution")}
               error={e.currentInstitution} />
           </div>
-          <DiplomasEditor value={fields.diplomas} onChange={set("diplomas")} errors={e} />
-          <LanguageTestsEditor value={fields.languageTests} onChange={set("languageTests")}
-            errors={e} />
-        </Section>
+          <div className="border-t pt-5">
+            <DiplomasEditor value={fields.diplomas} onChange={set("diplomas")} errors={e} />
+          </div>
+          <div className="border-t pt-5">
+            <LanguageTestsEditor value={fields.languageTests} onChange={set("languageTests")}
+              errors={e} />
+          </div>
+        </FormSection>
 
-        <Section title="Suivi">
+        <FormSection
+          title="Suivi"
+          description={
+            isEdit
+              ? "Les comptes externes se gèrent dans l'en-tête du dossier."
+              : "Responsable, comptes sur les plateformes et première note."
+          }
+        >
           {props.isOwner ? (
             <SelectField
               id="assignedTo"
@@ -367,83 +398,84 @@ export function CaseForm(
             </p>
           )}
 
-          {isEdit ? (
-            <p className="text-sm text-muted-foreground">
-              Les comptes externes se gèrent dans l&apos;en-tête du dossier.
-            </p>
-          ) : (
+          {!isEdit && (
             <>
-              <AccountsEditor
-                value={accounts}
-                onChange={setAccounts}
-                errors={e}
-                suggestions={[
-                  ...(campaign?.suggestedPlatforms ?? []),
-                  ...props.platformSuggestions,
-                ].filter((p, i, all) => all.indexOf(p) === i)}
-                passwordHint={imported !== null}
-              />
-              {e.externalAccounts && (
-                <p className="text-sm text-red-600">{e.externalAccounts}</p>
-              )}
-              <TextAreaField id="initialNote" label="Note initiale" maxLength={MAX_NOTE_LENGTH}
-                value={initialNote} onChange={setInitialNote} error={e.initialNote} />
+              <div className="border-t pt-5">
+                <AccountsEditor
+                  value={accounts}
+                  onChange={setAccounts}
+                  errors={e}
+                  suggestions={[
+                    ...(campaign?.suggestedPlatforms ?? []),
+                    ...props.platformSuggestions,
+                  ].filter((p, i, all) => all.indexOf(p) === i)}
+                  passwordHint={imported !== null}
+                />
+                {e.externalAccounts && (
+                  <p className="mt-2 text-xs font-medium text-destructive">{e.externalAccounts}</p>
+                )}
+              </div>
+              <div className="border-t pt-5">
+                <TextAreaField id="initialNote" label="Note initiale" maxLength={MAX_NOTE_LENGTH}
+                  placeholder="Premier rendez-vous, pièces à fournir…"
+                  value={initialNote} onChange={setInitialNote} error={e.initialNote} />
+              </div>
             </>
           )}
-        </Section>
+        </FormSection>
 
         {duplicates && (
           <div
             role="alert"
-            className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100"
+            className="flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100"
           >
-            <p className="font-medium">
-              Un dossier avec ce nom, ce prénom et cette date de naissance
-              existe déjà dans cette campagne.
-            </p>
-            <ul className="list-inside list-disc">
-              {duplicates.map((id) => (
-                <li key={id}>
-                  <Link href={`/cases/${id}`} target="_blank" className="underline">
-                    Ouvrir le dossier existant
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <div className="flex gap-2">
-              <Button type="button" size="sm" disabled={loading} onClick={() => void submit(true)}>
-                Créer quand même
-              </Button>
-              <Button type="button" size="sm" variant="outline" onClick={() => setDuplicates(null)}>
-                Annuler
-              </Button>
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <div className="space-y-2">
+              <p className="font-medium">
+                Un dossier avec ce nom, ce prénom et cette date de naissance
+                existe déjà dans cette campagne.
+              </p>
+              <ul className="list-inside list-disc">
+                {duplicates.map((id) => (
+                  <li key={id}>
+                    <Link href={`/cases/${id}`} target="_blank" className="underline">
+                      Ouvrir le dossier existant
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex gap-2 pt-1">
+                <Button type="button" size="sm" disabled={loading} onClick={() => void submit(true)}>
+                  Créer quand même
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => setDuplicates(null)}>
+                  Annuler
+                </Button>
+              </div>
             </div>
           </div>
         )}
 
-        {error && (
-          <p className="text-sm text-red-600" role="alert">
-            {error}
-          </p>
-        )}
-
-        <div className="flex gap-2">
-          <Button type="submit" disabled={loading || duplicates !== null} className="flex-1">
+        <FormActions>
+          {error && (
+            <p className="mr-auto text-sm font-medium text-destructive" role="alert">
+              {error}
+            </p>
+          )}
+          <Link
+            href={isEdit ? `/cases/${props.caseId}` : "/cases"}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Annuler
+          </Link>
+          <Button type="submit" disabled={loading || duplicates !== null}>
             {loading
               ? "Enregistrement..."
               : isEdit
                 ? "Enregistrer les modifications"
                 : "Créer le dossier"}
           </Button>
-          {isEdit && (
-            <Link
-              href={`/cases/${props.caseId}`}
-              className="inline-flex h-8 items-center rounded-lg border px-3 text-sm hover:bg-muted"
-            >
-              Annuler
-            </Link>
-          )}
-        </div>
+        </FormActions>
       </form>
     </div>
   );

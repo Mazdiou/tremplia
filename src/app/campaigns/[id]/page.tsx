@@ -1,8 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Plus } from "lucide-react";
 import { z } from "zod";
 import { AppShell } from "@/components/shell/app-shell";
-import { KeyRow, PageHeader, Panel, StatusPill } from "@/components/page-ui";
+import {
+  FormSection,
+  KeyRow,
+  PageContainer,
+  PageHeader,
+  Panel,
+  StatCard,
+  StatusPill,
+} from "@/components/page-ui";
+import { buttonVariants } from "@/components/ui/button";
 import { CAMPAIGN_STATUS_LABELS, type CampaignStatus } from "@/features/campaigns/labels";
 import { CampaignDangerZone } from "@/features/campaigns/components/campaign-danger-zone";
 import { CampaignSettingsForm } from "@/features/campaigns/components/campaign-settings-form";
@@ -11,6 +21,7 @@ import { countdownLabel, timeline } from "@/features/campaigns/timeline";
 import { requireMember } from "@/lib/auth/require-member";
 import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
 export default async function CampaignPage({
   params,
@@ -30,12 +41,21 @@ export default async function CampaignPage({
     .maybeSingle();
   if (!campaign) notFound();
 
-  const [datesRes, infosRes, groupsRes, caseGroupsRes, casesRes] = await Promise.all([
+  const [datesRes, infosRes, groupsRes, caseGroupsRes, casesRes, activeRes] = await Promise.all([
     supabase.from("campaign_dates").select("label, date").eq("campaign_id", id),
     supabase.from("campaign_infos").select("label, value").eq("campaign_id", id).order("position"),
     supabase.from("campaign_groups").select("id, name").eq("campaign_id", id).order("position"),
-    supabase.from("case_groups").select("group_id, cases!inner(status)").eq("campaign_id", id).eq("cases.status", "active"),
+    supabase
+      .from("case_groups")
+      .select("group_id, cases!inner(status)")
+      .eq("campaign_id", id)
+      .eq("cases.status", "active"),
     supabase.from("cases").select("id", { count: "exact", head: true }).eq("campaign_id", id),
+    supabase
+      .from("cases")
+      .select("id", { count: "exact", head: true })
+      .eq("campaign_id", id)
+      .eq("status", "active"),
   ]);
 
   const status = campaign.status as CampaignStatus;
@@ -55,27 +75,29 @@ export default async function CampaignPage({
     dates.map((d) => ({ ...d, campaignId: id, campaignName: campaign.name as string })),
     todayInAppTimezone(),
   );
+  const next = items.find((d) => d.days >= 0) ?? null;
   const canEdit = member?.isOwner === true && !archived;
+  const platforms = (campaign.suggested_platforms ?? []) as string[];
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-8">
+      <PageContainer>
         <PageHeader
+          eyebrow={
+            <Link href="/campaigns" className="hover:text-foreground">
+              Campagnes
+            </Link>
+          }
           title={campaign.name as string}
           subtitle={
             <StatusPill tone={archived ? "off" : "ok"}>{CAMPAIGN_STATUS_LABELS[status]}</StatusPill>
           }
           actions={
-            <div className="flex gap-3 text-sm">
-              {!archived && (
-                <Link href={`/cases/new?campaign=${id}`} className="underline">
-                  Nouveau dossier
-                </Link>
-              )}
-              <Link href="/campaigns" className="underline">
-                Toutes les campagnes
+            !archived && (
+              <Link href={`/cases/new?campaign=${id}`} className={buttonVariants()}>
+                <Plus /> Nouveau dossier
               </Link>
-            </div>
+            )
           }
         />
 
@@ -86,73 +108,115 @@ export default async function CampaignPage({
           </p>
         )}
 
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <StatCard label="Dossiers actifs" value={activeRes.count ?? 0} />
+          <StatCard label="Dossiers au total" value={casesRes.count ?? 0} />
+          <div className="col-span-2 rounded-2xl border bg-card px-5 py-4 sm:col-span-1">
+            <p className="text-sm text-muted-foreground">Prochaine échéance</p>
+            {next ? (
+              <>
+                <p className="mt-1 truncate font-semibold">{next.label}</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatLongDate(next.date)} ·{" "}
+                  <span className="font-medium text-primary">{countdownLabel(next.days)}</span>
+                </p>
+              </>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">Aucune à venir</p>
+            )}
+          </div>
+        </div>
+
         {canEdit ? (
-          <Panel title="Réglages">
-            <div className="p-5">
-              <CampaignSettingsForm
-                campaignId={id}
-                initial={{
-                  name: campaign.name as string,
-                  dates: items.map(({ label, date }) => ({ label, date })),
-                  infos,
-                  suggestedPlatforms: (campaign.suggested_platforms ?? []) as string[],
-                }}
-              />
-            </div>
-          </Panel>
+          <CampaignSettingsForm
+            campaignId={id}
+            initial={{
+              name: campaign.name as string,
+              dates: items.map(({ label, date }) => ({ label, date })),
+              infos,
+              suggestedPlatforms: platforms,
+            }}
+          />
         ) : (
-          <>
+          <div className="grid items-start gap-5 md:grid-cols-2">
             <Panel title="Dates">
               {items.length === 0 ? (
-                <p className="px-[18px] py-4 text-sm text-muted-foreground">Aucune date.</p>
+                <p className="px-5 py-4 text-sm text-muted-foreground">Aucune date.</p>
               ) : (
-                <dl>
+                <ul>
                   {items.map((d) => (
-                    <KeyRow key={`${d.label}-${d.date}`} label={d.label}>
-                      {formatLongDate(d.date)}{" "}
-                      <span className="text-xs text-muted-foreground">({countdownLabel(d.days)})</span>
-                    </KeyRow>
+                    <li
+                      key={`${d.label}-${d.date}`}
+                      className={cn(
+                        "flex items-baseline justify-between gap-4 border-b px-5 py-3 text-sm last:border-b-0",
+                        d.days < 0 && "text-muted-foreground",
+                      )}
+                    >
+                      <span>{d.label}</span>
+                      <span className="shrink-0 tabular-nums">
+                        {formatLongDate(d.date)}{" "}
+                        <span className="text-xs text-muted-foreground">({countdownLabel(d.days)})</span>
+                      </span>
+                    </li>
                   ))}
-                </dl>
+                </ul>
               )}
             </Panel>
-            {infos.length > 0 && (
+            <div className="space-y-5">
               <Panel title="Informations">
-                <dl>
-                  {infos.map((i) => (
-                    <KeyRow key={i.label} label={i.label}>
-                      {i.value}
-                    </KeyRow>
-                  ))}
-                </dl>
+                {infos.length === 0 ? (
+                  <p className="px-5 py-4 text-sm text-muted-foreground">Aucune information.</p>
+                ) : (
+                  <dl>
+                    {infos.map((i) => (
+                      <KeyRow key={i.label} label={i.label}>
+                        {i.value}
+                      </KeyRow>
+                    ))}
+                  </dl>
+                )}
               </Panel>
-            )}
-            <Panel title="Plateformes suggérées">
-              <p className="px-[18px] py-3 text-sm">
-                {((campaign.suggested_platforms ?? []) as string[]).join(", ") || "Aucune"}
-              </p>
-            </Panel>
-          </>
+              <Panel title="Plateformes suggérées">
+                <div className="flex flex-wrap gap-1.5 px-5 py-4">
+                  {platforms.length === 0 ? (
+                    <span className="text-sm text-muted-foreground">Aucune</span>
+                  ) : (
+                    platforms.map((p) => (
+                      <span key={p} className="rounded-full border bg-muted/50 px-3 py-0.5 text-sm">
+                        {p}
+                      </span>
+                    ))
+                  )}
+                </div>
+              </Panel>
+            </div>
+          </div>
         )}
 
-        <Panel title="Groupes">
-          <div className="p-5">
-            <GroupsManager campaignId={id} groups={groups} readOnly={archived} />
-          </div>
-        </Panel>
+        <FormSection
+          title="Groupes"
+          description={
+            archived
+              ? "Figés tant que la campagne est archivée."
+              : "Pour ranger les dossiers. Supprimer un groupe ne supprime aucun dossier."
+          }
+        >
+          <GroupsManager campaignId={id} groups={groups} readOnly={archived} />
+        </FormSection>
 
         {member?.isOwner && (
-          <Panel title="Zone sensible">
-            <div className="p-5">
-              <CampaignDangerZone
-                campaignId={id}
-                archived={archived}
-                caseCount={casesRes.count ?? 0}
-              />
-            </div>
-          </Panel>
+          <FormSection
+            title="Zone sensible"
+            description="Archiver met la campagne en pause ; la supprimer est définitif."
+          >
+            <CampaignDangerZone
+              campaignId={id}
+              archived={archived}
+              caseCount={casesRes.count ?? 0}
+            />
+          </FormSection>
         )}
-      </div>
+      </PageContainer>
     </AppShell>
   );
 }

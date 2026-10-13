@@ -1,59 +1,130 @@
 import Link from "next/link";
-import { CalendarRange } from "lucide-react";
+import { CalendarClock, CalendarRange, FolderOpen, Layers } from "lucide-react";
 import { AppShell } from "@/components/shell/app-shell";
 import { EmptyState } from "@/components/empty-state";
-import { PageHeader, Panel, StatusPill } from "@/components/page-ui";
+import { PageContainer, PageHeader, StatusPill } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { CAMPAIGN_TEMPLATES } from "@/config/campaign-templates";
 import { CAMPAIGN_STATUS_LABELS } from "@/features/campaigns/labels";
 import { TemplateGallery } from "@/features/campaigns/components/template-gallery";
-import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
-import { countdownLabel, nextDeadline } from "@/features/campaigns/timeline";
+import {
+  listCampaignDates,
+  listCampaigns,
+  listGroups,
+  type CampaignSummary,
+} from "@/features/campaigns/server/queries";
+import { countdownLabel, nextDeadline, type TimelineItem } from "@/features/campaigns/timeline";
 import { requireMember } from "@/lib/auth/require-member";
 import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
+
+type CardData = CampaignSummary & {
+  activeCases: number;
+  groupCount: number;
+  next: TimelineItem | null;
+};
+
+function CampaignCard({ c }: { c: CardData }) {
+  const archived = c.status === "archived";
+  return (
+    <Link
+      href={`/campaigns/${c.id}`}
+      className={cn(
+        "group flex h-full flex-col rounded-2xl border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-highlight/40",
+        archived && "opacity-80",
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="font-semibold group-hover:text-primary">{c.name}</h2>
+        <StatusPill tone={archived ? "off" : "ok"}>{CAMPAIGN_STATUS_LABELS[c.status]}</StatusPill>
+      </div>
+      <dl className="mt-4 mb-4 grid grid-cols-2 gap-3 text-sm">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <FolderOpen className="size-4" aria-hidden />
+          <dt className="sr-only">Dossiers actifs</dt>
+          <dd>
+            <span className="font-medium text-foreground tabular-nums">{c.activeCases}</span>{" "}
+            dossier{c.activeCases > 1 ? "s" : ""} actif{c.activeCases > 1 ? "s" : ""}
+          </dd>
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Layers className="size-4" aria-hidden />
+          <dt className="sr-only">Groupes</dt>
+          <dd>
+            <span className="font-medium text-foreground tabular-nums">{c.groupCount}</span>{" "}
+            groupe{c.groupCount > 1 ? "s" : ""}
+          </dd>
+        </div>
+      </dl>
+      <div className="mt-auto flex items-center gap-2 border-t pt-3 text-sm">
+        <CalendarClock className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+        {c.next ? (
+          <>
+            <span className="min-w-0 truncate" title={formatLongDate(c.next.date)}>
+              {c.next.label}
+            </span>
+            <span className="ml-auto shrink-0 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+              {countdownLabel(c.next.days)}
+            </span>
+          </>
+        ) : (
+          <span className="text-muted-foreground">Aucune échéance à venir</span>
+        )}
+      </div>
+    </Link>
+  );
+}
 
 export default async function CampaignsPage() {
   const member = await requireMember();
   const campaigns = await listCampaigns();
-  const dates = await listCampaignDates(campaigns);
+  const [dates, groups] = await Promise.all([
+    listCampaignDates(campaigns),
+    listGroups(campaigns.map((c) => c.id)),
+  ]);
   const today = todayInAppTimezone();
 
   // Dossiers actifs par campagne (lecture via le RLS)
   const supabase = await createClient();
-  const counts = new Map(
-    await Promise.all(
-      campaigns.map(async (c) => {
-        const { count } = await supabase
-          .from("cases")
-          .select("id", { count: "exact", head: true })
-          .eq("campaign_id", c.id)
-          .eq("status", "active");
-        return [c.id, count ?? 0] as const;
-      }),
-    ),
+  const cards: CardData[] = await Promise.all(
+    campaigns.map(async (c) => {
+      const { count } = await supabase
+        .from("cases")
+        .select("id", { count: "exact", head: true })
+        .eq("campaign_id", c.id)
+        .eq("status", "active");
+      return {
+        ...c,
+        activeCases: count ?? 0,
+        groupCount: groups.filter((g) => g.campaign_id === c.id).length,
+        next: nextDeadline(dates.filter((d) => d.campaignId === c.id), today),
+      };
+    }),
   );
+  const active = cards.filter((c) => c.status === "active");
+  const archived = cards.filter((c) => c.status === "archived");
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-8">
+      <PageContainer width="wide">
         <PageHeader
           title="Campagnes"
           subtitle={
             member?.isOwner
-              ? "Vos campagnes en cours et archivées"
-              : "Consultation seulement : le patron gère les campagnes"
+              ? "Créez vos campagnes ou partez d'un modèle préconfiguré."
+              : "Consultation seulement : le patron gère les campagnes, vous gérez les groupes."
           }
           actions={
             member?.isOwner && (
-              <div className="flex gap-2">
+              <>
                 <a href="#modeles" className={buttonVariants({ variant: "outline" })}>
                   Importer un modèle
                 </a>
                 <Link href="/campaigns/new" className={buttonVariants()}>
                   Créer une campagne
                 </Link>
-              </div>
+              </>
             )
           }
         />
@@ -64,59 +135,59 @@ export default async function CampaignsPage() {
             title="Aucune campagne"
             description={
               member?.isOwner
-                ? "Créez votre première campagne ou importez un modèle préconfiguré."
+                ? "Créez votre première campagne ou importez un modèle préconfiguré ci-dessous."
                 : "Le patron de l'agence doit créer une campagne."
             }
           />
         ) : (
-          <Panel title="Toutes les campagnes">
-            <ul>
-              {campaigns.map((c) => {
-                const next = nextDeadline(
-                  dates.filter((d) => d.campaignId === c.id),
-                  today,
-                );
-                const n = counts.get(c.id) ?? 0;
-                return (
-                  <li key={c.id} className="border-b last:border-b-0">
-                    <Link
-                      href={`/campaigns/${c.id}`}
-                      className="flex flex-wrap items-center gap-x-4 gap-y-1 px-[18px] py-3 text-sm hover:bg-muted/50"
-                    >
-                      <span className="min-w-0 flex-1 font-medium">{c.name}</span>
-                      <StatusPill tone={c.status === "active" ? "ok" : "off"}>
-                        {CAMPAIGN_STATUS_LABELS[c.status]}
-                      </StatusPill>
-                      <span className="w-32 text-muted-foreground tabular-nums">
-                        {n} dossier{n > 1 ? "s" : ""} actif{n > 1 ? "s" : ""}
-                      </span>
-                      <span className="w-64 text-muted-foreground max-md:w-full">
-                        {next
-                          ? `${next.label} : ${formatLongDate(next.date)} (${countdownLabel(next.days)})`
-                          : "Aucune échéance à venir"}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </Panel>
+          <>
+            {active.length > 0 && (
+              <section className="space-y-3">
+                <h2 className="text-sm font-semibold text-muted-foreground">
+                  En cours · {active.length}
+                </h2>
+                <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {active.map((c) => (
+                    <li key={c.id}>
+                      <CampaignCard c={c} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {archived.length > 0 && (
+              <section className="space-y-3">
+                <h2 className="text-sm font-semibold text-muted-foreground">
+                  Archivées · {archived.length}
+                </h2>
+                <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {archived.map((c) => (
+                    <li key={c.id}>
+                      <CampaignCard c={c} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </>
         )}
 
         {member?.isOwner && (
-          <section id="modeles" className="scroll-mt-6 space-y-3">
-            <h2 className="text-lg font-semibold">Modèles préconfigurés</h2>
-            <p className="text-sm text-muted-foreground">
-              L&apos;import crée une copie de la campagne dans votre agence :
-              vous pouvez ensuite tout modifier.
-            </p>
+          <section id="modeles" className="scroll-mt-6 space-y-3 border-t pt-6">
+            <div>
+              <h2 className="text-lg font-semibold">Modèles préconfigurés</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                L&apos;import crée une copie de la campagne dans votre agence :
+                vous pouvez ensuite tout modifier.
+              </p>
+            </div>
             <TemplateGallery
               templates={CAMPAIGN_TEMPLATES}
               importedKeys={campaigns.flatMap((c) => (c.template_key ? [c.template_key] : []))}
             />
           </section>
         )}
-      </div>
+      </PageContainer>
     </AppShell>
   );
 }

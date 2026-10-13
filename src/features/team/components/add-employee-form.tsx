@@ -67,17 +67,17 @@ export function AddEmployeeForm() {
   }
 
   return (
-    <div className="space-y-4 p-[18px]">
+    <div className="space-y-4 p-5">
       <form onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-3">
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <Label htmlFor="firstName">Prénom</Label>
           <Input id="firstName" name="firstName" placeholder="Prénom" required />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <Label htmlFor="lastName">Nom</Label>
           <Input id="lastName" name="lastName" placeholder="Nom" required />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <Label htmlFor="email">E-mail</Label>
           <Input id="email" name="email" type="email" placeholder="e-mail@exemple.com" required />
         </div>

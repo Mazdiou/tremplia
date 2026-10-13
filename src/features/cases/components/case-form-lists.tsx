@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { KeyRound, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DIPLOMA_TYPES,
@@ -13,7 +13,7 @@ import {
   MAX_EXTERNAL_ACCOUNTS,
   MAX_LANGUAGE_TESTS,
 } from "@/features/cases/labels";
-import { SelectField, TextField, optionsOf } from "./form-fields";
+import { ListHeader, SelectField, TextField, optionsOf } from "./form-fields";
 
 // Listes répétables du formulaire de dossier. Chaque ligne a ses propres
 // champs ; `errors` est indexé par chemin (« diplomas.0.year »).
@@ -44,11 +44,11 @@ function RemoveButton({ label, onClick }: { label: string; onClick: () => void }
     <Button
       type="button"
       variant="ghost"
-      size="icon-sm"
+      size="icon"
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="mt-6"
+      className="text-muted-foreground hover:text-destructive max-sm:mt-6"
     >
       <Trash2 />
     </Button>
@@ -63,6 +63,17 @@ function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
   );
 }
 
+function ListTitle({ title, hint }: { title: string; hint: string }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <legend className="text-sm font-medium">{title}</legend>
+      <span className="text-xs text-muted-foreground">{hint}</span>
+    </div>
+  );
+}
+
+const DIPLOMA_GRID = "sm:grid-cols-[11rem_1fr_7rem_2.5rem]";
+
 export function DiplomasEditor({
   value,
   onChange,
@@ -75,12 +86,16 @@ export function DiplomasEditor({
   const maxYear = new Date().getFullYear() + 1;
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-medium">Diplômes</legend>
+      <ListTitle title="Diplômes" hint={`${MAX_DIPLOMAS} au maximum`} />
+      {value.length > 0 && (
+        <ListHeader columns={["Type", "Intitulé", "Année", ""]} className={DIPLOMA_GRID} />
+      )}
       {value.map((d, i) => (
-        <div key={i} className="grid items-start gap-3 sm:grid-cols-[10rem_1fr_7rem_auto]">
+        <div key={i} className={`grid items-start gap-3 ${DIPLOMA_GRID}`}>
           <SelectField
             id={`diploma-${i}-type`}
             label="Type"
+            hideLabel
             required
             value={d.type}
             onChange={(type) => onChange(update(value, i, { type }))}
@@ -91,6 +106,8 @@ export function DiplomasEditor({
           <TextField
             id={`diploma-${i}-title`}
             label="Intitulé"
+            hideLabel
+            placeholder="Sciences expérimentales…"
             value={d.title}
             maxLength={150}
             onChange={(title) => onChange(update(value, i, { title }))}
@@ -99,7 +116,9 @@ export function DiplomasEditor({
           <TextField
             id={`diploma-${i}-year`}
             label="Année"
+            hideLabel
             type="number"
+            placeholder={String(maxYear - 1)}
             value={d.year}
             onChange={(year) => onChange(update(value, i, { year }))}
             error={errors[`diplomas.${i}.year`]}
@@ -116,12 +135,11 @@ export function DiplomasEditor({
           onClick={() => onChange([...value, { type: "", title: "", year: "" }])}
         />
       )}
-      <p className="text-xs text-muted-foreground">
-        Année entre 1950 et {maxYear}. {MAX_DIPLOMAS} diplômes au maximum.
-      </p>
     </fieldset>
   );
 }
+
+const TEST_GRID = "sm:grid-cols-[1fr_1fr_10rem_2.5rem]";
 
 export function LanguageTestsEditor({
   value,
@@ -134,35 +152,45 @@ export function LanguageTestsEditor({
 }) {
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-medium">Tests de langue</legend>
+      <ListTitle title="Tests de langue" hint={`${MAX_LANGUAGE_TESTS} au maximum`} />
+      {value.length > 0 && (
+        <ListHeader
+          columns={["Test", "Résultat (niveau ou score)", "Date", ""]}
+          className={TEST_GRID}
+        />
+      )}
       {value.map((t, i) => (
-        <div key={i} className="grid items-start gap-3 sm:grid-cols-[8rem_1fr_1fr_9rem_auto]">
-          <SelectField
-            id={`test-${i}-test`}
-            label="Test"
-            required
-            value={t.test}
-            onChange={(test) => onChange(update(value, i, { test }))}
-            options={optionsOf(LANGUAGE_TESTS, LANGUAGE_TEST_LABELS)}
-            placeholder="Choisir..."
-            error={errors[`languageTests.${i}.test`]}
-          />
-          {t.test === "other" ? (
-            <TextField
-              id={`test-${i}-other`}
-              label="Nom du test"
+        <div key={i} className={`grid items-start gap-3 ${TEST_GRID}`}>
+          <div className="space-y-2">
+            <SelectField
+              id={`test-${i}-test`}
+              label="Test"
+              hideLabel
               required
-              value={t.otherName}
-              maxLength={100}
-              onChange={(otherName) => onChange(update(value, i, { otherName }))}
-              error={errors[`languageTests.${i}.otherName`]}
+              value={t.test}
+              onChange={(test) => onChange(update(value, i, { test }))}
+              options={optionsOf(LANGUAGE_TESTS, LANGUAGE_TEST_LABELS)}
+              placeholder="Choisir..."
+              error={errors[`languageTests.${i}.test`]}
             />
-          ) : (
-            <span aria-hidden className="max-sm:hidden" />
-          )}
+            {t.test === "other" && (
+              <TextField
+                id={`test-${i}-other`}
+                label="Nom du test"
+                required
+                placeholder="Nom du test"
+                value={t.otherName}
+                maxLength={100}
+                onChange={(otherName) => onChange(update(value, i, { otherName }))}
+                error={errors[`languageTests.${i}.otherName`]}
+              />
+            )}
+          </div>
           <TextField
             id={`test-${i}-result`}
             label="Résultat (niveau ou score)"
+            hideLabel
+            placeholder="B2, 6.5…"
             value={t.result}
             maxLength={50}
             onChange={(result) => onChange(update(value, i, { result }))}
@@ -171,6 +199,7 @@ export function LanguageTestsEditor({
           <TextField
             id={`test-${i}-date`}
             label="Date"
+            hideLabel
             type="date"
             value={t.date}
             onChange={(date) => onChange(update(value, i, { date }))}
@@ -210,18 +239,35 @@ export function AccountsEditor({
 }) {
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-medium">Comptes externes</legend>
+      <ListTitle title="Comptes externes" hint="Pastel, Parcoursup, Universitaly…" />
       <datalist id="platform-suggestions">
         {suggestions.map((s) => (
           <option key={s} value={s} />
         ))}
       </datalist>
       {value.map((a, i) => (
-        <div key={i} className="space-y-3 rounded-lg border p-3">
-          <div className="grid items-start gap-3 sm:grid-cols-[1fr_1fr_auto]">
-            <div className="space-y-1">
-              <label htmlFor={`account-${i}-platform`} className="text-sm font-medium">
-                Plateforme<span aria-hidden> *</span>
+        <div key={i} className="space-y-3 rounded-xl border bg-muted/30 p-4">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <KeyRound className="size-4 text-muted-foreground" aria-hidden />
+            {a.platform.trim() || `Compte ${i + 1}`}
+            <span className="ml-auto">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Retirer le compte ${i + 1}`}
+                title="Retirer ce compte"
+                className="text-muted-foreground hover:text-destructive"
+                onClick={() => onChange(value.filter((_, j) => j !== i))}
+              >
+                <Trash2 />
+              </Button>
+            </span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label htmlFor={`account-${i}-platform`} className="flex gap-0.5 text-sm font-medium">
+                Plateforme<span aria-hidden className="text-destructive">*</span>
               </label>
               <input
                 id={`account-${i}-platform`}
@@ -229,11 +275,13 @@ export function AccountsEditor({
                 value={a.platform}
                 maxLength={80}
                 required
+                placeholder="Choisir ou saisir"
                 onChange={(e) => onChange(update(value, i, { platform: e.target.value }))}
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                aria-invalid={errors[`externalAccounts.${i}.platform`] ? true : undefined}
+                className="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive dark:bg-input/30"
               />
               {errors[`externalAccounts.${i}.platform`] && (
-                <p className="text-sm text-red-600">
+                <p className="text-xs font-medium text-destructive">
                   {errors[`externalAccounts.${i}.platform`]}
                 </p>
               )}
@@ -244,20 +292,20 @@ export function AccountsEditor({
               required
               value={a.status}
               onChange={(status) =>
-                onChange(update(value, i, { status, password: status === "existing" ? a.password : "" }))
+                onChange(
+                  update(value, i, {
+                    status,
+                    password: status === "existing" ? a.password : "",
+                  }),
+                )
               }
               options={optionsOf(EXTERNAL_ACCOUNT_STATUSES, EXTERNAL_ACCOUNT_STATUS_LABELS)}
             />
-            <RemoveButton
-              label={`Retirer le compte ${i + 1}`}
-              onClick={() => onChange(value.filter((_, j) => j !== i))}
-            />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
             <TextField
               id={`account-${i}-url`}
               label="Adresse du site"
               type="url"
+              placeholder="https://"
               value={a.url}
               onChange={(url) => onChange(update(value, i, { url }))}
               error={errors[`externalAccounts.${i}.url`]}
@@ -282,15 +330,15 @@ export function AccountsEditor({
                 value={a.password}
                 onChange={(password) => onChange(update(value, i, { password }))}
                 error={errors[`externalAccounts.${i}.password`]}
+                hint={
+                  passwordHint && !a.password
+                    ? "Le mot de passe de l'ancien dossier n'est jamais repris : saisissez-le à nouveau."
+                    : undefined
+                }
+                className="sm:col-span-2"
               />
             )}
           </div>
-          {passwordHint && a.status === "existing" && !a.password && (
-            <p className="text-xs text-amber-700 dark:text-amber-400">
-              Le mot de passe de l&apos;ancien dossier n&apos;est jamais repris :
-              saisissez-le à nouveau.
-            </p>
-          )}
         </div>
       ))}
       {value.length < MAX_EXTERNAL_ACCOUNTS && (

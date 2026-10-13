@@ -1,21 +1,27 @@
+import Link from "next/link";
+import { CalendarClock, CalendarRange } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppShell, getShellUser } from "@/components/shell/app-shell";
-import { NewCaseLink, PageHeader, Panel, StatCard } from "@/components/page-ui";
+import { EmptyState } from "@/components/empty-state";
+import {
+  NewCaseLink,
+  PageContainer,
+  PageHeader,
+  Panel,
+  StatCard,
+} from "@/components/page-ui";
+import { buttonVariants } from "@/components/ui/button";
 import { countdownLabel, nextDeadline } from "@/features/campaigns/timeline";
 import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
+import { CampaignSelect } from "@/features/dashboard/components/campaign-select";
 import { activityLabel } from "@/features/history/labels";
-import { APP_TIMEZONE, formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import {
   EDUCATION_LEVELS,
   EDUCATION_LEVEL_LABELS,
   labelOf,
 } from "@/features/cases/labels";
+import { APP_TIMEZONE, formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { displayName } from "@/lib/names";
-import Link from "next/link";
-import { CalendarRange } from "lucide-react";
-import { EmptyState } from "@/components/empty-state";
-import { buttonVariants } from "@/components/ui/button";
-import { CampaignSelect } from "@/features/dashboard/components/campaign-select";
 
 const dayFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIMEZONE });
 const timeFmt = new Intl.DateTimeFormat("fr-FR", {
@@ -23,18 +29,18 @@ const timeFmt = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
   minute: "2-digit",
 });
-
-function dayKey(d: Date) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: APP_TIMEZONE,
-  }).format(d);
-}
+const longToday = new Intl.DateTimeFormat("fr-FR", {
+  timeZone: APP_TIMEZONE,
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+});
 
 // « aujourd'hui », « hier », « il y a 2 jours », puis la date
 function relativeDay(iso: string) {
   const d = new Date(iso);
   const diff = Math.round(
-    (Date.parse(dayKey(new Date())) - Date.parse(dayKey(d))) / 86_400_000,
+    (Date.parse(todayInAppTimezone()) - Date.parse(todayInAppTimezone(d))) / 86_400_000,
   );
   if (diff <= 0) return "aujourd'hui";
   if (diff === 1) return "hier";
@@ -48,6 +54,17 @@ function activityWhen(iso: string) {
   return diff === "aujourd'hui" ? timeFmt.format(new Date(iso)) : diff;
 }
 
+function Initials({ first, last }: { first: string; last: string }) {
+  return (
+    <span
+      aria-hidden
+      className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-semibold text-accent-foreground"
+    >
+      {`${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase() || "?"}
+    </span>
+  );
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -56,6 +73,7 @@ export default async function DashboardPage({
   const u = await getShellUser();
   const supabase = await createClient();
   const today = todayInAppTimezone();
+  const todayLabel = longToday.format(new Date());
 
   // Toutes les campagnes actives, ou celle choisie dans le sélecteur
   const allActive = (await listCampaigns()).filter((c) => c.status === "active");
@@ -67,8 +85,8 @@ export default async function DashboardPage({
   if (ids.length === 0) {
     return (
       <AppShell>
-        <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-8">
-          <PageHeader title={`Bonjour ${u.member.firstName}`} />
+        <PageContainer width="narrow">
+          <PageHeader title={`Bonjour ${u.member.firstName}`} subtitle={todayLabel} />
           <EmptyState
             icon={CalendarRange}
             title="Bienvenue dans StudyFlow"
@@ -88,26 +106,25 @@ export default async function DashboardPage({
               </Link>
             </div>
           )}
-        </div>
+        </PageContainer>
       </AppShell>
     );
   }
 
-  const count = (build: (q: ReturnType<typeof base>) => unknown) =>
-    build(base()) as PromiseLike<{ count: number | null }>;
   const base = () =>
     supabase
       .from("cases")
       .select("id", { count: "exact", head: true })
       .in("campaign_id", ids);
+  const count = (build: (q: ReturnType<typeof base>) => unknown) =>
+    build(base()) as PromiseLike<{ count: number | null }>;
 
   const weekStart = new Date();
   weekStart.setDate(weekStart.getDate() - 7);
-  const weekAgo = weekStart.toISOString();
   const [active, mine, week, ended, ...levels] = await Promise.all([
     count((q) => q.eq("status", "active")),
     count((q) => q.eq("status", "active").eq("assigned_to", u.member.userId)),
-    count((q) => q.gte("created_at", weekAgo)),
+    count((q) => q.gte("created_at", weekStart.toISOString())),
     count((q) => q.in("status", ["closed", "abandoned"])),
     ...EDUCATION_LEVELS.map((l) =>
       count((q) => q.eq("status", "active").eq("education_level", l)),
@@ -128,22 +145,17 @@ export default async function DashboardPage({
         .from("activity_log")
         .select("id, actor_id, action, created_at")
         .order("created_at", { ascending: false })
-        .limit(5)
+        .limit(6)
     : { data: null };
   const actorIds = [
-    ...new Set(
-      (activity ?? []).flatMap((a) =>
-        a.actor_id ? [a.actor_id as string] : [],
-      ),
-    ),
+    ...new Set((activity ?? []).flatMap((a) => (a.actor_id ? [a.actor_id as string] : []))),
   ];
   const { data: actors } = actorIds.length
-    ? await supabase
-        .from("profiles")
-        .select("id, first_name")
-        .in("id", actorIds)
+    ? await supabase.from("profiles").select("id, first_name, last_name").in("id", actorIds)
     : { data: [] };
-  const actorName = new Map((actors ?? []).map((a) => [a.id, a.first_name]));
+  const actorById = new Map(
+    (actors ?? []).map((a) => [a.id as string, a as { first_name: string; last_name: string }]),
+  );
 
   const dates = await listCampaignDates(campaigns);
   const next = nextDeadline(dates, today);
@@ -161,14 +173,12 @@ export default async function DashboardPage({
             return {
               ...c,
               activeCount: activeCount ?? 0,
-              next: nextDeadline(
-                dates.filter((d) => d.campaignId === c.id),
-                today,
-              ),
+              next: nextDeadline(dates.filter((d) => d.campaignId === c.id), today),
             };
           }),
         )
       : [];
+
   // Les niveaux sans dossier ne s'affichent que s'ils sont courants
   const levelRows = EDUCATION_LEVELS.map((l, i) => ({ l, n: n(levels[i]) })).filter(
     (r) => r.n > 0 || ["terminale", "l1", "l2", "l3", "m1"].includes(r.l),
@@ -177,38 +187,55 @@ export default async function DashboardPage({
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-6xl p-4 md:p-8">
+      <PageContainer width="wide">
         <PageHeader
           title={`Bonjour ${u.member.firstName}`}
-          subtitle={`${selected ? selected.name : campaigns.length > 1 ? `${campaigns.length} campagnes actives` : campaigns[0].name}${u.member.isOwner ? " · vue du patron" : ""}`}
+          subtitle={
+            <span className="first-letter:uppercase">
+              {todayLabel} ·{" "}
+              {selected
+                ? selected.name
+                : campaigns.length > 1
+                  ? `${campaigns.length} campagnes actives`
+                  : campaigns[0].name}
+            </span>
+          }
           actions={
-            <div className="flex flex-wrap items-center gap-3">
+            <>
               {allActive.length > 1 && (
                 <CampaignSelect campaigns={allActive} value={selected?.id ?? ""} />
               )}
-              <NewCaseLink className="max-md:hidden" />
-            </div>
+              <NewCaseLink campaignId={selected?.id} className="max-md:hidden" />
+            </>
           }
         />
 
         {cards.length > 0 && (
-          <ul className="mb-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {cards.map((c) => (
               <li key={c.id}>
                 <Link
                   href={`/dashboard?campaign=${c.id}`}
-                  className="block rounded-2xl border bg-card px-5 py-4 hover:bg-muted/40"
+                  className="group flex h-full flex-col rounded-2xl border bg-card px-5 py-4 transition-colors hover:border-primary/40 hover:bg-highlight/40"
                 >
-                  <p className="font-semibold">{c.name}</p>
-                  <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+                  <span className="font-semibold group-hover:text-primary">{c.name}</span>
+                  <span className="mt-0.5 text-sm text-muted-foreground tabular-nums">
                     {c.activeCount} dossier{c.activeCount > 1 ? "s" : ""} actif
                     {c.activeCount > 1 ? "s" : ""}
-                  </p>
-                  <p className="mt-1 text-sm">
-                    {c.next
-                      ? `${c.next.label} · ${countdownLabel(c.next.days)}`
-                      : "Aucune échéance à venir"}
-                  </p>
+                  </span>
+                  <span className="mt-3 flex items-center gap-2 border-t pt-3 text-sm">
+                    <CalendarClock className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                    {c.next ? (
+                      <>
+                        <span className="min-w-0 truncate">{c.next.label}</span>
+                        <span className="ml-auto shrink-0 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+                          {countdownLabel(c.next.days)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">Aucune échéance à venir</span>
+                    )}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -217,56 +244,48 @@ export default async function DashboardPage({
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard label="Dossiers actifs" value={n(active)} />
-          <StatCard label="Mes dossiers" value={n(mine)} />
-          <StatCard
-            label="Ajoutés cette semaine"
-            value={n(week)}
-            className="max-md:hidden"
-          />
-          <StatCard
-            label="Clos ou abandonnés"
-            value={n(ended)}
-            className="max-md:hidden"
-          />
+          <StatCard label="Mes dossiers" value={n(mine)} hint="actifs, dont je suis responsable" />
+          <StatCard label="Ajoutés cette semaine" value={n(week)} className="max-md:hidden" />
+          <StatCard label="Clos ou abandonnés" value={n(ended)} className="max-md:hidden" />
         </div>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-3">
-          <Panel title="Prochaine échéance" highlight>
-            <div className="px-[18px] py-5">
-              {next ? (
-                <>
-                  <p className="text-lg font-semibold">{next.label}</p>
-                  <p className="mt-0.5 text-muted-foreground">
-                    {formatLongDate(next.date)}
-                    {campaigns.length > 1 ? ` · ${next.campaignName}` : ""}
-                  </p>
-                  <p className="mt-1.5 text-sm text-accent-foreground">
-                    {countdownLabel(next.days)}
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Aucune échéance à venir.
+        <div className="grid items-start gap-5 lg:grid-cols-3">
+          <section className="rounded-2xl border border-primary/30 bg-highlight p-5">
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <CalendarClock className="size-4 text-primary" aria-hidden />
+              Prochaine échéance
+            </h2>
+            {next ? (
+              <>
+                <p className="mt-4 text-4xl font-semibold tracking-tight text-primary tabular-nums">
+                  {countdownLabel(next.days)}
                 </p>
-              )}
-            </div>
-          </Panel>
+                <p className="mt-2 font-medium">{next.label}</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatLongDate(next.date)}
+                  {campaigns.length > 1 ? ` · ${next.campaignName}` : ""}
+                </p>
+              </>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">Aucune échéance à venir.</p>
+            )}
+          </section>
 
           <Panel title="Dossiers actifs par niveau" className="max-md:hidden">
-            <div className="space-y-3 px-[18px] py-4">
+            <div className="space-y-3 px-5 py-4">
               {levelRows.map(({ l, n: v }) => (
                 <div
                   key={l}
-                  className="grid grid-cols-[5rem_1fr_1.5rem] items-center gap-3 text-sm"
+                  className="grid grid-cols-[6.5rem_1fr_1.5rem] items-center gap-3 text-sm"
                 >
-                  <span className="text-muted-foreground">
-                    {EDUCATION_LEVEL_LABELS[l]}
+                  <span className="truncate text-muted-foreground">{EDUCATION_LEVEL_LABELS[l]}</span>
+                  <span className="h-2 overflow-hidden rounded-full bg-muted">
+                    <span
+                      className="block h-full rounded-full bg-primary"
+                      style={{ width: `${v === 0 ? 0 : Math.max(6, (v / maxLevel) * 100)}%` }}
+                    />
                   </span>
-                  <span
-                    className="h-1.5 rounded-full bg-primary"
-                    style={{ width: `${Math.max(4, (v / maxLevel) * 100)}%` }}
-                  />
-                  <span className="text-right tabular-nums">{v}</span>
+                  <span className="text-right font-medium tabular-nums">{v}</span>
                 </div>
               ))}
             </div>
@@ -274,25 +293,27 @@ export default async function DashboardPage({
 
           <Panel title="Ajoutés récemment">
             {(recent ?? []).length === 0 ? (
-              <p className="px-[18px] py-5 text-sm text-muted-foreground">
+              <p className="px-5 py-5 text-sm text-muted-foreground">
                 Aucun dossier pour le moment.
               </p>
             ) : (
               <ul>
-                {(recent ?? []).slice(0, 3).map((c) => (
+                {(recent ?? []).map((c) => (
                   <li key={c.id} className="border-b last:border-b-0">
                     <Link
                       href={`/cases/${c.id}`}
-                      className="flex items-baseline justify-between gap-3 px-[18px] py-3 text-sm hover:bg-muted/50"
+                      className="flex items-center gap-3 px-5 py-2.5 text-sm hover:bg-muted/50"
                     >
-                      <span className="min-w-0 truncate">
-                        {displayName(c.first_name, c.last_name)}
-                        <span className="text-muted-foreground">
-                          {" · "}
+                      <Initials first={c.first_name} last={c.last_name} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">
+                          {displayName(c.first_name, c.last_name)}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
                           {labelOf(EDUCATION_LEVEL_LABELS, c.education_level)}
                         </span>
                       </span>
-                      <span className="shrink-0 text-muted-foreground">
+                      <span className="shrink-0 text-xs text-muted-foreground">
                         {relativeDay(c.created_at)}
                       </span>
                     </Link>
@@ -306,36 +327,44 @@ export default async function DashboardPage({
         {u.member.isOwner && (
           <Panel
             title="Activité récente de l'agence"
-            className="mt-5 max-md:hidden"
+            description="Visible par le patron seulement."
+            className="max-md:hidden"
           >
             {(activity ?? []).length === 0 ? (
-              <p className="px-[18px] py-5 text-sm text-muted-foreground">
+              <p className="px-5 py-5 text-sm text-muted-foreground">
                 Aucune activité enregistrée.
               </p>
             ) : (
               <ul>
-                {(activity ?? []).map((a) => (
-                  <li
-                    key={a.id}
-                    className="flex justify-between gap-3 border-b px-[18px] py-3 text-sm last:border-b-0"
-                  >
-                    <span>
-                      {(a.actor_id ? actorName.get(a.actor_id) : null) ??
-                        "Quelqu'un"}{" "}
-                      {activityLabel(a.action, "agency")}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {activityWhen(a.created_at)}
-                    </span>
-                  </li>
-                ))}
+                {(activity ?? []).map((a) => {
+                  const actor = a.actor_id ? actorById.get(a.actor_id as string) : undefined;
+                  return (
+                    <li
+                      key={a.id}
+                      className="flex items-center gap-3 border-b px-5 py-2.5 text-sm last:border-b-0"
+                    >
+                      <Initials first={actor?.first_name ?? "?"} last={actor?.last_name ?? ""} />
+                      <span className="min-w-0 flex-1">
+                        <span className="font-medium">
+                          {actor ? `${actor.first_name} ${actor.last_name}` : "Un ancien membre"}
+                        </span>{" "}
+                        <span className="text-muted-foreground">
+                          {activityLabel(a.action, "agency")}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {activityWhen(a.created_at)}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </Panel>
         )}
 
-        <NewCaseLink className="mt-5 w-full md:hidden" />
-      </div>
+        <NewCaseLink campaignId={selected?.id} className="w-full md:hidden" />
+      </PageContainer>
     </AppShell>
   );
 }

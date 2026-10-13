@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
-import { PageHeader } from "@/components/page-ui";
+import { PageContainer, PageHeader } from "@/components/page-ui";
 import { CampaignSettingsForm } from "@/features/campaigns/components/campaign-settings-form";
 import { requireOwner } from "@/lib/auth/require-owner";
 
@@ -10,21 +10,20 @@ export default async function NewCampaignPage() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-3xl p-4 md:p-8">
+      <PageContainer>
         <PageHeader
-          title="Nouvelle campagne"
-          actions={
-            <Link href="/campaigns" className="text-sm underline">
-              Retour aux campagnes
+          eyebrow={
+            <Link href="/campaigns" className="hover:text-foreground">
+              Campagnes
             </Link>
           }
+          title="Nouvelle campagne"
+          subtitle="Vous pourrez tout modifier ensuite. Astuce : un modèle préconfiguré remplit tout pour vous."
         />
-        <div className="rounded-2xl border bg-card p-5">
-          <CampaignSettingsForm
-            initial={{ name: "", dates: [], infos: [], suggestedPlatforms: [] }}
-          />
-        </div>
-      </div>
+        <CampaignSettingsForm
+          initial={{ name: "", dates: [], infos: [], suggestedPlatforms: [] }}
+        />
+      </PageContainer>
     </AppShell>
   );
 }

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { NewCaseLink, PageContainer, PageHeader } from "@/components/page-ui";
+import { buttonVariants } from "@/components/ui/button";
 import { countdownLabel, timeline } from "@/features/campaigns/timeline";
 import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
 import { requireMember } from "@/lib/auth/require-member";
@@ -16,7 +18,7 @@ export default async function CasesHomePage() {
 
   if (active.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl p-8">
+      <PageContainer width="narrow">
         <EmptyState
           icon={CalendarDays}
           title="Aucune campagne active"
@@ -27,18 +29,23 @@ export default async function CasesHomePage() {
           }
         />
         {member?.isOwner && (
-          <p className="mt-4 text-center text-sm">
-            <Link href="/campaigns" className="underline">
+          <div className="flex justify-center">
+            <Link href="/campaigns" className={buttonVariants()}>
               Ouvrir les campagnes
             </Link>
-          </p>
+          </div>
         )}
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-8">
+    <PageContainer width="narrow">
+      <PageHeader
+        title="Dossiers"
+        subtitle="Choisissez un dossier dans l'arbre, ou consultez les échéances de vos campagnes."
+        actions={<NewCaseLink />}
+      />
       {active.map((campaign) => {
         const items = timeline(
           dates.filter((d) => d.campaignId === campaign.id),
@@ -46,8 +53,16 @@ export default async function CasesHomePage() {
         );
         const nextIndex = items.findIndex((i) => i.days >= 0);
         return (
-          <section key={campaign.id} className="rounded-lg border p-5">
-            <h1 className="text-xl font-semibold">{campaign.name}</h1>
+          <section key={campaign.id} className="rounded-2xl border bg-card p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">{campaign.name}</h2>
+              <Link
+                href={`/campaigns/${campaign.id}`}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                Voir la campagne
+              </Link>
+            </div>
             {items.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">
                 Aucune date n&apos;est renseignée pour cette campagne.
@@ -66,7 +81,7 @@ export default async function CasesHomePage() {
                     <span>
                       {item.label}
                       {i === nextIndex && (
-                        <span className="ml-2 rounded bg-accent px-1.5 py-0.5 text-xs font-medium text-accent-foreground">
+                        <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
                           Prochaine échéance
                         </span>
                       )}
@@ -84,11 +99,6 @@ export default async function CasesHomePage() {
           </section>
         );
       })}
-
-      <p className="text-center text-sm text-muted-foreground">
-        Sélectionnez un dossier dans l&apos;arbre à gauche, ou créez un nouveau
-        dossier.
-      </p>
-    </div>
+    </PageContainer>
   );
 }

@@ -1,17 +1,22 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-// Sur mobile, l'arbre et la fiche s'affichent chacun leur tour :
-// sans dossier sélectionné, seul l'arbre est visible.
+// Sur téléphone, l'arbre et le contenu s'affichent chacun leur tour : sur
+// l'accueil des dossiers, seul l'arbre est visible ; ailleurs (fiche,
+// nouveau dossier…), seul le contenu.
+export function isCasesIndex(pathname: string | null) {
+  return pathname === "/cases";
+}
+
 export function CasesContent({ children }: { children: React.ReactNode }) {
-  const params = useParams<{ id?: string }>();
+  const pathname = usePathname();
   return (
     <div
       className={cn(
         "min-w-0 flex-1 overflow-y-auto",
-        !params?.id && "max-md:hidden",
+        isCasesIndex(pathname) && "max-md:hidden",
       )}
     >
       {children}

@@ -33,8 +33,13 @@ export default async function EditCasePage({
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <h2 className="text-lg font-semibold">Modifier le dossier</h2>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold">Modifier le dossier</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Les champs marqués d&apos;un astérisque sont obligatoires.
+        </p>
+      </div>
       <CaseForm
         key={c.id}
         mode="edit"

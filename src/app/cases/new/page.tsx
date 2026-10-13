@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PageContainer, PageHeader } from "@/components/page-ui";
 import { createClient } from "@/lib/supabase/server";
 import { requireMember } from "@/lib/auth/require-member";
 import { listCampaigns, listGroups } from "@/features/campaigns/server/queries";
@@ -74,8 +76,16 @@ export default async function NewCasePage({
   }
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 p-6">
-      <h1 className="text-2xl font-bold">Nouveau dossier</h1>
+    <PageContainer>
+      <PageHeader
+        eyebrow={
+          <Link href="/cases" className="hover:text-foreground">
+            ← Dossiers
+          </Link>
+        }
+        title="Nouveau dossier"
+        subtitle="Les champs marqués d'un astérisque sont obligatoires."
+      />
       <CaseForm
         mode="create"
         campaigns={formCampaigns}
@@ -86,6 +96,6 @@ export default async function NewCasePage({
         isOwner={member.isOwner}
         currentUserId={member.userId}
       />
-    </main>
+    </PageContainer>
   );
 }
