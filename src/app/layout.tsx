@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "StudyFlow",
-  description: "CRM pour agences de démarches Campus France",
+  description: "CRM pour agences de démarches d'études à l'étranger",
 };
 
 // Posé avant l'hydratation : pas de flash au chargement.

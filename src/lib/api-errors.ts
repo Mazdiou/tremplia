@@ -24,7 +24,7 @@ export class ApiError extends Error {
   }
 }
 
-export function fail(
+function fail(
   error: string,
   status: number,
   extra?: Record<string, unknown>,

@@ -1,9 +1,12 @@
 # StudyFlow
 
-CRM pour les agences de démarches d'études à l'étranger : campagnes,
-dossiers d'étudiants, documents PDF et comptes sur les plateformes externes.
+CRM pour les agences de démarches d'études à l'étranger : chaque agence crée
+ses campagnes (ou importe un modèle comme Campus France), range ses dossiers
+candidats dans des groupes, et suit documents, notes et comptes sur les
+plateformes externes.
 
-Next.js (App Router), React, TypeScript, Tailwind, shadcn/ui, Supabase.
+Next.js 16 (App Router), React 19, TypeScript, Tailwind 4, shadcn/ui, zod,
+Supabase (PostgreSQL, Auth, Storage, RLS), Vitest, pgTAP.
 
 ## Démarrer
 
@@ -11,28 +14,92 @@ Next.js (App Router), React, TypeScript, Tailwind, shadcn/ui, Supabase.
 npm ci
 copy .env.example .env.local   # puis remplir les 4 valeurs
 npx supabase start             # base locale (Docker requis)
-npx supabase db reset          # applique les migrations
+npx supabase db reset          # applique les migrations (efface la base locale)
 npm run dev
 ```
 
-## Vérifications (les mêmes qu'à chaque push)
+Puis ouvrez http://localhost:3000/register pour créer une agence.
+
+## Vérifications (les mêmes qu'à chaque push, plus la base)
 
 ```powershell
 npm run typecheck   # génère les types Next puis lance tsc
 npx eslint src
 npm test            # tests unitaires (Vitest)
 npm run build
-npx supabase test db  # tests de la base (pgTAP)
+npx supabase test db  # tests de la base (pgTAP), sur la base locale démarrée
 ```
 
 ## Variables d'environnement
 
-Voir `.env.example`. Aucune variable ne doit jamais être commitée.
-Sans `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY`, les mots de passe des comptes externes
-ne peuvent ni être enregistrés ni affichés ; sauvegardez cette clé hors du dépôt.
+Voir `.env.example`. Aucune vraie valeur ne doit être commitée.
+
+| Variable | Rôle |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Adresse du projet Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clé publique (lecture via le RLS) |
+| `SUPABASE_SECRET_KEY` | Clé secrète, routes serveur seulement |
+| `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY` | Chiffre les mots de passe des comptes externes (32 octets, base64) ; à sauvegarder hors du dépôt |
 
 ## Règles du projet
 
-- Isolation stricte entre agences ; rôles patron et employé respectés côté base.
-- Le navigateur lit via le RLS ; les écritures passent par les routes serveur.
-- Aucune donnée personnelle dans une URL, un journal technique ou un message d'erreur.
+- **Isolation stricte entre agences**, garantie par la base (RLS et clés
+  composites agence + campagne), pas seulement par les routes.
+- **Le navigateur lit via le RLS ; il n'écrit jamais.** Les écritures passent
+  par les routes serveur. Seule exception : l'envoi d'un PDF va directement au
+  stockage, avec une URL signée préparée par le serveur (limite de taille de
+  Vercel).
+- **Le serveur n'a que les droits nécessaires**, table par table. Dès qu'une
+  règle dépend de l'acteur ou de son rôle (patron / employé), l'écriture passe
+  par une fonction SQL qui le vérifie. Un test pgTAP fige la liste exacte des
+  droits (`supabase/tests/core_test.sql`).
+- **Rien n'est supprimé de ce qui fait l'historique** : un dossier jamais, un
+  employé qui a créé quelque chose est désactivé, pas supprimé.
+- **Aucune donnée personnelle** dans une URL, un journal technique
+  (`console.*`), un message d'erreur ou le journal d'activité. Les recherches
+  par identité passent en POST.
+- **Mots de passe des comptes externes** chiffrés par le serveur, illisibles
+  côté client ; chaque affichage est inscrit au journal avant d'être renvoyé.
+- **Code en anglais, interface en français.** Une seule source de vérité par
+  liste métier (`features/*/labels.ts`).
+
+## Glossaire
+
+| Interface | Code |
+|---|---|
+| Agence | `agency` |
+| Patron / Employé | `owner` / `employee` |
+| Campagne | `campaign` |
+| Groupe (DAP, Hors-DAP, École…) | `campaign_group` |
+| Dossier (candidat) | `case` |
+| Dossier de documents | `document_folder` |
+| Compte externe | `external_account` |
+| Modèle de campagne | `campaign_template` (configuration, pas une table) |
+| Historique / Journal | `history` / `activity_log` |
+| Formations | `programs` |
+
+## Structure du dépôt
+
+```
+src/
+  app/                  pages, layouts et routes API (minces)
+  components/           partagés : ui/ (shadcn), shell/, auth/, page-ui
+  config/
+    campaign-templates/ modèles de campagne (un fichier par modèle)
+  features/
+    campaigns/ cases/ documents/ notes/ team/ history/ dashboard/
+      components/       composants React de la fonctionnalité
+      server/           lectures et écritures serveur (« server-only »)
+      schemas.ts        schémas zod partagés formulaires / routes
+      labels.ts         listes métier et libellés français
+  lib/                  transverse : supabase/, auth/, crypto/, audit/, api-errors, dates…
+supabase/
+  migrations/           une migration par domaine
+  tests/                un fichier pgTAP par domaine
+```
+
+## Ajouter un modèle de campagne
+
+Créez un fichier dans `src/config/campaign-templates/` (sur le modèle de
+`campus-france-2026-2027.ts`), ajoutez-le à `index.ts`, puis lancez
+`npm test` : chaque modèle est validé automatiquement.
