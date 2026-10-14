@@ -121,7 +121,7 @@ export function AuthShell({
 }) {
   return (
     <div className="grid min-h-dvh lg:h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:overflow-hidden">
-      <aside className="relative hidden overflow-hidden bg-[oklch(0.18_0.035_265)] p-10 text-white lg:flex lg:flex-col">
+      <aside className="relative hidden overflow-hidden bg-[oklch(0.18_0.035_265)] p-12 text-white lg:flex lg:flex-col [@media(max-height:800px)]:p-10">
         {/* Halo et quadrillage discret, estompés vers les bords */}
         <div
           aria-hidden
@@ -144,7 +144,7 @@ export function AuthShell({
           <span className="text-xl font-semibold tracking-tight">StudyFlow</span>
         </div>
 
-        <div className="relative my-auto py-8">
+        <div className="relative my-auto py-8 [@media(max-height:800px)]:py-4">
           <h2 className="max-w-md text-4xl leading-[1.1] font-semibold tracking-tight text-balance">
             Le CRM des agences d&apos;études à l&apos;étranger.
           </h2>
@@ -152,8 +152,9 @@ export function AuthShell({
             Candidats, pièces, lettres et échéances au même endroit, pour toute
             l&apos;équipe.
           </p>
-          {/* L'aperçu (336 px) ne s'affiche que si la fenêtre a la place */}
-          <div className="mt-8 [@media(max-height:780px)]:hidden">
+          {/* Fenêtre peu haute (portable) : l'aperçu est réduit pour tenir sans
+              barre de défilement ; masqué seulement sur une très petite fenêtre */}
+          <div className="mt-10 [@media(max-height:800px)]:mt-6 [@media(max-height:760px)]:[zoom:0.85] [@media(max-height:640px)]:hidden">
             <AppPreview />
           </div>
         </div>
