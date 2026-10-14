@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Ban, Banknote, Loader2, Pencil, Plus, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { StatusPill } from "@/components/page-ui";
+import { StatusPill, type PillTone } from "@/components/page-ui";
 import {
   AmountField,
   SelectField,
@@ -39,13 +39,10 @@ type Message = { text: string; error: boolean } | null;
 
 const methodOptions = optionsOf(PAYMENT_METHODS, PAYMENT_METHOD_LABELS);
 
-export const PAYMENT_STATE_PILL: Record<
-  PaymentState,
-  { tone: "ok" | "off" | "bad" | "info"; label: string }
-> = {
+const PAYMENT_STATE_PILL: Record<PaymentState, { tone: PillTone; label: string }> = {
   unset: { tone: "off", label: "Montant à fixer" },
-  unpaid: { tone: "bad", label: "Rien payé" },
-  partial: { tone: "info", label: "Paiement partiel" },
+  unpaid: { tone: "warn", label: "Rien payé" },
+  partial: { tone: "warn", label: "Paiement partiel" },
   paid: { tone: "ok", label: "Soldé" },
 };
 

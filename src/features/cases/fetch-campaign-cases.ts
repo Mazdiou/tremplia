@@ -8,6 +8,9 @@ export type TreeCase = {
   education_level: string;
   status: string;
   assigned_to: string | null;
+  // Paiements : montant convenu (vide : pas fixé) et reste à payer
+  agreed_amount: number | null;
+  remaining_amount: number | null;
 };
 
 export type TreeCaseGroup = { case_id: string; group_id: string };
@@ -15,7 +18,7 @@ export type TreeCaseGroup = { case_id: string; group_id: string };
 export type CampaignCases = { cases: TreeCase[]; caseGroups: TreeCaseGroup[] };
 
 const CASE_COLUMNS =
-  "id, campaign_id, first_name, last_name, education_level, status, assigned_to";
+  "id, campaign_id, first_name, last_name, education_level, status, assigned_to, agreed_amount, remaining_amount";
 
 // Supabase renvoie au plus 1000 lignes par requête (réglage max_rows). On lit
 // donc par pages de 500, triées sur une colonne stable, jusqu'à la dernière.

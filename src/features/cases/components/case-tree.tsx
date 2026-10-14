@@ -22,6 +22,7 @@ import {
   labelOf,
 } from "@/features/cases/labels";
 import { displayName } from "@/lib/names";
+import { formatDA } from "@/lib/money";
 import { UnreadBadge } from "@/features/messages/components/unread-badge";
 import { cn } from "@/lib/utils";
 import { useUiPrefs } from "@/lib/ui-prefs";
@@ -31,7 +32,11 @@ import {
   type CampaignCases,
   type TreeCase,
 } from "@/features/cases/fetch-campaign-cases";
-import { buildCampaignBranches, type TreeGroup } from "@/features/cases/tree";
+import {
+  buildCampaignBranches,
+  matchesPayment,
+  type TreeGroup,
+} from "@/features/cases/tree";
 import { isCasesIndex } from "./cases-content";
 import { TreeSearchResults } from "./tree-search-results";
 import { CampaignMenu, GroupActions, InlineNameInput, groupApi } from "./tree-actions";
@@ -171,7 +176,9 @@ export function CaseTree({
 
   // --- Recherche globale (serveur) et filtres (sur les dossiers chargés) ---
   const searching = query.trim() !== "";
-  const filtersActive = Boolean(prefs.level || prefs.responsible || prefs.mine);
+  const filtersActive = Boolean(
+    prefs.level || prefs.responsible || prefs.mine || prefs.payment,
+  );
 
   const activeCampaigns = campaigns.filter((c) => c.status === "active");
   // Campagnes archivées masquées, sauf réglage ou dossier ouvert dedans
@@ -210,7 +217,7 @@ export function CaseTree({
     if (prefs.level && c.education_level !== prefs.level) return false;
     if (prefs.responsible && c.assigned_to !== prefs.responsible) return false;
     if (prefs.mine && c.assigned_to !== currentUserId) return false;
-    return true;
+    return matchesPayment(c, prefs.payment);
   }
 
   const found = cases.filter(matches);
@@ -237,7 +244,7 @@ export function CaseTree({
 
   function reset() {
     setQuery("");
-    setPrefs({ level: "", responsible: "", mine: false });
+    setPrefs({ level: "", responsible: "", mine: false, payment: "" });
   }
 
   function startResize(e: React.PointerEvent) {
@@ -340,6 +347,14 @@ export function CaseTree({
                 onChange={(e) => setPrefs({ showLevel: e.target.checked })}
               />
               Afficher le niveau d&apos;études
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={prefs.showPayments}
+                onChange={(e) => setPrefs({ showPayments: e.target.checked })}
+              />
+              Afficher le reste à payer
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -449,6 +464,19 @@ export function CaseTree({
                 {EDUCATION_LEVEL_LABELS[l]}
               </option>
             ))}
+          </select>
+          <select
+            value={prefs.payment}
+            onChange={(e) =>
+              setPrefs({ payment: e.target.value as typeof prefs.payment })
+            }
+            aria-label="Filtrer par paiement"
+            className={selectClass}
+          >
+            <option value="">Tous paiements</option>
+            <option value="due">Reste à payer</option>
+            <option value="paid">Soldés</option>
+            <option value="unset">Montant à fixer</option>
           </select>
           {!prefs.mine && (
             <select
@@ -675,22 +703,23 @@ export function CaseTree({
                                           ({suffix})
                                         </span>
                                       )}
-                                      {(unread[c.id] ?? 0) > 0 && (
-                                        <UnreadBadge
-                                          count={unread[c.id]}
-                                          className="ml-auto shrink-0"
-                                        />
-                                      )}
-                                      {prefs.showLevel && (
-                                        <span
-                                          className={cn(
-                                            "shrink-0 text-xs text-muted-foreground",
-                                            !(unread[c.id] > 0) && "ml-auto",
+                                      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+                                        {(unread[c.id] ?? 0) > 0 && (
+                                          <UnreadBadge count={unread[c.id]} />
+                                        )}
+                                        {prefs.showPayments &&
+                                          (c.remaining_amount ?? 0) > 0 && (
+                                            <span className="rounded-full bg-amber-100 px-1.5 py-px text-[11px] font-medium text-amber-900 tabular-nums dark:bg-amber-950 dark:text-amber-200">
+                                              <span className="sr-only">Reste à payer : </span>
+                                              {formatDA(c.remaining_amount ?? 0)}
+                                            </span>
                                           )}
-                                        >
-                                          {labelOf(EDUCATION_LEVEL_LABELS, c.education_level)}
-                                        </span>
-                                      )}
+                                        {prefs.showLevel && (
+                                          <span className="text-xs text-muted-foreground">
+                                            {labelOf(EDUCATION_LEVEL_LABELS, c.education_level)}
+                                          </span>
+                                        )}
+                                      </span>
                                     </Link>
                                   );
                                 })}

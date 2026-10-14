@@ -16,7 +16,9 @@ export async function listCaseStats(campaignIds?: string[]): Promise<CaseStatRow
   for (let from = 0; ; from += PAGE_SIZE) {
     let query = supabase
       .from("case_stats")
-      .select("campaign_id, status, education_level, assigned_to, cases, created_last_week")
+      .select(
+        "campaign_id, status, education_level, assigned_to, cases, created_last_week, remaining, owing, fee_unset",
+      )
       .order("campaign_id")
       .order("status")
       .order("education_level")

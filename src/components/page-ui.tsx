@@ -161,11 +161,14 @@ export function StatCard({
   );
 }
 
+// warn : à surveiller (reste à payer…), sans l'alarme du rouge
+export type PillTone = "ok" | "off" | "bad" | "info" | "warn";
+
 export function StatusPill({
   tone,
   children,
 }: {
-  tone: "ok" | "off" | "bad" | "info";
+  tone: PillTone;
   children: React.ReactNode;
 }) {
   return (
@@ -176,6 +179,7 @@ export function StatusPill({
         tone === "off" && "bg-muted text-muted-foreground",
         tone === "bad" && "bg-destructive/10 text-destructive",
         tone === "info" && "bg-accent text-accent-foreground",
+        tone === "warn" && "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
       )}
     >
       {children}

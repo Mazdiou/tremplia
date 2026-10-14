@@ -21,6 +21,7 @@ import { getStudentAccess } from "@/features/student/server/access";
 import { readReview } from "@/features/student/server/review";
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
 import { dateTimeFormat } from "@/lib/dates";
+import { formatDA } from "@/lib/money";
 import { StudentAccessBar } from "@/features/student/components/student-access-bar";
 import {
   CaseHeaderDetails,
@@ -74,6 +75,16 @@ export default async function CaseLayout({
       <StatusPill tone={STATUS_TONE[c.status] ?? "off"}>
         {labelOf(STATUS_LABELS, c.status)}
       </StatusPill>
+      {c.remaining_amount !== null && (
+        <Link
+          href={`/cases/${c.id}/payments`}
+          className="shrink-0 rounded-full focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-sm:hidden"
+        >
+          <StatusPill tone={c.remaining_amount > 0 ? "warn" : "ok"}>
+            {c.remaining_amount > 0 ? `Reste ${formatDA(c.remaining_amount)}` : "Soldé"}
+          </StatusPill>
+        </Link>
+      )}
     </div>
   );
 

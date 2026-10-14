@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, CalendarRange, MessagesSquare } from "lucide-react";
+import { CalendarClock, CalendarRange, MessagesSquare, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppShell, getShellUser } from "@/components/shell/app-shell";
 import { EmptyState } from "@/components/empty-state";
@@ -9,13 +9,14 @@ import {
   PageHeader,
   Panel,
   StatCard,
+  StatusPill,
 } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { countdownLabel, nextDeadline } from "@/features/campaigns/timeline";
 import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
 import { CampaignSelect } from "@/features/dashboard/components/campaign-select";
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
-import { countCases, countCreatedLastWeek } from "@/features/cases/case-stats";
+import { countCases, countCreatedLastWeek, sumStat } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
 import { UnreadBadge } from "@/features/messages/components/unread-badge";
 import { activityActor, activityLabel } from "@/features/history/labels";
@@ -26,12 +27,14 @@ import {
 } from "@/features/cases/labels";
 import { APP_TIMEZONE, dayFormat, formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { displayName, initialsOf } from "@/lib/names";
+import { formatDA } from "@/lib/money";
 
 const timeFmt = new Intl.DateTimeFormat("fr-FR", {
   timeZone: APP_TIMEZONE,
   hour: "2-digit",
   minute: "2-digit",
 });
+const monthName = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIMEZONE, month: "long" });
 const longToday = new Intl.DateTimeFormat("fr-FR", {
   timeZone: APP_TIMEZONE,
   weekday: "long",
@@ -116,7 +119,9 @@ export default async function DashboardPage({
 
   // Lectures indépendantes, lancées ensemble. Tous les compteurs viennent
   // d'une seule lecture de la vue case_stats (via le RLS).
-  const [stats, unread, recentRes, activityRes, dates] = await Promise.all([
+  // Paiements : chiffres réservés au patron, comme le journal
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const [stats, unread, recentRes, activityRes, dates, monthRes, owingRes] = await Promise.all([
     listCaseStats(ids),
     // Dossiers dont le candidat a écrit sans réponse lue (toute l'agence)
     agencyUnreadCounts(u.member.agencyId),
@@ -135,6 +140,24 @@ export default async function DashboardPage({
           .limit(6)
       : Promise.resolve({ data: null }),
     listCampaignDates(campaigns),
+    u.member.isOwner
+      ? supabase
+          .from("payment_months")
+          .select("amount, payments")
+          .in("campaign_id", ids)
+          .eq("month", monthStart)
+      : Promise.resolve({ data: null }),
+    // Candidats qui doivent le plus (dossiers non abandonnés)
+    u.member.isOwner
+      ? supabase
+          .from("cases")
+          .select("id, first_name, last_name, remaining_amount")
+          .in("campaign_id", ids)
+          .neq("status", "abandoned")
+          .gt("remaining_amount", 0)
+          .order("remaining_amount", { ascending: false })
+          .limit(5)
+      : Promise.resolve({ data: null }),
   ]);
   const recent = recentRes.data;
   const activity = activityRes.data;
@@ -161,6 +184,20 @@ export default async function DashboardPage({
   const mine = countCases(stats, { status: "active", assignedTo: u.member.userId });
   const week = countCreatedLastWeek(stats);
   const ended = countCases(stats, { status: ["closed", "abandoned"] });
+
+  const monthRows = (monthRes.data ?? []) as { amount: number | string; payments: number }[];
+  const collected = monthRows.reduce((n, r) => n + Number(r.amount), 0);
+  const collectedCount = monthRows.reduce((n, r) => n + r.payments, 0);
+  const remaining = sumStat(stats, "remaining");
+  const owing = sumStat(stats, "owing");
+  const feeUnset = sumStat(stats, "fee_unset");
+  const topOwing = (owingRes.data ?? []) as {
+    id: string;
+    first_name: string;
+    last_name: string;
+    remaining_amount: number;
+  }[];
+  const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? "s" : ""}`;
 
   const actorById = new Map(
     (actors ?? []).map((a) => [a.id as string, a as { first_name: string; last_name: string }]),
@@ -276,6 +313,77 @@ export default async function DashboardPage({
           <StatCard label="Ajoutés cette semaine" value={week} className="max-md:hidden" />
           <StatCard label="Clos ou abandonnés" value={ended} className="max-md:hidden" />
         </div>
+
+        {u.member.isOwner && (
+          <Panel
+            title="Paiements"
+            description={
+              campaigns.length > 1
+                ? "Toutes les campagnes actives · visible par le patron seulement."
+                : "Visible par le patron seulement."
+            }
+            actions={<Wallet className="size-4 text-muted-foreground" aria-hidden />}
+          >
+            <div className="grid gap-5 px-5 py-4 lg:grid-cols-[1fr_1fr]">
+              <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+                <div>
+                  <dt className="text-sm text-muted-foreground first-letter:uppercase">
+                    Encaissé en {monthName.format(new Date())}
+                  </dt>
+                  <dd className="mt-0.5 text-xl font-semibold tracking-tight tabular-nums">
+                    {formatDA(collected)}
+                  </dd>
+                  <dd className="text-xs text-muted-foreground">
+                    {plural(collectedCount, "paiement")}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-muted-foreground">Reste à encaisser</dt>
+                  <dd className="mt-0.5 text-xl font-semibold tracking-tight tabular-nums">
+                    {formatDA(remaining)}
+                  </dd>
+                  <dd className="text-xs text-muted-foreground">{plural(owing, "dossier")}</dd>
+                </div>
+                <div className="col-span-2 sm:col-span-1 lg:col-span-2 xl:col-span-1">
+                  <dt className="text-sm text-muted-foreground">Montant à fixer</dt>
+                  <dd className="mt-0.5 text-xl font-semibold tracking-tight tabular-nums">
+                    {feeUnset}
+                  </dd>
+                  <dd className="text-xs text-muted-foreground">
+                    dossier{feeUnset > 1 ? "s" : ""} actif{feeUnset > 1 ? "s" : ""} sans montant
+                    convenu
+                  </dd>
+                </div>
+              </dl>
+              <div className="min-w-0">
+                <h3 className="text-xs font-medium text-muted-foreground">
+                  Restes à payer les plus élevés
+                </h3>
+                {topOwing.length === 0 ? (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Aucun candidat ne doit d&apos;argent à l&apos;agence.
+                  </p>
+                ) : (
+                  <ul className="mt-1">
+                    {topOwing.map((c) => (
+                      <li key={c.id}>
+                        <Link
+                          href={`/cases/${c.id}/payments`}
+                          className="-mx-2 flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-muted/50"
+                        >
+                          <span className="min-w-0 flex-1 truncate font-medium">
+                            {displayName(c.first_name, c.last_name)}
+                          </span>
+                          <StatusPill tone="warn">{formatDA(c.remaining_amount)}</StatusPill>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </Panel>
+        )}
 
         <div className="grid items-start gap-5 lg:grid-cols-3">
           <section className="rounded-2xl border border-primary/30 bg-highlight p-5">

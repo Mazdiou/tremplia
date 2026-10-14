@@ -9,6 +9,12 @@ export type CaseStatRow = {
   assigned_to: string | null;
   cases: number;
   created_last_week: number;
+  // Reste à encaisser (dossiers non abandonnés), en dinars
+  remaining: number;
+  // Dossiers non abandonnés qui doivent encore de l'argent
+  owing: number;
+  // Dossiers actifs sans montant convenu
+  fee_unset: number;
 };
 
 type Filter = Partial<{
@@ -37,4 +43,13 @@ export function countCases(rows: CaseStatRow[], filter: Filter = {}) {
 // Dossiers créés ces 7 derniers jours, tous statuts confondus
 export function countCreatedLastWeek(rows: CaseStatRow[], filter: Filter = {}) {
   return rows.reduce((n, r) => (matches(r, filter) ? n + r.created_last_week : n), 0);
+}
+
+// Somme d'une colonne de paiement sur les lignes correspondant au filtre
+export function sumStat(
+  rows: CaseStatRow[],
+  column: "remaining" | "owing" | "fee_unset",
+  filter: Filter = {},
+) {
+  return rows.reduce((n, r) => (matches(r, filter) ? n + Number(r[column]) : n), 0);
 }

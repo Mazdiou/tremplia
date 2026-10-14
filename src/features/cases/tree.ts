@@ -1,4 +1,5 @@
 import { UNCLASSIFIED_LABEL } from "@/features/campaigns/labels";
+import type { PaymentFilter } from "@/lib/ui-prefs";
 import type { TreeCase, TreeCaseGroup } from "./fetch-campaign-cases";
 
 export type TreeGroup = {
@@ -58,4 +59,16 @@ export function buildCampaignBranches(
     });
   }
   return branches;
+}
+
+// Filtre des paiements de l'arbre : reste à payer, soldés (gratuits compris),
+// montant convenu pas encore fixé
+export function matchesPayment(
+  c: Pick<TreeCase, "agreed_amount" | "remaining_amount">,
+  filter: PaymentFilter,
+) {
+  if (filter === "due") return (c.remaining_amount ?? 0) > 0;
+  if (filter === "paid") return c.agreed_amount !== null && c.remaining_amount === 0;
+  if (filter === "unset") return c.agreed_amount === null;
+  return true;
 }

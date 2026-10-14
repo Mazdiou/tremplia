@@ -1,5 +1,5 @@
 begin;
-select plan(24);
+select plan(30);
 
 -- Patron A, employé A1, patron B
 insert into auth.users (id, email) values
@@ -155,6 +155,29 @@ select isnt(public.record_case_payment('cccccccc-cccc-cccc-cccc-cccccccccccc',
     (select agency_a from ctx), '22222222-2222-2222-2222-222222222222',
     90000, current_date, 'ccp', null),
   null, 'le reste à payer ne compte pas le paiement annulé');
+
+-- Totaux gardés sur le dossier
+select is((select paid_amount from public.cases
+    where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+  150000, 'le total payé suit les paiements et les annulations');
+select is((select remaining_amount from public.cases
+    where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+  0, 'un dossier soldé ne doit plus rien');
+select is((select remaining_amount from public.cases
+    where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd'),
+  90000, 'reste à payer d''un dossier sans paiement');
+select throws_ok(
+  $$update public.cases set paid_amount = 999999
+    where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'$$,
+  '23514', null, 'jamais plus payé que convenu, même en écriture directe');
+select is(
+  (select sum(remaining)::bigint from public.case_stats
+    where campaign_id = (select id from camp)),
+  90000::bigint, 'case_stats : reste à encaisser de la campagne');
+select is(
+  (select sum(amount)::bigint from public.payment_months
+    where campaign_id = (select id from camp)),
+  150000::bigint, 'payment_months : encaissé, sans le paiement annulé');
 
 -- Lecture (RLS) : employé A1, puis patron B
 select set_config('request.jwt.claims',

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { TreeCase } from "./fetch-campaign-cases";
-import { buildCampaignBranches, type TreeGroup } from "./tree";
+import { buildCampaignBranches, matchesPayment, type TreeGroup } from "./tree";
 
 const person = (id: string, campaign = "fr"): TreeCase => ({
   id,
@@ -10,6 +10,8 @@ const person = (id: string, campaign = "fr"): TreeCase => ({
   education_level: "l3",
   status: "active",
   assigned_to: null,
+  agreed_amount: null,
+  remaining_amount: null,
 });
 
 const groups: TreeGroup[] = [
@@ -66,5 +68,22 @@ describe("buildCampaignBranches", () => {
     expect(shape(buildCampaignBranches("nl", groups, [person("e", "nl")], []))).toEqual([
       ["Non classés", ["e"]],
     ]);
+  });
+});
+
+describe("matchesPayment", () => {
+  const due = { ...person("a"), agreed_amount: 150000, remaining_amount: 90000 };
+  const paid = { ...person("b"), agreed_amount: 150000, remaining_amount: 0 };
+  const free = { ...person("c"), agreed_amount: 0, remaining_amount: 0 };
+  const unset = person("d");
+
+  it("sans filtre, tout passe", () => {
+    expect([due, paid, free, unset].every((c) => matchesPayment(c, ""))).toBe(true);
+  });
+
+  it("reste à payer, soldés, montant à fixer", () => {
+    expect([due, paid, free, unset].filter((c) => matchesPayment(c, "due"))).toEqual([due]);
+    expect([due, paid, free, unset].filter((c) => matchesPayment(c, "paid"))).toEqual([paid, free]);
+    expect([due, paid, free, unset].filter((c) => matchesPayment(c, "unset"))).toEqual([unset]);
   });
 });

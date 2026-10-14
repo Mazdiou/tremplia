@@ -5,6 +5,9 @@ import { useSyncExternalStore } from "react";
 // l'hydratation utilisent les valeurs par défaut, puis React bascule sur les
 // valeurs mémorisées sans écart d'hydratation. Aucune donnée sensible ici.
 
+export const PAYMENT_FILTERS = ["", "due", "paid", "unset"] as const;
+export type PaymentFilter = (typeof PAYMENT_FILTERS)[number];
+
 export type UiPrefs = {
   width: number;
   collapsed: boolean;
@@ -12,10 +15,14 @@ export type UiPrefs = {
   showLevel: boolean;
   showClosed: boolean;
   showArchived: boolean;
+  // Reste à payer affiché à côté du nom
+  showPayments: boolean;
   sortBy: "name" | "level";
   level: string;
   responsible: string;
   mine: boolean;
+  // Filtre des paiements : reste à payer, soldés, montant à fixer
+  payment: PaymentFilter;
   // En-tête de la fiche d'un dossier réduit à une ligne
   caseHeaderCollapsed: boolean;
 };
@@ -27,10 +34,12 @@ export const DEFAULT_PREFS: UiPrefs = {
   showLevel: false,
   showClosed: false,
   showArchived: false,
+  showPayments: true,
   sortBy: "name",
   level: "",
   responsible: "",
   mine: false,
+  payment: "",
   caseHeaderCollapsed: false,
 };
 
@@ -54,10 +63,14 @@ export function sanitize(raw: unknown): UiPrefs {
     showLevel: r.showLevel === true,
     showClosed: r.showClosed === true,
     showArchived: r.showArchived === true,
+    showPayments: r.showPayments !== false,
     sortBy: r.sortBy === "level" ? "level" : "name",
     level: typeof r.level === "string" ? r.level : "",
     responsible: typeof r.responsible === "string" ? r.responsible : "",
     mine: r.mine === true,
+    payment: (PAYMENT_FILTERS as readonly unknown[]).includes(r.payment)
+      ? (r.payment as PaymentFilter)
+      : "",
     caseHeaderCollapsed: r.caseHeaderCollapsed === true,
   };
 }

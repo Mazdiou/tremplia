@@ -24,6 +24,13 @@ describe("sanitize (mémoire de l'interface)", () => {
     });
   });
 
+  it("filtre des paiements : valeurs connues seulement, reste à payer affiché par défaut", () => {
+    expect(sanitize({ payment: "due" }).payment).toBe("due");
+    expect(sanitize({ payment: "tout" }).payment).toBe("");
+    expect(sanitize({}).showPayments).toBe(true);
+    expect(sanitize({ showPayments: false }).showPayments).toBe(false);
+  });
+
   it("borne la largeur du panneau", () => {
     expect(sanitize({ width: 10 }).width).toBe(220);
     expect(sanitize({ width: 9999 }).width).toBe(520);

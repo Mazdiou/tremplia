@@ -12,6 +12,9 @@ export type CaseRow = CaseFieldsRecord & {
   status: CaseStatus;
   // Montant convenu avec le candidat, en dinars (vide : pas encore fixé)
   agreed_amount: number | null;
+  // Total payé, et reste à payer calculé par la base (vide si pas de montant)
+  paid_amount: number;
+  remaining_amount: number | null;
   created_at: string;
 };
 

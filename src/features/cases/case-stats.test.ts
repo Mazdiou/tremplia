@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countCases, countCreatedLastWeek, type CaseStatRow } from "./case-stats";
+import { countCases, countCreatedLastWeek, sumStat, type CaseStatRow } from "./case-stats";
 
 const row = (r: Partial<CaseStatRow>): CaseStatRow => ({
   campaign_id: "c1",
@@ -8,6 +8,9 @@ const row = (r: Partial<CaseStatRow>): CaseStatRow => ({
   assigned_to: null,
   cases: 1,
   created_last_week: 0,
+  remaining: 0,
+  owing: 0,
+  fee_unset: 0,
   ...r,
 });
 
@@ -37,5 +40,23 @@ describe("countCreatedLastWeek", () => {
   it("additionne les dossiers récents, tous statuts", () => {
     expect(countCreatedLastWeek(rows)).toBe(8);
     expect(countCreatedLastWeek(rows, { campaignId: "c1" })).toBe(3);
+  });
+});
+
+describe("sumStat", () => {
+  it("additionne les montants et compteurs de paiement", () => {
+    const pay = [
+      row({ remaining: 90000, owing: 1 }),
+      row({ remaining: 50000, owing: 2, fee_unset: 1 }),
+      row({ campaign_id: "c2", remaining: 10000, owing: 1 }),
+    ];
+    expect(sumStat(pay, "remaining")).toBe(150000);
+    expect(sumStat(pay, "owing", { campaignId: "c1" })).toBe(3);
+    expect(sumStat(pay, "fee_unset")).toBe(1);
+  });
+
+  // La vue renvoie les sommes en bigint, que PostgREST transmet parfois en texte
+  it("accepte une somme transmise en texte", () => {
+    expect(sumStat([row({ remaining: "1500" as unknown as number })], "remaining")).toBe(1500);
   });
 });
