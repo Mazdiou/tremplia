@@ -133,9 +133,10 @@ export function KeyRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b px-5 py-3 text-sm last:border-b-0">
+    // Téléphone : libellé au-dessus de la valeur, qui garde toute la largeur
+    <div className="flex flex-col gap-0.5 border-b px-5 py-3 text-sm last:border-b-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 break-words text-right font-medium">{children}</dd>
+      <dd className="min-w-0 break-words font-medium sm:text-right">{children}</dd>
     </div>
   );
 }

@@ -59,8 +59,8 @@ export function ProgramRow({
             {programLevelLabel(program.level)}
           </span>
         </p>
-        <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
-          <MapPin className="size-3.5 shrink-0" aria-hidden />
+        <p className="mt-0.5 flex items-start gap-1 text-sm text-muted-foreground">
+          <MapPin className="mt-[3px] size-3.5 shrink-0" aria-hidden />
           <span className="min-w-0 break-words">
             {program.city}
             {program.institution && ` · ${program.institution}`}

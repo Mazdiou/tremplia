@@ -14,7 +14,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
+      <header className="z-10 border-b bg-background/95 backdrop-blur sm:sticky sm:top-0">
         <div className="mx-auto max-w-4xl px-4 md:px-8">
           <div className="flex h-14 items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
@@ -33,7 +33,10 @@ export default async function StudentLayout({ children }: { children: React.Reac
               {displayName(c.first_name, c.last_name)}
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Dossier suivi par {agency.name} · {agency.phone}
+              Dossier suivi par {agency.name} ·{" "}
+              <a href={`tel:${agency.phone.replace(/[^0-9+]/g, "")}`} className="whitespace-nowrap hover:underline">
+                {agency.phone}
+              </a>
             </p>
           </div>
           <div className="mt-3">

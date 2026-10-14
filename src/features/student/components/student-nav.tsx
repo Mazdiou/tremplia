@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
+// Libellé court sur téléphone : les trois onglets tiennent sur 320 px
 const TABS = [
-  { href: "/student", label: "Informations" },
-  { href: "/student/letter", label: "Lettre de motivation" },
-  { href: "/student/programs", label: "Formations" },
+  { href: "/student", label: "Informations", short: "Infos" },
+  { href: "/student/letter", label: "Lettre de motivation", short: "Lettre" },
+  { href: "/student/programs", label: "Formations", short: "Formations" },
 ];
 
 export function StudentTabs() {
@@ -35,7 +36,8 @@ export function StudentTabs() {
                 : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
-            {t.label}
+            <span className="sm:hidden">{t.short}</span>
+            <span className="max-sm:hidden">{t.label}</span>
           </Link>
         );
       })}
