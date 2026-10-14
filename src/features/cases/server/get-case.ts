@@ -30,52 +30,60 @@ export type CaseGroup = { id: string; name: string };
 export const getCase = cache(async (id: string) => {
   if (!z.string().uuid().safeParse(id).success) return null;
 
+  // Une seule requête : le dossier et ce qui s'y rattache, par ses liens
   const supabase = await createClient();
-  const { data } = await supabase.from("cases").select("*").eq("id", id).maybeSingle();
+  const { data } = await supabase
+    .from("cases")
+    .select(
+      `*,
+      responsible:profiles!cases_assigned_to_fk(first_name, last_name),
+      campaign:campaigns!cases_campaign_fk(id, name, status, suggested_platforms,
+        campaign_groups(id, name, position)),
+      case_groups!case_groups_case_fk(group_id),
+      case_external_accounts!case_external_accounts_case_fk(id, platform, url, login, status)`,
+    )
+    .eq("id", id)
+    .maybeSingle();
   if (!data) return null;
-  const c = data as CaseRow;
 
-  const [respRes, campRes, groupsRes, caseGroupsRes, accountsRes] = await Promise.all([
-    c.assigned_to
-      ? supabase
-          .from("profiles")
-          .select("first_name, last_name")
-          .eq("id", c.assigned_to)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    supabase
-      .from("campaigns")
-      .select("id, name, status, suggested_platforms")
-      .eq("id", c.campaign_id)
-      .maybeSingle(),
-    supabase
-      .from("campaign_groups")
-      .select("id, name")
-      .eq("campaign_id", c.campaign_id)
-      .order("position"),
-    supabase.from("case_groups").select("group_id").eq("case_id", id),
-    supabase
-      .from("case_external_accounts")
-      .select("id, platform, url, login, status")
-      .eq("case_id", id)
-      .order("platform"),
-  ]);
-
-  const p = respRes.data as { first_name: string; last_name: string } | null;
-  const campaignGroups = (groupsRes.data ?? []) as CaseGroup[];
-  const groupIds = new Set((caseGroupsRes.data ?? []).map((g) => g.group_id as string));
-
-  return {
-    c,
-    responsible: p ? `${p.first_name} ${p.last_name}` : null,
-    campaign: campRes.data as {
+  const {
+    responsible: p,
+    campaign: camp,
+    case_groups: caseGroups,
+    case_external_accounts: accounts,
+    ...c
+  } = data as unknown as CaseRow & {
+    responsible: { first_name: string; last_name: string } | null;
+    campaign: {
       id: string;
       name: string;
       status: string;
       suggested_platforms: string[];
-    } | null,
+      campaign_groups: (CaseGroup & { position: number })[];
+    } | null;
+    case_groups: { group_id: string }[];
+    case_external_accounts: CaseExternalAccount[];
+  };
+
+  const { campaign_groups: rawGroups = [], ...campaign } = camp ?? {};
+  const campaignGroups: CaseGroup[] = [...rawGroups]
+    .sort((a, b) => a.position - b.position)
+    .map((g) => ({ id: g.id, name: g.name }));
+  const groupIds = new Set(caseGroups.map((g) => g.group_id));
+
+  return {
+    c: c as CaseRow,
+    responsible: p ? `${p.first_name} ${p.last_name}` : null,
+    campaign: camp
+      ? (campaign as {
+          id: string;
+          name: string;
+          status: string;
+          suggested_platforms: string[];
+        })
+      : null,
     campaignGroups,
     groups: campaignGroups.filter((g) => groupIds.has(g.id)),
-    externalAccounts: (accountsRes.data ?? []) as CaseExternalAccount[],
+    externalAccounts: [...accounts].sort((a, b) => a.platform.localeCompare(b.platform)),
   };
 });

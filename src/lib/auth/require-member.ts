@@ -19,20 +19,20 @@ export type Member = {
 // page partagent la même lecture (sans effet dans les routes API).
 export const requireMember = cache(async (): Promise<Member | null> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  // Jeton vérifié sur place, sans appel au serveur d'authentification
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims.sub;
+  if (!userId) return null;
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("agency_id, role, is_active, must_change_password, first_name, last_name")
-    .eq("id", user.id)
+    .eq("id", userId)
     .maybeSingle();
 
   if (!profile || !profile.is_active || profile.must_change_password) return null;
   return {
-    userId: user.id,
+    userId,
     agencyId: profile.agency_id as string,
     isOwner: profile.role === "owner",
     firstName: profile.first_name as string,

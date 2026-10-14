@@ -37,9 +37,11 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Jeton vérifié sur place (clés de signature asymétriques) : pas d'appel
+  // au serveur d'authentification à chaque page. Le profil, lu juste après,
+  // écarte toujours un compte désactivé.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims.sub ?? null;
 
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.includes(path);
@@ -54,7 +56,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Visiteur non connecté
-  if (!user) {
+  if (!userId) {
     if (!isPublic && !isApi) return redirectTo("/login");
     return response;
   }
@@ -66,7 +68,7 @@ export async function proxy(request: NextRequest) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("must_change_password")
-    .eq("id", user.id)
+    .eq("id", userId)
     .maybeSingle();
 
   if (!profile) {

@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { z } from "zod";
 import { Pencil } from "lucide-react";
 import { StatusPill } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
@@ -26,6 +27,8 @@ import {
   CaseHeaderToggle,
 } from "@/features/cases/components/case-header";
 
+const isUuid = (id: string) => z.string().uuid().safeParse(id).success;
+
 const STATUS_TONE = { active: "ok", closed: "off", abandoned: "bad" } as const;
 
 
@@ -36,21 +39,23 @@ export default async function CaseLayout({
   children: React.ReactNode;
   params: Promise<{ id: string }>;
 }) {
-  const member = await requireMember();
+  const [member, { id }] = await Promise.all([requireMember(), params]);
   if (!member) redirect("/login");
 
-  const { id } = await params;
-  const data = await getCase(id);
+  // Tout est lu en même temps. Les lectures avec la clé secrète sont filtrées
+  // sur l'agence de la session : un dossier d'une autre agence n'y renvoie
+  // rien, et getCase (via le RLS) le déclare introuvable.
+  const [data, usedPlatforms, studentAccess, review, unread] = await Promise.all([
+    getCase(id),
+    listUsedPlatforms(),
+    isUuid(id) ? getStudentAccess(member.agencyId, id) : null,
+    isUuid(id) ? readReview(member.agencyId, id) : null,
+    agencyUnreadCounts(member.agencyId),
+  ]);
   if (!data) notFound();
   const { c, responsible, campaign, groups, externalAccounts } = data;
   // Plateformes proposées pour un nouveau compte : celles suggérées par la
   // campagne, puis celles déjà utilisées dans l'agence
-  const [usedPlatforms, studentAccess, review, unread] = await Promise.all([
-    listUsedPlatforms(),
-    getStudentAccess(member.agencyId, c.id),
-    readReview(member.agencyId, c.id),
-    agencyUnreadCounts(member.agencyId),
-  ]);
   const suggestions = mergePlatforms(campaign?.suggested_platforms ?? [], usedPlatforms);
 
   const summary = [

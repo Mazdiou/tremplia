@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { ApiError, dbError } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -106,8 +107,10 @@ export async function markReadByAgency(auth: AuthorizedCase, caseId: string) {
   if (error) throw dbError("messages read mark", error);
 }
 
-// Messages du candidat non lus par l'agence, par dossier
-export async function agencyUnreadCounts(agencyId: string): Promise<Record<string, number>> {
+// Messages du candidat non lus par l'agence, par dossier. Mis en cache pour
+// la durée d'un affichage : la liste des dossiers et le dossier ouvert
+// partagent la même lecture.
+export const agencyUnreadCounts = cache(async (agencyId: string): Promise<Record<string, number>> => {
   const { data, error } = await createAdminClient().rpc("agency_unread_messages", {
     p_agency_id: agencyId,
   });
@@ -121,7 +124,7 @@ export async function agencyUnreadCounts(agencyId: string): Promise<Record<strin
       Number(r.unread),
     ]),
   );
-}
+});
 
 // Côté candidat -------------------------------------------------------------
 

@@ -44,6 +44,18 @@ export async function listGroups(campaignIds: string[]): Promise<GroupSummary[]>
   return (data ?? []) as GroupSummary[];
 }
 
+// Tous les groupes de l'agence (le RLS filtre), sans attendre la liste des
+// campagnes : lus en même temps qu'elle
+export async function listAgencyGroups(): Promise<GroupSummary[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("campaign_groups")
+    .select("id, campaign_id, name, position")
+    .order("position");
+  if (error) console.error("[campaign groups list]", error.code);
+  return (data ?? []) as GroupSummary[];
+}
+
 export async function listCampaignDates(
   campaigns: Pick<CampaignSummary, "id" | "name">[],
 ): Promise<CampaignDate[]> {
