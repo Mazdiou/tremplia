@@ -9,11 +9,11 @@ import { UnreadBadge } from "@/features/messages/components/unread-badge";
 const TABS = [
   { suffix: "", label: "Informations", ownerOnly: false },
   { suffix: "/documents", label: "Documents", ownerOnly: false },
-  { suffix: "/motivation-letter", label: "Lettre de motivation", ownerOnly: false },
   { suffix: "/programs", label: "Formations", ownerOnly: false },
-  { suffix: "/payments", label: "Paiements", ownerOnly: false },
-  { suffix: "/messages", label: "Messages", ownerOnly: false },
+  { suffix: "/motivation-letter", label: "Lettre de motivation", ownerOnly: false },
   { suffix: "/notes", label: "Notes", ownerOnly: false },
+  { suffix: "/messages", label: "Messages", ownerOnly: false },
+  { suffix: "/payments", label: "Paiements", ownerOnly: false },
   { suffix: "/history", label: "Historique", ownerOnly: true },
 ];
 
