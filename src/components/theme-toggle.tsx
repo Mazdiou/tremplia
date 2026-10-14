@@ -9,7 +9,17 @@ export function ThemeToggle({ className }: { className?: string }) {
   function toggle() {
     const root = document.documentElement;
     const dark = !root.classList.contains("dark");
+
+    // Sans animation pendant le changement : les éléments animés au survol
+    // (cartes, boutons) changeraient de couleur en retard sur le reste.
+    const freeze = document.createElement("style");
+    freeze.textContent = "*,*::before,*::after{transition:none!important}";
+    document.head.appendChild(freeze);
     root.classList.toggle("dark", dark);
+    // Force le calcul des nouveaux styles avant de rendre les animations
+    void getComputedStyle(document.body).color;
+    setTimeout(() => freeze.remove(), 1);
+
     try {
       localStorage.setItem("sf:theme", dark ? "dark" : "light");
     } catch {
