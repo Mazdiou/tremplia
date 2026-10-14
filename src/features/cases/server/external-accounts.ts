@@ -1,10 +1,9 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { ApiError, dbError } from "@/lib/api-errors";
-import { logActivity } from "@/lib/audit/log-activity";
 import { decryptSecret, encryptSecret } from "@/lib/crypto/secrets";
 import type { ExternalAccountInput } from "../schemas";
-import type { AuthorizedCase } from "./authorize-case";
+import { logCaseActivity, type AuthorizedCase } from "./authorize-case";
 
 // Le mot de passe est lié à son compte : copié dans la ligne d'un autre
 // compte, il ne se déchiffre pas.
@@ -59,13 +58,10 @@ export async function saveExternalAccount(
     });
   }
 
-  await logActivity(admin, {
-    agencyId: member.agencyId,
-    actorId: member.userId,
+  await logCaseActivity(auth, caseId, {
     action: "external_account.saved",
     targetType: "external_account",
     targetId: id,
-    caseId,
     details: {
       created: created === true,
       status: input.status,
@@ -103,13 +99,10 @@ export async function revealPassword(
   if (error) throw dbError("external accounts reveal", error);
   if (!secret) throw new ApiError(404, "Aucun mot de passe enregistré pour ce compte");
 
-  const logged = await logActivity(admin, {
-    agencyId: member.agencyId,
-    actorId: member.userId,
+  const logged = await logCaseActivity(auth, caseId, {
     action: "external_account.password_viewed",
     targetType: "external_account",
     targetId: accountId,
-    caseId,
   });
   if (!logged) throw new ApiError(503, "Journal indisponible, réessayez dans un instant");
 

@@ -21,7 +21,7 @@ import {
   labelOf,
 } from "@/features/cases/labels";
 import { APP_TIMEZONE, dayFormat, formatLongDate, todayInAppTimezone } from "@/lib/dates";
-import { displayName } from "@/lib/names";
+import { displayName, initialsOf } from "@/lib/names";
 
 const timeFmt = new Intl.DateTimeFormat("fr-FR", {
   timeZone: APP_TIMEZONE,
@@ -59,7 +59,7 @@ function Initials({ first, last }: { first: string; last: string }) {
       aria-hidden
       className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-semibold text-accent-foreground"
     >
-      {`${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase() || "?"}
+      {initialsOf(first, last)}
     </span>
   );
 }

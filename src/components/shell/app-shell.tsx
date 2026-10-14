@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireMember } from "@/lib/auth/require-member";
+import { initialsOf } from "@/lib/names";
 import { AppRail } from "./app-rail";
 
 // Coquille commune : barre d'icônes + contenu. Utilisée par le tableau de
@@ -9,8 +10,7 @@ export async function getShellUser() {
   if (!member) redirect("/login");
   return {
     member,
-    initials:
-      `${member.firstName[0] ?? ""}${member.lastName[0] ?? ""}`.toUpperCase() || "?",
+    initials: initialsOf(member.firstName, member.lastName),
   };
 }
 

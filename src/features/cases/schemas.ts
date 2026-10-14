@@ -2,6 +2,7 @@ import { z } from "zod";
 import { noteContentSchema } from "@/features/notes/schemas";
 import { todayInAppTimezone } from "@/lib/dates";
 import {
+  emptyToUndefined,
   isoDateSchema,
   isUniqueIgnoringCase,
   optionalEmailSchema,
@@ -26,9 +27,6 @@ import {
 
 // Schémas partagés par les formulaires et les routes. La base impose les
 // mêmes limites (migration cases).
-
-const emptyToUndefined = (v: unknown) =>
-  typeof v === "string" && v.trim() === "" ? undefined : v;
 
 export const diplomaSchema = z.object({
   type: z.enum(DIPLOMA_TYPES, "Choisissez un type de diplôme"),

@@ -13,7 +13,13 @@ import {
   MAX_EXTERNAL_ACCOUNTS,
   MAX_LANGUAGE_TESTS,
 } from "@/features/cases/labels";
-import { ListHeader, SelectField, TextField, optionsOf } from "./form-fields";
+import {
+  ListHeader,
+  RemoveButton,
+  SelectField,
+  TextField,
+  optionsOf,
+} from "@/components/form-fields";
 
 // Listes répétables du formulaire de dossier. Chaque ligne a ses propres
 // champs ; `errors` est indexé par chemin (« diplomas.0.year »).
@@ -37,22 +43,6 @@ type Errors = Record<string, string>;
 
 function update<T>(list: T[], index: number, patch: Partial<T>) {
   return list.map((item, i) => (i === index ? { ...item, ...patch } : item));
-}
-
-function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      className="text-muted-foreground hover:text-destructive max-sm:mt-6"
-    >
-      <Trash2 />
-    </Button>
-  );
 }
 
 function AddButton({ label, onClick }: { label: string; onClick: () => void }) {

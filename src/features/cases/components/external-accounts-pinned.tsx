@@ -3,6 +3,7 @@
 import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Copy, Eye, EyeOff, KeyRound, Pencil, Plus } from "lucide-react";
+import { FieldError } from "@/components/form-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -402,9 +403,4 @@ function AccountForm({
       </div>
     </form>
   );
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-sm text-destructive">{message}</p>;
 }

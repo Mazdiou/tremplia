@@ -6,6 +6,7 @@ import { requireMember } from "@/lib/auth/require-member";
 import { listCampaigns, listGroups } from "@/features/campaigns/server/queries";
 import { CaseForm, type FormCampaign } from "@/features/cases/components/case-form";
 import type { SourceCampaign } from "@/features/cases/components/import-panel";
+import { listUsedPlatforms } from "@/features/cases/server/lookups";
 
 export default async function NewCasePage({
   searchParams,
@@ -57,12 +58,7 @@ export default async function NewCasePage({
   );
 
   // Plateformes déjà utilisées dans l'agence, en suggestion
-  const { data: used } = await supabase
-    .from("case_external_accounts")
-    .select("platform")
-    .order("updated_at", { ascending: false })
-    .limit(200);
-  const platformSuggestions = [...new Set((used ?? []).map((r) => r.platform as string))];
+  const platformSuggestions = await listUsedPlatforms();
 
   // Seul le patron choisit un responsable : on ne charge la liste que pour lui
   let members: { id: string; first_name: string; last_name: string }[] = [];

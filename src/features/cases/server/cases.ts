@@ -14,7 +14,7 @@ import {
 } from "../case-record";
 import type { CaseStatus } from "../labels";
 import type { CreateCaseInput, UpdateCaseInput } from "../schemas";
-import type { AuthorizedCase } from "./authorize-case";
+import { logCaseActivity, type AuthorizedCase } from "./authorize-case";
 
 // Création d'un dossier ---------------------------------------------------------
 
@@ -158,13 +158,10 @@ export async function updateCase(auth: AuthorizedCase, caseId: string, input: Up
     });
     if (error) throw dbError("cases update", error, { P0002: "Dossier introuvable" });
 
-    await logActivity(admin, {
-      agencyId: member.agencyId,
-      actorId: member.userId,
+    await logCaseActivity(auth, caseId, {
       action: "case.updated",
       targetType: "case",
       targetId: caseId,
-      caseId,
       details: { fields, ...changes },
     });
   }
@@ -184,13 +181,10 @@ export async function updateCase(auth: AuthorizedCase, caseId: string, input: Up
         "22023": "Responsable invalide (compte inactif ou d'une autre agence)",
       });
     }
-    await logActivity(admin, {
-      agencyId: member.agencyId,
-      actorId: member.userId,
+    await logCaseActivity(auth, caseId, {
       action: "case.assigned",
       targetType: "case",
       targetId: caseId,
-      caseId,
       details: { from: row.assigned_to, to: nextAssignee },
     });
     fields.push("assigned_to");
@@ -210,13 +204,10 @@ export async function setCaseStatus(auth: AuthorizedCase, caseId: string, status
   if (error) throw dbError("cases status", error, { P0002: "Dossier introuvable" });
 
   if (previous !== status) {
-    await logActivity(admin, {
-      agencyId: member.agencyId,
-      actorId: member.userId,
+    await logCaseActivity(auth, caseId, {
       action: "case.status_changed",
       targetType: "case",
       targetId: caseId,
-      caseId,
       details: { from: previous as string, to: status },
     });
   }
@@ -250,13 +241,10 @@ export async function setCaseGroups(auth: AuthorizedCase, caseId: string, groupI
   const added = [...next].filter((g) => !old.has(g));
   const removed = [...old].filter((g) => !next.has(g));
   if (added.length > 0 || removed.length > 0) {
-    await logActivity(admin, {
-      agencyId: member.agencyId,
-      actorId: member.userId,
+    await logCaseActivity(auth, caseId, {
       action: "case.groups_updated",
       targetType: "case",
       targetId: caseId,
-      caseId,
       details: { added, removed },
     });
   }

@@ -4,7 +4,8 @@ import { PageContainer, PageHeader, Panel, StatusPill } from "@/components/page-
 import { DeleteEmployeeButton } from "@/features/team/components/delete-employee-button";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireOwner } from "@/lib/auth/require-owner";
+import { requireOwner } from "@/lib/auth/require-member";
+import { initialsOf } from "@/lib/names";
 import { AddEmployeeForm } from "@/features/team/components/add-employee-form";
 import { ToggleActiveButton } from "@/features/team/components/toggle-active-button";
 
@@ -54,7 +55,7 @@ export default async function TeamPage() {
                     aria-hidden
                     className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-foreground"
                   >
-                    {`${m.first_name[0] ?? ""}${m.last_name[0] ?? ""}`.toUpperCase()}
+                    {initialsOf(m.first_name, m.last_name)}
                   </span>
                   <div className="min-w-0 flex-1 basis-48">
                     <p className="truncate text-sm font-medium">

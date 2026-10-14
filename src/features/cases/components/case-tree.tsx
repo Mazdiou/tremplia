@@ -17,6 +17,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import {
   EDUCATION_LEVELS,
   EDUCATION_LEVEL_LABELS,
+  STATUS_SUFFIXES,
   educationRank,
   labelOf,
 } from "@/features/cases/labels";
@@ -41,11 +42,6 @@ export type TreeMember = {
   first_name: string;
   last_name: string;
   is_active: boolean;
-};
-
-const STATUS_SUFFIX: Record<string, string> = {
-  closed: "clos",
-  abandoned: "abandonné",
 };
 
 const collator = new Intl.Collator("fr", { sensitivity: "base" });
@@ -653,7 +649,7 @@ export function CaseTree({
                               {branchOpen &&
                                 visible.map((c) => {
                                   const isSelected = c.id === selectedId;
-                                  const suffix = STATUS_SUFFIX[c.status];
+                                  const suffix = STATUS_SUFFIXES[c.status];
                                   return (
                                     <Link
                                       key={c.id}

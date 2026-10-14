@@ -12,3 +12,5 @@ export const noteContentSchema = z
     MAX_NOTE_LENGTH,
     `La note ne peut pas dépasser ${MAX_NOTE_LENGTH} caractères`,
   );
+
+export const noteSchema = z.object({ content: noteContentSchema });

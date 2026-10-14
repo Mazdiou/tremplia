@@ -7,7 +7,7 @@ import { FormActions, FormSection } from "@/components/page-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FieldError, ListHeader, TextField } from "@/features/cases/components/form-fields";
+import { FieldError, ListHeader, RemoveButton, TextField } from "@/components/form-fields";
 import { callApi } from "@/lib/api-client";
 import {
   MAX_CAMPAIGN_DATES,
@@ -25,22 +25,6 @@ export type CampaignSettingsDraft = {
 
 const DATE_GRID = "sm:grid-cols-[1fr_11rem_2.5rem]";
 const INFO_GRID = "sm:grid-cols-[1fr_2fr_2.5rem]";
-
-function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      aria-label={label}
-      title={label}
-      className="text-muted-foreground hover:text-destructive max-sm:mt-6"
-      onClick={onClick}
-    >
-      <Trash2 />
-    </Button>
-  );
-}
 
 // Création (avec les groupes de départ) ou modification des réglages d'une
 // campagne. Réservé au patron ; la base le revérifie.

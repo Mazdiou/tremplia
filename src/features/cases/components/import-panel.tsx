@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { CaseFieldsDraft } from "@/features/cases/case-record";
+import type { ImportMatch } from "@/features/cases/case-record";
 import {
   EDUCATION_LEVEL_LABELS,
   STATUS_LABELS,
@@ -10,21 +10,9 @@ import {
 } from "@/features/cases/labels";
 import { callApi } from "@/lib/api-client";
 import { displayName } from "@/lib/names";
-import { SelectField, TextField } from "./form-fields";
+import { SelectField, TextField } from "@/components/form-fields";
 
 export type SourceCampaign = { id: string; name: string; caseCount: number };
-
-export type ImportMatch = {
-  id: string;
-  status: string;
-  fields: CaseFieldsDraft;
-  externalAccounts: {
-    platform: string;
-    url: string;
-    login: string;
-    status: "existing" | "to_create";
-  }[];
-};
 
 // Import depuis une autre campagne : choisir la campagne source, puis
 // retrouver le candidat par nom, prénom et date de naissance (en POST).

@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ApiError } from "@/lib/api-errors";
 
@@ -14,7 +15,9 @@ export type Member = {
 // désactivé. Un compte qui doit encore remplacer son mot de passe temporaire
 // n'a accès à rien d'autre (la page de changement n'utilise pas ce contrôle).
 // L'agence vient toujours d'ici, jamais de la requête.
-export async function requireMember(): Promise<Member | null> {
+// Mis en cache pour la durée d'un affichage : la coquille, le layout et la
+// page partagent la même lecture (sans effet dans les routes API).
+export const requireMember = cache(async (): Promise<Member | null> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -35,6 +38,12 @@ export async function requireMember(): Promise<Member | null> {
     firstName: profile.first_name as string,
     lastName: profile.last_name as string,
   };
+});
+
+// Pages réservées au patron : null pour un employé
+export async function requireOwner(): Promise<Member | null> {
+  const member = await requireMember();
+  return member?.isOwner ? member : null;
 }
 
 // Pour les routes API : refuse (403) au lieu de renvoyer null

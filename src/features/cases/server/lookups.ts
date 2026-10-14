@@ -6,10 +6,11 @@ import { createClient } from "@/lib/supabase/server";
 import {
   CASE_FIELD_COLUMNS,
   toCaseDraft,
-  type CaseFieldsDraft,
   type CaseFieldsRecord,
+  type ImportMatch,
 } from "../case-record";
 import { CASE_SEARCH_LIMIT } from "../schemas";
+import { mergePlatforms } from "../platforms";
 import { parseSearchQuery } from "../search-query";
 
 // Lectures via le RLS : seuls les dossiers de l'agence de l'appelant sont
@@ -24,6 +25,19 @@ export type CaseSearchResult = {
   campaignId: string;
   campaignName: string;
 };
+
+// Plateformes des comptes externes déjà utilisées dans l'agence, les plus
+// récentes d'abord (suggestions des formulaires)
+export async function listUsedPlatforms(): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("case_external_accounts")
+    .select("platform")
+    .order("updated_at", { ascending: false })
+    .limit(200);
+  if (error) console.error("[platforms list]", error.code);
+  return mergePlatforms((data ?? []).map((r) => r.platform as string));
+}
 
 // Échappe les jokers de LIKE (% et _) saisis par l'utilisateur
 const likeEscape = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -76,19 +90,6 @@ export async function searchCases(query: string): Promise<CaseSearchResult[]> {
     campaignName: names.get(r.campaign_id as string) ?? "",
   }));
 }
-
-export type ImportMatch = {
-  id: string;
-  status: string;
-  fields: CaseFieldsDraft;
-  // Comptes repris SANS mot de passe : il est à ressaisir
-  externalAccounts: {
-    platform: string;
-    url: string;
-    login: string;
-    status: "existing" | "to_create";
-  }[];
-};
 
 // Import depuis une autre campagne : dossiers de la campagne source qui ont
 // ce nom, ce prénom et cette date de naissance (noms comparés sans accents

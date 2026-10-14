@@ -8,12 +8,13 @@ import { FormActions, FormSection } from "@/components/page-ui";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { callApi, type ApiResult } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import type { CaseFieldsDraft } from "@/features/cases/case-record";
+import type { CaseFieldsDraft, ImportMatch } from "@/features/cases/case-record";
 import {
   EDUCATION_LEVELS,
   EDUCATION_LEVEL_LABELS,
 } from "@/features/cases/labels";
 import { MAX_NOTE_LENGTH } from "@/features/notes/schemas";
+import { mergePlatforms } from "@/features/cases/platforms";
 import {
   AccountsEditor,
   DiplomasEditor,
@@ -25,8 +26,8 @@ import {
   TextAreaField,
   TextField,
   optionsOf,
-} from "./form-fields";
-import { ImportPanel, type ImportMatch, type SourceCampaign } from "./import-panel";
+} from "@/components/form-fields";
+import { ImportPanel, type SourceCampaign } from "./import-panel";
 
 export type FormCampaign = {
   id: string;
@@ -395,10 +396,10 @@ export function CaseForm(
                   value={accounts}
                   onChange={setAccounts}
                   errors={e}
-                  suggestions={[
-                    ...(campaign?.suggestedPlatforms ?? []),
-                    ...props.platformSuggestions,
-                  ].filter((p, i, all) => all.indexOf(p) === i)}
+                  suggestions={mergePlatforms(
+                    campaign?.suggestedPlatforms ?? [],
+                    props.platformSuggestions,
+                  )}
                   passwordHint={imported !== null}
                 />
                 {e.externalAccounts && (

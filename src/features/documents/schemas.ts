@@ -21,3 +21,39 @@ export const folderNameSchema = z
   .trim()
   .min(1, "Saisissez un nom pour le dossier")
   .max(80, "Le nom ne peut pas dépasser 80 caractères");
+
+// Corps des requêtes ------------------------------------------------------------
+
+// Étape 1 de l'envoi : demande d'une URL signée
+export const uploadRequestSchema = z.object({
+  name: documentNameSchema,
+  originalFileName: z
+    .string()
+    .trim()
+    .min(1)
+    .max(255)
+    .refine((n) => /\.pdf$/i.test(n), "Seuls les fichiers PDF sont acceptés"),
+  sizeBytes: z
+    .number()
+    .int()
+    .min(1, "Ce fichier est vide")
+    .max(MAX_DOCUMENT_BYTES, "Le fichier dépasse 10 Mo"),
+});
+
+// Étape 2 de l'envoi : enregistrement du fichier reçu
+export const addDocumentSchema = z.object({
+  documentId: z.string().uuid(),
+  name: documentNameSchema,
+  originalFileName: z.string().trim().min(1).max(255),
+  // Dossier de rangement (absent ou null : « Sans dossier »)
+  folderId: z.string().uuid().nullish(),
+});
+
+export const renameDocumentSchema = z.object({ name: documentNameSchema });
+
+// folderId null : « Sans dossier »
+export const moveDocumentSchema = z.object({ folderId: z.string().uuid().nullable() });
+
+export const lockDocumentSchema = z.object({ locked: z.boolean() });
+
+export const folderSchema = z.object({ name: folderNameSchema });

@@ -6,7 +6,7 @@ import type { ActivityAction, ActivityTarget } from "./actions";
 // identifiants, des noms de champs, des statuts et des nombres.
 type Detail = string | number | boolean | null | string[];
 
-type Entry = {
+export type ActivityEntry = {
   agencyId: string;
   actorId: string | null;
   action: ActivityAction;
@@ -22,7 +22,7 @@ type Entry = {
 // vérifie le résultat AVANT d'agir.
 export async function logActivity(
   admin: SupabaseClient,
-  e: Entry,
+  e: ActivityEntry,
 ): Promise<boolean> {
   const { error } = await admin.from("activity_log").insert({
     agency_id: e.agencyId,

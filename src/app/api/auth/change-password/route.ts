@@ -1,59 +1,33 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { ApiError, ok, parseBody, safely } from "@/lib/api-errors";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { safely } from "@/lib/api-errors";
+import { createClient } from "@/lib/supabase/server";
+import { changePasswordSchema } from "@/features/auth/schemas";
 
-const schema = z.object({ password: z.string().min(8).max(72) });
+// Remplacement du mot de passe temporaire à la première connexion. Seul
+// contrôle : être connecté (requireApiMember refuserait ce compte, qui doit
+// justement encore changer son mot de passe).
+export function POST(request: Request) {
+  return safely("change-password", async () => {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) throw new ApiError(401, "Non connecté");
 
-async function changePassword(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Non connecté" }, { status: 401 });
-  }
+    const { password } = await parseBody(request, changePasswordSchema);
+    const admin = createAdminClient();
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
-  }
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Mot de passe invalide (8 caractères minimum)" },
-      { status: 400 },
-    );
-  }
+    const { error: pwError } = await admin.auth.admin.updateUserById(user.id, { password });
+    if (pwError) throw new ApiError(500, "Changement impossible");
 
-  const admin = createAdminClient();
-  const { error: pwError } = await admin.auth.admin.updateUserById(user.id, {
-    password: parsed.data.password,
+    const { error: flagError } = await admin
+      .from("profiles")
+      .update({ must_change_password: false })
+      .eq("id", user.id);
+    if (flagError) {
+      console.error("[change-password]", flagError.code);
+      throw new ApiError(500, "Changement impossible");
+    }
+    return ok();
   });
-  if (pwError) {
-    return NextResponse.json(
-      { error: "Changement impossible" },
-      { status: 500 },
-    );
-  }
-
-  const { error: flagError } = await admin
-    .from("profiles")
-    .update({ must_change_password: false })
-    .eq("id", user.id);
-  if (flagError) {
-    return NextResponse.json(
-      { error: "Changement impossible" },
-      { status: 500 },
-    );
-  }
-
-  return NextResponse.json({ ok: true });
-}
-
-export async function POST(request: Request) {
-  return safely("change-password", () => changePassword(request));
 }

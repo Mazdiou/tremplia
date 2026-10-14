@@ -4,7 +4,8 @@ import { isIsoDate } from "@/lib/dates";
 // Briques de validation partagées par les formulaires et les routes.
 // La base impose les mêmes limites.
 
-const emptyToUndefined = (v: unknown) =>
+// Chaîne vide ou faite d'espaces : valeur absente
+export const emptyToUndefined = (v: unknown) =>
   typeof v === "string" && v.trim() === "" ? undefined : v;
 
 const tooLong = (max: number) => `${max} caractères au maximum`;

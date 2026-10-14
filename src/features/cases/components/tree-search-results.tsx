@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { EDUCATION_LEVEL_LABELS, labelOf } from "@/features/cases/labels";
+import { EDUCATION_LEVEL_LABELS, STATUS_SUFFIXES, labelOf } from "@/features/cases/labels";
 import { CASE_SEARCH_LIMIT } from "@/features/cases/schemas";
 import { displayName } from "@/lib/names";
 import { cn } from "@/lib/utils";
@@ -14,11 +14,6 @@ type Result = {
   status: string;
   educationLevel: string;
   campaignName: string;
-};
-
-const STATUS_SUFFIX: Record<string, string> = {
-  closed: "clos",
-  abandoned: "abandonné",
 };
 
 const DEBOUNCE_MS = 300;
@@ -92,7 +87,7 @@ export function TreeSearchResults({
       </p>
       <ul className={cn(pending && "opacity-60")}>
         {(results ?? []).map((r) => {
-          const suffix = STATUS_SUFFIX[r.status];
+          const suffix = STATUS_SUFFIXES[r.status];
           const isSelected = r.id === selectedId;
           return (
             <li key={r.id}>

@@ -37,6 +37,12 @@ export const STATUS_LABELS: Record<CaseStatus, string> = {
   abandoned: "Abandonné",
 };
 
+// Mention ajoutée au nom d'un dossier qui n'est plus actif, dans les listes
+export const STATUS_SUFFIXES: Partial<Record<string, string>> = {
+  closed: "clos",
+  abandoned: "abandonné",
+};
+
 export const DIPLOMA_TYPES = [
   "baccalaureate",
   "license",

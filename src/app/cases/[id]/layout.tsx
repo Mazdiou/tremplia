@@ -9,8 +9,9 @@ import {
   STATUS_LABELS,
   labelOf,
 } from "@/features/cases/labels";
-import { displayName } from "@/lib/names";
-import { createClient } from "@/lib/supabase/server";
+import { displayName, initialsOf } from "@/lib/names";
+import { mergePlatforms } from "@/features/cases/platforms";
+import { listUsedPlatforms } from "@/features/cases/server/lookups";
 import { getCase } from "@/features/cases/server/get-case";
 import { ExternalAccountsPinned } from "@/features/cases/components/external-accounts-pinned";
 import { CaseStatusButtons } from "@/features/cases/components/case-status-buttons";
@@ -18,26 +19,6 @@ import { CaseTabs } from "@/features/cases/components/case-tabs";
 
 const STATUS_TONE = { active: "ok", closed: "off", abandoned: "bad" } as const;
 
-// Plateformes proposées pour un nouveau compte : celles suggérées par la
-// campagne, puis celles déjà utilisées dans l'agence (lecture via le RLS).
-async function platformSuggestions(fromCampaign: string[]) {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("case_external_accounts")
-    .select("platform")
-    .order("updated_at", { ascending: false })
-    .limit(200);
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const p of [...fromCampaign, ...(data ?? []).map((r) => r.platform as string)]) {
-    const key = p.toLocaleLowerCase("fr");
-    if (!seen.has(key)) {
-      seen.add(key);
-      out.push(p);
-    }
-  }
-  return out;
-}
 
 export default async function CaseLayout({
   children,
@@ -53,7 +34,12 @@ export default async function CaseLayout({
   const data = await getCase(id);
   if (!data) notFound();
   const { c, responsible, campaign, groups, externalAccounts } = data;
-  const suggestions = await platformSuggestions(campaign?.suggested_platforms ?? []);
+  // Plateformes proposées pour un nouveau compte : celles suggérées par la
+  // campagne, puis celles déjà utilisées dans l'agence
+  const suggestions = mergePlatforms(
+    campaign?.suggested_platforms ?? [],
+    await listUsedPlatforms(),
+  );
 
   const summary = [
     campaign?.name,
@@ -80,7 +66,7 @@ export default async function CaseLayout({
                 aria-hidden
                 className="mt-0.5 grid size-11 shrink-0 place-items-center rounded-full bg-accent text-sm font-semibold text-accent-foreground max-sm:hidden"
               >
-                {`${c.first_name[0] ?? ""}${c.last_name[0] ?? ""}`.toUpperCase()}
+                {initialsOf(c.first_name, c.last_name)}
               </span>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">

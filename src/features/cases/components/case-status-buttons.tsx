@@ -1,43 +1,41 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
+import type { CaseStatus } from "@/features/cases/labels";
 import { callApi } from "@/lib/api-client";
 
-type Status = "active" | "closed" | "abandoned";
-
 type Action = {
-  to: Status;
+  to: CaseStatus;
   label: string;
-  title: string | null;
-  body: string | null;
-  confirmLabel: string;
+  // Absent : action immédiate, sans confirmation
+  confirm?: { title: string; body: string; label: string };
 };
 
-const ACTIONS: Record<Status, Action[]> = {
+const HIDDEN_FROM_TREE =
+  "Le dossier disparaît de l'arbre. Vous pourrez le rouvrir à tout moment.";
+
+const ACTIONS: Record<CaseStatus, Action[]> = {
   active: [
     {
       to: "closed",
       label: "Clore",
-      title: "Clore ce dossier ?",
-      body: "Le dossier disparaît de l'arbre. Vous pourrez le rouvrir à tout moment.",
-      confirmLabel: "Clore le dossier",
+      confirm: { title: "Clore ce dossier ?", body: HIDDEN_FROM_TREE, label: "Clore le dossier" },
     },
     {
       to: "abandoned",
       label: "Abandonner",
-      title: "Marquer ce dossier comme abandonné ?",
-      body: "Le dossier disparaît de l'arbre. Vous pourrez le rouvrir à tout moment.",
-      confirmLabel: "Abandonner le dossier",
+      confirm: {
+        title: "Marquer ce dossier comme abandonné ?",
+        body: HIDDEN_FROM_TREE,
+        label: "Abandonner le dossier",
+      },
     },
   ],
-  closed: [
-    { to: "active", label: "Rouvrir", title: null, body: null, confirmLabel: "" },
-  ],
-  abandoned: [
-    { to: "active", label: "Rouvrir", title: null, body: null, confirmLabel: "" },
-  ],
+  closed: [{ to: "active", label: "Rouvrir" }],
+  abandoned: [{ to: "active", label: "Rouvrir" }],
 };
 
 export function CaseStatusButtons({
@@ -45,15 +43,14 @@ export function CaseStatusButtons({
   status,
 }: {
   id: string;
-  status: Status;
+  status: CaseStatus;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState<Action | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const dialogRef = useRef<HTMLDialogElement>(null);
 
-  async function change(to: Status) {
+  async function change(to: CaseStatus) {
     setError(null);
     setLoading(true);
     const res = await callApi(`/api/cases/${id}/status`, {
@@ -61,22 +58,10 @@ export function CaseStatusButtons({
       body: { status: to },
     });
     setLoading(false);
-    dialogRef.current?.close();
     setPending(null);
     if (!res.ok) setError(res.error);
     // Recharge l'arbre (compteurs, dossiers masqués) et la fiche
     router.refresh();
-  }
-
-  function ask(a: Action) {
-    if (!a.title) return void change(a.to);
-    setPending(a);
-    dialogRef.current?.showModal();
-  }
-
-  function dismiss() {
-    dialogRef.current?.close();
-    setPending(null);
   }
 
   return (
@@ -88,7 +73,7 @@ export function CaseStatusButtons({
               key={a.to}
               variant="outline"
               disabled={loading}
-              onClick={() => ask(a)}
+              onClick={() => (a.confirm ? setPending(a) : void change(a.to))}
             >
               {a.label}
             </Button>
@@ -101,30 +86,15 @@ export function CaseStatusButtons({
         )}
       </div>
 
-      {/* Boîte de confirmation : <dialog> natif (Échap, focus piégé, fond) */}
-      <dialog
-        ref={dialogRef}
-        onClose={() => setPending(null)}
-        onClick={(e) => e.target === dialogRef.current && dismiss()}
-        className="m-auto w-[min(26rem,calc(100%-2rem))] rounded-2xl border bg-card p-5 text-card-foreground backdrop:bg-black/45"
-      >
-        {pending && (
-          <>
-            <h2 className="text-base font-semibold">{pending.title}</h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              {pending.body}
-            </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <Button variant="outline" onClick={dismiss} disabled={loading}>
-                Annuler
-              </Button>
-              <Button onClick={() => change(pending.to)} disabled={loading}>
-                {loading ? "Patientez..." : pending.confirmLabel}
-              </Button>
-            </div>
-          </>
-        )}
-      </dialog>
+      <ConfirmDialog
+        open={pending !== null}
+        title={pending?.confirm?.title ?? ""}
+        body={pending?.confirm?.body ?? ""}
+        confirmLabel={pending?.confirm?.label ?? ""}
+        loading={loading}
+        onCancel={() => setPending(null)}
+        onConfirm={() => pending && void change(pending.to)}
+      />
     </>
   );
 }

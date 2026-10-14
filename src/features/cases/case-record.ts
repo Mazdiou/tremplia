@@ -98,6 +98,20 @@ export type CaseFieldsDraft = {
   languageTests: { test: string; otherName: string; result: string; date: string }[];
 };
 
+// Dossier retrouvé dans une autre campagne pour préremplir un nouveau
+// dossier. Comptes repris SANS mot de passe : il est à ressaisir.
+export type ImportMatch = {
+  id: string;
+  status: string;
+  fields: CaseFieldsDraft;
+  externalAccounts: {
+    platform: string;
+    url: string;
+    login: string;
+    status: "existing" | "to_create";
+  }[];
+};
+
 export function toCaseDraft(r: CaseFieldsRecord): CaseFieldsDraft {
   return {
     firstName: r.first_name,

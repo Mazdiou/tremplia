@@ -1,15 +1,9 @@
 import { randomInt } from "node:crypto";
-import { z } from "zod";
 import { ApiError, ok, parseBody, safely } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
 import { requireApiOwner } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const schema = z.object({
-  firstName: z.string().trim().min(1).max(100),
-  lastName: z.string().trim().min(1).max(100),
-  email: z.string().trim().toLowerCase().email().max(254),
-});
+import { newEmployeeSchema } from "@/features/auth/schemas";
 
 // Sans caractères ambigus (0/O, 1/l/I) pour faciliter la communication
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
@@ -24,7 +18,7 @@ function generateTemporaryPassword(length = 12) {
 export function POST(request: Request) {
   return safely("team create", async () => {
     const member = await requireApiOwner();
-    const d = await parseBody(request, schema);
+    const d = await parseBody(request, newEmployeeSchema);
 
     const admin = createAdminClient();
     const temporaryPassword = generateTemporaryPassword();

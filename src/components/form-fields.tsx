@@ -1,5 +1,7 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -204,6 +206,23 @@ export function ListHeader({
         <span key={i}>{c}</span>
       ))}
     </div>
+  );
+}
+
+// Bouton « Retirer » d'une ligne de liste répétable
+export function RemoveButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="text-muted-foreground hover:text-destructive max-sm:mt-6"
+    >
+      <Trash2 />
+    </Button>
   );
 }
 
