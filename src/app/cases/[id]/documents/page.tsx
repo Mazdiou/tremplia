@@ -52,20 +52,21 @@ export default async function DocumentsPage({
   // Lecture via le RLS : seuls les documents de l'agence reviennent.
   const supabase = await createClient();
 
-  const { data: folderRows } = await supabase
-    .from("document_folders")
-    .select("id, name")
-    .eq("case_id", id)
-    .order("created_at", { ascending: true });
+  const [{ data: folderRows }, { data }] = await Promise.all([
+    supabase
+      .from("document_folders")
+      .select("id, name")
+      .eq("case_id", id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("documents")
+      .select(
+        "id, name, size_bytes, uploaded_by, folder_id, locked_at, created_at",
+      )
+      .eq("case_id", id)
+      .order("created_at", { ascending: false }),
+  ]);
   const folders = (folderRows ?? []) as FolderItem[];
-
-  const { data } = await supabase
-    .from("documents")
-    .select(
-      "id, name, size_bytes, uploaded_by, folder_id, locked_at, created_at",
-    )
-    .eq("case_id", id)
-    .order("created_at", { ascending: false });
   const rows = (data ?? []) as Row[];
 
   const names = new Map<string, string>();

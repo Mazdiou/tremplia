@@ -147,8 +147,10 @@ export function DocumentsPanel({
     }
 
     setUploading(null);
-    if (lastError) say(lastError, true);
-    else say(added > 1 ? `${added} documents ajoutés` : "Document ajouté");
+    const addedText = added > 1 ? `${added} documents ajoutés` : "Document ajouté";
+    // Envoi de plusieurs fichiers en partie réussi : on le dit aussi
+    if (lastError) say(added > 0 ? `${addedText} · ${lastError}` : lastError, true);
+    else say(addedText);
     if (added > 0) router.refresh();
     if (inputRef.current) inputRef.current.value = "";
   }

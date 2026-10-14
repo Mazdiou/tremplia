@@ -232,7 +232,7 @@ function PaymentForm({
           maxLength={300}
           value={note}
           onChange={setNote}
-          placeholder="Ex. : référence du virement"
+          placeholder="Ex. : numéro du reçu CCP"
           hint="Facultatif"
           error={errors.note}
         />

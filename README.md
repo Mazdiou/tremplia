@@ -2,8 +2,8 @@
 
 CRM pour les agences de démarches d'études à l'étranger : chaque agence crée
 ses campagnes (ou importe un modèle comme Campus France), range ses dossiers
-candidats dans des groupes, et suit documents, lettre de motivation, formations visées, notes
-et comptes sur les plateformes externes.
+candidats dans des groupes, et suit documents, lettre de motivation, formations visées, notes,
+comptes sur les plateformes externes et paiements du candidat à l'agence (en dinars).
 
 Next.js 16 (App Router), React 19, TypeScript, Tailwind 4, shadcn/ui, zod,
 Supabase (PostgreSQL, Auth, Storage, RLS), Vitest, pgTAP.
@@ -87,6 +87,7 @@ Voir `.env.example`. Aucune vraie valeur ne doit être commitée.
 | Historique / Journal | `history` / `activity_log` |
 | Lettre de motivation | `motivation_letter` |
 | Formations | `programs` / `case_program` |
+| Paiement / Montant convenu | `case_payment` / `agreed_amount` |
 
 ## Structure du dépôt
 
@@ -97,7 +98,7 @@ src/
   config/
     campaign-templates/ modèles de campagne (un fichier par modèle)
   features/
-    auth/ campaigns/ cases/ documents/ motivation-letter/ messages/ notes/ programs/ student/ team/
+    auth/ campaigns/ cases/ documents/ motivation-letter/ messages/ notes/ payments/ programs/ student/ team/
     history/ dashboard/
       components/       composants React de la fonctionnalité
       server/           lectures et écritures serveur (« server-only »)

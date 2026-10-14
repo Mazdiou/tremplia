@@ -29,10 +29,24 @@ export default function ChangePasswordPage() {
       return setError("Les mots de passe ne correspondent pas.");
 
     setLoading(true);
+    // Le changement ferme les sessions du compte côté serveur : on se
+    // reconnecte aussitôt avec le nouveau mot de passe, sinon l'employé
+    // serait déconnecté au prochain renouvellement de sa session.
+    const supabase = createClient();
+    const { data } = await supabase.auth.getSession();
+    const email = data.session?.user.email;
     const res = await callApi("/api/auth/change-password", { body: { password } });
     if (!res.ok) {
       setLoading(false);
       return setError(res.error);
+    }
+    if (email) {
+      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+      if (loginError) {
+        router.replace("/login");
+        router.refresh();
+        return;
+      }
     }
     router.replace("/dashboard");
     router.refresh();

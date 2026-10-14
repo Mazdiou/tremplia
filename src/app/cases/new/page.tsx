@@ -18,19 +18,33 @@ export default async function NewCasePage({
   const member = await requireMember();
   if (!member) redirect("/login");
 
-  // Lecture via le RLS : seules les données de l'agence reviennent
+  // Lecture via le RLS : seules les données de l'agence reviennent. Les
+  // lectures indépendantes sont lancées ensemble.
   const supabase = await createClient();
-  const campaigns = await listCampaigns();
+  const [campaigns, stats, platformSuggestions, membersRes] = await Promise.all([
+    listCampaigns(),
+    // Nombre de dossiers par campagne (campagnes d'où importer un candidat)
+    listCaseStats(),
+    // Plateformes déjà utilisées dans l'agence, en suggestion
+    listUsedPlatforms(),
+    // Seul le patron choisit un responsable : on ne charge la liste que pour lui
+    member.isOwner
+      ? supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .eq("is_active", true)
+          .order("first_name")
+      : Promise.resolve({ data: null }),
+  ]);
   const active = campaigns.filter((c) => c.status === "active");
-  const groups = await listGroups(active.map((c) => c.id));
-
-  const { data: settings } = await supabase
-    .from("campaigns")
-    .select("id, suggested_platforms, default_fee")
-    .in(
-      "id",
-      active.map((c) => c.id),
-    );
+  const activeIds = active.map((c) => c.id);
+  const [groups, { data: settings }] = await Promise.all([
+    listGroups(activeIds),
+    supabase
+      .from("campaigns")
+      .select("id, suggested_platforms, default_fee")
+      .in("id", activeIds),
+  ]);
   const settingsByCampaign = new Map(
     (settings ?? []).map((s) => [
       s.id as string,
@@ -56,26 +70,13 @@ export default async function NewCasePage({
 
   // Campagnes d'où importer un candidat (archivées comprises), avec leur
   // nombre de dossiers
-  const stats = await listCaseStats();
   const sources: SourceCampaign[] = campaigns.map((c) => ({
     id: c.id,
     name: c.name,
     caseCount: countCases(stats, { campaignId: c.id }),
   }));
 
-  // Plateformes déjà utilisées dans l'agence, en suggestion
-  const platformSuggestions = await listUsedPlatforms();
-
-  // Seul le patron choisit un responsable : on ne charge la liste que pour lui
-  let members: { id: string; first_name: string; last_name: string }[] = [];
-  if (member.isOwner) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id, first_name, last_name")
-      .eq("is_active", true)
-      .order("first_name");
-    members = data ?? [];
-  }
+  const members = (membersRes.data ?? []) as { id: string; first_name: string; last_name: string }[];
 
   return (
     <PageContainer>
