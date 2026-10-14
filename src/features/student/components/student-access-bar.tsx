@@ -15,9 +15,12 @@ type Action = "enable" | "disable" | "regenerate";
 export function StudentAccessBar({
   caseId,
   access,
+  blockedReason,
 }: {
   caseId: string;
   access: StudentAccess;
+  // Accès ouvert mais sans effet (dossier abandonné, campagne archivée)
+  blockedReason: string | null;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<Action | null>(null);
@@ -106,6 +109,12 @@ export function StudentAccessBar({
           )}
         </span>
       </div>
+
+      {enabled && blockedReason && (
+        <p className="border-t px-3 py-1.5 text-xs text-muted-foreground">
+          Le candidat ne peut pas se connecter : {blockedReason}.
+        </p>
+      )}
 
       {error && (
         <p className="border-t px-3 py-2 text-sm text-destructive" role="alert">

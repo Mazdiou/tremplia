@@ -129,7 +129,18 @@ export default async function CaseLayout({
               accounts={externalAccounts}
               suggestions={suggestions}
             />
-            <StudentAccessBar key={`student-${c.id}`} caseId={c.id} access={studentAccess} />
+            <StudentAccessBar
+              key={`student-${c.id}`}
+              caseId={c.id}
+              access={studentAccess}
+              blockedReason={
+                c.status === "abandoned"
+                  ? "le dossier est abandonné"
+                  : campaign?.status === "archived"
+                    ? "la campagne est archivée"
+                    : null
+              }
+            />
           </CaseHeaderDetails>
 
           <CaseTabs id={c.id} isOwner={member.isOwner} />
