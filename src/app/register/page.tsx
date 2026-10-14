@@ -189,7 +189,7 @@ export default function RegisterPage() {
             label="Nom de l'agence"
             icon={Building2}
             autoComplete="organization"
-            placeholder="Agence Horizon"
+            placeholder="Ex. : Agence Horizon"
             maxLength={100}
             required
             autoFocus

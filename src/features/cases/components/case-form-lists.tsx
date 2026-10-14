@@ -98,7 +98,7 @@ export function DiplomasEditor({
             id={`diploma-${i}-title`}
             label="Intitulé"
             hideLabel
-            placeholder="Sciences expérimentales…"
+            placeholder="Ex. : Sciences expérimentales"
             value={d.title}
             maxLength={150}
             onChange={(title) => onChange(update(value, i, { title }))}
@@ -181,7 +181,7 @@ export function LanguageTestsEditor({
             id={`test-${i}-result`}
             label="Résultat (niveau ou score)"
             hideLabel
-            placeholder="B2, 6.5…"
+            placeholder="Ex. : B2, 6.5"
             value={t.result}
             maxLength={50}
             onChange={(result) => onChange(update(value, i, { result }))}

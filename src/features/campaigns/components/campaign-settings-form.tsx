@@ -96,7 +96,7 @@ export function CampaignSettingsForm({
           label="Nom de la campagne"
           required
           maxLength={100}
-          placeholder="Campus France 2026/2027"
+          placeholder="Ex. : Campus France 2026/2027"
           value={draft.name}
           onChange={(name) => patch({ name })}
           error={errors.name}
@@ -132,7 +132,7 @@ export function CampaignSettingsForm({
             <div className="flex max-w-sm gap-2">
               <Input
                 id="platform-new"
-                placeholder="Pastel, Parcoursup…"
+                placeholder="Ex. : Pastel, Parcoursup"
                 value={platformInput}
                 maxLength={80}
                 onChange={(e) => setPlatformInput(e.target.value)}
@@ -169,7 +169,7 @@ export function CampaignSettingsForm({
                   hideLabel
                   required
                   maxLength={100}
-                  placeholder="Date limite…"
+                  placeholder="Ex. : Date limite DAP"
                   value={d.label}
                   onChange={(label) =>
                     patch({ dates: draft.dates.map((x, j) => (j === i ? { ...x, label } : x)) })
@@ -225,7 +225,7 @@ export function CampaignSettingsForm({
                   hideLabel
                   required
                   maxLength={100}
-                  placeholder="Pays"
+                  placeholder="Ex. : Pays"
                   value={info.label}
                   onChange={(label) =>
                     patch({ infos: draft.infos.map((x, j) => (j === i ? { ...x, label } : x)) })
@@ -238,7 +238,7 @@ export function CampaignSettingsForm({
                   hideLabel
                   required
                   maxLength={500}
-                  placeholder="France"
+                  placeholder="Ex. : France"
                   value={info.value}
                   onChange={(value) =>
                     patch({ infos: draft.infos.map((x, j) => (j === i ? { ...x, value } : x)) })
