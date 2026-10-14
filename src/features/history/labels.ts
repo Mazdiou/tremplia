@@ -39,6 +39,10 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "note.updated": "a modifié une note",
   "note.deleted": "a supprimé une note",
   "motivation_letter.saved": "a modifié une lettre de motivation",
+  "program.created": "a ajouté une formation",
+  "program.updated": "a modifié une formation",
+  "program.deleted": "a supprimé une formation",
+  "program.moved": "a changé l'ordre des formations",
 };
 
 const CASE_LABELS: Record<ActivityAction, string> = {

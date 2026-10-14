@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
-import { GraduationCap } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 import { getCase } from "@/features/cases/server/get-case";
-import { EmptyState } from "@/components/empty-state";
+import {
+  ProgramsPanel,
+  type ProgramItem,
+} from "@/features/programs/components/programs-panel";
 
 export default async function ProgramsPage({
   params,
@@ -10,11 +13,14 @@ export default async function ProgramsPage({
 }) {
   const { id } = await params;
   if (!(await getCase(id))) notFound();
-  return (
-    <EmptyState
-      icon={GraduationCap}
-      title="Les formations arrivent bientôt"
-      description="Cet onglet sera disponible dans une prochaine version."
-    />
-  );
+
+  // Lecture via le RLS : seules les formations de l'agence reviennent
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("case_programs")
+    .select("id, title, level, city, institution")
+    .eq("case_id", id)
+    .order("position");
+
+  return <ProgramsPanel caseId={id} programs={(data ?? []) as ProgramItem[]} />;
 }
