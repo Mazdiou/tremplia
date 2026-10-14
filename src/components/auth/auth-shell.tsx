@@ -110,6 +110,8 @@ function AppPreview() {
 
 // Page d'authentification : panneau de présentation à gauche (écrans larges),
 // formulaire à droite. Sur mobile, seul le formulaire est affiché.
+// Écrans larges : la page a exactement la hauteur de la fenêtre (jamais de
+// barre de défilement) ; seul le formulaire défile s'il est trop long.
 export function AuthShell({
   children,
   compact = false,
@@ -118,8 +120,8 @@ export function AuthShell({
   compact?: boolean;
 }) {
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-      <aside className="relative hidden overflow-hidden bg-[oklch(0.18_0.035_265)] p-12 text-white lg:flex lg:flex-col">
+    <div className="grid min-h-dvh lg:h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:overflow-hidden">
+      <aside className="relative hidden overflow-hidden bg-[oklch(0.18_0.035_265)] p-10 text-white lg:flex lg:flex-col">
         {/* Halo et quadrillage discret, estompés vers les bords */}
         <div
           aria-hidden
@@ -150,7 +152,8 @@ export function AuthShell({
             Candidats, pièces, lettres et échéances au même endroit, pour toute
             l&apos;équipe.
           </p>
-          <div className="mt-10 [@media(max-height:680px)]:hidden">
+          {/* L'aperçu (336 px) ne s'affiche que si la fenêtre a la place */}
+          <div className="mt-8 [@media(max-height:780px)]:hidden">
             <AppPreview />
           </div>
         </div>
@@ -170,7 +173,7 @@ export function AuthShell({
 
       <main
         className={cn(
-          "relative flex min-h-dvh flex-col bg-background px-5 sm:px-10",
+          "relative flex min-h-dvh flex-col bg-background px-5 sm:px-10 lg:min-h-0 lg:overflow-y-auto",
           compact ? "py-2" : "py-6",
         )}
       >
