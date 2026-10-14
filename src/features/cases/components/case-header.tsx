@@ -12,16 +12,18 @@ export function CaseHeaderToggle() {
   const [prefs, setPrefs] = useUiPrefs();
   const collapsed = prefs.caseHeaderCollapsed;
   const label = collapsed ? "Afficher l'en-tête du dossier" : "Réduire l'en-tête du dossier";
+  // Même style que « Modifier » ; le texte disparaît sur petit écran
   return (
     <Button
-      variant="ghost"
-      size="icon"
+      variant="outline"
       onClick={() => setPrefs({ caseHeaderCollapsed: !collapsed })}
       aria-expanded={!collapsed}
       aria-label={label}
       title={label}
+      className="shrink-0 max-sm:w-10 max-sm:px-0"
     >
       {collapsed ? <ChevronDown /> : <ChevronUp />}
+      <span className="max-sm:hidden">{collapsed ? "Afficher l'en-tête" : "Réduire"}</span>
     </Button>
   );
 }
