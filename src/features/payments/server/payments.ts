@@ -1,4 +1,5 @@
 import "server-only";
+import { z } from "zod";
 import { ApiError, dbError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -38,6 +39,7 @@ const fullName = (p: { first_name: string; last_name: string } | null) =>
 // Lecture via le RLS : seuls les paiements de l'agence reviennent. Les plus
 // récents d'abord.
 export async function listPayments(caseId: string): Promise<PaymentItem[]> {
+  if (!z.string().uuid().safeParse(caseId).success) return [];
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("case_payments")
@@ -75,11 +77,6 @@ export async function listPayments(caseId: string): Promise<PaymentItem[]> {
       ? { by: fullName(r.canceller), at: r.cancelled_at, reason: r.cancel_reason ?? "" }
       : null,
   }));
-}
-
-// Total des paiements non annulés
-export function paidTotal(payments: Pick<PaymentItem, "amount" | "cancelled">[]) {
-  return payments.reduce((sum, p) => (p.cancelled ? sum : sum + p.amount), 0);
 }
 
 export async function setAgreedAmount(auth: AuthorizedCase, caseId: string, amount: number) {

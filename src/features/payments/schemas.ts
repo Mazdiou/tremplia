@@ -27,7 +27,8 @@ function amount(min: number, emptyMessage: string) {
   return z.preprocess(
     (v) => (typeof v === "string" ? (parseAmount(v) ?? undefined) : v),
     z
-      .number(emptyMessage)
+      // Champ vide : message propre au champ ; saisie illisible : invalide
+      .number({ error: (iss) => (iss.input === undefined ? emptyMessage : "Montant invalide") })
       .int("Montant invalide")
       .min(min, min > 0 ? "Le montant doit être positif" : "Montant invalide")
       .max(MAX_AMOUNT, "Montant trop élevé"),

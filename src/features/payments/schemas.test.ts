@@ -37,6 +37,17 @@ describe("recordPaymentSchema", () => {
   });
 });
 
+describe("messages d'erreur du montant", () => {
+  it("distingue un champ vide d'une saisie illisible", () => {
+    const issue = (amount: unknown) =>
+      recordPaymentSchema.safeParse({ amount, paidOn: today, method: "cash" }).error?.issues[0]
+        .message;
+    expect(issue("")).toBe("Indiquez le montant payé");
+    expect(issue("abc")).toBe("Montant invalide");
+    expect(issue("0")).toBe("Le montant doit être positif");
+  });
+});
+
 describe("optionalAmountSchema", () => {
   it("vide = absent, zéro accepté", () => {
     expect(optionalAmountSchema.parse("")).toBeUndefined();

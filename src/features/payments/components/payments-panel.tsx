@@ -321,19 +321,21 @@ function PaymentLine({
 export function PaymentsPanel({
   caseId,
   agreed,
+  paid,
   payments,
   isOwner,
   defaultFee,
 }: {
   caseId: string;
   agreed: number | null;
+  // Total des paiements non annulés, tenu par la base
+  paid: number;
   payments: PaymentRow[];
   isOwner: boolean;
   // Tarif de la campagne, proposé quand le montant n'est pas encore fixé
   defaultFee: number | null;
 }) {
   const router = useRouter();
-  const paid = payments.reduce((sum, p) => (p.cancelled ? sum : sum + p.amount), 0);
   const summary = paymentSummary(agreed, paid);
   const pill = PAYMENT_STATE_PILL[summary.state];
 

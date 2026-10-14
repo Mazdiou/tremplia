@@ -21,6 +21,7 @@ export default async function PaymentsPage({
     <PaymentsPanel
       caseId={id}
       agreed={data.c.agreed_amount}
+      paid={data.c.paid_amount}
       payments={payments}
       isOwner={member.isOwner}
       defaultFee={data.campaign?.default_fee ?? null}
