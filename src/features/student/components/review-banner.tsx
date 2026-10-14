@@ -13,10 +13,12 @@ import { MAX_MESSAGE_LENGTH, type ReviewStatus } from "@/features/student/schema
 function RequestDialog({
   open,
   agencyName,
+  fingerprint,
   onClose,
 }: {
   open: boolean;
   agencyName: string;
+  fingerprint: string;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -37,10 +39,14 @@ function RequestDialog({
     setSending(true);
     setError(null);
     const res = await callApi("/api/student/review", {
-      body: { decision: "changes_requested", message },
+      body: { decision: "changes_requested", fingerprint, message },
     });
     setSending(false);
-    if (!res.ok) return setError(res.error);
+    if (!res.ok) {
+      setError(res.error);
+      router.refresh();
+      return;
+    }
     setMessage("");
     onClose();
     router.refresh();
@@ -100,11 +106,13 @@ export function ReviewBanner({
   respondedLabel,
   lastRequest,
   agencyName,
+  fingerprint,
 }: {
   status: ReviewStatus;
   respondedLabel: string | null;
   lastRequest: string | null;
   agencyName: string;
+  fingerprint: string;
 }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
@@ -115,7 +123,9 @@ export function ReviewBanner({
   async function approve() {
     setBusy(true);
     setError(null);
-    const res = await callApi("/api/student/review", { body: { decision: "approved" } });
+    const res = await callApi("/api/student/review", {
+      body: { decision: "approved", fingerprint },
+    });
     setBusy(false);
     setConfirming(false);
     if (!res.ok) setError(res.error);
@@ -187,6 +197,11 @@ export function ReviewBanner({
                 {lastRequest}
               </blockquote>
             )}
+            {/* L'agence peut répondre que rien ne change : le candidat valide */}
+            <Button variant="ghost" size="sm" className="mt-2 -ml-2.5"
+              onClick={() => setConfirming(true)} disabled={busy}>
+              <CircleCheck /> Finalement, je valide
+            </Button>
           </div>
         </div>
       )}
@@ -206,7 +221,12 @@ export function ReviewBanner({
         onConfirm={() => void approve()}
         onCancel={() => setConfirming(false)}
       />
-      <RequestDialog open={requesting} agencyName={agencyName} onClose={() => setRequesting(false)} />
+      <RequestDialog
+        open={requesting}
+        agencyName={agencyName}
+        fingerprint={fingerprint}
+        onClose={() => setRequesting(false)}
+      />
     </section>
   );
 }

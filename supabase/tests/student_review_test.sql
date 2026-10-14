@@ -1,5 +1,5 @@
 begin;
-select plan(17);
+select plan(18);
 
 -- Patron A, employé A1, employé désactivé A3, patron B
 insert into auth.users (id, email) values
@@ -44,7 +44,10 @@ from ctx;
 create function pg_temp.review(decision text, msg text default null, gen integer default 1)
 returns boolean language sql as $$
   select public.student_review('cccccccc-cccc-cccc-cccc-cccccccccccc',
-    (select agency_a from ctx), gen, decision, msg)
+    (select agency_a from ctx), gen,
+    public.student_content_fingerprint('cccccccc-cccc-cccc-cccc-cccccccccccc',
+      (select agency_a from ctx)),
+    decision, msg)
 $$;
 create function pg_temp.status() returns text language sql as $$
   select coalesce((select status from public.case_student_reviews
@@ -81,6 +84,10 @@ select throws_ok($$select pg_temp.review('approved', null, 2)$$, '42501', null,
   'une session d''une ancienne génération est refusée');
 select throws_ok($$select pg_temp.review('maybe')$$, '22023', null,
   'une réponse inconnue est refusée');
+select throws_ok(
+  $$select public.student_review('cccccccc-cccc-cccc-cccc-cccccccccccc',
+      (select agency_a from ctx), 1, 'empreinte-d-une-ancienne-version', 'approved', null)$$,
+  '55000', null, 'une réponse sur une version déjà modifiée est refusée');
 
 -- Toute modification de l'agence remet « en attente »
 select public.save_motivation_letter('cccccccc-cccc-cccc-cccc-cccccccccccc',

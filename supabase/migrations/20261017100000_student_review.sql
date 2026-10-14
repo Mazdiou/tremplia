@@ -69,6 +69,29 @@ create policy "case_student_reviews_select_same_agency" on public.case_student_r
   for select to authenticated
   using (agency_id = public.current_agency_id());
 
+-- Empreinte du contenu soumis au candidat (lettre et formations, dans
+-- l'ordre). Sa réponse porte sur la version qu'il a lue : si l'agence a
+-- modifié le contenu entre-temps, la réponse est refusée.
+create function public.student_content_fingerprint(p_case_id uuid, p_agency_id uuid)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select md5(
+    coalesce((select l.content from public.case_motivation_letters l
+              where l.case_id = p_case_id and l.agency_id = p_agency_id), '')
+    || chr(30) ||
+    coalesce((select string_agg(
+                concat_ws(chr(31), p.id::text, p.position::text, p.title, p.level, p.city,
+                          coalesce(p.institution, '')),
+                chr(30) order by p.position)
+              from public.case_programs p
+              where p.case_id = p_case_id and p.agency_id = p_agency_id), '')
+  )
+$$;
+
 -- Réponse du candidat, depuis son espace. Revérifie que sa session est
 -- toujours valable (accès ouvert, même génération). Renvoie vrai si l'état
 -- a changé ; une demande de modification est toujours enregistrée.
@@ -76,6 +99,7 @@ create function public.student_review(
   p_case_id uuid,
   p_agency_id uuid,
   p_generation integer,
+  p_fingerprint text,
   p_decision text,
   p_message text
 )
@@ -102,6 +126,11 @@ begin
     where o.generation = p_generation
   ) then
     raise exception 'Accès fermé' using errcode = '42501';
+  end if;
+
+  if p_fingerprint is distinct from
+     public.student_content_fingerprint(p_case_id, p_agency_id) then
+    raise exception 'Contenu modifié entre-temps' using errcode = '55000';
   end if;
 
   -- Rien à valider tant que l'agence n'a écrit ni lettre ni formation
@@ -173,8 +202,10 @@ create trigger case_programs_reset_review
 
 -- Droits --------------------------------------------------------------------
 
-revoke execute on function public.student_review(uuid, uuid, integer, text, text) from public;
+revoke execute on function public.student_content_fingerprint(uuid, uuid) from public;
+revoke execute on function public.student_review(uuid, uuid, integer, text, text, text) from public;
 revoke execute on function public.reset_student_review() from public;
 
-grant execute on function public.student_review(uuid, uuid, integer, text, text)
+grant execute on function public.student_content_fingerprint(uuid, uuid) to service_role;
+grant execute on function public.student_review(uuid, uuid, integer, text, text, text)
   to service_role;

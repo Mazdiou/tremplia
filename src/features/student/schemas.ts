@@ -14,10 +14,15 @@ export type StudentAccess = { enabled: boolean; code: string } | null;
 export const MAX_MESSAGE_LENGTH = 2000;
 
 // Réponse du candidat : une demande de modification a toujours un message
+// `fingerprint` : version du contenu affichée au candidat ; refusée si
+// l'agence l'a modifiée entre-temps
+const fingerprint = z.string().max(64);
+
 export const studentReviewSchema = z.discriminatedUnion("decision", [
-  z.object({ decision: z.literal("approved") }),
+  z.object({ decision: z.literal("approved"), fingerprint }),
   z.object({
     decision: z.literal("changes_requested"),
+    fingerprint,
     message: z
       .string()
       .trim()

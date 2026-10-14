@@ -18,6 +18,7 @@ export async function submitReview(session: StudentSession, input: StudentReview
     p_case_id: session.caseId,
     p_agency_id: session.agencyId,
     p_generation: session.generation,
+    p_fingerprint: input.fingerprint,
     p_decision: input.decision,
     p_message: input.decision === "changes_requested" ? input.message : null,
   });
@@ -26,6 +27,7 @@ export async function submitReview(session: StudentSession, input: StudentReview
       "42501": "Votre accès a été fermé par l'agence",
       "22023": "Votre agence n'a encore rien à vous faire valider",
       "23514": "Message invalide",
+      "55000": "Votre agence vient de modifier votre dossier : relisez la nouvelle version",
     });
   }
 
@@ -93,4 +95,14 @@ export async function hasContentToReview(agencyId: string, caseId: string) {
   ]);
   const letter = (letterRes.data?.content as string | undefined) ?? "";
   return letter.trim() !== "" || (programsRes.count ?? 0) > 0;
+}
+
+// Version du contenu affichée au candidat (voir student_content_fingerprint)
+export async function contentFingerprint(agencyId: string, caseId: string) {
+  const { data, error } = await createAdminClient().rpc("student_content_fingerprint", {
+    p_case_id: caseId,
+    p_agency_id: agencyId,
+  });
+  if (error) console.error("[student fingerprint]", error.code);
+  return typeof data === "string" ? data : "";
 }

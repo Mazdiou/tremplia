@@ -4,7 +4,11 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { displayName } from "@/lib/names";
 import { dateTimeFormat } from "@/lib/dates";
 import { getStudentCase, requireStudent } from "@/features/student/server/student-case";
-import { hasContentToReview, readReview } from "@/features/student/server/review";
+import {
+  contentFingerprint,
+  hasContentToReview,
+  readReview,
+} from "@/features/student/server/review";
 import { ReviewBanner } from "@/features/student/components/review-banner";
 import { StudentLogout, StudentTabs } from "@/features/student/components/student-nav";
 
@@ -14,10 +18,11 @@ export const metadata: Metadata = { title: "Mon dossier · StudyFlow" };
 // motivation et de ses formations.
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const session = await requireStudent();
-  const [{ c, agency }, review, hasContent] = await Promise.all([
+  const [{ c, agency }, review, hasContent, fingerprint] = await Promise.all([
     getStudentCase(),
     readReview(session.agencyId, session.caseId),
     hasContentToReview(session.agencyId, session.caseId),
+    contentFingerprint(session.agencyId, session.caseId),
   ]);
 
   return (
@@ -62,6 +67,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
             }
             lastRequest={review?.lastRequest?.body ?? null}
             agencyName={agency.name}
+            fingerprint={fingerprint}
           />
         )}
         <div>{children}</div>
