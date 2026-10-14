@@ -39,6 +39,11 @@ export const ACTIVITY_ACTIONS = [
   "program.updated",
   "program.deleted",
   "program.moved",
+  "student_access.enabled",
+  "student_access.disabled",
+  "student_access.regenerated",
+  // Actions du candidat lui-même (actor_id vide)
+  "student.logged_in",
 ] as const;
 
 export type ActivityAction = (typeof ACTIVITY_ACTIONS)[number];

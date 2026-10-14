@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireMember } from "@/lib/auth/require-member";
 import { createClient } from "@/lib/supabase/server";
 import { getCase } from "@/features/cases/server/get-case";
-import { activityLabel } from "@/features/history/labels";
+import { activityActor, activityLabel } from "@/features/history/labels";
 import { dateTimeFormat } from "@/lib/dates";
 
 // Le champ `details` du journal n'est jamais lu ni affiché.
@@ -68,7 +68,7 @@ export default async function HistoryPage({
         >
           <span>
             <span className="font-medium">
-              {(r.actor_id && names.get(r.actor_id)) || "Un ancien membre"}
+              {activityActor(r.action, r.actor_id && names.get(r.actor_id), "case")}
             </span>{" "}
             {activityLabel(r.action, "case")}
           </span>

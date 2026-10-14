@@ -39,7 +39,7 @@ Voir `.env.example`. Aucune vraie valeur ne doit être commitée.
 | `NEXT_PUBLIC_SUPABASE_URL` | Adresse du projet Supabase |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clé publique (lecture via le RLS) |
 | `SUPABASE_SECRET_KEY` | Clé secrète, routes serveur seulement |
-| `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY` | Chiffre les mots de passe des comptes externes (32 octets, base64) ; à sauvegarder hors du dépôt |
+| `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY` | Chiffre les mots de passe des comptes externes et les codes candidats, signe les sessions candidat (32 octets, base64) ; à sauvegarder hors du dépôt |
 
 ## Règles du projet
 
@@ -60,6 +60,12 @@ Voir `.env.example`. Aucune vraie valeur ne doit être commitée.
   par identité passent en POST.
 - **Mots de passe des comptes externes** chiffrés par le serveur, illisibles
   côté client ; chaque affichage est inscrit au journal avant d'être renvoyé.
+- **Espace candidat** (`/student`) : le candidat se connecte avec le code de
+  son dossier, sans compte Supabase. Session dans un cookie signé, revérifiée
+  à chaque affichage ; lecture seule (informations, lettre, formations) par
+  le serveur, filtrée sur le dossier de la session. La base ne garde que
+  l'empreinte du code et une copie chiffrée ; 10 essais ratés par adresse
+  sur 15 minutes.
 - **Code en anglais, interface en français.** Une seule source de vérité par
   liste métier (`features/*/labels.ts`).
 
@@ -88,7 +94,7 @@ src/
   config/
     campaign-templates/ modèles de campagne (un fichier par modèle)
   features/
-    auth/ campaigns/ cases/ documents/ motivation-letter/ notes/ programs/ team/
+    auth/ campaigns/ cases/ documents/ motivation-letter/ notes/ programs/ student/ team/
     history/ dashboard/
       components/       composants React de la fonctionnalité
       server/           lectures et écritures serveur (« server-only »)

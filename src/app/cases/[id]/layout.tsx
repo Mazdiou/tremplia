@@ -16,6 +16,8 @@ import { getCase } from "@/features/cases/server/get-case";
 import { ExternalAccountsPinned } from "@/features/cases/components/external-accounts-pinned";
 import { CaseStatusButtons } from "@/features/cases/components/case-status-buttons";
 import { CaseTabs } from "@/features/cases/components/case-tabs";
+import { getStudentAccess } from "@/features/student/server/access";
+import { StudentAccessBar } from "@/features/student/components/student-access-bar";
 import {
   CaseHeaderDetails,
   CaseHeaderToggle,
@@ -40,10 +42,11 @@ export default async function CaseLayout({
   const { c, responsible, campaign, groups, externalAccounts } = data;
   // Plateformes proposées pour un nouveau compte : celles suggérées par la
   // campagne, puis celles déjà utilisées dans l'agence
-  const suggestions = mergePlatforms(
-    campaign?.suggested_platforms ?? [],
-    await listUsedPlatforms(),
-  );
+  const [usedPlatforms, studentAccess] = await Promise.all([
+    listUsedPlatforms(),
+    getStudentAccess(member.agencyId, c.id),
+  ]);
+  const suggestions = mergePlatforms(campaign?.suggested_platforms ?? [], usedPlatforms);
 
   const summary = [
     campaign?.name,
@@ -126,6 +129,7 @@ export default async function CaseLayout({
               accounts={externalAccounts}
               suggestions={suggestions}
             />
+            <StudentAccessBar key={`student-${c.id}`} caseId={c.id} access={studentAccess} />
           </CaseHeaderDetails>
 
           <CaseTabs id={c.id} isOwner={member.isOwner} />

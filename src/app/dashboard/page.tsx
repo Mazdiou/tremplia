@@ -14,7 +14,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { countdownLabel, nextDeadline } from "@/features/campaigns/timeline";
 import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
 import { CampaignSelect } from "@/features/dashboard/components/campaign-select";
-import { activityLabel } from "@/features/history/labels";
+import { activityActor, activityLabel } from "@/features/history/labels";
 import {
   EDUCATION_LEVELS,
   EDUCATION_LEVEL_LABELS,
@@ -345,7 +345,11 @@ export default async function DashboardPage({
                       <Initials first={actor?.first_name ?? "?"} last={actor?.last_name ?? ""} />
                       <span className="min-w-0 flex-1">
                         <span className="font-medium">
-                          {actor ? `${actor.first_name} ${actor.last_name}` : "Un ancien membre"}
+                          {activityActor(
+                            a.action,
+                            actor && `${actor.first_name} ${actor.last_name}`,
+                            "agency",
+                          )}
                         </span>{" "}
                         <span className="text-muted-foreground">
                           {activityLabel(a.action, "agency")}

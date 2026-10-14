@@ -43,6 +43,10 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "program.updated": "a modifié une formation",
   "program.deleted": "a supprimé une formation",
   "program.moved": "a changé l'ordre des formations",
+  "student_access.enabled": "a ouvert l'accès d'un candidat",
+  "student_access.disabled": "a fermé l'accès d'un candidat",
+  "student_access.regenerated": "a créé un nouveau code candidat",
+  "student.logged_in": "s'est connecté à son espace",
 };
 
 const CASE_LABELS: Record<ActivityAction, string> = {
@@ -53,6 +57,9 @@ const CASE_LABELS: Record<ActivityAction, string> = {
   "case.status_changed": "a changé le statut du dossier",
   "case.groups_updated": "a changé le classement du dossier",
   "motivation_letter.saved": "a modifié la lettre de motivation",
+  "student_access.enabled": "a ouvert l'accès du candidat",
+  "student_access.disabled": "a fermé l'accès du candidat",
+  "student_access.regenerated": "a créé un nouveau code candidat",
 };
 
 const UNKNOWN = "a effectué une action";
@@ -65,4 +72,15 @@ function isKnown(action: string): action is ActivityAction {
 export function activityLabel(action: string, scope: "case" | "agency") {
   if (!isKnown(action)) return UNKNOWN;
   return (scope === "case" ? CASE_LABELS : AGENCY_LABELS)[action];
+}
+
+// Auteur affiché : le candidat pour ses propres actions, sinon le membre
+// (ou « Un ancien membre » s'il a été supprimé)
+export function activityActor(
+  action: string,
+  memberName: string | null | undefined,
+  scope: "case" | "agency",
+) {
+  if (action.startsWith("student.")) return scope === "case" ? "Le candidat" : "Un candidat";
+  return memberName || "Un ancien membre";
 }

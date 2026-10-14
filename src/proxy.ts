@@ -4,7 +4,15 @@ import { publicEnv } from "@/lib/env";
 
 const PUBLIC_PATHS = ["/login", "/register"];
 
+// Espace candidat : sa propre session (cookie signé), vérifiée par ses pages
+// et ses routes. La session des employés n'y est pas consultée.
+function isStudentPath(path: string) {
+  return /^\/(api\/)?student(\/|$)/.test(path);
+}
+
 export async function proxy(request: NextRequest) {
+  if (isStudentPath(request.nextUrl.pathname)) return NextResponse.next();
+
   let response = NextResponse.next({ request });
 
   const env = publicEnv();
