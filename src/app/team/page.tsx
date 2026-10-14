@@ -72,7 +72,7 @@ export default async function TeamPage() {
                       {m.is_active ? "Actif" : "Désactivé"}
                     </StatusPill>
                   </span>
-                  <div className="flex min-w-44 justify-end gap-2 max-md:w-full max-md:justify-start">
+                  <div className="flex min-w-44 flex-wrap justify-end gap-2 max-md:w-full max-md:justify-start">
                     {m.id !== caller.userId && (
                       <>
                         {m.role === "employee" && !m.is_active && (

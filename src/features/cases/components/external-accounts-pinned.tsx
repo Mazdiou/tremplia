@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   EXTERNAL_ACCOUNT_STATUS_LABELS,
+  MAX_EXTERNAL_ACCOUNTS,
   type ExternalAccountStatus,
 } from "@/features/cases/labels";
+import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
 export type PinnedAccount = {
@@ -25,16 +27,6 @@ const HIDE_AFTER_MS = 30_000;
 const selectClass =
   "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
 
-async function send(url: string, method: string, body?: unknown) {
-  const res = await fetch(url, {
-    method,
-    cache: "no-store",
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await res.json().catch(() => null);
-  return { res, data };
-}
 
 // En-tête de la fiche : comptes du candidat sur les plateformes externes.
 // Le mot de passe n'est jamais dans la page : il est demandé au serveur, qui
@@ -81,7 +73,7 @@ export function ExternalAccountsPinned({
           onDone={() => setAdding(false)}
         />
       ) : (
-        accounts.length < 10 && (
+        accounts.length < MAX_EXTERNAL_ACCOUNTS && (
           <div className="border-t px-3 py-1.5">
             <Button variant="ghost" size="xs" onClick={() => setAdding(true)}>
               <Plus /> Ajouter un compte
@@ -136,19 +128,18 @@ function AccountRow({
   async function reveal() {
     setError(null);
     setRevealing(true);
-    const { res, data } = await send(
+    const res = await callApi<{ password?: unknown }>(
       `/api/cases/${caseId}/external-accounts/${account.id}/reveal`,
-      "POST",
     );
     setRevealing(false);
-    if (!res.ok || typeof data?.password !== "string") {
-      setError(data?.error ?? `Erreur ${res.status}`);
+    if (!res.ok || typeof res.data.password !== "string") {
+      setError(res.ok ? "Impossible de lire le mot de passe" : res.error);
       return;
     }
     const t = Date.now();
     setExpiresAt(t + HIDE_AFTER_MS);
     setNow(t);
-    setPassword(data.password);
+    setPassword(res.data.password);
   }
 
   async function copy(value: string, what: "login" | "password") {
@@ -259,7 +250,7 @@ function AccountRow({
         </p>
       )}
       {error && (
-        <p className="border-t px-3 py-2 text-sm text-red-600" role="alert">
+        <p className="border-t px-3 py-2 text-sm text-destructive" role="alert">
           {error}
         </p>
       )}
@@ -306,20 +297,17 @@ function AccountForm({
     };
 
     setSaving(true);
-    const { res, data } = account
-      ? await send(`/api/cases/${caseId}/external-accounts/${account.id}`, "PUT", body)
-      : await send(`/api/cases/${caseId}/external-accounts`, "POST", body);
+    const res = account
+      ? await callApi(`/api/cases/${caseId}/external-accounts/${account.id}`, {
+          method: "PUT",
+          body,
+        })
+      : await callApi(`/api/cases/${caseId}/external-accounts`, { body });
     setSaving(false);
 
     if (!res.ok) {
-      if (Array.isArray(data?.fields)) {
-        const map: Record<string, string> = {};
-        for (const f of data.fields as { path: string; message: string }[]) {
-          map[f.path] ??= f.message;
-        }
-        setFieldErrors(map);
-      }
-      setError(data?.error ?? `Erreur ${res.status}`);
+      setFieldErrors(res.fieldErrors);
+      setError(res.error);
       return;
     }
     onDone();
@@ -400,7 +388,7 @@ function AccountForm({
         </div>
       )}
       {error && (
-        <p className="text-sm text-red-600 sm:col-span-2" role="alert">
+        <p className="text-sm text-destructive sm:col-span-2" role="alert">
           {error}
         </p>
       )}
@@ -418,5 +406,5 @@ function AccountForm({
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-sm text-red-600">{message}</p>;
+  return <p className="text-sm text-destructive">{message}</p>;
 }

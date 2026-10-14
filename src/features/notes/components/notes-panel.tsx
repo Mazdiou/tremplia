@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Pencil, StickyNote, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MAX_NOTE_LENGTH } from "@/features/notes/schemas";
+import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
 export type NoteItem = {
@@ -18,16 +19,6 @@ export type NoteItem = {
 
 type Message = { text: string; error: boolean };
 
-async function call(url: string, init?: RequestInit) {
-  const res = await fetch(url, { cache: "no-store", ...init });
-  const data = await res.json().catch(() => null);
-  return {
-    ok: res.ok,
-    error: res.ok ? null : ((data?.error as string) ?? `Erreur ${res.status}`),
-  };
-}
-
-const JSON_HEADERS = { "Content-Type": "application/json" };
 
 const TEXTAREA =
   "w-full min-h-24 resize-y rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60";
@@ -63,14 +54,10 @@ export function NotesPanel({
     }
     setMessage(null);
     setAdding(true);
-    const res = await call(base, {
-      method: "POST",
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ content }),
-    });
+    const res = await callApi(base, { body: { content } });
     setAdding(false);
     if (!res.ok) {
-      say(res.error ?? "Erreur", true);
+      say(res.error, true);
       return;
     }
     setDraft("");
@@ -90,14 +77,10 @@ export function NotesPanel({
     }
     setMessage(null);
     setSaving(true);
-    const res = await call(`${base}/${note.id}`, {
-      method: "PATCH",
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ content }),
-    });
+    const res = await callApi(`${base}/${note.id}`, { method: "PATCH", body: { content } });
     setSaving(false);
     if (!res.ok) {
-      say(res.error ?? "Erreur", true);
+      say(res.error, true);
       return;
     }
     setEditingId(null);
@@ -108,10 +91,10 @@ export function NotesPanel({
   async function removeNote(id: string) {
     setMessage(null);
     setDeleting(id);
-    const res = await call(`${base}/${id}`, { method: "DELETE" });
+    const res = await callApi(`${base}/${id}`, { method: "DELETE" });
     setDeleting(null);
     setConfirmId(null);
-    if (!res.ok) say(res.error ?? "Erreur", true);
+    if (!res.ok) say(res.error, true);
     else say("Note supprimée");
     router.refresh();
   }
@@ -157,7 +140,7 @@ export function NotesPanel({
         aria-live="polite"
         className={cn(
           "min-h-5 px-1 text-sm",
-          message?.error ? "text-red-600" : "text-muted-foreground",
+          message?.error ? "text-destructive" : "text-muted-foreground",
         )}
       >
         {message?.text}

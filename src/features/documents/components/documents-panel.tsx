@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { DOCUMENTS_BUCKET, MAX_DOCUMENT_BYTES } from "@/features/documents/schemas";
 import { useDragAutoScroll } from "@/features/documents/drag-autoscroll";
+import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
 export type DocItem = {
@@ -47,18 +48,6 @@ function hasType(e: React.DragEvent, type: string) {
 }
 
 type Message = { text: string; error: boolean };
-
-async function call(url: string, init?: RequestInit) {
-  const res = await fetch(url, { cache: "no-store", ...init });
-  const data = await res.json().catch(() => null);
-  return {
-    ok: res.ok,
-    data,
-    error: res.ok ? null : ((data?.error as string) ?? `Erreur ${res.status}`),
-  };
-}
-
-const JSON_HEADERS = { "Content-Type": "application/json" };
 
 export function DocumentsPanel({
   caseId,
@@ -121,15 +110,10 @@ export function DocumentsPanel({
         file.name.replace(/\.pdf$/i, "").trim().slice(0, 120) || "Document";
 
       // 1. Le serveur contrôle la demande et renvoie une URL signée
-      const step1 = await call(`${base}/upload-url`, {
-        method: "POST",
-        headers: JSON_HEADERS,
-        body: JSON.stringify({
-          name,
-          originalFileName: file.name,
-          sizeBytes: file.size,
-        }),
-      });
+      const step1 = await callApi<{ documentId: string; path: string; token: string }>(
+        `${base}/upload-url`,
+        { body: { name, originalFileName: file.name, sizeBytes: file.size } },
+      );
       if (!step1.ok) {
         lastError = `${file.name} : ${step1.error}`;
         continue;
@@ -147,15 +131,13 @@ export function DocumentsPanel({
       }
 
       // 3. Le serveur vérifie le fichier reçu et crée le document
-      const step3 = await call(base, {
-        method: "POST",
-        headers: JSON_HEADERS,
-        body: JSON.stringify({
+      const step3 = await callApi(base, {
+        body: {
           documentId: step1.data.documentId,
           name,
           originalFileName: file.name,
           folderId,
-        }),
+        },
       });
       if (!step3.ok) {
         lastError = `${file.name} : ${step3.error}`;
@@ -176,10 +158,10 @@ export function DocumentsPanel({
     // Fenêtre ouverte tout de suite (clic de l'utilisateur) pour éviter le
     // blocage des fenêtres, puis dirigée vers le lien signé d'une minute.
     const win = window.open("about:blank", "_blank");
-    const res = await call(`${base}/${id}/open`, { method: "POST" });
-    if (!res.ok || typeof res.data?.url !== "string") {
+    const res = await callApi<{ url?: unknown }>(`${base}/${id}/open`);
+    if (!res.ok || typeof res.data.url !== "string") {
       win?.close();
-      say(res.error ?? "Impossible d'ouvrir le document", true);
+      say(res.ok ? "Impossible d'ouvrir le document" : res.error, true);
       return;
     }
     if (!win) {
@@ -211,14 +193,10 @@ export function DocumentsPanel({
       return;
     }
     setSaving(true);
-    const res = await call(`${base}/${d.id}`, {
-      method: "PATCH",
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ name }),
-    });
+    const res = await callApi(`${base}/${d.id}`, { method: "PATCH", body: { name } });
     setSaving(false);
     if (!res.ok) {
-      say(res.error ?? "Erreur", true);
+      say(res.error, true);
       return;
     }
     setEditingId(null);
@@ -238,10 +216,10 @@ export function DocumentsPanel({
 
   async function remove(id: string) {
     setWorking(id);
-    const res = await call(`${base}/${id}`, { method: "DELETE" });
+    const res = await callApi(`${base}/${id}`, { method: "DELETE" });
     setWorking(null);
     setConfirmId(null);
-    if (!res.ok) say(res.error ?? "Erreur", true);
+    if (!res.ok) say(res.error, true);
     else say("Document supprimé");
     router.refresh();
   }
@@ -249,13 +227,9 @@ export function DocumentsPanel({
   async function toggleLock(d: DocItem) {
     setMessage(null);
     setWorking(d.id);
-    const res = await call(`${base}/${d.id}/lock`, {
-      method: "POST",
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ locked: !d.locked }),
-    });
+    const res = await callApi(`${base}/${d.id}/lock`, { body: { locked: !d.locked } });
     setWorking(null);
-    if (!res.ok) say(res.error ?? "Erreur", true);
+    if (!res.ok) say(res.error, true);
     else say(d.locked ? "Document déverrouillé" : "Document verrouillé");
     router.refresh();
   }
@@ -294,14 +268,10 @@ export function DocumentsPanel({
     }
     setMessage(null);
     setWorking(docId);
-    const res = await call(`${base}/${docId}/move`, {
-      method: "POST",
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ folderId }),
-    });
+    const res = await callApi(`${base}/${docId}/move`, { body: { folderId } });
     setWorking(null);
     if (!res.ok) {
-      say(res.error ?? "Erreur", true);
+      say(res.error, true);
     } else {
       const target = folders.find((f) => f.id === folderId);
       say(
@@ -320,14 +290,10 @@ export function DocumentsPanel({
       return;
     }
     setFolderBusy(true);
-    const res = await call(foldersBase, {
-      method: "POST",
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ name }),
-    });
+    const res = await callApi(foldersBase, { body: { name } });
     setFolderBusy(false);
     if (!res.ok) {
-      say(res.error ?? "Erreur", true);
+      say(res.error, true);
       return;
     }
     setCreatingFolder(false);
@@ -342,14 +308,10 @@ export function DocumentsPanel({
       return;
     }
     setFolderBusy(true);
-    const res = await call(`${foldersBase}/${f.id}`, {
-      method: "PATCH",
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ name }),
-    });
+    const res = await callApi(`${foldersBase}/${f.id}`, { method: "PATCH", body: { name } });
     setFolderBusy(false);
     if (!res.ok) {
-      say(res.error ?? "Erreur", true);
+      say(res.error, true);
       return;
     }
     setEditingFolderId(null);
@@ -359,10 +321,10 @@ export function DocumentsPanel({
 
   async function removeFolder(f: FolderItem) {
     setFolderBusy(true);
-    const res = await call(`${foldersBase}/${f.id}`, { method: "DELETE" });
+    const res = await callApi(`${foldersBase}/${f.id}`, { method: "DELETE" });
     setFolderBusy(false);
     setConfirmFolderId(null);
-    if (!res.ok) say(res.error ?? "Erreur", true);
+    if (!res.ok) say(res.error, true);
     else say("Dossier supprimé");
     router.refresh();
   }
@@ -791,7 +753,7 @@ export function DocumentsPanel({
           aria-live="polite"
           className={cn(
             "min-h-5 flex-1 px-1 text-sm",
-            message?.error ? "text-red-600" : "text-muted-foreground",
+            message?.error ? "text-destructive" : "text-muted-foreground",
           )}
         >
           {message?.text}

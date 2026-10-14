@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
+import { callApi } from "@/lib/api-client";
 
 type Action = "archive" | "unarchive" | "delete";
 
@@ -43,15 +44,14 @@ export function CampaignDangerZone({
   async function confirm(action: Action) {
     setBusy(true);
     setError(null);
-    const res = await fetch(
+    const res = await callApi(
       action === "delete" ? `/api/campaigns/${campaignId}` : `/api/campaigns/${campaignId}/${action}`,
       { method: action === "delete" ? "DELETE" : "POST" },
     );
-    const data = await res.json().catch(() => null);
     setBusy(false);
     setPending(null);
     if (!res.ok) {
-      setError(data?.error ?? `Erreur ${res.status}`);
+      setError(res.error);
       return;
     }
     if (action === "delete") router.push("/campaigns");
@@ -77,7 +77,7 @@ export function CampaignDangerZone({
         </p>
       )}
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       )}

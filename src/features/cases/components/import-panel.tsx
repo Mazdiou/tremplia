@@ -8,6 +8,7 @@ import {
   STATUS_LABELS,
   labelOf,
 } from "@/features/cases/labels";
+import { callApi } from "@/lib/api-client";
 import { displayName } from "@/lib/names";
 import { SelectField, TextField } from "./form-fields";
 
@@ -50,18 +51,15 @@ export function ImportPanel({
     setError(null);
     setMatches(null);
     setLoading(true);
-    const res = await fetch("/api/cases/import-lookup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sourceCampaignId: sourceId, lastName, firstName, birthDate }),
+    const res = await callApi<{ matches?: ImportMatch[] }>("/api/cases/import-lookup", {
+      body: { sourceCampaignId: sourceId, lastName, firstName, birthDate },
     });
-    const data = await res.json().catch(() => null);
     setLoading(false);
-    if (!res.ok || !Array.isArray(data?.matches)) {
-      setError(data?.error ?? `Erreur ${res.status}`);
+    if (!res.ok || !Array.isArray(res.data.matches)) {
+      setError(res.ok ? "Recherche impossible" : res.error);
       return;
     }
-    setMatches(data.matches as ImportMatch[]);
+    setMatches(res.data.matches);
   }
 
   if (!open) {
@@ -126,7 +124,7 @@ export function ImportPanel({
       )}
 
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       )}

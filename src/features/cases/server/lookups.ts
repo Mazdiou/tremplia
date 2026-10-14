@@ -9,11 +9,11 @@ import {
   type CaseFieldsDraft,
   type CaseFieldsRecord,
 } from "../case-record";
+import { CASE_SEARCH_LIMIT } from "../schemas";
+import { parseSearchQuery } from "../search-query";
 
 // Lectures via le RLS : seuls les dossiers de l'agence de l'appelant sont
 // visibles. Appelées en POST : jamais l'identité d'un candidat dans une adresse.
-
-const SEARCH_LIMIT = 20;
 
 export type CaseSearchResult = {
   id: string;
@@ -38,13 +38,15 @@ export async function searchCases(query: string): Promise<CaseSearchResult[]> {
     .select("id, first_name, last_name, status, education_level, campaign_id")
     .order("last_name")
     .order("first_name")
-    .limit(SEARCH_LIMIT);
+    .limit(CASE_SEARCH_LIMIT);
 
-  const digits = query.replace(/[\s.+-]/g, "");
-  if (/^\d{4,}$/.test(digits)) {
-    request = request.ilike("phone", `%${likeEscape(digits)}%`);
+  const parsed = parseSearchQuery(query);
+  if (parsed.kind === "phone") {
+    // Expression régulière (opérateur ~) : le numéro est enregistré tel
+    // qu'il a été saisi, avec ou sans espaces
+    request = request.filter("phone", "match", parsed.pattern);
   } else {
-    for (const word of normalizeName(query).split(" ").filter(Boolean)) {
+    for (const word of parsed.words) {
       request = request.ilike("search_name", `%${likeEscape(word)}%`);
     }
   }

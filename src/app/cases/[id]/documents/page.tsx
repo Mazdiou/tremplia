@@ -45,7 +45,7 @@ export default async function DocumentsPage({
       },
     );
     if (initError) {
-      console.error("[documents folders init]", initError.message);
+      console.error("[documents folders init]", initError.code);
     }
   }
 

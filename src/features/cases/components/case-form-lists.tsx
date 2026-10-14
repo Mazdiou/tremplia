@@ -63,12 +63,13 @@ function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
   );
 }
 
+// Le <legend> doit être l'enfant direct du <fieldset> pour en être le titre
 function ListTitle({ title, hint }: { title: string; hint: string }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-2">
-      <legend className="text-sm font-medium">{title}</legend>
+    <legend className="flex w-full flex-wrap items-baseline justify-between gap-2">
+      <span className="text-sm font-medium">{title}</span>
       <span className="text-xs text-muted-foreground">{hint}</span>
-    </div>
+    </legend>
   );
 }
 

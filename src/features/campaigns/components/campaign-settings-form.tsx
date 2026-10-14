@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldError, ListHeader, TextField } from "@/features/cases/components/form-fields";
+import { callApi } from "@/lib/api-client";
 import {
   MAX_CAMPAIGN_DATES,
   MAX_CAMPAIGN_GROUPS,
@@ -81,29 +82,21 @@ export function CampaignSettingsForm({
     setError(null);
     setErrors({});
     setSaving(true);
-    const res = await fetch(isEdit ? `/api/campaigns/${campaignId}` : "/api/campaigns", {
-      method: isEdit ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(isEdit ? draft : { ...draft, groups }),
-    });
-    const data = await res.json().catch(() => null);
+    const res = await callApi<{ id: string }>(
+      isEdit ? `/api/campaigns/${campaignId}` : "/api/campaigns",
+      { method: isEdit ? "PATCH" : "POST", body: isEdit ? draft : { ...draft, groups } },
+    );
     setSaving(false);
     if (!res.ok) {
-      if (Array.isArray(data?.fields)) {
-        const map: Record<string, string> = {};
-        for (const f of data.fields as { path: string; message: string }[]) {
-          map[f.path] ??= f.message;
-        }
-        setErrors(map);
-      }
-      setError(data?.error ?? `Erreur ${res.status}`);
+      setErrors(res.fieldErrors);
+      setError(res.error);
       return;
     }
     if (isEdit) {
       setSaved(true);
       router.refresh();
     } else {
-      router.push(`/campaigns/${data.id}`);
+      router.push(`/campaigns/${res.data.id}`);
       router.refresh();
     }
   }

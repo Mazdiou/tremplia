@@ -7,15 +7,10 @@ import {
   labelOf,
 } from "@/features/cases/labels";
 import { getCase } from "@/features/cases/server/get-case";
+import { dayFormat, formatShortDate } from "@/lib/dates";
 
 const Row = KeyRow;
 const dash = (v: string | null) => v ?? "—";
-
-function formatDay(value: string) {
-  return new Date(`${value}T00:00:00Z`).toLocaleDateString("fr-FR", {
-    timeZone: "UTC",
-  });
-}
 
 export default async function CaseInfoPage({
   params,
@@ -32,7 +27,7 @@ export default async function CaseInfoPage({
       <div className="space-y-5">
         <Panel title="Identité">
           <dl>
-            <Row label="Date de naissance">{formatDay(c.birth_date)}</Row>
+            <Row label="Date de naissance">{formatShortDate(c.birth_date)}</Row>
             <Row label="Téléphone">{c.phone}</Row>
             <Row label="E-mail">{dash(c.email)}</Row>
             <Row label="Ville ou wilaya">{dash(c.city)}</Row>
@@ -49,7 +44,7 @@ export default async function CaseInfoPage({
           <dl>
             <Row label="Campagne">{campaign?.name ?? "—"}</Row>
             <Row label="Responsable">{responsible ?? "—"}</Row>
-            <Row label="Créé le">{new Date(c.created_at).toLocaleDateString("fr-FR")}</Row>
+            <Row label="Créé le">{dayFormat.format(new Date(c.created_at))}</Row>
           </dl>
         </Panel>
       </div>
@@ -81,7 +76,7 @@ export default async function CaseInfoPage({
                       [
                         t.test === "other" ? t.other_name : labelOf(LANGUAGE_TEST_LABELS, t.test),
                         t.result,
-                        t.date && formatDay(t.date),
+                        t.date && formatShortDate(t.date),
                       ]
                         .filter(Boolean)
                         .join(" · "),

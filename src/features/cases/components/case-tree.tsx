@@ -261,38 +261,41 @@ export function CaseTree({
     window.addEventListener("pointerup", onUp);
   }
 
-  // --- Panneau replié : une fine barre d'icônes ---
-  if (prefs.collapsed) {
-    return (
-      <aside className="flex h-full w-12 shrink-0 flex-col items-center gap-1 border-r bg-sidebar py-2">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => setPrefs({ collapsed: false })}
-          aria-label="Ouvrir le panneau des dossiers"
-          title="Ouvrir le panneau (Ctrl+B)"
-        >
-          <PanelLeftOpen />
-        </Button>
-        <Link
-          href="/cases/new"
-          aria-label="Nouveau dossier"
-          title="Nouveau dossier"
-          className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
-        >
-          <Plus />
-        </Link>
-      </aside>
-    );
-  }
+  // Le repli ne concerne que l'ordinateur : sur téléphone, l'arbre occupe
+  // tout l'écran de l'accueil des dossiers et n'a rien à replier.
+  const collapsed = prefs.collapsed;
 
   return (
     <>
+      {/* Panneau replié : une fine barre d'icônes */}
+      {collapsed && (
+        <aside className="hidden h-full w-12 shrink-0 flex-col items-center gap-1 border-r bg-sidebar py-2 md:flex">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setPrefs({ collapsed: false })}
+            aria-label="Ouvrir le panneau des dossiers"
+            title="Ouvrir le panneau (Ctrl+B)"
+          >
+            <PanelLeftOpen />
+          </Button>
+          <Link
+            href="/cases/new"
+            aria-label="Nouveau dossier"
+            title="Nouveau dossier"
+            className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+          >
+            <Plus />
+          </Link>
+        </aside>
+      )}
+
       <aside
         style={{ "--tree-w": `${width}px` } as React.CSSProperties}
         className={cn(
           "relative flex h-full w-full shrink-0 flex-col bg-sidebar md:w-(--tree-w)",
           !isCasesIndex(pathname) && "max-md:hidden",
+          collapsed && "md:hidden",
         )}
       >
         {/* En-tête */}
@@ -322,6 +325,7 @@ export function CaseTree({
             onClick={() => setPrefs({ collapsed: true })}
             aria-label="Replier le panneau"
             title="Replier le panneau (Ctrl+B)"
+            className="max-md:hidden"
           >
             <PanelLeftClose />
           </Button>
@@ -718,7 +722,10 @@ export function CaseTree({
           if (e.key === "ArrowLeft") setPrefs({ width: width - 16 });
           if (e.key === "ArrowRight") setPrefs({ width: width + 16 });
         }}
-        className="hidden w-px shrink-0 cursor-col-resize md:block bg-border outline-none transition-colors hover:w-0.5 hover:bg-primary/40 focus-visible:w-0.5 focus-visible:bg-ring"
+        className={cn(
+          "hidden w-px shrink-0 cursor-col-resize bg-border outline-none transition-colors hover:w-0.5 hover:bg-primary/40 focus-visible:w-0.5 focus-visible:bg-ring",
+          !collapsed && "md:block",
+        )}
       />
     </>
   );

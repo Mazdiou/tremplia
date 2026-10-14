@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { callApi } from "@/lib/api-client";
 
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
@@ -46,22 +47,17 @@ export function AddEmployeeForm() {
     const email = String(form.get("email"));
 
     setLoading(true);
-    const res = await fetch("/api/team/employees", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const res = await callApi<{ temporaryPassword: string }>("/api/team/employees", {
+      body: {
         firstName: form.get("firstName"),
         lastName: form.get("lastName"),
         email,
-      }),
+      },
     });
     setLoading(false);
+    if (!res.ok) return setError(res.error);
 
-    const data = await res.json().catch(() => null);
-    if (!res.ok)
-      return setError(data?.error ?? `Erreur serveur (${res.status})`);
-
-    setCreated({ email, password: data.temporaryPassword });
+    setCreated({ email, password: res.data.temporaryPassword });
     formEl.reset();
     router.refresh();
   }

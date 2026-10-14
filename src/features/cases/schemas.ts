@@ -226,6 +226,9 @@ export const importLookupSchema = z.object({
   birthDate: isoDateSchema,
 });
 
+// Nombre maximal de résultats de la recherche globale
+export const CASE_SEARCH_LIMIT = 20;
+
 export const caseSearchSchema = z.object({
   query: z
     .string()

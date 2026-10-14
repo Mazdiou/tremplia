@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
+import { StatusPill } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { requireMember } from "@/lib/auth/require-member";
 import {
@@ -10,17 +11,12 @@ import {
 } from "@/features/cases/labels";
 import { displayName } from "@/lib/names";
 import { createClient } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
 import { getCase } from "@/features/cases/server/get-case";
 import { ExternalAccountsPinned } from "@/features/cases/components/external-accounts-pinned";
 import { CaseStatusButtons } from "@/features/cases/components/case-status-buttons";
 import { CaseTabs } from "@/features/cases/components/case-tabs";
 
-const BADGE: Record<string, string> = {
-  active: "bg-success-bg text-success",
-  closed: "bg-muted text-muted-foreground",
-  abandoned: "bg-red-500/10 text-red-700 dark:text-red-400",
-};
+const STATUS_TONE = { active: "ok", closed: "off", abandoned: "bad" } as const;
 
 // Plateformes proposées pour un nouveau compte : celles suggérées par la
 // campagne, puis celles déjà utilisées dans l'agence (lecture via le RLS).
@@ -91,14 +87,9 @@ export default async function CaseLayout({
                   <h1 className="truncate text-[22px] font-semibold tracking-tight">
                     {displayName(c.first_name, c.last_name)}
                   </h1>
-                  <span
-                    className={cn(
-                      "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
-                      BADGE[c.status],
-                    )}
-                  >
+                  <StatusPill tone={STATUS_TONE[c.status] ?? "off"}>
                     {labelOf(STATUS_LABELS, c.status)}
-                  </span>
+                  </StatusPill>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
                 {groups.length > 0 && (

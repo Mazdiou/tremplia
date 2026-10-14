@@ -21,6 +21,7 @@ import {
   FormError,
   PasswordField,
 } from "@/components/auth/auth-field";
+import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
 type Values = {
@@ -124,25 +125,14 @@ export default function RegisterPage() {
     setLoading(true);
     const { confirm, ...payload } = values;
     void confirm;
-    try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        // Le mot de passe n'a plus de raison de rester en mémoire
-        setValues(EMPTY);
-        setDone(true);
-        return;
-      }
-      setError(
-        (await res.json().catch(() => null))?.error ?? `Erreur ${res.status}`,
-      );
-    } catch {
-      setError("Connexion impossible. Vérifiez votre réseau et réessayez.");
+    const res = await callApi("/api/auth/register", { body: payload });
+    if (res.ok) {
+      // Le mot de passe n'a plus de raison de rester en mémoire
+      setValues(EMPTY);
+      setDone(true);
+      return;
     }
+    setError(res.error);
     setLoading(false);
   }
 

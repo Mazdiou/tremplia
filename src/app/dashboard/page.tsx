@@ -20,10 +20,9 @@ import {
   EDUCATION_LEVEL_LABELS,
   labelOf,
 } from "@/features/cases/labels";
-import { APP_TIMEZONE, formatLongDate, todayInAppTimezone } from "@/lib/dates";
+import { APP_TIMEZONE, dayFormat, formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { displayName } from "@/lib/names";
 
-const dayFmt = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIMEZONE });
 const timeFmt = new Intl.DateTimeFormat("fr-FR", {
   timeZone: APP_TIMEZONE,
   hour: "2-digit",
@@ -45,7 +44,7 @@ function relativeDay(iso: string) {
   if (diff <= 0) return "aujourd'hui";
   if (diff === 1) return "hier";
   if (diff < 7) return `il y a ${diff} jours`;
-  return dayFmt.format(d);
+  return dayFormat.format(d);
 }
 
 // Heure pour aujourd'hui, sinon jour relatif

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Check, Info, TriangleAlert } from "lucide-react";
 import { FormActions, FormSection } from "@/components/page-ui";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { callApi, type ApiResult } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import type { CaseFieldsDraft } from "@/features/cases/case-record";
 import {
@@ -156,30 +157,26 @@ export function CaseForm(
     setFieldErrors({});
     setLoading(true);
 
-    let res: Response;
+    let res: ApiResult<{ id?: string }>;
     if (isEdit) {
-      res = await fetch(`/api/cases/${props.caseId}`, {
+      res = await callApi(`/api/cases/${props.caseId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           ...toPayload(fields),
           assignedTo: props.isOwner ? assignedTo : "",
-        }),
+        },
       });
       const changedGroups =
         [...groupIds].sort().join() !== [...props.initial.groupIds].sort().join();
       if (res.ok && changedGroups) {
-        res = await fetch(`/api/cases/${props.caseId}/groups`, {
+        res = await callApi(`/api/cases/${props.caseId}/groups`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ groupIds }),
+          body: { groupIds },
         });
       }
     } else {
-      res = await fetch("/api/cases", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      res = await callApi("/api/cases", {
+        body: {
           campaignId,
           groupIds,
           assignedTo: props.isOwner ? assignedTo : "",
@@ -191,29 +188,22 @@ export function CaseForm(
           initialNote,
           sourceCampaignId: imported?.id ?? "",
           confirmDuplicate,
-        }),
+        },
       });
     }
     setLoading(false);
 
-    const data = await res.json().catch(() => null);
     if (!res.ok) {
-      if (data?.code === "possible_duplicate" && Array.isArray(data.duplicates)) {
-        setDuplicates(data.duplicates as string[]);
+      if (res.data?.code === "possible_duplicate" && Array.isArray(res.data.duplicates)) {
+        setDuplicates(res.data.duplicates as string[]);
         return;
       }
-      if (Array.isArray(data?.fields)) {
-        const map: Record<string, string> = {};
-        for (const f of data.fields as { path: string; message: string }[]) {
-          map[f.path] ??= f.message;
-        }
-        setFieldErrors(map);
-      }
-      setError(data?.error ?? `Erreur serveur (${res.status})`);
+      setFieldErrors(res.fieldErrors);
+      setError(res.error);
       return;
     }
 
-    const id = isEdit ? props.caseId : (data.id as string);
+    const id = isEdit ? props.caseId : (res.data.id as string);
     router.push(`/cases/${id}`);
     router.refresh();
   }

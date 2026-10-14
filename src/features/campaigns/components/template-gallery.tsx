@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { callApi } from "@/lib/api-client";
 import { formatLongDate } from "@/lib/dates";
 import type { CampaignTemplate } from "@/config/campaign-templates";
 
@@ -23,18 +24,15 @@ export function TemplateGallery({
   async function importTemplate(key: string) {
     setError(null);
     setPending(key);
-    const res = await fetch("/api/campaigns/import", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ templateKey: key }),
+    const res = await callApi<{ id: string }>("/api/campaigns/import", {
+      body: { templateKey: key },
     });
-    const data = await res.json().catch(() => null);
     setPending(null);
     if (!res.ok) {
-      setError(data?.error ?? `Erreur ${res.status}`);
+      setError(res.error);
       return;
     }
-    router.push(`/campaigns/${data.id}`);
+    router.push(`/campaigns/${res.data.id}`);
     router.refresh();
   }
 

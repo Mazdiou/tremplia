@@ -7,18 +7,15 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { callApi } from "@/lib/api-client";
 import { MAX_CAMPAIGN_GROUPS } from "../schemas";
 
 export type ManagedGroup = { id: string; name: string; activeCases: number };
 
+// Message d'erreur, ou null en cas de succès
 async function send(url: string, method: string, body?: unknown) {
-  const res = await fetch(url, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await res.json().catch(() => null);
-  return res.ok ? null : (data?.error ?? `Erreur ${res.status}`);
+  const res = await callApi(url, { method, body });
+  return res.ok ? null : res.error;
 }
 
 // Groupes d'une campagne : tout membre actif les gère, sauf si la campagne
@@ -154,7 +151,7 @@ export function GroupsManager({
       )}
 
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       )}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { EDUCATION_LEVEL_LABELS, labelOf } from "@/features/cases/labels";
+import { CASE_SEARCH_LIMIT } from "@/features/cases/schemas";
 import { displayName } from "@/lib/names";
 import { cn } from "@/lib/utils";
 
@@ -87,7 +88,7 @@ export function TreeSearchResults({
             ? error
             : results && results.length === 0
               ? "Aucun dossier ne correspond."
-              : `${results?.length ?? 0} résultat${(results?.length ?? 0) > 1 ? "s" : ""}${results?.length === 20 ? " (les 20 premiers)" : ""}`}
+              : `${results?.length ?? 0} résultat${(results?.length ?? 0) > 1 ? "s" : ""}${results?.length === CASE_SEARCH_LIMIT ? ` (les ${CASE_SEARCH_LIMIT} premiers)` : ""}`}
       </p>
       <ul className={cn(pending && "opacity-60")}>
         {(results ?? []).map((r) => {

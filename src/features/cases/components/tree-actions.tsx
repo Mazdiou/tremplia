@@ -6,16 +6,13 @@ import { useRouter } from "next/navigation";
 import { Check, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
+import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
+// Message d'erreur, ou null en cas de succès
 async function send(url: string, method: string, body?: unknown) {
-  const res = await fetch(url, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await res.json().catch(() => null);
-  return res.ok ? null : (data?.error ?? `Erreur ${res.status}`);
+  const res = await callApi(url, { method, body });
+  return res.ok ? null : res.error;
 }
 
 // Saisie d'un nom de groupe sur une ligne de l'arbre (Entrée : valider,
@@ -62,7 +59,7 @@ export function InlineNameInput({
           <X />
         </Button>
       </div>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </form>
   );
 }

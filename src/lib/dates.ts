@@ -33,6 +33,19 @@ export function formatLongDate(dateISO: string) {
   });
 }
 
+// Date seule (AAAA-MM-JJ), sans décalage de fuseau : « 15/12/2026 »
+export function formatShortDate(dateISO: string) {
+  return new Date(`${dateISO}T00:00:00Z`).toLocaleDateString("fr-FR", {
+    timeZone: "UTC",
+  });
+}
+
+// Jour d'un instant (created_at…) dans le fuseau de l'application, et non
+// celui du serveur : « 15/12/2026 »
+export const dayFormat = new Intl.DateTimeFormat("fr-FR", {
+  timeZone: APP_TIMEZONE,
+});
+
 export const dateTimeFormat = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "medium",
   timeStyle: "short",

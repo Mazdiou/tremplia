@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { callApi } from "@/lib/api-client";
 
 type Status = "active" | "closed" | "abandoned";
 
@@ -49,23 +50,20 @@ export function CaseStatusButtons({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState<Action | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   async function change(to: Status) {
+    setError(null);
     setLoading(true);
-    const res = await fetch(`/api/cases/${id}/status`, {
+    const res = await callApi(`/api/cases/${id}/status`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: to }),
+      body: { status: to },
     });
     setLoading(false);
     dialogRef.current?.close();
     setPending(null);
-    if (!res.ok) {
-      alert(
-        (await res.json().catch(() => null))?.error ?? `Erreur ${res.status}`,
-      );
-    }
+    if (!res.ok) setError(res.error);
     // Recharge l'arbre (compteurs, dossiers masqués) et la fiche
     router.refresh();
   }
@@ -83,17 +81,24 @@ export function CaseStatusButtons({
 
   return (
     <>
-      <div className="flex gap-2">
-        {ACTIONS[status].map((a) => (
-          <Button
-            key={a.to}
-            variant="outline"
-            disabled={loading}
-            onClick={() => ask(a)}
-          >
-            {a.label}
-          </Button>
-        ))}
+      <div className="flex flex-col items-end gap-1">
+        <div className="flex gap-2">
+          {ACTIONS[status].map((a) => (
+            <Button
+              key={a.to}
+              variant="outline"
+              disabled={loading}
+              onClick={() => ask(a)}
+            >
+              {a.label}
+            </Button>
+          ))}
+        </div>
+        {error && (
+          <p className="max-w-xs text-right text-xs text-destructive" role="alert">
+            {error}
+          </p>
+        )}
       </div>
 
       {/* Boîte de confirmation : <dialog> natif (Échap, focus piégé, fond) */}
