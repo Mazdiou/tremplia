@@ -15,7 +15,7 @@ export function CasesContent({ children }: { children: React.ReactNode }) {
   return (
     <div
       className={cn(
-        "min-w-0 flex-1 overflow-y-auto",
+        "relative min-w-0 flex-1 overflow-y-auto",
         isCasesIndex(pathname) && "max-md:hidden",
       )}
     >

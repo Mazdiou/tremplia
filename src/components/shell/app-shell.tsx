@@ -19,7 +19,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-dvh flex-col-reverse overflow-hidden md:flex-row">
       <AppRail isOwner={member.isOwner} initials={initials} />
-      <main className="min-w-0 flex-1 overflow-y-auto">{children}</main>
+      <main className="relative min-w-0 flex-1 overflow-y-auto">{children}</main>
     </div>
   );
 }
