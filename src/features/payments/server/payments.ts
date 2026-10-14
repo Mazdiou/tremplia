@@ -1,0 +1,171 @@
+import "server-only";
+import { ApiError, dbError } from "@/lib/api-errors";
+import { createClient } from "@/lib/supabase/server";
+import {
+  logCaseActivity,
+  type AuthorizedCase,
+} from "@/features/cases/server/authorize-case";
+import type { RecordPaymentInput } from "@/features/payments/schemas";
+
+// Paiements du candidat à l'agence. Tout membre actif enregistre un paiement
+// et fixe un montant convenu encore vide ; seul le patron annule un paiement
+// ou change le montant convenu (revérifié par les fonctions SQL, qui gardent
+// le total payé sous le montant convenu). Le journal garde les montants,
+// jamais la note ni le motif d'annulation.
+
+const MESSAGES = {
+  P0002: "Paiement introuvable",
+  "22003": "Le paiement dépasse le reste à payer",
+  "55000": "Indiquez d'abord le montant convenu",
+  "54000": "Limite de 200 paiements par dossier atteinte",
+  "23514": "Paiement invalide",
+};
+
+export type PaymentItem = {
+  id: string;
+  amount: number;
+  paidOn: string;
+  method: string;
+  note: string | null;
+  createdBy: string;
+  createdAt: string;
+  cancelled: { by: string; at: string; reason: string } | null;
+};
+
+const fullName = (p: { first_name: string; last_name: string } | null) =>
+  p ? `${p.first_name} ${p.last_name}` : "Un ancien membre";
+
+// Lecture via le RLS : seuls les paiements de l'agence reviennent. Les plus
+// récents d'abord.
+export async function listPayments(caseId: string): Promise<PaymentItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("case_payments")
+    .select(
+      `id, amount, paid_on, method, note, created_at, cancelled_at, cancel_reason,
+      author:profiles!case_payments_created_by_fk(first_name, last_name),
+      canceller:profiles!case_payments_cancelled_by_fk(first_name, last_name)`,
+    )
+    .eq("case_id", caseId)
+    .order("paid_on", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (error) console.error("[payments list]", error.code);
+
+  type Row = {
+    id: string;
+    amount: number;
+    paid_on: string;
+    method: string;
+    note: string | null;
+    created_at: string;
+    cancelled_at: string | null;
+    cancel_reason: string | null;
+    author: { first_name: string; last_name: string } | null;
+    canceller: { first_name: string; last_name: string } | null;
+  };
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    id: r.id,
+    amount: r.amount,
+    paidOn: r.paid_on,
+    method: r.method,
+    note: r.note,
+    createdBy: fullName(r.author),
+    createdAt: r.created_at,
+    cancelled: r.cancelled_at
+      ? { by: fullName(r.canceller), at: r.cancelled_at, reason: r.cancel_reason ?? "" }
+      : null,
+  }));
+}
+
+// Total des paiements non annulés
+export function paidTotal(payments: Pick<PaymentItem, "amount" | "cancelled">[]) {
+  return payments.reduce((sum, p) => (p.cancelled ? sum : sum + p.amount), 0);
+}
+
+export async function setAgreedAmount(auth: AuthorizedCase, caseId: string, amount: number) {
+  const { data: changed, error } = await auth.admin.rpc("set_case_agreed_amount", {
+    p_case_id: caseId,
+    p_agency_id: auth.agencyId,
+    p_actor_id: auth.member.userId,
+    p_amount: amount,
+  });
+  if (error) {
+    throw dbError("payments agreed amount", error, {
+      P0002: "Dossier introuvable",
+      "42501": "Seul le patron modifie le montant convenu",
+      "22003": "Le montant convenu ne peut pas être inférieur au total déjà payé",
+      "23514": "Montant invalide",
+    });
+  }
+  if (changed === true) {
+    await logCaseActivity(auth, caseId, {
+      action: "payment.agreed_amount_set",
+      targetType: "case",
+      targetId: caseId,
+      details: { amount },
+    });
+  }
+}
+
+export async function recordPayment(
+  auth: AuthorizedCase,
+  caseId: string,
+  input: RecordPaymentInput,
+) {
+  const { data, error } = await auth.admin.rpc("record_case_payment", {
+    p_case_id: caseId,
+    p_agency_id: auth.agencyId,
+    p_actor_id: auth.member.userId,
+    p_amount: input.amount,
+    p_paid_on: input.paidOn,
+    p_method: input.method,
+    p_note: input.note ?? null,
+  });
+  if (error) {
+    throw dbError("payments record", error, {
+      ...MESSAGES,
+      P0002: "Dossier introuvable",
+      "22007": "La date ne peut pas être dans le futur",
+    });
+  }
+  if (typeof data !== "string") throw new ApiError(500, "Impossible d'enregistrer le paiement");
+
+  await logCaseActivity(auth, caseId, {
+    action: "payment.recorded",
+    targetType: "case_payment",
+    targetId: data,
+    details: { amount: input.amount, method: input.method },
+  });
+  return data;
+}
+
+// Patron seulement
+export async function cancelPayment(
+  auth: AuthorizedCase,
+  caseId: string,
+  paymentId: string,
+  reason: string,
+) {
+  const { data: amount, error } = await auth.admin.rpc("cancel_case_payment", {
+    p_payment_id: paymentId,
+    p_case_id: caseId,
+    p_agency_id: auth.agencyId,
+    p_actor_id: auth.member.userId,
+    p_reason: reason,
+  });
+  if (error) {
+    throw dbError("payments cancel", error, {
+      ...MESSAGES,
+      "42501": "Seul le patron annule un paiement",
+      "55000": "Ce paiement est déjà annulé",
+      "23514": "Motif invalide",
+    });
+  }
+
+  await logCaseActivity(auth, caseId, {
+    action: "payment.cancelled",
+    targetType: "case_payment",
+    targetId: paymentId,
+    details: { amount },
+  });
+}

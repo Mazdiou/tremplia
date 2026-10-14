@@ -49,6 +49,7 @@ export default async function EditCasePage({
           name: campaign.name,
           groups: campaignGroups,
           suggestedPlatforms: campaign.suggested_platforms,
+          defaultFee: campaign.default_fee,
         }}
         initial={{
           fields: toCaseDraft(c),

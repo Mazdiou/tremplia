@@ -43,6 +43,9 @@ export const ACTIVITY_ACTIONS = [
   "student_access.disabled",
   "student_access.regenerated",
   "message.sent",
+  "payment.agreed_amount_set",
+  "payment.recorded",
+  "payment.cancelled",
   // Actions du candidat lui-même (actor_id vide)
   "student.logged_in",
   "student.approved",
@@ -64,4 +67,5 @@ export type ActivityTarget =
   | "case_note"
   | "motivation_letter"
   | "case_program"
-  | "case_message";
+  | "case_message"
+  | "case_payment";

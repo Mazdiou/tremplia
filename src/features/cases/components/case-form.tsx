@@ -22,11 +22,17 @@ import {
   type AccountDraft,
 } from "./case-form-lists";
 import {
+  AmountField,
   SelectField,
   TextAreaField,
   TextField,
   optionsOf,
 } from "@/components/form-fields";
+import {
+  PAYMENT_METHODS,
+  PAYMENT_METHOD_LABELS,
+} from "@/features/payments/schemas";
+import { amountInputValue, formatDA, parseAmount } from "@/lib/money";
 import { ImportPanel, type SourceCampaign } from "./import-panel";
 
 export type FormCampaign = {
@@ -34,6 +40,8 @@ export type FormCampaign = {
   name: string;
   groups: { id: string; name: string }[];
   suggestedPlatforms: string[];
+  // Tarif proposé comme montant convenu
+  defaultFee: number | null;
 };
 
 export type Member = {
@@ -112,6 +120,17 @@ export function CaseForm(
   );
   const [accounts, setAccounts] = useState<AccountDraft[]>([]);
   const [initialNote, setInitialNote] = useState("");
+  // Montant convenu : le tarif de la campagne, tant qu'il n'a pas été changé
+  const [agreedAmount, setAgreedAmount] = useState(() =>
+    isEdit
+      ? ""
+      : amountInputValue(
+          props.campaigns.find((c) => c.id === props.defaultCampaignId)?.defaultFee,
+        ),
+  );
+  const [agreedTouched, setAgreedTouched] = useState(false);
+  const [paidToday, setPaidToday] = useState("");
+  const [paidMethod, setPaidMethod] = useState("cash");
   const [imported, setImported] = useState<SourceCampaign | null>(null);
 
   const [loading, setLoading] = useState(false);
@@ -187,6 +206,9 @@ export function CaseForm(
             password: a.status === "existing" ? a.password : "",
           })),
           initialNote,
+          agreedAmount,
+          initialPayment:
+            paidToday.trim() === "" ? undefined : { amount: paidToday, method: paidMethod },
           sourceCampaignId: imported?.id ?? "",
           confirmDuplicate,
         },
@@ -210,6 +232,9 @@ export function CaseForm(
   }
 
   const e = fieldErrors;
+  // Montant convenu saisi, s'il est valide (bouton « Tout réglé »)
+  const parsedAgreed = parseAmount(agreedAmount);
+  const agreedValue = parsedAgreed !== null && !Number.isNaN(parsedAgreed) ? parsedAgreed : null;
   const levelOptions = optionsOf(EDUCATION_LEVELS, EDUCATION_LEVEL_LABELS);
 
   return (
@@ -260,6 +285,11 @@ export function CaseForm(
               setCampaignId(v);
               // Les groupes appartiennent à la campagne choisie
               setGroupIds([]);
+              if (!agreedTouched) {
+                setAgreedAmount(
+                  amountInputValue(campaigns.find((c) => c.id === v)?.defaultFee),
+                );
+              }
             }}
             placeholder="Choisir une campagne..."
             options={campaigns.map((c) => ({ value: c.id, label: c.name }))}
@@ -359,6 +389,69 @@ export function CaseForm(
               errors={e} />
           </div>
         </FormSection>
+
+        {!isEdit && (
+          <FormSection
+            title="Paiement"
+            description="Ce qui est convenu avec le candidat et ce qu'il règle aujourd'hui. Tout peut se faire plus tard, dans l'onglet Paiements."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <AmountField
+                id="agreedAmount"
+                label="Montant convenu"
+                value={agreedAmount}
+                onChange={(v) => {
+                  setAgreedTouched(true);
+                  setAgreedAmount(v);
+                }}
+                hint={
+                  campaign?.defaultFee != null
+                    ? `Tarif de la campagne : ${formatDA(campaign.defaultFee)}`
+                    : "Facultatif"
+                }
+                error={e.agreedAmount}
+                className="sm:col-span-2"
+              />
+              <div className="space-y-1.5">
+                <AmountField
+                  id="paidToday"
+                  label="Payé aujourd'hui"
+                  value={paidToday}
+                  onChange={setPaidToday}
+                  error={e["initialPayment.amount"]}
+                />
+                {!e["initialPayment.amount"] && (
+                  <p className="text-xs text-muted-foreground">
+                    Vide si rien n&apos;est payé
+                    {agreedValue !== null && agreedValue > 0 && (
+                      <>
+                        {" · "}
+                        <button
+                          type="button"
+                          className="font-medium text-primary underline-offset-2 hover:underline"
+                          onClick={() => setPaidToday(amountInputValue(agreedValue))}
+                        >
+                          Tout réglé
+                        </button>
+                      </>
+                    )}
+                  </p>
+                )}
+              </div>
+              {paidToday.trim() !== "" && (
+                <SelectField
+                  id="paidMethod"
+                  label="Moyen de paiement"
+                  required
+                  value={paidMethod}
+                  onChange={setPaidMethod}
+                  options={optionsOf(PAYMENT_METHODS, PAYMENT_METHOD_LABELS)}
+                  error={e["initialPayment.method"]}
+                />
+              )}
+            </div>
+          </FormSection>
+        )}
 
         <FormSection
           title="Suivi"

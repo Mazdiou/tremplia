@@ -23,6 +23,7 @@ import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { countCases } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
+import { amountInputValue, formatDA } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 export default async function CampaignPage({
@@ -38,7 +39,7 @@ export default async function CampaignPage({
   const supabase = await createClient();
   const { data: campaign } = await supabase
     .from("campaigns")
-    .select("id, name, status, suggested_platforms")
+    .select("id, name, status, suggested_platforms, default_fee")
     .eq("id", id)
     .maybeSingle();
   if (!campaign) notFound();
@@ -78,6 +79,7 @@ export default async function CampaignPage({
   const next = items.find((d) => d.days >= 0) ?? null;
   const canEdit = member?.isOwner === true && !archived;
   const platforms = (campaign.suggested_platforms ?? []) as string[];
+  const defaultFee = (campaign.default_fee as number | null) ?? null;
 
   return (
     <AppShell>
@@ -135,6 +137,7 @@ export default async function CampaignPage({
               dates: items.map(({ label, date }) => ({ label, date })),
               infos,
               suggestedPlatforms: platforms,
+              defaultFee: amountInputValue(defaultFee),
             }}
           />
         ) : (
@@ -175,6 +178,15 @@ export default async function CampaignPage({
                     ))}
                   </dl>
                 )}
+              </Panel>
+              <Panel title="Tarif par défaut">
+                <p className="px-5 py-4 text-sm">
+                  {defaultFee === null ? (
+                    <span className="text-muted-foreground">Aucun</span>
+                  ) : (
+                    <span className="font-medium tabular-nums">{formatDA(defaultFee)}</span>
+                  )}
+                </p>
               </Panel>
               <Panel title="Plateformes suggérées">
                 <div className="flex flex-wrap gap-1.5 px-5 py-4">

@@ -26,20 +26,27 @@ export default async function NewCasePage({
 
   const { data: settings } = await supabase
     .from("campaigns")
-    .select("id, suggested_platforms")
+    .select("id, suggested_platforms, default_fee")
     .in(
       "id",
       active.map((c) => c.id),
     );
-  const platformsByCampaign = new Map(
-    (settings ?? []).map((s) => [s.id as string, (s.suggested_platforms ?? []) as string[]]),
+  const settingsByCampaign = new Map(
+    (settings ?? []).map((s) => [
+      s.id as string,
+      {
+        platforms: (s.suggested_platforms ?? []) as string[],
+        defaultFee: (s.default_fee as number | null) ?? null,
+      },
+    ]),
   );
 
   const formCampaigns: FormCampaign[] = active.map((c) => ({
     id: c.id,
     name: c.name,
     groups: groups.filter((g) => g.campaign_id === c.id).map(({ id, name }) => ({ id, name })),
-    suggestedPlatforms: platformsByCampaign.get(c.id) ?? [],
+    suggestedPlatforms: settingsByCampaign.get(c.id)?.platforms ?? [],
+    defaultFee: settingsByCampaign.get(c.id)?.defaultFee ?? null,
   }));
 
   // Présélection : la campagne ouverte dans l'arbre, sinon l'unique active

@@ -26,6 +26,7 @@ async function create(
     p_dates: settings.dates,
     p_infos: settings.infos,
     p_groups: settings.groups,
+    p_default_fee: settings.defaultFee ?? null,
   });
   if (error || typeof data !== "string") {
     throw error ? dbError("campaigns create", error, NAME_TAKEN) : new ApiError(500, "Erreur serveur");
@@ -90,6 +91,7 @@ export async function updateCampaign(
     p_suggested_platforms: input.suggestedPlatforms,
     p_dates: input.dates,
     p_infos: input.infos,
+    p_default_fee: input.defaultFee ?? null,
   });
   if (error) {
     throw dbError("campaigns update", error, {

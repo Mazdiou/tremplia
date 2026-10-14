@@ -7,7 +7,13 @@ import { FormActions, FormSection } from "@/components/page-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FieldError, ListHeader, RemoveButton, TextField } from "@/components/form-fields";
+import {
+  AmountField,
+  FieldError,
+  ListHeader,
+  RemoveButton,
+  TextField,
+} from "@/components/form-fields";
 import { callApi } from "@/lib/api-client";
 import {
   MAX_CAMPAIGN_DATES,
@@ -21,6 +27,8 @@ export type CampaignSettingsDraft = {
   dates: { label: string; date: string }[];
   infos: { label: string; value: string }[];
   suggestedPlatforms: string[];
+  // Saisie du tarif par défaut (« 150 000 »), vide : aucun
+  defaultFee: string;
 };
 
 const DATE_GRID = "sm:grid-cols-[1fr_11rem_2.5rem]";
@@ -89,7 +97,7 @@ export function CampaignSettingsForm({
     <form onSubmit={submit} noValidate className="space-y-8">
       <FormSection
         title="Général"
-        description="Le nom de la campagne et les plateformes proposées pour les comptes des candidats."
+        description="Le nom de la campagne, son tarif et les plateformes proposées pour les comptes des candidats."
       >
         <TextField
           id="campaign-name"
@@ -100,6 +108,16 @@ export function CampaignSettingsForm({
           value={draft.name}
           onChange={(name) => patch({ name })}
           error={errors.name}
+        />
+
+        <AmountField
+          id="campaign-default-fee"
+          label="Tarif par défaut"
+          value={draft.defaultFee}
+          onChange={(defaultFee) => patch({ defaultFee })}
+          hint="Proposé comme montant convenu à la création d'un dossier. Facultatif."
+          error={errors.defaultFee}
+          className="max-w-xs"
         />
 
         <div className="space-y-2">

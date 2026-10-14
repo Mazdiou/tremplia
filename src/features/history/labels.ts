@@ -47,6 +47,9 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "student_access.disabled": "a fermé l'accès d'un candidat",
   "student_access.regenerated": "a créé un nouveau code candidat",
   "message.sent": "a écrit à un candidat",
+  "payment.agreed_amount_set": "a fixé le montant convenu d'un dossier",
+  "payment.recorded": "a enregistré un paiement",
+  "payment.cancelled": "a annulé un paiement",
   "student.logged_in": "s'est connecté à son espace",
   "student.approved": "a validé sa lettre et ses formations",
   "student.changes_requested": "a demandé une modification",
@@ -65,6 +68,7 @@ const CASE_LABELS: Record<ActivityAction, string> = {
   "student_access.disabled": "a fermé l'accès du candidat",
   "student_access.regenerated": "a créé un nouveau code candidat",
   "message.sent": "a écrit au candidat",
+  "payment.agreed_amount_set": "a fixé le montant convenu",
 };
 
 const UNKNOWN = "a effectué une action";

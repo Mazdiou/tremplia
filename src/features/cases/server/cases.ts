@@ -102,6 +102,8 @@ export async function createCase(member: Member, input: CreateCaseInput) {
     p_group_ids: input.groupIds,
     p_accounts: accounts,
     p_initial_note: input.initialNote ?? null,
+    p_agreed_amount: input.agreedAmount ?? null,
+    p_initial_payment: input.initialPayment ?? null,
   });
   if (error) {
     throw dbError("cases create", error, {
@@ -109,6 +111,7 @@ export async function createCase(member: Member, input: CreateCaseInput) {
       "23503": "Campagne ou groupe introuvable",
       "23505": "Un seul compte par plateforme",
       "22023": "Données invalides (responsable inactif ?)",
+      "22003": "Le paiement dépasse le montant convenu",
     });
   }
 
@@ -127,6 +130,8 @@ export async function createCase(member: Member, input: CreateCaseInput) {
       groups: input.groupIds.length,
       external_accounts: accounts.length,
       initial_note: Boolean(input.initialNote),
+      agreed_amount: input.agreedAmount ?? null,
+      initial_payment: input.initialPayment?.amount ?? null,
     },
   });
 

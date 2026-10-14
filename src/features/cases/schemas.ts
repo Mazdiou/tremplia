@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { noteContentSchema } from "@/features/notes/schemas";
+import {
+  initialPaymentSchema,
+  optionalAmountSchema,
+} from "@/features/payments/schemas";
 import { todayInAppTimezone } from "@/lib/dates";
 import {
   emptyToUndefined,
@@ -193,12 +197,32 @@ export const createCaseSchema = z
         "Un seul compte par plateforme",
       ),
     initialNote: optionalNote,
+    // Montant convenu (facultatif) et paiement fait le jour même (absent :
+    // rien payé aujourd'hui)
+    agreedAmount: optionalAmountSchema,
+    initialPayment: initialPaymentSchema.optional(),
     // Campagne d'où viennent les données importées (journal seulement)
     sourceCampaignId: optionalUuidSchema,
     // Création confirmée malgré un doublon possible
     confirmDuplicate: z.boolean().optional(),
   })
-  .superRefine(checkSecondaryContact);
+  .superRefine(checkSecondaryContact)
+  .superRefine((d, ctx) => {
+    if (!d.initialPayment) return;
+    if (d.agreedAmount === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["agreedAmount"],
+        message: "Indiquez le montant convenu",
+      });
+    } else if (d.initialPayment.amount > d.agreedAmount) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["initialPayment", "amount"],
+        message: "Le paiement dépasse le montant convenu",
+      });
+    }
+  });
 
 export type CreateCaseInput = z.infer<typeof createCaseSchema>;
 

@@ -11,6 +11,7 @@ const TABS = [
   { suffix: "/documents", label: "Documents", ownerOnly: false },
   { suffix: "/motivation-letter", label: "Lettre de motivation", ownerOnly: false },
   { suffix: "/programs", label: "Formations", ownerOnly: false },
+  { suffix: "/payments", label: "Paiements", ownerOnly: false },
   { suffix: "/messages", label: "Messages", ownerOnly: false },
   { suffix: "/notes", label: "Notes", ownerOnly: false },
   { suffix: "/history", label: "Historique", ownerOnly: true },

@@ -81,6 +81,7 @@ const DB_ERRORS: Record<string, [number, string]> = {
   "23514": [400, "Données invalides"],
   "23503": [400, "Données invalides"],
   "22023": [400, "Données invalides"],
+  "22003": [400, "Montant invalide"],
   "22007": [400, "Date invalide"],
   "22008": [400, "Date invalide"],
 };

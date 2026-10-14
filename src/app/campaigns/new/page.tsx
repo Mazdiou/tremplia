@@ -21,7 +21,7 @@ export default async function NewCampaignPage() {
           subtitle="Vous pourrez tout modifier ensuite. Astuce : un modèle préconfiguré remplit tout pour vous."
         />
         <CampaignSettingsForm
-          initial={{ name: "", dates: [], infos: [], suggestedPlatforms: [] }}
+          initial={{ name: "", dates: [], infos: [], suggestedPlatforms: [], defaultFee: "" }}
         />
       </PageContainer>
     </AppShell>

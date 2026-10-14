@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { amountInputValue, parseAmount } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 // Petits champs de formulaire partagés : un libellé toujours lié à son champ
@@ -93,6 +94,56 @@ export function TextField({
         placeholder={placeholder}
         aria-invalid={error ? true : undefined}
       />
+      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <FieldError message={error} />
+    </div>
+  );
+}
+
+// Montant en dinars : clavier numérique sur téléphone, milliers regroupés
+// à la sortie du champ (« 150000 » devient « 150 000 »)
+export function AmountField({
+  id,
+  label,
+  value,
+  onChange,
+  error,
+  required,
+  className,
+  hint,
+  autoFocus,
+}: Common & {
+  value: string;
+  onChange: (value: string) => void;
+  autoFocus?: boolean;
+}) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <FieldLabel htmlFor={id} label={label} required={required} />
+      <div className="relative">
+        <Input
+          id={id}
+          inputMode="numeric"
+          autoComplete="off"
+          autoFocus={autoFocus}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={() => {
+            const n = parseAmount(value);
+            if (n !== null && !Number.isNaN(n)) onChange(amountInputValue(n));
+          }}
+          required={required}
+          placeholder="0"
+          className="pr-11 tabular-nums"
+          aria-invalid={error ? true : undefined}
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-3 grid place-items-center text-sm text-muted-foreground"
+        >
+          DA
+        </span>
+      </div>
       {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
       <FieldError message={error} />
     </div>

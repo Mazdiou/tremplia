@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionalAmountSchema } from "@/features/payments/schemas";
 import {
   isoDateSchema,
   isUniqueIgnoringCase,
@@ -50,6 +51,8 @@ export const campaignSettingsSchema = z.object({
     .array(campaignInfoSchema)
     .max(MAX_CAMPAIGN_INFOS, `${MAX_CAMPAIGN_INFOS} informations au maximum`),
   suggestedPlatforms: suggestedPlatformsSchema,
+  // Tarif proposé comme montant convenu des nouveaux dossiers (facultatif)
+  defaultFee: optionalAmountSchema,
 });
 
 export const createCampaignSchema = campaignSettingsSchema.extend({

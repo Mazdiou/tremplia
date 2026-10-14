@@ -10,6 +10,8 @@ export type CaseRow = CaseFieldsRecord & {
   campaign_id: string;
   assigned_to: string | null;
   status: CaseStatus;
+  // Montant convenu avec le candidat, en dinars (vide : pas encore fixé)
+  agreed_amount: number | null;
   created_at: string;
 };
 
@@ -37,7 +39,7 @@ export const getCase = cache(async (id: string) => {
     .select(
       `*,
       responsible:profiles!cases_assigned_to_fk(first_name, last_name),
-      campaign:campaigns!cases_campaign_fk(id, name, status, suggested_platforms,
+      campaign:campaigns!cases_campaign_fk(id, name, status, suggested_platforms, default_fee,
         campaign_groups(id, name, position)),
       case_groups!case_groups_case_fk(group_id),
       case_external_accounts!case_external_accounts_case_fk(id, platform, url, login, status)`,
@@ -59,6 +61,7 @@ export const getCase = cache(async (id: string) => {
       name: string;
       status: string;
       suggested_platforms: string[];
+      default_fee: number | null;
       campaign_groups: (CaseGroup & { position: number })[];
     } | null;
     case_groups: { group_id: string }[];
@@ -80,6 +83,7 @@ export const getCase = cache(async (id: string) => {
           name: string;
           status: string;
           suggested_platforms: string[];
+          default_fee: number | null;
         })
       : null,
     campaignGroups,
