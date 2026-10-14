@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { todayInAppTimezone } from "@/lib/dates";
 import {
   optionalAmountSchema,
+  paymentMethodLabel,
   paymentSummary,
   recordPaymentSchema,
 } from "./schemas";
@@ -25,6 +26,15 @@ describe("recordPaymentSchema", () => {
         recordPaymentSchema.safeParse({ amount, paidOn: today, method: "cash" }).success,
       ).toBe(false);
     }
+  });
+
+  it("virement et chèque ne sont plus acceptés, mais restent lisibles", () => {
+    for (const method of ["transfer", "cheque"]) {
+      expect(recordPaymentSchema.safeParse({ amount: 1, paidOn: today, method }).success).toBe(false);
+    }
+    expect(paymentMethodLabel("transfer")).toBe("Virement");
+    expect(paymentMethodLabel("cheque")).toBe("Chèque");
+    expect(paymentMethodLabel("ccp")).toBe("CCP / BaridiMob");
   });
 
   it("refuse une date future et un moyen inconnu", () => {

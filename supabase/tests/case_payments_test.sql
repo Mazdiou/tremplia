@@ -1,5 +1,5 @@
 begin;
-select plan(30);
+select plan(32);
 
 -- Patron A, employé A1, patron B
 insert into auth.users (id, email) values
@@ -96,7 +96,7 @@ select is(public.set_case_agreed_amount('dddddddd-dddd-dddd-dddd-dddddddddddd',
 -- Paiements du dossier 1 : reste 90 000
 create temp table pay as
 select public.record_case_payment('cccccccc-cccc-cccc-cccc-cccccccccccc', agency_a,
-  '22222222-2222-2222-2222-222222222222', 40000, current_date - 1, 'transfer', 'Réf. 8841') as p2
+  '22222222-2222-2222-2222-222222222222', 40000, current_date - 1, 'card', 'Réf. 8841') as p2
 from ctx;
 grant select on pay to public;
 
@@ -124,6 +124,16 @@ select throws_ok(
       (select agency_a from ctx), '22222222-2222-2222-2222-222222222222',
       1000, current_date, 'bitcoin', null)$$,
   '23514', null, 'moyen de paiement inconnu refusé');
+select throws_ok(
+  $$select public.record_case_payment('cccccccc-cccc-cccc-cccc-cccccccccccc',
+      (select agency_a from ctx), '22222222-2222-2222-2222-222222222222',
+      1000, current_date, 'transfer', null)$$,
+  '23514', null, 'le virement n''est plus accepté');
+select throws_ok(
+  $$select public.record_case_payment('cccccccc-cccc-cccc-cccc-cccccccccccc',
+      (select agency_a from ctx), '22222222-2222-2222-2222-222222222222',
+      1000, current_date, 'cheque', null)$$,
+  '23514', null, 'le chèque n''est plus accepté');
 select throws_ok(
   $$select public.set_case_agreed_amount('cccccccc-cccc-cccc-cccc-cccccccccccc',
       (select agency_a from ctx), '11111111-1111-1111-1111-111111111111', 99999)$$,

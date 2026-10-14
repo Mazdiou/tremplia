@@ -6,20 +6,29 @@ import { isoDateSchema, optionalText, requiredText } from "@/lib/validation";
 // Règles partagées entre le navigateur et le serveur. La base impose les
 // mêmes valeurs et limites (migration case_payments).
 
-export const PAYMENT_METHODS = ["cash", "transfer", "ccp", "cheque", "card"] as const;
+export const PAYMENT_METHODS = ["cash", "ccp", "card"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   cash: "Espèces",
-  transfer: "Virement",
   ccp: "CCP / BaridiMob",
-  cheque: "Chèque",
   card: "Carte (CIB / Edahabia)",
+};
+
+// Moyens retirés (migration payment_methods) : plus proposés, mais un
+// paiement déjà enregistré ainsi garde son libellé
+const FORMER_METHOD_LABELS: Record<string, string> = {
+  transfer: "Virement",
+  cheque: "Chèque",
 };
 
 // Un moyen inconnu s'affiche tel quel, sans faire planter la page
 export function paymentMethodLabel(method: string) {
-  return (PAYMENT_METHOD_LABELS as Record<string, string>)[method] ?? method;
+  return (
+    (PAYMENT_METHOD_LABELS as Record<string, string>)[method] ??
+    FORMER_METHOD_LABELS[method] ??
+    method
+  );
 }
 
 // Montant en dinars : nombre, ou texte saisi (« 150 000 »)
