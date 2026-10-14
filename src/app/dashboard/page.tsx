@@ -15,6 +15,8 @@ import { countdownLabel, nextDeadline } from "@/features/campaigns/timeline";
 import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
 import { CampaignSelect } from "@/features/dashboard/components/campaign-select";
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
+import { countCases, countCreatedLastWeek } from "@/features/cases/case-stats";
+import { listCaseStats } from "@/features/cases/server/case-stats";
 import { UnreadBadge } from "@/features/messages/components/unread-badge";
 import { activityActor, activityLabel } from "@/features/history/labels";
 import {
@@ -112,91 +114,75 @@ export default async function DashboardPage({
     );
   }
 
-  const base = () =>
+  // Lectures indépendantes, lancées ensemble. Tous les compteurs viennent
+  // d'une seule lecture de la vue case_stats (via le RLS).
+  const [stats, unread, recentRes, activityRes, dates] = await Promise.all([
+    listCaseStats(ids),
+    // Dossiers dont le candidat a écrit sans réponse lue (toute l'agence)
+    agencyUnreadCounts(u.member.agencyId),
     supabase
       .from("cases")
-      .select("id", { count: "exact", head: true })
-      .in("campaign_id", ids);
-  const count = (build: (q: ReturnType<typeof base>) => unknown) =>
-    build(base()) as PromiseLike<{ count: number | null }>;
+      .select("id, first_name, last_name, education_level, created_at")
+      .in("campaign_id", ids)
+      .order("created_at", { ascending: false })
+      .limit(5),
+    // Journal : lisible par le patron seulement (règle RLS)
+    u.member.isOwner
+      ? supabase
+          .from("activity_log")
+          .select("id, actor_id, action, created_at")
+          .order("created_at", { ascending: false })
+          .limit(6)
+      : Promise.resolve({ data: null }),
+    listCampaignDates(campaigns),
+  ]);
+  const recent = recentRes.data;
+  const activity = activityRes.data;
 
-  // Dossiers dont le candidat a écrit sans réponse lue (toute l'agence)
-  const unread = await agencyUnreadCounts(u.member.agencyId);
   const unreadIds = Object.keys(unread);
-  const { data: unreadCases } =
+  const actorIds = [
+    ...new Set((activity ?? []).flatMap((a) => (a.actor_id ? [a.actor_id as string] : []))),
+  ];
+  // Noms : des dossiers avec messages non lus, et des auteurs du journal
+  const [{ data: unreadCases }, { data: actors }] = await Promise.all([
     unreadIds.length > 0
-      ? await supabase
-          .from("cases")
-          .select("id, first_name, last_name")
-          .in("id", unreadIds.slice(0, 50))
-      : { data: [] };
+      ? supabase.from("cases").select("id, first_name, last_name").in("id", unreadIds.slice(0, 50))
+      : Promise.resolve({ data: [] }),
+    actorIds.length > 0
+      ? supabase.from("profiles").select("id, first_name, last_name").in("id", actorIds)
+      : Promise.resolve({ data: [] }),
+  ]);
   const unreadList = ((unreadCases ?? []) as { id: string; first_name: string; last_name: string }[])
     .map((c) => ({ ...c, count: unread[c.id] }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
-  const weekStart = new Date();
-  weekStart.setDate(weekStart.getDate() - 7);
-  const [active, mine, week, ended, ...levels] = await Promise.all([
-    count((q) => q.eq("status", "active")),
-    count((q) => q.eq("status", "active").eq("assigned_to", u.member.userId)),
-    count((q) => q.gte("created_at", weekStart.toISOString())),
-    count((q) => q.in("status", ["closed", "abandoned"])),
-    ...EDUCATION_LEVELS.map((l) =>
-      count((q) => q.eq("status", "active").eq("education_level", l)),
-    ),
-  ]);
-  const n = (r: { count: number | null } | undefined) => r?.count ?? 0;
+  const active = countCases(stats, { status: "active" });
+  const mine = countCases(stats, { status: "active", assignedTo: u.member.userId });
+  const week = countCreatedLastWeek(stats);
+  const ended = countCases(stats, { status: ["closed", "abandoned"] });
 
-  const { data: recent } = await supabase
-    .from("cases")
-    .select("id, first_name, last_name, education_level, created_at")
-    .in("campaign_id", ids)
-    .order("created_at", { ascending: false })
-    .limit(5);
-
-  // Journal : lisible par le patron seulement (règle RLS)
-  const { data: activity } = u.member.isOwner
-    ? await supabase
-        .from("activity_log")
-        .select("id, actor_id, action, created_at")
-        .order("created_at", { ascending: false })
-        .limit(6)
-    : { data: null };
-  const actorIds = [
-    ...new Set((activity ?? []).flatMap((a) => (a.actor_id ? [a.actor_id as string] : []))),
-  ];
-  const { data: actors } = actorIds.length
-    ? await supabase.from("profiles").select("id, first_name, last_name").in("id", actorIds)
-    : { data: [] };
   const actorById = new Map(
     (actors ?? []).map((a) => [a.id as string, a as { first_name: string; last_name: string }]),
   );
 
-  const dates = await listCampaignDates(campaigns);
   const next = nextDeadline(dates, today);
 
   // Vue « toutes les campagnes » : une carte par campagne
   const cards =
     !selected && campaigns.length > 1
-      ? await Promise.all(
-          campaigns.map(async (c) => {
-            const { count: activeCount } = await supabase
-              .from("cases")
-              .select("id", { count: "exact", head: true })
-              .eq("campaign_id", c.id)
-              .eq("status", "active");
-            return {
-              ...c,
-              activeCount: activeCount ?? 0,
-              next: nextDeadline(dates.filter((d) => d.campaignId === c.id), today),
-            };
-          }),
-        )
+      ? campaigns.map((c) => ({
+          ...c,
+          activeCount: countCases(stats, { campaignId: c.id, status: "active" }),
+          next: nextDeadline(dates.filter((d) => d.campaignId === c.id), today),
+        }))
       : [];
 
   // Les niveaux sans dossier ne s'affichent que s'ils sont courants
-  const levelRows = EDUCATION_LEVELS.map((l, i) => ({ l, n: n(levels[i]) })).filter(
+  const levelRows = EDUCATION_LEVELS.map((l) => ({
+    l,
+    n: countCases(stats, { status: "active", educationLevel: l }),
+  })).filter(
     (r) => r.n > 0 || ["terminale", "l1", "l2", "l3", "m1"].includes(r.l),
   );
   const maxLevel = Math.max(1, ...levelRows.map((r) => r.n));
@@ -285,10 +271,10 @@ export default async function DashboardPage({
         )}
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard label="Dossiers actifs" value={n(active)} />
-          <StatCard label="Mes dossiers" value={n(mine)} hint="actifs, dont je suis responsable" />
-          <StatCard label="Ajoutés cette semaine" value={n(week)} className="max-md:hidden" />
-          <StatCard label="Clos ou abandonnés" value={n(ended)} className="max-md:hidden" />
+          <StatCard label="Dossiers actifs" value={active} />
+          <StatCard label="Mes dossiers" value={mine} hint="actifs, dont je suis responsable" />
+          <StatCard label="Ajoutés cette semaine" value={week} className="max-md:hidden" />
+          <StatCard label="Clos ou abandonnés" value={ended} className="max-md:hidden" />
         </div>
 
         <div className="grid items-start gap-5 lg:grid-cols-3">

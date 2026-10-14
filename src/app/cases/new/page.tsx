@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageContainer, PageHeader } from "@/components/page-ui";
 import { createClient } from "@/lib/supabase/server";
+import { countCases } from "@/features/cases/case-stats";
+import { listCaseStats } from "@/features/cases/server/case-stats";
 import { requireMember } from "@/lib/auth/require-member";
 import { listCampaigns, listGroups } from "@/features/campaigns/server/queries";
 import { CaseForm, type FormCampaign } from "@/features/cases/components/case-form";
@@ -47,15 +49,12 @@ export default async function NewCasePage({
 
   // Campagnes d'où importer un candidat (archivées comprises), avec leur
   // nombre de dossiers
-  const sources: SourceCampaign[] = await Promise.all(
-    campaigns.map(async (c) => {
-      const { count } = await supabase
-        .from("cases")
-        .select("id", { count: "exact", head: true })
-        .eq("campaign_id", c.id);
-      return { id: c.id, name: c.name, caseCount: count ?? 0 };
-    }),
-  );
+  const stats = await listCaseStats();
+  const sources: SourceCampaign[] = campaigns.map((c) => ({
+    id: c.id,
+    name: c.name,
+    caseCount: countCases(stats, { campaignId: c.id }),
+  }));
 
   // Plateformes déjà utilisées dans l'agence, en suggestion
   const platformSuggestions = await listUsedPlatforms();

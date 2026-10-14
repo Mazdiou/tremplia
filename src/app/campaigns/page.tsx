@@ -16,7 +16,8 @@ import {
 import { countdownLabel, nextDeadline, type TimelineItem } from "@/features/campaigns/timeline";
 import { requireMember } from "@/lib/auth/require-member";
 import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
-import { createClient } from "@/lib/supabase/server";
+import { countCases } from "@/features/cases/case-stats";
+import { listCaseStats } from "@/features/cases/server/case-stats";
 import { cn } from "@/lib/utils";
 
 type CardData = CampaignSummary & {
@@ -79,29 +80,20 @@ function CampaignCard({ c }: { c: CardData }) {
 export default async function CampaignsPage() {
   const member = await requireMember();
   const campaigns = await listCampaigns();
-  const [dates, groups] = await Promise.all([
+  // Dossiers actifs par campagne : une lecture pour toutes (vue case_stats)
+  const [dates, groups, stats] = await Promise.all([
     listCampaignDates(campaigns),
     listGroups(campaigns.map((c) => c.id)),
+    listCaseStats(),
   ]);
   const today = todayInAppTimezone();
 
-  // Dossiers actifs par campagne (lecture via le RLS)
-  const supabase = await createClient();
-  const cards: CardData[] = await Promise.all(
-    campaigns.map(async (c) => {
-      const { count } = await supabase
-        .from("cases")
-        .select("id", { count: "exact", head: true })
-        .eq("campaign_id", c.id)
-        .eq("status", "active");
-      return {
-        ...c,
-        activeCases: count ?? 0,
-        groupCount: groups.filter((g) => g.campaign_id === c.id).length,
-        next: nextDeadline(dates.filter((d) => d.campaignId === c.id), today),
-      };
-    }),
-  );
+  const cards: CardData[] = campaigns.map((c) => ({
+    ...c,
+    activeCases: countCases(stats, { campaignId: c.id, status: "active" }),
+    groupCount: groups.filter((g) => g.campaign_id === c.id).length,
+    next: nextDeadline(dates.filter((d) => d.campaignId === c.id), today),
+  }));
   const active = cards.filter((c) => c.status === "active");
   const archived = cards.filter((c) => c.status === "archived");
 

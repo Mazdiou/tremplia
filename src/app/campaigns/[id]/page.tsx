@@ -21,6 +21,8 @@ import { countdownLabel, timeline } from "@/features/campaigns/timeline";
 import { requireMember } from "@/lib/auth/require-member";
 import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
+import { countCases } from "@/features/cases/case-stats";
+import { listCaseStats } from "@/features/cases/server/case-stats";
 import { cn } from "@/lib/utils";
 
 export default async function CampaignPage({
@@ -41,7 +43,7 @@ export default async function CampaignPage({
     .maybeSingle();
   if (!campaign) notFound();
 
-  const [datesRes, infosRes, groupsRes, caseGroupsRes, casesRes, activeRes] = await Promise.all([
+  const [datesRes, infosRes, groupsRes, caseGroupsRes, stats] = await Promise.all([
     supabase.from("campaign_dates").select("label, date").eq("campaign_id", id),
     supabase.from("campaign_infos").select("label, value").eq("campaign_id", id).order("position"),
     supabase.from("campaign_groups").select("id, name").eq("campaign_id", id).order("position"),
@@ -50,14 +52,12 @@ export default async function CampaignPage({
       .select("group_id, cases!inner(status)")
       .eq("campaign_id", id)
       .eq("cases.status", "active"),
-    supabase.from("cases").select("id", { count: "exact", head: true }).eq("campaign_id", id),
-    supabase
-      .from("cases")
-      .select("id", { count: "exact", head: true })
-      .eq("campaign_id", id)
-      .eq("status", "active"),
+    // Dossiers de la campagne, tous et actifs : une lecture (vue case_stats)
+    listCaseStats([id]),
   ]);
 
+  const totalCount = countCases(stats);
+  const activeCount = countCases(stats, { status: "active" });
   const status = campaign.status as CampaignStatus;
   const archived = status === "archived";
   const dates = (datesRes.data ?? []) as { label: string; date: string }[];
@@ -109,8 +109,8 @@ export default async function CampaignPage({
         )}
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <StatCard label="Dossiers actifs" value={activeRes.count ?? 0} />
-          <StatCard label="Dossiers au total" value={casesRes.count ?? 0} />
+          <StatCard label="Dossiers actifs" value={activeCount} />
+          <StatCard label="Dossiers au total" value={totalCount} />
           <div className="col-span-2 rounded-2xl border bg-card px-5 py-4 sm:col-span-1">
             <p className="text-sm text-muted-foreground">Prochaine échéance</p>
             {next ? (
@@ -212,7 +212,7 @@ export default async function CampaignPage({
             <CampaignDangerZone
               campaignId={id}
               archived={archived}
-              caseCount={casesRes.count ?? 0}
+              caseCount={totalCount}
             />
           </FormSection>
         )}
