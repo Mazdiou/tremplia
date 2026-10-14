@@ -59,6 +59,20 @@ export async function listMessages(agencyId: string, caseId: string) {
   );
 }
 
+// Dernier message de la conversation : la page n'est relue que s'il change
+export async function latestMessageId(agencyId: string, caseId: string) {
+  const { data, error } = await createAdminClient()
+    .from("case_messages")
+    .select("id")
+    .eq("case_id", caseId)
+    .eq("agency_id", agencyId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw dbError("messages latest", error);
+  return (data?.id as string | undefined) ?? null;
+}
+
 // Côté agence -----------------------------------------------------------------
 
 export async function sendAgencyMessage(auth: AuthorizedCase, caseId: string, body: string) {

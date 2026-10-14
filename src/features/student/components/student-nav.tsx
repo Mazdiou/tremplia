@@ -22,7 +22,7 @@ export function StudentTabs({ unreadMessages }: { unreadMessages: number }) {
   return (
     <nav
       aria-label="Sections de mon dossier"
-      className="flex gap-5 overflow-x-auto [scrollbar-width:none] sm:gap-6 [&::-webkit-scrollbar]:hidden"
+      className="flex gap-3.5 overflow-x-auto [scrollbar-width:none] min-[360px]:gap-5 sm:gap-6 [&::-webkit-scrollbar]:hidden"
     >
       {TABS.map((t) => {
         const active = pathname === t.href;

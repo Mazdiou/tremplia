@@ -10,8 +10,8 @@ import { MAX_MESSAGE_LENGTH, type MessageItem } from "@/features/messages/schema
 
 export type ThreadMessage = MessageItem & { timeLabel: string };
 
-// Nouveaux messages de l'autre côté : la page est relue régulièrement tant
-// qu'elle est visible (pas de connexion en temps réel)
+// Nouveaux messages de l'autre côté : vérifiés régulièrement tant que la
+// page est visible (pas de connexion en temps réel)
 const REFRESH_MS = 15_000;
 
 export function MessageThread({
@@ -46,12 +46,16 @@ export function MessageThread({
     void callApi(readUrl).then((res) => res.ok && router.refresh());
   }, [unread, readUrl, router]);
 
+  // Vérification légère : la page n'est relue que si un message est arrivé
+  const lastId = messages.at(-1)?.id ?? null;
   useEffect(() => {
-    const id = setInterval(() => {
-      if (document.visibilityState === "visible") router.refresh();
+    const id = setInterval(async () => {
+      if (document.visibilityState !== "visible") return;
+      const res = await callApi<{ last: string | null }>(sendUrl, { method: "GET" });
+      if (res.ok && res.data.last !== lastId) router.refresh();
     }, REFRESH_MS);
     return () => clearInterval(id);
-  }, [router]);
+  }, [router, sendUrl, lastId]);
 
   // Dernier message visible à l'ouverture et à chaque nouveau message
   useEffect(() => {
