@@ -4,17 +4,28 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { UnreadBadge } from "@/features/messages/components/unread-badge";
 
 const TABS = [
   { suffix: "", label: "Informations", ownerOnly: false },
   { suffix: "/documents", label: "Documents", ownerOnly: false },
   { suffix: "/motivation-letter", label: "Lettre de motivation", ownerOnly: false },
   { suffix: "/programs", label: "Formations", ownerOnly: false },
+  { suffix: "/messages", label: "Messages", ownerOnly: false },
   { suffix: "/notes", label: "Notes", ownerOnly: false },
   { suffix: "/history", label: "Historique", ownerOnly: true },
 ];
 
-export function CaseTabs({ id, isOwner }: { id: string; isOwner: boolean }) {
+export function CaseTabs({
+  id,
+  isOwner,
+  unreadMessages,
+}: {
+  id: string;
+  isOwner: boolean;
+  // Messages du candidat non lus par l'agence
+  unreadMessages: number;
+}) {
   const pathname = usePathname();
   const base = `/cases/${id}`;
   const navRef = useRef<HTMLElement>(null);
@@ -61,13 +72,16 @@ export function CaseTabs({ id, isOwner }: { id: string; isOwner: boolean }) {
             href={href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "shrink-0 border-b-2 py-2.5 text-sm whitespace-nowrap transition-colors",
+              "flex shrink-0 items-center gap-1.5 border-b-2 py-2.5 text-sm whitespace-nowrap transition-colors",
               active
                 ? "border-primary font-medium text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {t.label}
+            {t.suffix === "/messages" && unreadMessages > 0 && !active && (
+              <UnreadBadge count={unreadMessages} />
+            )}
           </Link>
         );
       })}

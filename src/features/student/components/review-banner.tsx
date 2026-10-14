@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { MAX_MESSAGE_LENGTH, type ReviewStatus } from "@/features/student/schemas";
+import { MAX_MESSAGE_LENGTH } from "@/features/messages/schemas";
+import type { ReviewStatus } from "@/features/student/schemas";
 
 // Demande de modification : un message à l'agence, obligatoire
 function RequestDialog({

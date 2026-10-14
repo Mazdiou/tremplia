@@ -22,6 +22,7 @@ import {
   labelOf,
 } from "@/features/cases/labels";
 import { displayName } from "@/lib/names";
+import { UnreadBadge } from "@/features/messages/components/unread-badge";
 import { cn } from "@/lib/utils";
 import { useUiPrefs } from "@/lib/ui-prefs";
 import { createClient } from "@/lib/supabase/client";
@@ -69,6 +70,7 @@ export function CaseTree({
   initialData,
   members,
   currentUserId,
+  unread,
 }: {
   campaigns: TreeCampaign[];
   groups: TreeGroup[];
@@ -76,6 +78,8 @@ export function CaseTree({
   initialData: Record<string, CampaignCases>;
   members: TreeMember[];
   currentUserId: string;
+  // Messages du candidat non lus, par dossier
+  unread: Record<string, number>;
 }) {
   const params = useParams<{ id?: string }>();
   const selectedId = params?.id;
@@ -671,8 +675,19 @@ export function CaseTree({
                                           ({suffix})
                                         </span>
                                       )}
+                                      {(unread[c.id] ?? 0) > 0 && (
+                                        <UnreadBadge
+                                          count={unread[c.id]}
+                                          className="ml-auto shrink-0"
+                                        />
+                                      )}
                                       {prefs.showLevel && (
-                                        <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                                        <span
+                                          className={cn(
+                                            "shrink-0 text-xs text-muted-foreground",
+                                            !(unread[c.id] > 0) && "ml-auto",
+                                          )}
+                                        >
                                           {labelOf(EDUCATION_LEVEL_LABELS, c.education_level)}
                                         </span>
                                       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Check,
@@ -150,6 +151,12 @@ export function StudentAccessBar({
                     {review.lastRequest}
                   </p>
                 )}
+                <Link
+                  href={`/cases/${caseId}/messages`}
+                  className="mt-1 inline-block text-sm font-medium text-primary hover:underline"
+                >
+                  Répondre au candidat →
+                </Link>
               </div>
             </>
           ) : (

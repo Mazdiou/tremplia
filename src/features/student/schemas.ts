@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_MESSAGE_LENGTH } from "@/features/messages/schemas";
 
 export const studentLoginSchema = z.object({
   code: z.string().trim().min(1, "Saisissez votre code").max(40, "Code incorrect"),
@@ -11,7 +12,6 @@ export const studentAccessSchema = z.object({
 // Accès vu par l'agence : code affiché (K7P4-9XQM), ou null si jamais ouvert
 export type StudentAccess = { enabled: boolean; code: string } | null;
 
-export const MAX_MESSAGE_LENGTH = 2000;
 
 // Réponse du candidat : une demande de modification a toujours un message
 // `fingerprint` : version du contenu affichée au candidat ; refusée si

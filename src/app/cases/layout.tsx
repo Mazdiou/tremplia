@@ -8,6 +8,7 @@ import {
 import { listCampaigns, listGroups } from "@/features/campaigns/server/queries";
 import { CasesContent } from "@/features/cases/components/cases-content";
 import { CaseTree, type TreeMember } from "@/features/cases/components/case-tree";
+import { agencyUnreadCounts } from "@/features/messages/server/messages";
 
 export default async function CasesLayout({
   children,
@@ -19,12 +20,13 @@ export default async function CasesLayout({
   // Lecture via le RLS : seules les campagnes, groupes, dossiers et membres
   // de l'agence reviennent.
   const supabase = await createClient();
-  const [campaigns, membersRes] = await Promise.all([
+  const [campaigns, membersRes, unread] = await Promise.all([
     listCampaigns(),
     supabase
       .from("profiles")
       .select("id, first_name, last_name, is_active")
       .order("first_name"),
+    agencyUnreadCounts(member.agencyId),
   ]);
   if (membersRes.error) console.error("[cases layout] membres", membersRes.error.code);
   const groups = await listGroups(campaigns.map((c) => c.id));
@@ -51,6 +53,7 @@ export default async function CasesLayout({
           initialData={initialData}
           members={(membersRes.data ?? []) as TreeMember[]}
           currentUserId={member.userId}
+          unread={unread}
         />
         <CasesContent>{children}</CasesContent>
       </div>

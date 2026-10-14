@@ -10,6 +10,7 @@ import {
   readReview,
 } from "@/features/student/server/review";
 import { ReviewBanner } from "@/features/student/components/review-banner";
+import { studentUnreadCount } from "@/features/messages/server/messages";
 import { StudentLogout, StudentTabs } from "@/features/student/components/student-nav";
 
 export const metadata: Metadata = { title: "Mon dossier · StudyFlow" };
@@ -18,11 +19,12 @@ export const metadata: Metadata = { title: "Mon dossier · StudyFlow" };
 // motivation et de ses formations.
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const session = await requireStudent();
-  const [{ c, agency }, review, hasContent, fingerprint] = await Promise.all([
+  const [{ c, agency }, review, hasContent, fingerprint, unread] = await Promise.all([
     getStudentCase(),
     readReview(session.agencyId, session.caseId),
     hasContentToReview(session.agencyId, session.caseId),
     contentFingerprint(session.agencyId, session.caseId),
+    studentUnreadCount(session),
   ]);
 
   return (
@@ -53,7 +55,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
             </p>
           </div>
           <div className="mt-3">
-            <StudentTabs />
+            <StudentTabs unreadMessages={unread} />
           </div>
         </div>
       </header>

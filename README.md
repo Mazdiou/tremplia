@@ -67,6 +67,8 @@ Voir `.env.example`. Aucune vraie valeur ne doit être commitée.
   l'empreinte du code et une copie chiffrée ; 10 essais ratés par adresse
   sur 15 minutes. Le candidat valide ou demande une modification ; toute
   modification de la lettre ou des formations par l'agence redemande son avis.
+  Une conversation par dossier (onglet Messages des deux côtés) ; pastilles
+  de non-lus dans le dossier, l'arbre et le tableau de bord.
 - **Code en anglais, interface en français.** Une seule source de vérité par
   liste métier (`features/*/labels.ts`).
 
@@ -95,7 +97,7 @@ src/
   config/
     campaign-templates/ modèles de campagne (un fichier par modèle)
   features/
-    auth/ campaigns/ cases/ documents/ motivation-letter/ notes/ programs/ student/ team/
+    auth/ campaigns/ cases/ documents/ motivation-letter/ messages/ notes/ programs/ student/ team/
     history/ dashboard/
       components/       composants React de la fonctionnalité
       server/           lectures et écritures serveur (« server-only »)

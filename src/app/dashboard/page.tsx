@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, CalendarRange } from "lucide-react";
+import { CalendarClock, CalendarRange, MessagesSquare } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppShell, getShellUser } from "@/components/shell/app-shell";
 import { EmptyState } from "@/components/empty-state";
@@ -14,6 +14,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { countdownLabel, nextDeadline } from "@/features/campaigns/timeline";
 import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
 import { CampaignSelect } from "@/features/dashboard/components/campaign-select";
+import { agencyUnreadCounts } from "@/features/messages/server/messages";
+import { UnreadBadge } from "@/features/messages/components/unread-badge";
 import { activityActor, activityLabel } from "@/features/history/labels";
 import {
   EDUCATION_LEVELS,
@@ -117,6 +119,21 @@ export default async function DashboardPage({
       .in("campaign_id", ids);
   const count = (build: (q: ReturnType<typeof base>) => unknown) =>
     build(base()) as PromiseLike<{ count: number | null }>;
+
+  // Dossiers dont le candidat a écrit sans réponse lue (toute l'agence)
+  const unread = await agencyUnreadCounts(u.member.agencyId);
+  const unreadIds = Object.keys(unread);
+  const { data: unreadCases } =
+    unreadIds.length > 0
+      ? await supabase
+          .from("cases")
+          .select("id, first_name, last_name")
+          .in("id", unreadIds.slice(0, 50))
+      : { data: [] };
+  const unreadList = ((unreadCases ?? []) as { id: string; first_name: string; last_name: string }[])
+    .map((c) => ({ ...c, count: unread[c.id] }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
 
   const weekStart = new Date();
   weekStart.setDate(weekStart.getDate() - 7);
@@ -239,6 +256,32 @@ export default async function DashboardPage({
               </li>
             ))}
           </ul>
+        )}
+
+        {unreadList.length > 0 && (
+          <section className="rounded-2xl border border-primary/30 bg-highlight p-5">
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <MessagesSquare className="size-4 text-primary" aria-hidden />
+              Messages non lus
+              <UnreadBadge count={Object.values(unread).reduce((a, b) => a + b, 0)} />
+            </h2>
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {unreadList.map((c) => (
+                <li key={c.id}>
+                  <Link
+                    href={`/cases/${c.id}/messages`}
+                    className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2 text-sm transition-colors hover:border-primary/40"
+                  >
+                    <Initials first={c.first_name} last={c.last_name} />
+                    <span className="min-w-0 flex-1 truncate font-medium">
+                      {displayName(c.first_name, c.last_name)}
+                    </span>
+                    <UnreadBadge count={c.count} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

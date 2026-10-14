@@ -7,20 +7,22 @@ import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { UnreadBadge } from "@/features/messages/components/unread-badge";
 
 // Libellé court sur téléphone : les trois onglets tiennent sur 320 px
 const TABS = [
   { href: "/student", label: "Informations", short: "Infos" },
   { href: "/student/letter", label: "Lettre de motivation", short: "Lettre" },
   { href: "/student/programs", label: "Formations", short: "Formations" },
+  { href: "/student/messages", label: "Messages", short: "Messages" },
 ];
 
-export function StudentTabs() {
+export function StudentTabs({ unreadMessages }: { unreadMessages: number }) {
   const pathname = usePathname();
   return (
     <nav
       aria-label="Sections de mon dossier"
-      className="flex gap-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex gap-5 overflow-x-auto [scrollbar-width:none] sm:gap-6 [&::-webkit-scrollbar]:hidden"
     >
       {TABS.map((t) => {
         const active = pathname === t.href;
@@ -30,7 +32,7 @@ export function StudentTabs() {
             href={t.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "shrink-0 border-b-2 py-2.5 text-sm whitespace-nowrap transition-colors",
+              "flex shrink-0 items-center gap-1.5 border-b-2 py-2.5 text-sm whitespace-nowrap transition-colors",
               active
                 ? "border-primary font-medium text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground",
@@ -38,6 +40,9 @@ export function StudentTabs() {
           >
             <span className="sm:hidden">{t.short}</span>
             <span className="max-sm:hidden">{t.label}</span>
+            {t.href === "/student/messages" && unreadMessages > 0 && !active && (
+              <UnreadBadge count={unreadMessages} />
+            )}
           </Link>
         );
       })}

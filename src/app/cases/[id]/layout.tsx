@@ -18,6 +18,7 @@ import { CaseStatusButtons } from "@/features/cases/components/case-status-butto
 import { CaseTabs } from "@/features/cases/components/case-tabs";
 import { getStudentAccess } from "@/features/student/server/access";
 import { readReview } from "@/features/student/server/review";
+import { agencyUnreadCounts } from "@/features/messages/server/messages";
 import { dateTimeFormat } from "@/lib/dates";
 import { StudentAccessBar } from "@/features/student/components/student-access-bar";
 import {
@@ -44,10 +45,11 @@ export default async function CaseLayout({
   const { c, responsible, campaign, groups, externalAccounts } = data;
   // Plateformes proposées pour un nouveau compte : celles suggérées par la
   // campagne, puis celles déjà utilisées dans l'agence
-  const [usedPlatforms, studentAccess, review] = await Promise.all([
+  const [usedPlatforms, studentAccess, review, unread] = await Promise.all([
     listUsedPlatforms(),
     getStudentAccess(member.agencyId, c.id),
     readReview(member.agencyId, c.id),
+    agencyUnreadCounts(member.agencyId),
   ]);
   const suggestions = mergePlatforms(campaign?.suggested_platforms ?? [], usedPlatforms);
 
@@ -154,7 +156,7 @@ export default async function CaseLayout({
             />
           </CaseHeaderDetails>
 
-          <CaseTabs id={c.id} isOwner={member.isOwner} />
+          <CaseTabs id={c.id} isOwner={member.isOwner} unreadMessages={unread[c.id] ?? 0} />
         </div>
       </header>
 

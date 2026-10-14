@@ -42,10 +42,12 @@ export const ACTIVITY_ACTIONS = [
   "student_access.enabled",
   "student_access.disabled",
   "student_access.regenerated",
+  "message.sent",
   // Actions du candidat lui-même (actor_id vide)
   "student.logged_in",
   "student.approved",
   "student.changes_requested",
+  "student.message_sent",
 ] as const;
 
 export type ActivityAction = (typeof ACTIVITY_ACTIONS)[number];
@@ -61,4 +63,5 @@ export type ActivityTarget =
   | "document_folder"
   | "case_note"
   | "motivation_letter"
-  | "case_program";
+  | "case_program"
+  | "case_message";
