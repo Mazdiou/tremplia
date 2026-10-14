@@ -2,11 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Link2, Loader2, RefreshCw, UserRound } from "lucide-react";
+import {
+  Check,
+  CircleCheck,
+  Copy,
+  Hourglass,
+  Link2,
+  Loader2,
+  MessageSquareText,
+  RefreshCw,
+  UserRound,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { callApi } from "@/lib/api-client";
-import type { StudentAccess } from "@/features/student/schemas";
+import type { ReviewStatus, StudentAccess } from "@/features/student/schemas";
 
 type Action = "enable" | "disable" | "regenerate";
 
@@ -16,11 +26,14 @@ export function StudentAccessBar({
   caseId,
   access,
   blockedReason,
+  review,
 }: {
   caseId: string;
   access: StudentAccess;
   // Accès ouvert mais sans effet (dossier abandonné, campagne archivée)
   blockedReason: string | null;
+  // Avis du candidat sur la lettre et les formations (dates déjà formatées)
+  review: { status: ReviewStatus; respondedLabel: string | null; lastRequest: string | null };
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<Action | null>(null);
@@ -109,6 +122,46 @@ export function StudentAccessBar({
           )}
         </span>
       </div>
+
+      {access && (
+        <div className="flex gap-2 border-t px-3 py-2 text-sm">
+          {review.status === "approved" ? (
+            <>
+              <CircleCheck className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+              <span>
+                <span className="font-medium">Validé par le candidat</span>
+                {review.respondedLabel && (
+                  <span className="text-muted-foreground"> · le {review.respondedLabel}</span>
+                )}
+              </span>
+            </>
+          ) : review.status === "changes_requested" ? (
+            <>
+              <MessageSquareText className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+              <div className="min-w-0">
+                <p>
+                  <span className="font-medium">Modification demandée</span>
+                  {review.respondedLabel && (
+                    <span className="text-muted-foreground"> · le {review.respondedLabel}</span>
+                  )}
+                </p>
+                {review.lastRequest && (
+                  <p className="mt-1 border-l-2 border-amber-500/50 pl-2 whitespace-pre-wrap break-words text-muted-foreground">
+                    {review.lastRequest}
+                  </p>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <Hourglass className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+              <span className="text-muted-foreground">
+                En attente de l&apos;avis du candidat sur la lettre et les formations
+              </span>
+            </>
+          )}
+        </div>
+      )}
 
       {enabled && blockedReason && (
         <p className="border-t px-3 py-1.5 text-xs text-muted-foreground">

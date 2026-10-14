@@ -65,7 +65,8 @@ Voir `.env.example`. Aucune vraie valeur ne doit être commitée.
   à chaque affichage ; lecture seule (informations, lettre, formations) par
   le serveur, filtrée sur le dossier de la session. La base ne garde que
   l'empreinte du code et une copie chiffrée ; 10 essais ratés par adresse
-  sur 15 minutes.
+  sur 15 minutes. Le candidat valide ou demande une modification ; toute
+  modification de la lettre ou des formations par l'agence redemande son avis.
 - **Code en anglais, interface en français.** Une seule source de vérité par
   liste métier (`features/*/labels.ts`).
 

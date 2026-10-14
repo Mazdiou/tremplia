@@ -47,6 +47,8 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "student_access.disabled": "a fermé l'accès d'un candidat",
   "student_access.regenerated": "a créé un nouveau code candidat",
   "student.logged_in": "s'est connecté à son espace",
+  "student.approved": "a validé sa lettre et ses formations",
+  "student.changes_requested": "a demandé une modification",
 };
 
 const CASE_LABELS: Record<ActivityAction, string> = {

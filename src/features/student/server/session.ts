@@ -13,7 +13,7 @@ export const STUDENT_COOKIE = "sf_student";
 const MAX_AGE = 7 * 24 * 3600;
 
 type Payload = { c: string; a: string; g: number; e: number };
-export type StudentSession = { caseId: string; agencyId: string };
+export type StudentSession = { caseId: string; agencyId: string; generation: number };
 
 export function sessionCookie(caseId: string, agencyId: string, generation: number) {
   const payload: Payload = {
@@ -63,5 +63,7 @@ export const getStudentSession = cache(async (): Promise<StudentSession | null> 
     return null;
   }
   const row = (data as { generation: number }[] | null)?.[0];
-  return row && row.generation === p.g ? { caseId: p.c, agencyId: p.a } : null;
+  return row && row.generation === p.g
+    ? { caseId: p.c, agencyId: p.a, generation: p.g }
+    : null;
 });

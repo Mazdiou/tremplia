@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { LogoMark } from "@/components/auth/auth-shell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { displayName } from "@/lib/names";
-import { getStudentCase } from "@/features/student/server/student-case";
+import { dateTimeFormat } from "@/lib/dates";
+import { getStudentCase, requireStudent } from "@/features/student/server/student-case";
+import { hasContentToReview, readReview } from "@/features/student/server/review";
+import { ReviewBanner } from "@/features/student/components/review-banner";
 import { StudentLogout, StudentTabs } from "@/features/student/components/student-nav";
 
 export const metadata: Metadata = { title: "Mon dossier · StudyFlow" };
@@ -10,7 +13,12 @@ export const metadata: Metadata = { title: "Mon dossier · StudyFlow" };
 // Espace du candidat : lecture seule de ses informations, de sa lettre de
 // motivation et de ses formations.
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
-  const { c, agency } = await getStudentCase();
+  const session = await requireStudent();
+  const [{ c, agency }, review, hasContent] = await Promise.all([
+    getStudentCase(),
+    readReview(session.agencyId, session.caseId),
+    hasContentToReview(session.agencyId, session.caseId),
+  ]);
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -44,7 +52,20 @@ export default async function StudentLayout({ children }: { children: React.Reac
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6 md:px-8">{children}</main>
+      <main className="mx-auto w-full max-w-4xl flex-1 space-y-6 px-4 py-6 md:px-8">
+        {/* Rien à valider tant que l'agence n'a écrit ni lettre ni formation */}
+        {hasContent && (
+          <ReviewBanner
+            status={review?.status ?? "pending"}
+            respondedLabel={
+              review?.respondedAt ? dateTimeFormat.format(new Date(review.respondedAt)) : null
+            }
+            lastRequest={review?.lastRequest?.body ?? null}
+            agencyName={agency.name}
+          />
+        )}
+        <div>{children}</div>
+      </main>
     </div>
   );
 }

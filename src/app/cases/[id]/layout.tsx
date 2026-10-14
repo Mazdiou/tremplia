@@ -17,6 +17,8 @@ import { ExternalAccountsPinned } from "@/features/cases/components/external-acc
 import { CaseStatusButtons } from "@/features/cases/components/case-status-buttons";
 import { CaseTabs } from "@/features/cases/components/case-tabs";
 import { getStudentAccess } from "@/features/student/server/access";
+import { readReview } from "@/features/student/server/review";
+import { dateTimeFormat } from "@/lib/dates";
 import { StudentAccessBar } from "@/features/student/components/student-access-bar";
 import {
   CaseHeaderDetails,
@@ -42,9 +44,10 @@ export default async function CaseLayout({
   const { c, responsible, campaign, groups, externalAccounts } = data;
   // Plateformes proposées pour un nouveau compte : celles suggérées par la
   // campagne, puis celles déjà utilisées dans l'agence
-  const [usedPlatforms, studentAccess] = await Promise.all([
+  const [usedPlatforms, studentAccess, review] = await Promise.all([
     listUsedPlatforms(),
     getStudentAccess(member.agencyId, c.id),
+    readReview(member.agencyId, c.id),
   ]);
   const suggestions = mergePlatforms(campaign?.suggested_platforms ?? [], usedPlatforms);
 
@@ -133,6 +136,14 @@ export default async function CaseLayout({
               key={`student-${c.id}`}
               caseId={c.id}
               access={studentAccess}
+              review={{
+                status: review?.status ?? "pending",
+                respondedLabel: review?.respondedAt
+                  ? dateTimeFormat.format(new Date(review.respondedAt))
+                  : null,
+                lastRequest:
+                  review?.status === "changes_requested" ? (review.lastRequest?.body ?? null) : null,
+              }}
               blockedReason={
                 c.status === "abandoned"
                   ? "le dossier est abandonné"
