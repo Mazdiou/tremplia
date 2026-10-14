@@ -16,6 +16,10 @@ import { getCase } from "@/features/cases/server/get-case";
 import { ExternalAccountsPinned } from "@/features/cases/components/external-accounts-pinned";
 import { CaseStatusButtons } from "@/features/cases/components/case-status-buttons";
 import { CaseTabs } from "@/features/cases/components/case-tabs";
+import {
+  CaseHeaderDetails,
+  CaseHeaderToggle,
+} from "@/features/cases/components/case-header";
 
 const STATUS_TONE = { active: "ok", closed: "off", abandoned: "bad" } as const;
 
@@ -49,6 +53,17 @@ export default async function CaseLayout({
     .filter(Boolean)
     .join(" · ");
 
+  const title = (
+    <div className="flex min-w-0 items-center gap-2">
+      <h1 className="truncate text-[22px] font-semibold tracking-tight">
+        {displayName(c.first_name, c.last_name)}
+      </h1>
+      <StatusPill tone={STATUS_TONE[c.status] ?? "off"}>
+        {labelOf(STATUS_LABELS, c.status)}
+      </StatusPill>
+    </div>
+  );
+
   return (
     <div>
       {/* En-tête fixe, partagé par tous les onglets */}
@@ -60,55 +75,58 @@ export default async function CaseLayout({
           >
             ← Dossiers
           </Link>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex min-w-0 items-start gap-3">
-              <span
-                aria-hidden
-                className="mt-0.5 grid size-11 shrink-0 place-items-center rounded-full bg-accent text-sm font-semibold text-accent-foreground max-sm:hidden"
-              >
-                {initialsOf(c.first_name, c.last_name)}
-              </span>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h1 className="truncate text-[22px] font-semibold tracking-tight">
-                    {displayName(c.first_name, c.last_name)}
-                  </h1>
-                  <StatusPill tone={STATUS_TONE[c.status] ?? "off"}>
-                    {labelOf(STATUS_LABELS, c.status)}
-                  </StatusPill>
+          <CaseHeaderDetails
+            compact={
+              <div className="flex items-center justify-between gap-3">
+                {title}
+                <CaseHeaderToggle />
+              </div>
+            }
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <span
+                  aria-hidden
+                  className="mt-0.5 grid size-11 shrink-0 place-items-center rounded-full bg-accent text-sm font-semibold text-accent-foreground max-sm:hidden"
+                >
+                  {initialsOf(c.first_name, c.last_name)}
+                </span>
+                <div className="min-w-0">
+                  {title}
+                  <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
+                  {groups.length > 0 && (
+                    <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Groupes">
+                      {groups.map((g) => (
+                        <li
+                          key={g.id}
+                          className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground"
+                        >
+                          {g.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
-                {groups.length > 0 && (
-                  <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Groupes">
-                    {groups.map((g) => (
-                      <li
-                        key={g.id}
-                        className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground"
-                      >
-                        {g.name}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/cases/${c.id}/edit`}
+                  className={buttonVariants({ variant: "outline" })}
+                >
+                  <Pencil /> Modifier
+                </Link>
+                <CaseStatusButtons id={c.id} status={c.status} />
+                <CaseHeaderToggle />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Link
-                href={`/cases/${c.id}/edit`}
-                className={buttonVariants({ variant: "outline" })}
-              >
-                <Pencil /> Modifier
-              </Link>
-              <CaseStatusButtons id={c.id} status={c.status} />
-            </div>
-          </div>
 
-          <ExternalAccountsPinned
-            key={c.id}
-            caseId={c.id}
-            accounts={externalAccounts}
-            suggestions={suggestions}
-          />
+            <ExternalAccountsPinned
+              key={c.id}
+              caseId={c.id}
+              accounts={externalAccounts}
+              suggestions={suggestions}
+            />
+          </CaseHeaderDetails>
 
           <CaseTabs id={c.id} isOwner={member.isOwner} />
         </div>

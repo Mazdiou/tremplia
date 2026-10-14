@@ -2,8 +2,8 @@
 
 CRM pour les agences de démarches d'études à l'étranger : chaque agence crée
 ses campagnes (ou importe un modèle comme Campus France), range ses dossiers
-candidats dans des groupes, et suit documents, notes et comptes sur les
-plateformes externes.
+candidats dans des groupes, et suit documents, lettre de motivation, notes
+et comptes sur les plateformes externes.
 
 Next.js 16 (App Router), React 19, TypeScript, Tailwind 4, shadcn/ui, zod,
 Supabase (PostgreSQL, Auth, Storage, RLS), Vitest, pgTAP.
@@ -76,6 +76,7 @@ Voir `.env.example`. Aucune vraie valeur ne doit être commitée.
 | Compte externe | `external_account` |
 | Modèle de campagne | `campaign_template` (configuration, pas une table) |
 | Historique / Journal | `history` / `activity_log` |
+| Lettre de motivation | `motivation_letter` |
 | Formations | `programs` |
 
 ## Structure du dépôt
@@ -83,16 +84,18 @@ Voir `.env.example`. Aucune vraie valeur ne doit être commitée.
 ```
 src/
   app/                  pages, layouts et routes API (minces)
-  components/           partagés : ui/ (shadcn), shell/, auth/, page-ui
+  components/           partagés : ui/ (shadcn), shell/, auth/, page-ui, form-fields
   config/
     campaign-templates/ modèles de campagne (un fichier par modèle)
   features/
-    campaigns/ cases/ documents/ notes/ team/ history/ dashboard/
+    auth/ campaigns/ cases/ documents/ motivation-letter/ notes/ team/
+    history/ dashboard/
       components/       composants React de la fonctionnalité
       server/           lectures et écritures serveur (« server-only »)
       schemas.ts        schémas zod partagés formulaires / routes
       labels.ts         listes métier et libellés français
-  lib/                  transverse : supabase/, auth/, crypto/, audit/, api-errors, dates…
+  lib/                  transverse : supabase/, auth/, crypto/, audit/, api-errors,
+                        api-client (appels depuis le navigateur), dates…
 supabase/
   migrations/           une migration par domaine
   tests/                un fichier pgTAP par domaine

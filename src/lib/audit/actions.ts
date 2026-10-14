@@ -34,6 +34,7 @@ export const ACTIVITY_ACTIONS = [
   "note.created",
   "note.updated",
   "note.deleted",
+  "motivation_letter.saved",
 ] as const;
 
 export type ActivityAction = (typeof ACTIVITY_ACTIONS)[number];
@@ -47,4 +48,5 @@ export type ActivityTarget =
   | "external_account"
   | "document"
   | "document_folder"
-  | "case_note";
+  | "case_note"
+  | "motivation_letter";

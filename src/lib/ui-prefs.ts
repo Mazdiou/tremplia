@@ -16,6 +16,8 @@ export type UiPrefs = {
   level: string;
   responsible: string;
   mine: boolean;
+  // En-tête de la fiche d'un dossier réduit à une ligne
+  caseHeaderCollapsed: boolean;
 };
 
 export const DEFAULT_PREFS: UiPrefs = {
@@ -29,6 +31,7 @@ export const DEFAULT_PREFS: UiPrefs = {
   level: "",
   responsible: "",
   mine: false,
+  caseHeaderCollapsed: false,
 };
 
 const KEY = "sf:ui";
@@ -55,6 +58,7 @@ export function sanitize(raw: unknown): UiPrefs {
     level: typeof r.level === "string" ? r.level : "",
     responsible: typeof r.responsible === "string" ? r.responsible : "",
     mine: r.mine === true,
+    caseHeaderCollapsed: r.caseHeaderCollapsed === true,
   };
 }
 

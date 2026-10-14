@@ -38,6 +38,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "note.created": "a ajouté une note",
   "note.updated": "a modifié une note",
   "note.deleted": "a supprimé une note",
+  "motivation_letter.saved": "a modifié une lettre de motivation",
 };
 
 const CASE_LABELS: Record<ActivityAction, string> = {
@@ -47,6 +48,7 @@ const CASE_LABELS: Record<ActivityAction, string> = {
   "case.assigned": "a changé le responsable",
   "case.status_changed": "a changé le statut du dossier",
   "case.groups_updated": "a changé le classement du dossier",
+  "motivation_letter.saved": "a modifié la lettre de motivation",
 };
 
 const UNKNOWN = "a effectué une action";

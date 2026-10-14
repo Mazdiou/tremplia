@@ -366,13 +366,13 @@ select is(
 select is(
   (select count(*) from public.document_folders
     where case_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
-  4::bigint, 'un dossier « Visa » déjà présent est conservé, les 3 autres sont ajoutés');
+  3::bigint, 'un dossier « Visa » déjà présent est conservé, les 2 autres sont ajoutés');
 
 select is(
   (select array_agg(name order by created_at) from public.document_folders
     where case_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
       and name <> 'Visa'),
-  array['Candidature', 'Informations personnelles', 'Lettres de motivation'],
+  array['Candidature', 'Informations personnelles'],
   'les dossiers de départ sont dans l''ordre prévu');
 
 select is(
@@ -397,7 +397,7 @@ select is(
 select is(
   (select count(*) from public.document_folders
     where case_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
-  3::bigint, 'il reste bien 3 dossiers après la suppression');
+  2::bigint, 'il reste bien 2 dossiers après la suppression');
 
 select throws_ok(
   $$select public.ensure_default_document_folders(
@@ -418,7 +418,7 @@ select set_config('request.jwt.claims',
   '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
 set local role authenticated;
 
-select is((select count(*) from public.document_folders), 3::bigint,
+select is((select count(*) from public.document_folders), 2::bigint,
   'le patron voit les dossiers de documents de son agence, pas ceux des autres');
 
 select throws_ok(
@@ -437,7 +437,7 @@ select set_config('request.jwt.claims',
   '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', true);
 set local role authenticated;
 
-select is((select count(*) from public.document_folders), 3::bigint,
+select is((select count(*) from public.document_folders), 2::bigint,
   'un employé voit les dossiers de documents de son agence');
 
 select throws_ok(
