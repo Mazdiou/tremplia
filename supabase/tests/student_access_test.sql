@@ -63,7 +63,8 @@ select is(
     pg_temp.h('b'), 'chiffre-b', 1::smallint),
   false, 'une deuxième activation ne change rien');
 
-select is((select code_lookup from public.case_student_access), pg_temp.h('a'),
+select is((select code_lookup from public.case_student_access
+  where case_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'), pg_temp.h('a'),
   'le premier code est gardé');
 
 select is((select generation from pg_temp.login('a')), 1,
@@ -79,7 +80,8 @@ select is(
   true, 'le patron désactive l''accès');
 select is((select count(*) from pg_temp.login('a')), 0::bigint,
   'un accès désactivé est refusé');
-select is((select generation from public.case_student_access), 2,
+select is((select generation from public.case_student_access
+  where case_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'), 2,
   'la désactivation ferme les sessions ouvertes');
 
 select is(
