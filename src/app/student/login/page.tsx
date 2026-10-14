@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, KeyRound, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LogoMark } from "@/components/auth/auth-shell";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthField, FormError } from "@/components/auth/auth-field";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { LoginSwitch } from "@/components/auth/login-switch";
 import { callApi } from "@/lib/api-client";
 
 // Connexion du candidat avec le code transmis par son agence
@@ -31,51 +31,49 @@ export default function StudentLoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-background px-5">
-      <div className="flex h-16 items-center justify-end">
-        <ThemeToggle className="size-9 rounded-xl text-muted-foreground" />
+    <AuthShell>
+      <LoginSwitch active="student" />
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Espace candidat</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          Saisissez le code transmis par votre agence pour consulter votre dossier.
+        </p>
       </div>
 
-      <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center pb-16">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <LogoMark className="size-12 rounded-2xl" />
-          <h1 className="mt-5 text-2xl font-semibold tracking-tight">Espace candidat</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Saisissez le code transmis par votre agence pour consulter votre dossier.
-          </p>
-        </div>
+      <form onSubmit={onSubmit} noValidate className="space-y-5">
+        <FormError message={error} />
+        <AuthField
+          label="Code d'accès"
+          name="code"
+          icon={KeyRound}
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          placeholder="XXXX-XXXX"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={20}
+          autoFocus
+          className="font-mono tracking-[0.2em] placeholder:tracking-[0.2em]"
+        />
+        <Button type="submit" size="lg" disabled={loading} className="w-full">
+          {loading ? (
+            <>
+              <LoaderCircle className="animate-spin" />
+              Connexion...
+            </>
+          ) : (
+            <>
+              Accéder à mon dossier
+              <ArrowRight />
+            </>
+          )}
+        </Button>
+      </form>
 
-        <form onSubmit={onSubmit} noValidate className="space-y-5">
-          <FormError message={error} />
-          <AuthField
-            label="Code d'accès"
-            name="code"
-            icon={KeyRound}
-            value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="XXXX-XXXX"
-            autoComplete="off"
-            autoCapitalize="characters"
-            spellCheck={false}
-            maxLength={20}
-            autoFocus
-            className="h-11 font-mono text-base tracking-[0.2em] placeholder:tracking-[0.2em]"
-          />
-          <Button type="submit" className="h-11 w-full" disabled={loading}>
-            {loading ? (
-              <LoaderCircle className="animate-spin" aria-hidden />
-            ) : (
-              <>
-                Accéder à mon dossier <ArrowRight />
-              </>
-            )}
-          </Button>
-        </form>
-
-        <p className="mt-8 text-center text-xs text-muted-foreground">
-          Vous n&apos;avez pas de code ? Demandez-le à votre conseiller.
-        </p>
-      </main>
-    </div>
+      <p className="mt-8 text-center text-sm text-muted-foreground">
+        Vous n&apos;avez pas de code ? Demandez-le à votre conseiller.
+      </p>
+    </AuthShell>
   );
 }

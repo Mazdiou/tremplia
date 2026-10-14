@@ -7,6 +7,7 @@ import { ArrowRight, LoaderCircle, Mail } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { LoginSwitch } from "@/components/auth/login-switch";
 import {
   AuthField,
   FormError,
@@ -40,6 +41,7 @@ export default function LoginPage() {
 
   return (
     <AuthShell>
+      <LoginSwitch active="agency" />
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight">
           Bon retour parmi nous
