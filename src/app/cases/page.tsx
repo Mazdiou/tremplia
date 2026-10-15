@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 
 // Aucun dossier sélectionné : les dates des campagnes actives
 export default async function CasesHomePage() {
-  const member = await requireMember();
-  const active = (await listCampaigns()).filter((c) => c.status === "active");
+  const [member, campaigns] = await Promise.all([requireMember(), listCampaigns()]);
+  const active = campaigns.filter((c) => c.status === "active");
   const today = todayInAppTimezone();
   const dates = await listCampaignDates(active);
 

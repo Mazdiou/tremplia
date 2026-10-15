@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { CalendarClock, CalendarRange, FolderOpen, Layers } from "lucide-react";
-import { AppShell } from "@/components/shell/app-shell";
 import { EmptyState } from "@/components/empty-state";
 import { PageContainer, PageHeader, StatusPill } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
@@ -78,8 +77,7 @@ function CampaignCard({ c }: { c: CardData }) {
 }
 
 export default async function CampaignsPage() {
-  const member = await requireMember();
-  const campaigns = await listCampaigns();
+  const [member, campaigns] = await Promise.all([requireMember(), listCampaigns()]);
   // Dossiers actifs par campagne : une lecture pour toutes (vue case_stats)
   const [dates, groups, stats] = await Promise.all([
     listCampaignDates(campaigns),
@@ -98,88 +96,86 @@ export default async function CampaignsPage() {
   const archived = cards.filter((c) => c.status === "archived");
 
   return (
-    <AppShell>
-      <PageContainer width="wide">
-        <PageHeader
-          title="Campagnes"
-          subtitle={
+    <PageContainer width="wide">
+      <PageHeader
+        title="Campagnes"
+        subtitle={
+          member?.isOwner
+            ? "Créez vos campagnes ou partez d'un modèle préconfiguré."
+            : "Consultation seulement : le patron gère les campagnes, vous gérez les groupes."
+        }
+        actions={
+          member?.isOwner && (
+            <>
+              <a href="#modeles" className={buttonVariants({ variant: "outline" })}>
+                Importer un modèle
+              </a>
+              <Link href="/campaigns/new" className={buttonVariants()}>
+                Créer une campagne
+              </Link>
+            </>
+          )
+        }
+      />
+
+      {campaigns.length === 0 ? (
+        <EmptyState
+          icon={CalendarRange}
+          title="Aucune campagne"
+          description={
             member?.isOwner
-              ? "Créez vos campagnes ou partez d'un modèle préconfiguré."
-              : "Consultation seulement : le patron gère les campagnes, vous gérez les groupes."
-          }
-          actions={
-            member?.isOwner && (
-              <>
-                <a href="#modeles" className={buttonVariants({ variant: "outline" })}>
-                  Importer un modèle
-                </a>
-                <Link href="/campaigns/new" className={buttonVariants()}>
-                  Créer une campagne
-                </Link>
-              </>
-            )
+              ? "Créez votre première campagne ou importez un modèle préconfiguré ci-dessous."
+              : "Le patron de l'agence doit créer une campagne."
           }
         />
+      ) : (
+        <>
+          {active.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold text-muted-foreground">
+                En cours · {active.length}
+              </h2>
+              <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {active.map((c) => (
+                  <li key={c.id}>
+                    <CampaignCard c={c} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {archived.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold text-muted-foreground">
+                Archivées · {archived.length}
+              </h2>
+              <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {archived.map((c) => (
+                  <li key={c.id}>
+                    <CampaignCard c={c} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </>
+      )}
 
-        {campaigns.length === 0 ? (
-          <EmptyState
-            icon={CalendarRange}
-            title="Aucune campagne"
-            description={
-              member?.isOwner
-                ? "Créez votre première campagne ou importez un modèle préconfiguré ci-dessous."
-                : "Le patron de l'agence doit créer une campagne."
-            }
+      {member?.isOwner && (
+        <section id="modeles" className="scroll-mt-6 space-y-3 border-t pt-6">
+          <div>
+            <h2 className="text-lg font-semibold">Modèles préconfigurés</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              L&apos;import crée une copie de la campagne dans votre agence :
+              vous pouvez ensuite tout modifier.
+            </p>
+          </div>
+          <TemplateGallery
+            templates={CAMPAIGN_TEMPLATES}
+            importedKeys={campaigns.flatMap((c) => (c.template_key ? [c.template_key] : []))}
           />
-        ) : (
-          <>
-            {active.length > 0 && (
-              <section className="space-y-3">
-                <h2 className="text-sm font-semibold text-muted-foreground">
-                  En cours · {active.length}
-                </h2>
-                <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {active.map((c) => (
-                    <li key={c.id}>
-                      <CampaignCard c={c} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-            {archived.length > 0 && (
-              <section className="space-y-3">
-                <h2 className="text-sm font-semibold text-muted-foreground">
-                  Archivées · {archived.length}
-                </h2>
-                <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {archived.map((c) => (
-                    <li key={c.id}>
-                      <CampaignCard c={c} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </>
-        )}
-
-        {member?.isOwner && (
-          <section id="modeles" className="scroll-mt-6 space-y-3 border-t pt-6">
-            <div>
-              <h2 className="text-lg font-semibold">Modèles préconfigurés</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                L&apos;import crée une copie de la campagne dans votre agence :
-                vous pouvez ensuite tout modifier.
-              </p>
-            </div>
-            <TemplateGallery
-              templates={CAMPAIGN_TEMPLATES}
-              importedKeys={campaigns.flatMap((c) => (c.template_key ? [c.template_key] : []))}
-            />
-          </section>
-        )}
-      </PageContainer>
-    </AppShell>
+        </section>
+      )}
+    </PageContainer>
   );
 }

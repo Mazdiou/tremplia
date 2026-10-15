@@ -27,37 +27,27 @@ export default async function DocumentsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  if (!(await getCase(id))) notFound();
-
-  const caller = await requireMember();
+  const [found, caller, supabase] = await Promise.all([
+    getCase(id),
+    requireMember(),
+    createClient(),
+  ]);
+  if (!found) notFound();
   const isOwner = caller?.isOwner === true;
 
   // Les 4 dossiers de départ sont créés une seule fois par dossier candidat
   // (la fonction SQL est sans effet si c'est déjà fait). Un échec ne bloque
   // pas la page : les documents restent visibles dans « Sans dossier ».
-  if (caller) {
-    const { error: initError } = await createAdminClient().rpc(
-      "ensure_default_document_folders",
-      {
-        p_case_id: id,
-        p_agency_id: caller.agencyId,
-        p_actor_id: caller.userId,
-      },
-    );
-    if (initError) {
-      console.error("[documents folders init]", initError.code);
-    }
-  }
-
-  // Lecture via le RLS : seuls les documents de l'agence reviennent.
-  const supabase = await createClient();
-
-  const [{ data: folderRows }, { data }] = await Promise.all([
-    supabase
-      .from("document_folders")
-      .select("id, name")
-      .eq("case_id", id)
-      .order("created_at", { ascending: true }),
+  // Les documents (lecture via le RLS : seuls ceux de l'agence reviennent)
+  // sont lus en même temps ; les dossiers, seulement une fois créés.
+  const [initRes, { data }] = await Promise.all([
+    caller
+      ? createAdminClient().rpc("ensure_default_document_folders", {
+          p_case_id: id,
+          p_agency_id: caller.agencyId,
+          p_actor_id: caller.userId,
+        })
+      : Promise.resolve({ error: null }),
     supabase
       .from("documents")
       .select(
@@ -66,19 +56,27 @@ export default async function DocumentsPage({
       .eq("case_id", id)
       .order("created_at", { ascending: false }),
   ]);
-  const folders = (folderRows ?? []) as FolderItem[];
+  if (initRes.error) {
+    console.error("[documents folders init]", initRes.error.code);
+  }
   const rows = (data ?? []) as Row[];
+  const authorIds = [...new Set(rows.map((r) => r.uploaded_by))];
+
+  const [{ data: folderRows }, { data: profiles }] = await Promise.all([
+    supabase
+      .from("document_folders")
+      .select("id, name")
+      .eq("case_id", id)
+      .order("created_at", { ascending: true }),
+    authorIds.length > 0
+      ? supabase.from("profiles").select("id, first_name").in("id", authorIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+  const folders = (folderRows ?? []) as FolderItem[];
 
   const names = new Map<string, string>();
-  const authorIds = [...new Set(rows.map((r) => r.uploaded_by))];
-  if (authorIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, first_name")
-      .in("id", authorIds);
-    for (const p of (profiles ?? []) as { id: string; first_name: string }[]) {
-      names.set(p.id, p.first_name);
-    }
+  for (const p of (profiles ?? []) as { id: string; first_name: string }[]) {
+    names.set(p.id, p.first_name);
   }
 
   const docs: DocItem[] = rows.map((r) => ({
