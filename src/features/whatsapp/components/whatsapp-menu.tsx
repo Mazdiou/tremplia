@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ChevronDown, MessageCircle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { formatDA } from "@/lib/money";
@@ -16,9 +16,16 @@ import {
 
 export type WhatsAppMenuContext = Omit<WhatsAppContext, "studentLink">;
 
-// Lien de connexion de l'espace candidat, sur l'adresse du site ouvert
-function studentLink() {
-  return `${window.location.origin}/student/login`;
+// Lien de connexion de l'espace candidat, sur l'adresse du site ouvert.
+// Inconnue côté serveur : le lien complet n'existe qu'une fois la page
+// chargée dans le navigateur (avant, le bouton ouvre la conversation seule).
+const noSubscribe = () => () => {};
+function useStudentLink(): string | null {
+  return useSyncExternalStore(
+    noSubscribe,
+    () => `${window.location.origin}/student/login`,
+    () => null,
+  );
 }
 
 // Bouton « WhatsApp ▾ » : ouvre la conversation avec un message déjà écrit,
@@ -36,6 +43,7 @@ export function WhatsAppMenu({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const number = toWhatsAppNumber(phone);
+  const studentLink = useStudentLink();
 
   // Fermeture au clic à l'extérieur ou avec Échap
   useEffect(() => {
@@ -88,19 +96,13 @@ export function WhatsAppMenu({
             <a
               key={t}
               role="menuitem"
-              href={`https://wa.me/${number}`}
+              // Lien complet dès l'affichage : il marche aussi au clic molette
+              // et avec « Copier le lien »
+              href={whatsAppUrl(number, whatsAppMessage(t, { ...context, studentLink: studentLink ?? "" }))}
               target="_blank"
               rel="noopener noreferrer"
               className={item}
-              // Le lien complet est construit au clic : il dépend de l'adresse
-              // du site, connue seulement dans le navigateur
-              onClick={(e) => {
-                e.currentTarget.href = whatsAppUrl(
-                  number,
-                  whatsAppMessage(t, { ...context, studentLink: studentLink() }),
-                );
-                setOpen(false);
-              }}
+              onClick={() => setOpen(false)}
             >
               {TEMPLATE_LABELS[t]}
               {t === "payment" && context.remaining ? (
@@ -117,7 +119,7 @@ export function WhatsAppMenu({
   );
 }
 
-// Bouton direct « Envoyer par WhatsApp » (code d'accès au candidat)
+// Bouton « WhatsApp » de la barre Espace candidat : envoie le code d'accès
 export function WhatsAppAccessButton({
   phone,
   context,
@@ -126,20 +128,19 @@ export function WhatsAppAccessButton({
   context: WhatsAppMenuContext;
 }) {
   const number = toWhatsAppNumber(phone);
+  const studentLink = useStudentLink();
   if (!number) return null;
   return (
     <a
-      href={`https://wa.me/${number}`}
+      href={
+        studentLink
+          ? whatsAppUrl(number, whatsAppMessage("access", { ...context, studentLink }))
+          : whatsAppUrl(number)
+      }
       target="_blank"
       rel="noopener noreferrer"
       title="Envoyer le code au candidat par WhatsApp"
       aria-label="Envoyer le code au candidat par WhatsApp"
-      onClick={(e) => {
-        e.currentTarget.href = whatsAppUrl(
-          number,
-          whatsAppMessage("access", { ...context, studentLink: studentLink() }),
-        );
-      }}
       className={cn(
         buttonVariants({ variant: "ghost", size: "xs" }),
         "text-emerald-700 dark:text-emerald-400",
