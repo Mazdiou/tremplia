@@ -2,7 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { publicEnv } from "@/lib/env";
 
-const PUBLIC_PATHS = ["/login", "/register"];
+// Pages publiques. Une personne déjà connectée qui les ouvre est envoyée sur
+// son tableau de bord (la page d'accueil « / » comprise).
+const PUBLIC_PATHS = ["/", "/login", "/register"];
 
 // Espace candidat : sa propre session (cookie signé), vérifiée par ses pages
 // et ses routes. La session des employés n'y est pas consultée.

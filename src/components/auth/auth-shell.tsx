@@ -41,7 +41,7 @@ function Glass({ className, children }: { className?: string; children: ReactNod
 
 // Aperçu décoratif de l'application : une échéance, une fiche candidat et
 // une ligne d'activité. Données fictives, ignorées par les lecteurs d'écran.
-function AppPreview() {
+export function AppPreview() {
   return (
     <div aria-hidden className="relative mx-auto h-[21rem] w-full max-w-md select-none">
       {/* Fiche candidat */}
