@@ -26,7 +26,7 @@ const CASE_COLUMNS =
 // (autres campagnes, à l'ouverture). Lecture via le RLS dans les deux cas.
 const PAGE_SIZE = 500;
 
-async function readAll<T>(
+export async function readAll<T>(
   page: (from: number, to: number) => PromiseLike<{ data: unknown; error: { message: string } | null }>,
 ): Promise<T[]> {
   const rows: T[] = [];

@@ -12,6 +12,7 @@ export const ACTIVITY_ACTIONS = [
   "campaign.archived",
   "campaign.unarchived",
   "campaign.deleted",
+  "campaign.exported",
   "group.created",
   "group.renamed",
   "group.deleted",

@@ -16,6 +16,7 @@ import { CAMPAIGN_STATUS_LABELS, type CampaignStatus } from "@/features/campaign
 import { CampaignDangerZone } from "@/features/campaigns/components/campaign-danger-zone";
 import { CampaignSettingsForm } from "@/features/campaigns/components/campaign-settings-form";
 import { GroupsManager } from "@/features/campaigns/components/groups-manager";
+import { ExportCampaignButton } from "@/features/export/components/export-campaign-button";
 import { countdownLabel, timeline } from "@/features/campaigns/timeline";
 import { requireMember } from "@/lib/auth/require-member";
 import { isReadOnly } from "@/features/subscription/server/subscription";
@@ -95,11 +96,15 @@ export default async function CampaignPage({
           <StatusPill tone={archived ? "off" : "ok"}>{CAMPAIGN_STATUS_LABELS[status]}</StatusPill>
         }
         actions={
-          !archived && (
-            <Link href={`/cases/new?campaign=${id}`} className={buttonVariants()}>
-              <Plus /> Nouveau dossier
-            </Link>
-          )
+          <>
+            {/* Export : aussi en archive et en lecture seule (simple lecture) */}
+            {member?.isOwner && <ExportCampaignButton campaignId={id} />}
+            {!archived && (
+              <Link href={`/cases/new?campaign=${id}`} className={buttonVariants()}>
+                <Plus /> Nouveau dossier
+              </Link>
+            )}
+          </>
         }
       />
 

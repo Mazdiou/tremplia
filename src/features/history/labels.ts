@@ -16,6 +16,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "campaign.archived": "a archivé une campagne",
   "campaign.unarchived": "a réactivé une campagne",
   "campaign.deleted": "a supprimé une campagne",
+  "campaign.exported": "a exporté une campagne en Excel",
   "group.created": "a créé un groupe",
   "group.renamed": "a renommé un groupe",
   "group.deleted": "a supprimé un groupe",
