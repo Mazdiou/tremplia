@@ -18,7 +18,7 @@ export default async function ProgramsPage({
   const supabase = await createClient();
   const { data } = await supabase
     .from("case_programs")
-    .select("id, title, level, city, institution")
+    .select("id, title, level, city, institution, result")
     .eq("case_id", id)
     .order("position");
 

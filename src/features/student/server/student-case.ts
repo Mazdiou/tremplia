@@ -55,7 +55,7 @@ export async function getStudentPrograms() {
   const { caseId, agencyId } = await requireStudent();
   const { data, error } = await createAdminClient()
     .from("case_programs")
-    .select("id, title, level, city, institution")
+    .select("id, title, level, city, institution, result")
     .eq("case_id", caseId)
     .eq("agency_id", agencyId)
     .order("position");

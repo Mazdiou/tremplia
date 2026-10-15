@@ -1,5 +1,5 @@
 begin;
-select plan(19);
+select plan(25);
 
 -- Patron A, employé A1, employé désactivé A3, patron B
 insert into auth.users (id, email) values
@@ -136,6 +136,35 @@ select throws_ok(
   $$select public.update_case_program((select p1 from p), 'cccccccc-cccc-cccc-cccc-cccccccccccc',
       (select agency_a from ctx), '22222222-2222-2222-2222-222222222222', 'X', 'l3', 'Lyon', null)$$,
   'P0002', null, 'une formation supprimée est introuvable');
+
+-- Réponse de l'établissement
+select is((select result from public.case_programs where id = (select p2 from p)), 'none',
+  'une nouvelle formation est sans réponse');
+
+select is(
+  public.set_case_program_result((select p2 from p), 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+    (select agency_a from ctx), '22222222-2222-2222-2222-222222222222', 'accepted'),
+  true, 'un employé note la réponse');
+
+select is(
+  public.set_case_program_result((select p2 from p), 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+    (select agency_a from ctx), '11111111-1111-1111-1111-111111111111', 'accepted'),
+  false, 'la même réponse ne change rien');
+
+select throws_ok(
+  $$select public.set_case_program_result((select p2 from p), 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+      (select agency_a from ctx), '22222222-2222-2222-2222-222222222222', 'maybe')$$,
+  '23514', null, 'une réponse inconnue est refusée');
+
+select throws_ok(
+  $$select public.set_case_program_result((select p2 from p), 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+      (select agency_b from ctx), '33333333-3333-3333-3333-333333333333', 'rejected')$$,
+  'P0002', null, 'une autre agence ne note pas la réponse');
+
+select throws_ok(
+  $$select public.set_case_program_result((select p2 from p), 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+      (select agency_a from ctx), '55555555-5555-5555-5555-555555555555', 'rejected')$$,
+  '42501', null, 'un utilisateur désactivé ne note pas la réponse');
 
 -- Lecture (RLS) : employé A1
 select set_config('request.jwt.claims',

@@ -1,5 +1,5 @@
 begin;
-select plan(18);
+select plan(20);
 
 -- Patron A, employé A1, employé désactivé A3, patron B
 insert into auth.users (id, email) values
@@ -103,6 +103,17 @@ select pg_temp.review('approved');
 select public.save_motivation_letter('cccccccc-cccc-cccc-cccc-cccccccccccc',
   (select agency_a from ctx), '22222222-2222-2222-2222-222222222222', 'Madame, Monsieur, (v2)');
 select is(pg_temp.status(), 'approved', 'un enregistrement identique ne change rien');
+
+-- La réponse d'un établissement ne fait pas partie de ce que le candidat valide
+create temp table fp as
+select public.student_content_fingerprint('cccccccc-cccc-cccc-cccc-cccccccccccc', agency_a) as before
+from ctx;
+select public.set_case_program_result((select p1 from p), 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+  (select agency_a from ctx), '22222222-2222-2222-2222-222222222222', 'accepted');
+select is(pg_temp.status(), 'approved', 'noter une réponse ne redemande pas l''avis du candidat');
+select is(
+  public.student_content_fingerprint('cccccccc-cccc-cccc-cccc-cccccccccccc', (select agency_a from ctx)),
+  (select before from fp), 'la réponse ne change pas l''empreinte du contenu');
 
 -- Demande de modification
 select is(pg_temp.review('changes_requested', 'Pouvez-vous ajouter Lille ?'), true,

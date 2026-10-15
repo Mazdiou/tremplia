@@ -164,6 +164,15 @@ export function StatCard({
 // warn : à surveiller (reste à payer…), sans l'alarme du rouge
 export type PillTone = "ok" | "off" | "bad" | "info" | "warn";
 
+// Couleurs des pastilles, partagées avec les sélecteurs qui en ont l'aspect
+export const PILL_TONE_CLASSES: Record<PillTone, string> = {
+  ok: "bg-success-bg text-success",
+  off: "bg-muted text-muted-foreground",
+  bad: "bg-destructive/10 text-destructive",
+  info: "bg-accent text-accent-foreground",
+  warn: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
+};
+
 export function StatusPill({
   tone,
   children,
@@ -175,11 +184,7 @@ export function StatusPill({
     <span
       className={cn(
         "inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
-        tone === "ok" && "bg-success-bg text-success",
-        tone === "off" && "bg-muted text-muted-foreground",
-        tone === "bad" && "bg-destructive/10 text-destructive",
-        tone === "info" && "bg-accent text-accent-foreground",
-        tone === "warn" && "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
+        PILL_TONE_CLASSES[tone],
       )}
     >
       {children}

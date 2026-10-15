@@ -4,7 +4,7 @@ import {
   logCaseActivity,
   type AuthorizedCase,
 } from "@/features/cases/server/authorize-case";
-import type { ProgramInput } from "@/features/programs/schemas";
+import type { ProgramInput, ProgramResult } from "@/features/programs/schemas";
 
 // Formations visées par le candidat, dans l'ordre de préférence. Tout membre
 // actif les gère (revérifié par les fonctions SQL, qui gardent l'ordre sans
@@ -86,6 +86,33 @@ export async function deleteProgram(auth: AuthorizedCase, caseId: string, progra
     targetType: "case_program",
     targetId: programId,
   });
+}
+
+// Réponse de l'établissement (tout membre actif). Ne redemande pas l'avis du
+// candidat : elle ne fait pas partie de ce qu'il valide.
+export async function setProgramResult(
+  auth: AuthorizedCase,
+  caseId: string,
+  programId: string,
+  result: ProgramResult,
+) {
+  const { data: changed, error } = await auth.admin.rpc("set_case_program_result", {
+    p_program_id: programId,
+    p_case_id: caseId,
+    p_agency_id: auth.agencyId,
+    p_actor_id: auth.member.userId,
+    p_result: result,
+  });
+  if (error) throw dbError("programs result", error, MESSAGES);
+
+  if (changed === true) {
+    await logCaseActivity(auth, caseId, {
+      action: "program.result_set",
+      targetType: "case_program",
+      targetId: programId,
+      details: { result },
+    });
+  }
 }
 
 // Monter (-1) ou descendre (+1) d'un rang ; rien en tête ou en fin de liste

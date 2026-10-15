@@ -43,6 +43,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "program.updated": "a modifié une formation",
   "program.deleted": "a supprimé une formation",
   "program.moved": "a changé l'ordre des formations",
+  "program.result_set": "a noté la réponse d'un établissement",
   "student_access.enabled": "a ouvert l'accès d'un candidat",
   "student_access.disabled": "a fermé l'accès d'un candidat",
   "student_access.regenerated": "a créé un nouveau code candidat",

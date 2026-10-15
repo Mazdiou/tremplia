@@ -39,6 +39,7 @@ export const ACTIVITY_ACTIONS = [
   "program.updated",
   "program.deleted",
   "program.moved",
+  "program.result_set",
   "student_access.enabled",
   "student_access.disabled",
   "student_access.regenerated",
