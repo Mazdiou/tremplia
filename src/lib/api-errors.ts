@@ -78,6 +78,8 @@ const DB_ERRORS: Record<string, [number, string]> = {
   "55006": [409, "Élément verrouillé par le patron"],
   "2BP01": [409, "Cette campagne contient des dossiers : archivez-la plutôt"],
   "54000": [409, "Limite atteinte"],
+  // Abonnement terminé (déclencheurs de la migration subscriptions)
+  "25006": [403, "Abonnement expiré : votre agence est en lecture seule."],
   "23514": [400, "Données invalides"],
   "23503": [400, "Données invalides"],
   "22023": [400, "Données invalides"],
