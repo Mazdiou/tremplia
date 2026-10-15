@@ -264,11 +264,13 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
             </span>
             <span className="text-lg font-semibold tracking-tight">{BRAND.name}</span>
           </Link>
+          {/* Liens par le routeur (Link) : avec un simple <a href="#…">, le retour
+              arrière depuis une autre page changerait l'adresse sans la page */}
           <nav aria-label="Sections" className="hidden items-center gap-8 text-sm text-white/70 md:flex">
-            <a href="#fonctionnalites" className="transition-colors hover:text-white">Fonctionnalités</a>
-            <a href="#candidats" className="transition-colors hover:text-white">Espace candidat</a>
-            <a href="#tarifs" className="transition-colors hover:text-white">Tarifs</a>
-            <a href="#faq" className="transition-colors hover:text-white">FAQ</a>
+            <Link href="#fonctionnalites" className="transition-colors hover:text-white">Fonctionnalités</Link>
+            <Link href="#candidats" className="transition-colors hover:text-white">Espace candidat</Link>
+            <Link href="#tarifs" className="transition-colors hover:text-white">Tarifs</Link>
+            <Link href="#faq" className="transition-colors hover:text-white">FAQ</Link>
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle className="size-9 rounded-xl text-white/70 hover:bg-white/10 hover:text-white" />
@@ -540,7 +542,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
             <Link href="/login" className="hover:text-foreground">Se connecter</Link>
             <Link href="/register" className="hover:text-foreground">Créer une agence</Link>
             <Link href="/student/login" className="hover:text-foreground">Espace candidat</Link>
-            <a href="#faq" className="hover:text-foreground">FAQ</a>
+            <Link href="#faq" className="hover:text-foreground">FAQ</Link>
           </nav>
         </div>
       </footer>

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import {
   CalendarClock,
   Check,
@@ -137,12 +138,13 @@ export function AuthShell({
           }}
         />
 
-        <div className="relative flex items-center gap-3">
+        {/* Logo : retour à la page d'accueil */}
+        <Link href="/" className="relative flex w-fit items-center gap-3 rounded-xl focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none">
           <span className="grid size-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15">
             <GraduationCap className="size-5" strokeWidth={1.8} />
           </span>
           <span className="text-xl font-semibold tracking-tight">StudyFlow</span>
-        </div>
+        </Link>
 
         <div className="relative my-auto py-8 [@media(max-height:800px)]:py-4">
           <h2 className="max-w-md text-4xl leading-[1.1] font-semibold tracking-tight text-balance">
@@ -179,10 +181,10 @@ export function AuthShell({
         )}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5 lg:invisible">
+          <Link href="/" className="flex items-center gap-2.5 rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:invisible">
             <LogoMark />
             <span className="text-lg font-semibold tracking-tight">StudyFlow</span>
-          </div>
+          </Link>
           <ThemeToggle className="size-9 rounded-xl text-muted-foreground" />
         </div>
 
