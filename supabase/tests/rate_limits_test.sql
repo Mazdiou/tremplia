@@ -4,6 +4,11 @@ select plan(13);
 -- Empreintes factices (64 caractères hexadécimaux), une par « adresse »
 create function pg_temp.h(n text) returns text language sql as $$ select md5(n) || md5(n) $$;
 
+-- Les essais déjà enregistrés dans la base ne doivent pas fausser les
+-- comptes (tout est annulé à la fin du test)
+delete from public.student_login_failures;
+delete from public.registration_attempts;
+
 -- 1. Connexion des candidats : limite globale ----------------------------
 
 -- 199 échecs récents venus de 199 adresses différentes
