@@ -41,3 +41,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Requêtes enregistrées par Supabase Studio en local (peuvent contenir des
+# données personnelles)
+supabase/snippets/

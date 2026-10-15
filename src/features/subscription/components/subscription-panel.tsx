@@ -24,9 +24,11 @@ type Payment = {
 
 // Encart « Abonnement » de la page Équipe (patron) : état, fin, paiements
 export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
+  const sub = await getSubscription(agencyId);
+  // Agence de l'administrateur : pas d'abonnement, rien à afficher
+  if (sub.state === "exempt") return null;
   const supabase = await createClient();
-  const [sub, { data }] = await Promise.all([
-    getSubscription(agencyId),
+  const [{ data }] = await Promise.all([
     // Lecture via le RLS : le patron voit les paiements de son agence
     supabase
       .from("platform_payments")

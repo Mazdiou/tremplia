@@ -86,10 +86,16 @@ export function AgenciesTable({ agencies }: { agencies: AgencyRow[] }) {
                 </p>
               </div>
               <StatusPill tone={STATE_TONES[a.state]}>{STATE_LABELS[a.state]}</StatusPill>
-              <span className="w-28 text-sm tabular-nums text-muted-foreground">
-                {a.state === "expired" ? "depuis le" : "jusqu'au"} {formatEndDate(a.endsAt)}
-              </span>
-              <PaymentButton agency={a} />
+              {a.state === "exempt" ? (
+                <span className="text-sm text-muted-foreground">sans abonnement</span>
+              ) : (
+                <>
+                  <span className="w-28 text-sm tabular-nums text-muted-foreground">
+                    {a.state === "expired" ? "depuis le" : "jusqu'au"} {formatEndDate(a.endsAt)}
+                  </span>
+                  <PaymentButton agency={a} />
+                </>
+              )}
             </li>
           ))}
         </ul>

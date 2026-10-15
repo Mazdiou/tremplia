@@ -15,7 +15,7 @@ export default async function AdminPage() {
   const count = (s: string) => agencies.filter((a) => a.state === s).length;
   // À relancer : essais et abonnements qui se terminent dans les 7 jours
   const soon = agencies.filter(
-    (a) => a.state !== "expired" && daysLeft(a.endsAt) <= RENEWAL_NOTICE_DAYS,
+    (a) => (a.state === "trial" || a.state === "active") && daysLeft(a.endsAt) <= RENEWAL_NOTICE_DAYS,
   ).length;
 
   return (

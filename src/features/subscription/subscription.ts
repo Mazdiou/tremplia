@@ -1,8 +1,9 @@
 import { APP_TIMEZONE } from "@/lib/dates";
 
 // Abonnement d'une agence (voir la migration subscriptions) : essai, actif
-// ou expiré. Expiré = lecture seule, imposée par la base.
-export type SubscriptionState = "trial" | "active" | "expired";
+// ou expiré. Expiré = lecture seule, imposée par la base. L'agence de
+// l'administrateur de la plateforme est exemptée : pas d'abonnement du tout.
+export type SubscriptionState = "trial" | "active" | "expired" | "exempt";
 
 export type Subscription = {
   state: SubscriptionState;
@@ -30,6 +31,7 @@ export type SubscriptionNotice = { tone: "info" | "warn" | "bad"; text: string }
 // Texte du bandeau, sans le moyen de contact (ajouté par l'affichage) ; rien
 // pour un abonnement payé qui court encore plus de 7 jours
 export function subscriptionNotice(sub: Subscription, now = new Date()): SubscriptionNotice {
+  if (sub.state === "exempt") return null;
   const date = formatEndDate(sub.endsAt);
   const n = daysLeft(sub.endsAt, now);
   const days = `${n} jour${n > 1 ? "s" : ""}`;
@@ -58,6 +60,7 @@ export const STATE_LABELS: Record<SubscriptionState, string> = {
   trial: "Essai",
   active: "Actif",
   expired: "Expiré",
+  exempt: "Administration",
 };
 
 // Teinte de la pastille d'état (voir StatusPill)
@@ -65,6 +68,7 @@ export const STATE_TONES = {
   trial: "info",
   active: "ok",
   expired: "bad",
+  exempt: "off",
 } as const satisfies Record<SubscriptionState, string>;
 
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {

@@ -38,6 +38,11 @@ describe("subscriptionNotice", () => {
     });
   });
 
+  it("agence de l'administrateur : jamais de bandeau", () => {
+    expect(subscriptionNotice({ state: "exempt", endsAt: inDays(-30) }, now)).toBeNull();
+    expect(subscriptionNotice({ state: "exempt", endsAt: inDays(2) }, now)).toBeNull();
+  });
+
   it("expiré : lecture seule expliquée", () => {
     const n = subscriptionNotice({ state: "expired", endsAt: inDays(-2) }, now);
     expect(n?.tone).toBe("bad");

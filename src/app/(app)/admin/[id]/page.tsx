@@ -33,6 +33,8 @@ export default async function AdminAgencyPage({ params }: { params: Promise<{ id
   const agency = agencies.find((a) => a.id === id);
   if (!agency) notFound();
   const n = daysLeft(agency.endsAt);
+  // Agence de l'administrateur : pas d'abonnement
+  const exempt = agency.state === "exempt";
 
   return (
     <PageContainer>
@@ -46,7 +48,7 @@ export default async function AdminAgencyPage({ params }: { params: Promise<{ id
         subtitle={[agency.city, agency.ownerName && `patron : ${agency.ownerName}`, agency.phone]
           .filter(Boolean)
           .join(" · ")}
-        actions={<PaymentButton agency={agency} variant="default" />}
+        actions={exempt ? undefined : <PaymentButton agency={agency} variant="default" />}
       />
 
       <Panel
@@ -59,8 +61,8 @@ export default async function AdminAgencyPage({ params }: { params: Promise<{ id
               {agency.state === "expired" ? "Expiré le" : "Fin"}
             </dt>
             <dd className="font-medium">
-              {formatEndDate(agency.endsAt)}
-              {agency.state !== "expired" && (
+              {exempt ? "Sans abonnement (agence de l'administrateur)" : formatEndDate(agency.endsAt)}
+              {agency.state !== "expired" && !exempt && (
                 <span className="font-normal text-muted-foreground">
                   {" "}
                   · {n} jour{n > 1 ? "s" : ""}
