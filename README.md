@@ -4,6 +4,9 @@ CRM pour les agences de démarches d'études à l'étranger : chaque agence cré
 ses campagnes (ou importe un modèle comme Campus France), range ses dossiers
 candidats dans des groupes, et suit documents, lettre de motivation, formations visées, notes,
 comptes sur les plateformes externes et paiements du candidat à l'agence (en dinars).
+Le tableau de bord rassemble ce qui attend l'agence (« À traiter »), chaque
+campagne s'exporte en Excel (patron), et l'application s'installe sur
+téléphone (agence et espace candidat).
 
 Next.js 16 (App Router), React 19, TypeScript, Tailwind 4, shadcn/ui, zod,
 Supabase (PostgreSQL, Auth, Storage, RLS), Vitest, pgTAP.
@@ -42,6 +45,25 @@ Voir `.env.example`. Aucune vraie valeur ne doit être commitée.
 | `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY` | Chiffre les mots de passe des comptes externes et les codes candidats, signe les sessions candidat (32 octets, base64) ; à sauvegarder hors du dépôt |
 | `SUPPORT_PHONE` | Facultatif. Numéro affiché aux agences pour renouveler leur abonnement (bandeaux, page Équipe) |
 | `CLIENT_IP_HEADER` | Facultatif. En-tête qui porte l'adresse IP du visiteur, pour les limites d'essais. Par défaut `x-forwarded-for` (dernière adresse) : correct sur Vercel et derrière nginx ; derrière Cloudflare, `cf-connecting-ip`. À vérifier à chaque changement d'hébergeur |
+
+## Nom et couleurs de l'application
+
+« StudyFlow » est un nom provisoire. Le nom, la phrase d'accroche et les
+couleurs de l'application installée sont dans `src/config/brand.ts` : les
+changer là suffit (titres des pages, logos, accueil, manifestes, icônes).
+Les identifiants techniques `studyflow:…` de
+`src/features/student/server/keys.ts` ne doivent pas changer (ils
+invalideraient les codes et sessions des candidats).
+
+## Application installable (PWA)
+
+Manifestes `src/app/manifest.ts` (agence) et
+`src/app/student/manifest.webmanifest` (candidat), icônes générées
+(`src/features/pwa/app-icon.tsx`), service worker `public/sw.js`. Le service
+worker ne garde aucune donnée : seulement la page « Pas de connexion »
+(`/offline`). Après une modification de cette page, changer `VERSION` dans
+`public/sw.js`. Le service worker et l'installation n'existent qu'en
+production (HTTPS) : rien n'apparaît avec `npm run dev`.
 
 ## Abonnements et administration
 
@@ -117,14 +139,16 @@ src/
   config/
     campaign-templates/ modèles de campagne (un fichier par modèle)
   features/
-    auth/ campaigns/ cases/ documents/ motivation-letter/ messages/ notes/ payments/ programs/ student/ team/
-    history/ dashboard/
+    admin/ agency/ auth/ campaigns/ cases/ dashboard/ documents/ export/ history/
+    landing/ messages/ motivation-letter/ notes/ payments/ programs/ pwa/ student/
+    subscription/ team/ whatsapp/
       components/       composants React de la fonctionnalité
       server/           lectures et écritures serveur (« server-only »)
       schemas.ts        schémas zod partagés formulaires / routes
       labels.ts         listes métier et libellés français
   lib/                  transverse : supabase/, auth/, crypto/, audit/, api-errors,
-                        api-client (appels depuis le navigateur), dates…
+                        api-client (appels depuis le navigateur), dates, money,
+                        xlsx (classeurs Excel)…
 supabase/
   migrations/           une migration par domaine
   tests/                un fichier pgTAP par domaine

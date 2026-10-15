@@ -99,11 +99,13 @@ export default async function DashboardPage({
   // d'une seule lecture de la vue case_stats (via le RLS).
   // Paiements et journal : réservés au patron
   const monthStart = `${today.slice(0, 7)}-01`;
-  const [stats, unread, recentRes, dates, monthRes, owingRes, results, activity] =
+  // Messages non lus : servent aussi à « À traiter », lancé dès leur arrivée
+  // sans attendre les autres lectures
+  const unreadPromise = agencyUnreadCounts(u.member.agencyId);
+  const [stats, todo, recentRes, dates, monthRes, owingRes, results, activity] =
     await Promise.all([
       listCaseStats(ids),
-      // Dossiers dont le candidat a écrit sans réponse lue (toute l'agence)
-      agencyUnreadCounts(u.member.agencyId),
+      unreadPromise.then((unread) => loadTodo(supabase, ids, unread)),
       supabase
         .from("cases")
         .select("id, first_name, last_name, education_level, created_at")
@@ -132,7 +134,6 @@ export default async function DashboardPage({
       loadResults(supabase, ids),
       u.member.isOwner ? loadActivity(supabase, campaignList) : Promise.resolve([]),
     ]);
-  const todo = await loadTodo(supabase, ids, unread);
   const recent = recentRes.data;
 
   const active = countCases(stats, { status: "active" });
