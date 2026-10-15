@@ -15,6 +15,12 @@ describe("clientIp", () => {
     expect(clientIp(r, "cf-connecting-ip")).toBe("198.51.100.9");
   });
 
+  it("se rabat sur x-real-ip sans x-forwarded-for", () => {
+    expect(clientIp(req({ "x-real-ip": "198.51.100.4" }))).toBe("198.51.100.4");
+    // Mais pas quand un autre en-tête est choisi
+    expect(clientIp(req({ "x-real-ip": "198.51.100.4" }), "cf-connecting-ip")).toBe("inconnue");
+  });
+
   it("sans en-tête, renvoie une valeur commune", () => {
     expect(clientIp(req({}))).toBe("inconnue");
     expect(clientIp(req({ "x-forwarded-for": " " }))).toBe("inconnue");
