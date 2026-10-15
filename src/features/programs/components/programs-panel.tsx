@@ -93,7 +93,9 @@ export function ProgramRow({
   );
 }
 
-// Sélecteur de réponse, avec l'aspect et la couleur d'une pastille
+// Sélecteur de réponse, avec l'aspect et la couleur d'une pastille. Le choix
+// reste affiché pendant l'enregistrement ; l'ancienne réponse revient en cas
+// d'échec. (Remonté par sa clé quand la réponse enregistrée change.)
 function ResultSelect({
   program,
   disabled,
@@ -101,15 +103,20 @@ function ResultSelect({
 }: {
   program: ProgramItem;
   disabled: boolean;
-  onChange: (result: ProgramResult) => void;
+  onChange: (result: ProgramResult) => Promise<boolean>;
 }) {
-  const r = programResult(program.result);
+  const saved = programResult(program.result);
+  const [r, setR] = useState(saved);
   return (
     <select
       aria-label={`Réponse de l'établissement pour ${program.title}`}
       value={r}
       disabled={disabled}
-      onChange={(e) => onChange(e.target.value as ProgramResult)}
+      onChange={async (e) => {
+        const next = e.target.value as ProgramResult;
+        setR(next);
+        if (!(await onChange(next))) setR(saved);
+      }}
       className={cn(
         "h-6 cursor-pointer rounded-full border-0 py-0 pr-6 pl-2.5 text-xs font-medium",
         "focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:cursor-wait disabled:opacity-60",
@@ -239,7 +246,7 @@ export function ProgramsPanel({
     router.refresh();
   }
 
-  async function setResult(id: string, result: ProgramResult) {
+  async function setResult(id: string, result: ProgramResult): Promise<boolean> {
     setBusyId(id);
     setMessage(null);
     const res = await callApi(`${base}/${id}/result`, { method: "PUT", body: { result } });
@@ -250,6 +257,7 @@ export function ProgramsPanel({
         : { text: res.error, error: true },
     );
     router.refresh();
+    return res.ok;
   }
 
   async function remove() {
@@ -341,9 +349,10 @@ export function ProgramsPanel({
                 program={p}
                 result={
                   <ResultSelect
+                    key={p.result}
                     program={p}
                     disabled={busyId !== null}
-                    onChange={(r) => void setResult(p.id, r)}
+                    onChange={(r) => setResult(p.id, r)}
                   />
                 }
                 actions={
