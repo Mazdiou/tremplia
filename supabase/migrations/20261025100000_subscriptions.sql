@@ -19,8 +19,16 @@ alter table public.agencies
   add column subscription_ends_at timestamptz not null
     default (now() + interval '7 days');
 
--- Agences déjà inscrites : un an, personne n'est bloqué du jour au lendemain
-update public.agencies set subscription_ends_at = now() + interval '1 year';
+-- Abonnement offert, sans paiement (agences inscrites avant les abonnements) :
+-- elles sont « actives » et non « en essai »
+alter table public.agencies
+  add column subscription_granted boolean not null default false;
+
+-- Agences déjà inscrites : un an offert, personne n'est bloqué du jour au
+-- lendemain
+update public.agencies
+set subscription_ends_at = now() + interval '1 year',
+    subscription_granted = true;
 
 -- 2. Administrateurs de la plateforme --------------------------------------
 
@@ -82,8 +90,9 @@ create policy "platform_payments_select_owner" on public.platform_payments
 
 -- 4. État de l'abonnement ---------------------------------------------------
 
--- trial : jamais payé ; active : au moins un paiement non annulé ;
--- expired : date de fin passée (quel que soit l'historique)
+-- trial : jamais payé ; active : au moins un paiement non annulé, ou
+-- abonnement offert ; expired : date de fin passée (quel que soit
+-- l'historique)
 create function public.agency_subscription(p_agency_id uuid)
 returns table (ends_at timestamptz, state text)
 language sql
@@ -94,6 +103,7 @@ as $$
   select a.subscription_ends_at,
     case
       when a.subscription_ends_at <= now() then 'expired'
+      when a.subscription_granted then 'active'
       when exists (select 1 from public.platform_payments p
                    where p.agency_id = a.id and p.cancelled_at is null) then 'active'
       else 'trial'

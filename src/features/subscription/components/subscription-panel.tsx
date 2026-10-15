@@ -64,7 +64,7 @@ export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
             </>
           ) : (
             <>
-              {sub.state === "trial" ? "Essai gratuit jusqu'au " : "Payé jusqu'au "}
+              {sub.state === "trial" ? "Essai gratuit jusqu'au " : "Abonnement jusqu'au "}
               <span className="font-medium">{formatEndDate(sub.endsAt)}</span>
               <span className="text-muted-foreground">
                 {" "}

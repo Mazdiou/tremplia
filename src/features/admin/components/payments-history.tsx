@@ -49,7 +49,7 @@ export function PaymentsHistory({ payments }: { payments: HistoryPayment[] }) {
   if (payments.length === 0) {
     return (
       <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-        Aucun paiement : l&apos;agence est encore en essai.
+        Aucun paiement enregistré.
       </p>
     );
   }

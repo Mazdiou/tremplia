@@ -1,5 +1,5 @@
 begin;
-select plan(36);
+select plan(38);
 
 -- Patron A, employé A1, employé désactivé A3, patron B, administrateur P
 insert into auth.users (id, email) values
@@ -53,6 +53,13 @@ create function pg_temp.expire(a uuid) returns void language sql as $$
 -- 1. Essai ------------------------------------------------------------------
 
 select is(pg_temp.state((select agency_a from ctx)), 'trial', 'une nouvelle agence est en essai');
+select is(
+  (select subscription_granted from public.agencies where id = (select agency_b from ctx)),
+  false, 'une nouvelle agence n''a pas d''abonnement offert');
+update public.agencies set subscription_granted = true where id = (select agency_b from ctx);
+select is(pg_temp.state((select agency_b from ctx)), 'active',
+  'abonnement offert (agences d''avant) : active, sans paiement');
+update public.agencies set subscription_granted = false where id = (select agency_b from ctx);
 select ok(pg_temp.ends((select agency_a from ctx)) between now() + interval '6 days 23 hours'
                                                        and now() + interval '7 days 1 minute',
   'l''essai dure 7 jours');
