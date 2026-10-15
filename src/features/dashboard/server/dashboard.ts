@@ -122,8 +122,12 @@ export async function loadResults(supabase: SupabaseClient, campaignIds: string[
         .neq("cases.status", "abandoned")
         .order("id")
         .range(from, to),
-    ).catch(() => []),
+    ).catch(() => {
+      console.error("[dashboard results]", "admis");
+      return [];
+    }),
   ]);
+  for (const r of countRes) if (r.error) console.error("[dashboard results]", r.error.code);
   const counts = Object.fromEntries(
     PROGRAM_RESULTS.map((r, i) => [r, countRes[i].count ?? 0]),
   ) as Record<ProgramResult, number>;
