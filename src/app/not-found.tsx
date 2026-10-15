@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { LogoMark } from "@/components/auth/auth-shell";
-import { buttonVariants } from "@/components/ui/button";
+import { NotFoundHomeLink } from "@/components/not-found-home-link";
 
 export const metadata: Metadata = { title: "Page introuvable · StudyFlow" };
 
-// Toute adresse inconnue (faute de frappe, ancien lien). L'accueil renvoie
-// ensuite au bon endroit : tableau de bord, ou connexion si besoin.
+// Toute adresse inconnue (faute de frappe, ancien lien), côté agence comme
+// dans l'espace candidat
 export default function NotFound() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 text-center">
@@ -16,9 +15,7 @@ export default function NotFound() {
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">
         L&apos;adresse est peut-être mal tapée, ou cette page n&apos;existe plus.
       </p>
-      <Link href="/" className={buttonVariants({ className: "mt-6" })}>
-        Retour à l&apos;accueil
-      </Link>
+      <NotFoundHomeLink />
     </main>
   );
 }
