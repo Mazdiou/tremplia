@@ -23,6 +23,7 @@ export function MessageThread({
   studentName,
   agencyName,
   emptyHint,
+  readOnlyNotice,
 }: {
   viewer: "agency" | "student";
   messages: ThreadMessage[];
@@ -33,6 +34,8 @@ export function MessageThread({
   studentName: string;
   agencyName: string;
   emptyHint: string;
+  // Abonnement de l'agence expiré : lecture seule, ce texte remplace la saisie
+  readOnlyNotice?: string;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState("");
@@ -125,6 +128,11 @@ export function MessageThread({
         </ol>
       )}
 
+      {readOnlyNotice ? (
+        <p className="sticky bottom-0 rounded-xl border bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
+          {readOnlyNotice}
+        </p>
+      ) : (
       <form
         noValidate
         onSubmit={(e) => {
@@ -171,6 +179,7 @@ export function MessageThread({
           </Button>
         </div>
       </form>
+      )}
       {/* Après la zone de saisie : le défilement va jusqu'en bas de la page,
           le dernier message n'est jamais caché sous la saisie */}
       <div ref={endRef} />

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireMember } from "@/lib/auth/require-member";
 import { initialsOf } from "@/lib/names";
+import { SubscriptionBanner } from "@/features/subscription/components/subscription-banner";
 import { AppRail } from "./app-rail";
 
 // Coquille commune : barre d'icônes + contenu. Utilisée par le tableau de
@@ -19,7 +20,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-dvh flex-col-reverse overflow-hidden md:flex-row">
       <AppRail isOwner={member.isOwner} initials={initials} />
-      <main className="relative min-w-0 flex-1 overflow-y-auto">{children}</main>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <SubscriptionBanner agencyId={member.agencyId} />
+        <main className="relative min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</main>
+      </div>
     </div>
   );
 }

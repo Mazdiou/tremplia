@@ -9,6 +9,8 @@ import { listAgencyGroups, listCampaigns } from "@/features/campaigns/server/que
 import { CasesContent } from "@/features/cases/components/cases-content";
 import { CaseTree, type TreeMember } from "@/features/cases/components/case-tree";
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
+import { SubscriptionBanner } from "@/features/subscription/components/subscription-banner";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 
 export default async function CasesLayout({
   children,
@@ -20,7 +22,7 @@ export default async function CasesLayout({
   // Lecture via le RLS : seules les campagnes, groupes, dossiers et membres
   // de l'agence reviennent.
   const supabase = await createClient();
-  const [campaigns, groups, membersRes, unread] = await Promise.all([
+  const [campaigns, groups, membersRes, unread, readOnly] = await Promise.all([
     listCampaigns(),
     listAgencyGroups(),
     supabase
@@ -28,6 +30,7 @@ export default async function CasesLayout({
       .select("id, first_name, last_name, is_active")
       .order("first_name"),
     agencyUnreadCounts(member.agencyId),
+    isReadOnly(member.agencyId),
   ]);
   if (membersRes.error) console.error("[cases layout] membres", membersRes.error.code);
 
@@ -46,16 +49,20 @@ export default async function CasesLayout({
   return (
     <div className="flex h-dvh flex-col-reverse overflow-hidden md:flex-row">
       <AppRail isOwner={member.isOwner} initials={initials} />
-      <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-        <CaseTree
-          campaigns={campaigns}
-          groups={groups}
-          initialData={initialData}
-          members={(membersRes.data ?? []) as TreeMember[]}
-          currentUserId={member.userId}
-          unread={unread}
-        />
-        <CasesContent>{children}</CasesContent>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <SubscriptionBanner agencyId={member.agencyId} />
+        <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+          <CaseTree
+            campaigns={campaigns}
+            groups={groups}
+            initialData={initialData}
+            members={(membersRes.data ?? []) as TreeMember[]}
+            currentUserId={member.userId}
+            unread={unread}
+            readOnly={readOnly}
+          />
+          <CasesContent>{children}</CasesContent>
+        </div>
       </div>
     </div>
   );

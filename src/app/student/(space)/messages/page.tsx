@@ -6,13 +6,16 @@ import {
 } from "@/features/messages/server/messages";
 import { MessageThread } from "@/features/messages/components/message-thread";
 import { getStudentCase, requireStudent } from "@/features/student/server/student-case";
+import { STUDENT_READ_ONLY } from "@/features/subscription/subscription";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 
 export default async function StudentMessagesPage() {
   const session = await requireStudent();
-  const [{ c, agency }, messages, unread] = await Promise.all([
+  const [{ c, agency }, messages, unread, readOnly] = await Promise.all([
     getStudentCase(),
     listMessages(session.agencyId, session.caseId),
     studentUnreadCount(session),
+    isReadOnly(session.agencyId),
   ]);
 
   return (
@@ -28,6 +31,7 @@ export default async function StudentMessagesPage() {
       studentName={displayName(c.first_name, c.last_name)}
       agencyName={agency.name}
       emptyHint={`Une question sur votre dossier ? Écrivez à ${agency.name}.`}
+      readOnlyNotice={readOnly ? STUDENT_READ_ONLY : undefined}
     />
   );
 }

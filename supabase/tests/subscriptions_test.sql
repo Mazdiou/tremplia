@@ -169,23 +169,23 @@ select throws_ok(
 
 select throws_ok(
   $$select public.cancel_platform_payment('99999999-9999-9999-9999-999999999999',
-      (select id from public.platform_payments where months = 1), 'Erreur')$$,
+      (select id from public.platform_payments where agency_id = (select agency_a from ctx) and months = 1), 'Erreur')$$,
   '55000', null, 'seul le dernier paiement peut être annulé');
 select throws_ok(
   $$select public.cancel_platform_payment('99999999-9999-9999-9999-999999999999',
-      (select id from public.platform_payments where months = 12), '  ')$$,
+      (select id from public.platform_payments where agency_id = (select agency_a from ctx) and months = 12), '  ')$$,
   '23514', null, 'une annulation sans motif est refusée');
 select is(
   public.cancel_platform_payment('99999999-9999-9999-9999-999999999999',
-    (select id from public.platform_payments where months = 12), 'Erreur de saisie'),
+    (select id from public.platform_payments where agency_id = (select agency_a from ctx) and months = 12), 'Erreur de saisie'),
   (select ends1 from pay), 'annuler le dernier paiement rétablit la fin d''avant');
 select throws_ok(
   $$select public.cancel_platform_payment('99999999-9999-9999-9999-999999999999',
-      (select id from public.platform_payments where months = 12), 'Encore')$$,
+      (select id from public.platform_payments where agency_id = (select agency_a from ctx) and months = 12), 'Encore')$$,
   '55000', null, 'un paiement déjà annulé ne s''annule pas deux fois');
 select is(public.cancel_platform_payment('99999999-9999-9999-9999-999999999999',
-    (select id from public.platform_payments where months = 1), 'Erreur'),
-  (select previous_ends_at from public.platform_payments where months = 1),
+    (select id from public.platform_payments where agency_id = (select agency_a from ctx) and months = 1), 'Erreur'),
+  (select previous_ends_at from public.platform_payments where agency_id = (select agency_a from ctx) and months = 1),
   'puis le précédent devient annulable');
 select is(pg_temp.state((select agency_a from ctx)), 'expired',
   'sans paiement valable et date passée, l''agence redevient expirée');

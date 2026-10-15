@@ -4,6 +4,8 @@ import { requireMember } from "@/lib/auth/require-member";
 import { toCaseDraft } from "@/features/cases/case-record";
 import { CaseForm, type Member } from "@/features/cases/components/case-form";
 import { getCase } from "@/features/cases/server/get-case";
+import { ReadOnlyNotice } from "@/features/subscription/components/read-only-notice";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 
 export default async function EditCasePage({
   params,
@@ -17,6 +19,9 @@ export default async function EditCasePage({
   const data = await getCase(id);
   if (!data || !data.campaign) notFound();
   const { c, campaign, campaignGroups, groups } = data;
+  if (await isReadOnly(member.agencyId)) {
+    return <ReadOnlyNotice backHref={`/cases/${c.id}`} backLabel="Retour au dossier" />;
+  }
 
   // Seul le patron choisit le responsable. Le responsable actuel est
   // toujours dans la liste, même s'il est devenu inactif.

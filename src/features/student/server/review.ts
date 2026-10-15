@@ -2,6 +2,7 @@ import "server-only";
 import { dbError } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { STUDENT_READ_ONLY } from "@/features/subscription/subscription";
 import type {
   ReviewStatus,
   StudentReview,
@@ -28,6 +29,7 @@ export async function submitReview(session: StudentSession, input: StudentReview
       "22023": "Votre agence n'a encore rien à vous faire valider",
       "23514": "Message invalide",
       "55000": "Votre agence vient de modifier votre dossier : relisez la nouvelle version",
+      "25006": STUDENT_READ_ONLY,
     });
   }
 

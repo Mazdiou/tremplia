@@ -3,6 +3,7 @@ import Link from "next/link";
 import { z } from "zod";
 import { Pencil, Phone, UserRound } from "lucide-react";
 import { getAgency } from "@/features/agency/server/get-agency";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 import { WhatsAppMenu } from "@/features/whatsapp/components/whatsapp-menu";
 import { StatusPill } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
@@ -48,13 +49,14 @@ export default async function CaseLayout({
   // Tout est lu en même temps. Les lectures avec la clé secrète sont filtrées
   // sur l'agence de la session : un dossier d'une autre agence n'y renvoie
   // rien, et getCase (via le RLS) le déclare introuvable.
-  const [data, usedPlatforms, studentAccess, review, unread, agency] = await Promise.all([
+  const [data, usedPlatforms, studentAccess, review, unread, agency, readOnly] = await Promise.all([
     getCase(id),
     listUsedPlatforms(),
     isUuid(id) ? getStudentAccess(member.agencyId, id) : null,
     isUuid(id) ? readReview(member.agencyId, id) : null,
     agencyUnreadCounts(member.agencyId),
     getAgency(member.agencyId),
+    isReadOnly(member.agencyId),
   ]);
   if (!data) notFound();
   const { c, responsible, campaign, groups, externalAccounts } = data;
@@ -182,13 +184,18 @@ export default async function CaseLayout({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Link
-                  href={`/cases/${c.id}/edit`}
-                  className={buttonVariants({ variant: "outline" })}
-                >
-                  <Pencil /> Modifier
-                </Link>
-                <CaseStatusButtons id={c.id} status={c.status} />
+                {/* Abonnement expiré : rien à modifier */}
+                {!readOnly && (
+                  <>
+                    <Link
+                      href={`/cases/${c.id}/edit`}
+                      className={buttonVariants({ variant: "outline" })}
+                    >
+                      <Pencil /> Modifier
+                    </Link>
+                    <CaseStatusButtons id={c.id} status={c.status} />
+                  </>
+                )}
                 <CaseHeaderToggle />
               </div>
             </div>
@@ -198,6 +205,7 @@ export default async function CaseLayout({
               caseId={c.id}
               accounts={externalAccounts}
               suggestions={suggestions}
+              readOnly={readOnly}
             />
             <StudentAccessBar
               key={`student-${c.id}`}
@@ -213,6 +221,7 @@ export default async function CaseLayout({
               }}
               blockedReason={blockedReason}
               whatsapp={{ phone: c.phone, context: whatsapp }}
+              readOnly={readOnly}
             />
           </CaseHeaderDetails>
 

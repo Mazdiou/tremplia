@@ -1,0 +1,107 @@
+import { Panel, StatusPill } from "@/components/page-ui";
+import { createClient } from "@/lib/supabase/server";
+import { formatDA } from "@/lib/money";
+import { dayFormat } from "@/lib/dates";
+import {
+  PAYMENT_METHOD_LABELS,
+  STATE_LABELS,
+  daysLeft,
+  formatEndDate,
+} from "../subscription";
+import { getSubscription, supportPhone } from "../server/subscription";
+
+type Payment = {
+  id: string;
+  months: number;
+  amount: number;
+  method: string;
+  note: string | null;
+  recorded_at: string;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
+};
+
+const TONE = { trial: "info", active: "ok", expired: "bad" } as const;
+
+// Encart « Abonnement » de la page Équipe (patron) : état, fin, paiements
+export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
+  const supabase = await createClient();
+  const [sub, { data }] = await Promise.all([
+    getSubscription(agencyId),
+    // Lecture via le RLS : le patron voit les paiements de son agence
+    supabase
+      .from("platform_payments")
+      .select("id, months, amount, method, note, recorded_at, cancelled_at, cancel_reason")
+      .order("recorded_at", { ascending: false })
+      .limit(24),
+  ]);
+  const payments = (data ?? []) as Payment[];
+  const n = daysLeft(sub.endsAt);
+  const phone = supportPhone();
+
+  return (
+    <Panel
+      title="Abonnement"
+      description={
+        phone ? (
+          <>
+            Pour le renouveler, contactez-nous :{" "}
+            <a href={`tel:${phone.replace(/[^0-9+]/g, "")}`} className="underline">
+              {phone}
+            </a>
+          </>
+        ) : (
+          "Pour le renouveler, contactez-nous."
+        )
+      }
+      actions={<StatusPill tone={TONE[sub.state]}>{STATE_LABELS[sub.state]}</StatusPill>}
+    >
+      <div className="space-y-4 px-5 py-4">
+        <p className="text-sm">
+          {sub.state === "expired" ? (
+            <>
+              Expiré le <span className="font-medium">{formatEndDate(sub.endsAt)}</span> : l&apos;agence
+              est en lecture seule.
+            </>
+          ) : (
+            <>
+              {sub.state === "trial" ? "Essai gratuit jusqu'au " : "Payé jusqu'au "}
+              <span className="font-medium">{formatEndDate(sub.endsAt)}</span>
+              <span className="text-muted-foreground">
+                {" "}
+                · {n} jour{n > 1 ? "s" : ""} restant{n > 1 ? "s" : ""}
+              </span>
+            </>
+          )}
+        </p>
+
+        {payments.length > 0 && (
+          <div>
+            <h3 className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              Paiements
+            </h3>
+            <ul className="divide-y rounded-xl border text-sm">
+              {payments.map((p) => (
+                <li
+                  key={p.id}
+                  className={`flex flex-wrap items-baseline gap-x-3 gap-y-0.5 px-3 py-2 ${p.cancelled_at ? "text-muted-foreground" : ""}`}
+                >
+                  <span className="tabular-nums">{dayFormat.format(new Date(p.recorded_at))}</span>
+                  <span className={p.cancelled_at ? "line-through" : "font-medium"}>
+                    {formatDA(p.amount)}
+                  </span>
+                  <span>
+                    {p.months} mois · {PAYMENT_METHOD_LABELS[p.method] ?? p.method}
+                  </span>
+                  {p.cancelled_at && (
+                    <span className="text-xs">Annulé{p.cancel_reason ? ` : ${p.cancel_reason}` : ""}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </Panel>
+  );
+}

@@ -33,10 +33,13 @@ export function StudentAccessBar({
   blockedReason,
   review,
   whatsapp,
+  readOnly = false,
 }: {
   caseId: string;
   // Envoi du code au candidat par WhatsApp
   whatsapp: { phone: string; context: WhatsAppMenuContext };
+  // Abonnement expiré : plus d'ouverture, de fermeture ni de nouveau code
+  readOnly?: boolean;
   access: StudentAccess;
   // Accès ouvert mais sans effet (dossier abandonné, campagne archivée)
   blockedReason: string | null;
@@ -112,6 +115,7 @@ export function StudentAccessBar({
           </span>
         )}
 
+        {!readOnly && (
         <span className="ml-auto flex items-center gap-1">
           {enabled ? (
             <>
@@ -132,6 +136,7 @@ export function StudentAccessBar({
             </Button>
           )}
         </span>
+        )}
       </div>
 
       {access && (

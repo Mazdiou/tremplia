@@ -76,6 +76,7 @@ export function CaseTree({
   members,
   currentUserId,
   unread,
+  readOnly = false,
 }: {
   campaigns: TreeCampaign[];
   groups: TreeGroup[];
@@ -85,6 +86,8 @@ export function CaseTree({
   currentUserId: string;
   // Messages du candidat non lus, par dossier
   unread: Record<string, number>;
+  // Abonnement expiré : rien à créer (la base refuserait de toute façon)
+  readOnly?: boolean;
 }) {
   const params = useParams<{ id?: string }>();
   const selectedId = params?.id;
@@ -286,14 +289,16 @@ export function CaseTree({
           >
             <PanelLeftOpen />
           </Button>
-          <Link
-            href="/cases/new"
-            aria-label="Nouveau dossier"
-            title="Nouveau dossier"
-            className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
-          >
-            <Plus />
-          </Link>
+          {!readOnly && (
+            <Link
+              href="/cases/new"
+              aria-label="Nouveau dossier"
+              title="Nouveau dossier"
+              className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+            >
+              <Plus />
+            </Link>
+          )}
         </aside>
       )}
 
@@ -567,7 +572,7 @@ export function CaseTree({
                       <CampaignMenu
                         campaignId={camp.id}
                         campaignName={camp.name}
-                        active={campActive}
+                        active={campActive && !readOnly}
                         onAddGroup={() => {
                           setPrefs((p) => ({ open: { ...p.open, [camp.id]: true } }));
                           setAddingGroupFor(camp.id);
@@ -667,7 +672,7 @@ export function CaseTree({
                                     {count}
                                   </span>
                                 </button>
-                                {groupId && campActive && (
+                                {groupId && campActive && !readOnly && (
                                   <GroupActions
                                     campaignId={camp.id}
                                     groupId={groupId}
@@ -735,6 +740,7 @@ export function CaseTree({
         </nav>
 
         {/* Pied */}
+        {!readOnly && (
         <div className="p-4">
           <Link
             href={
@@ -747,6 +753,7 @@ export function CaseTree({
             <Plus /> Nouveau dossier
           </Link>
         </div>
+        )}
       </aside>
 
       <div

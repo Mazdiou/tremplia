@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarClock, CalendarRange, MessagesSquare, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getShellUser } from "@/components/shell/app-shell";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 import { EmptyState } from "@/components/empty-state";
 import {
   NewCaseLink,
@@ -85,6 +86,8 @@ export default async function DashboardPage({
   ]);
   const today = todayInAppTimezone();
   const todayLabel = longToday.format(new Date());
+  // Abonnement expiré : pas de bouton de création (déjà en cache : coquille)
+  const readOnly = await isReadOnly(u.member.agencyId);
 
   const allActive = campaignList.filter((c) => c.status === "active");
   const selected = allActive.find((c) => c.id === wanted) ?? null;
@@ -104,7 +107,7 @@ export default async function DashboardPage({
               : "Aucune campagne active pour le moment. Prévenez le patron : il doit créer une campagne avant que vous puissiez ajouter des dossiers."
           }
         />
-        {u.member.isOwner && (
+        {u.member.isOwner && !readOnly && (
           <div className="flex justify-center gap-2">
             <Link href="/campaigns#modeles" className={buttonVariants({ variant: "outline" })}>
               Importer un modèle
@@ -244,7 +247,7 @@ export default async function DashboardPage({
             {allActive.length > 1 && (
               <CampaignSelect campaigns={allActive} value={selected?.id ?? ""} />
             )}
-            <NewCaseLink campaignId={selected?.id} className="max-md:hidden" />
+            {!readOnly && <NewCaseLink campaignId={selected?.id} className="max-md:hidden" />}
           </>
         }
       />
@@ -503,7 +506,7 @@ export default async function DashboardPage({
         </Panel>
       )}
 
-      <NewCaseLink campaignId={selected?.id} className="w-full md:hidden" />
+      {!readOnly && <NewCaseLink campaignId={selected?.id} className="w-full md:hidden" />}
     </PageContainer>
   );
 }

@@ -9,6 +9,8 @@ import { listCampaigns, listGroups } from "@/features/campaigns/server/queries";
 import { CaseForm, type FormCampaign } from "@/features/cases/components/case-form";
 import type { SourceCampaign } from "@/features/cases/components/import-panel";
 import { listUsedPlatforms } from "@/features/cases/server/lookups";
+import { ReadOnlyNotice } from "@/features/subscription/components/read-only-notice";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 
 export default async function NewCasePage({
   searchParams,
@@ -17,6 +19,9 @@ export default async function NewCasePage({
 }) {
   const member = await requireMember();
   if (!member) redirect("/login");
+  if (await isReadOnly(member.agencyId)) {
+    return <ReadOnlyNotice backHref="/cases" backLabel="Retour aux dossiers" />;
+  }
 
   // Lecture via le RLS : seules les données de l'agence reviennent. Les
   // lectures indépendantes sont lancées ensemble.

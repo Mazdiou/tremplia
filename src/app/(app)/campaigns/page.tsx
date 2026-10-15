@@ -14,6 +14,7 @@ import {
 } from "@/features/campaigns/server/queries";
 import { countdownLabel, nextDeadline, type TimelineItem } from "@/features/campaigns/timeline";
 import { requireMember } from "@/lib/auth/require-member";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { countCases } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
@@ -78,6 +79,8 @@ function CampaignCard({ c }: { c: CardData }) {
 
 export default async function CampaignsPage() {
   const [member, campaigns] = await Promise.all([requireMember(), listCampaigns()]);
+  // Abonnement expiré : rien à créer ni à importer
+  const canCreate = member?.isOwner === true && !(await isReadOnly(member.agencyId));
   // Dossiers actifs par campagne : une lecture pour toutes (vue case_stats)
   const [dates, groups, stats] = await Promise.all([
     listCampaignDates(campaigns),
@@ -105,7 +108,7 @@ export default async function CampaignsPage() {
             : "Consultation seulement : le patron gère les campagnes, vous gérez les groupes."
         }
         actions={
-          member?.isOwner && (
+          canCreate && (
             <>
               <a href="#modeles" className={buttonVariants({ variant: "outline" })}>
                 Importer un modèle
@@ -161,7 +164,7 @@ export default async function CampaignsPage() {
         </>
       )}
 
-      {member?.isOwner && (
+      {canCreate && (
         <section id="modeles" className="scroll-mt-6 space-y-3 border-t pt-6">
           <div>
             <h2 className="text-lg font-semibold">Modèles préconfigurés</h2>

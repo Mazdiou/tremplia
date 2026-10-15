@@ -36,10 +36,13 @@ export function ExternalAccountsPinned({
   caseId,
   accounts,
   suggestions,
+  readOnly = false,
 }: {
   caseId: string;
   accounts: PinnedAccount[];
   suggestions: string[];
+  // Abonnement expiré : consultation seulement
+  readOnly?: boolean;
 }) {
   const [adding, setAdding] = useState(false);
   const listId = useId();
@@ -63,7 +66,7 @@ export function ExternalAccountsPinned({
 
       <ul className="divide-y">
         {accounts.map((a) => (
-          <AccountRow key={a.id} caseId={caseId} account={a} listId={listId} />
+          <AccountRow key={a.id} caseId={caseId} account={a} listId={listId} readOnly={readOnly} />
         ))}
       </ul>
 
@@ -74,7 +77,7 @@ export function ExternalAccountsPinned({
           onDone={() => setAdding(false)}
         />
       ) : (
-        accounts.length < MAX_EXTERNAL_ACCOUNTS && (
+        !readOnly && accounts.length < MAX_EXTERNAL_ACCOUNTS && (
           <div className="border-t px-3 py-1.5">
             <Button variant="ghost" size="xs" onClick={() => setAdding(true)}>
               <Plus /> Ajouter un compte
@@ -90,10 +93,12 @@ function AccountRow({
   caseId,
   account,
   listId,
+  readOnly,
 }: {
   caseId: string;
   account: PinnedAccount;
   listId: string;
+  readOnly: boolean;
 }) {
   const [password, setPassword] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState(0);
@@ -230,19 +235,21 @@ function AccountRow({
           </span>
         )}
 
-        <Button
-          variant="ghost"
-          size="xs"
-          className="ml-auto"
-          onClick={() => {
-            setPassword(null);
-            setError(null);
-            setEditing(true);
-          }}
-          aria-label={`Modifier le compte ${account.platform}`}
-        >
-          <Pencil /> Modifier
-        </Button>
+        {!readOnly && (
+          <Button
+            variant="ghost"
+            size="xs"
+            className="ml-auto"
+            onClick={() => {
+              setPassword(null);
+              setError(null);
+              setEditing(true);
+            }}
+            aria-label={`Modifier le compte ${account.platform}`}
+          >
+            <Pencil /> Modifier
+          </Button>
+        )}
       </div>
 
       {password !== null && (

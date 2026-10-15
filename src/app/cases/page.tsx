@@ -6,12 +6,14 @@ import { buttonVariants } from "@/components/ui/button";
 import { countdownLabel, timeline } from "@/features/campaigns/timeline";
 import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
 import { requireMember } from "@/lib/auth/require-member";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
 // Aucun dossier sélectionné : les dates des campagnes actives
 export default async function CasesHomePage() {
   const [member, campaigns] = await Promise.all([requireMember(), listCampaigns()]);
+  const readOnly = member ? await isReadOnly(member.agencyId) : false;
   const active = campaigns.filter((c) => c.status === "active");
   const today = todayInAppTimezone();
   const dates = await listCampaignDates(active);
@@ -44,7 +46,7 @@ export default async function CasesHomePage() {
       <PageHeader
         title="Dossiers"
         subtitle="Choisissez un dossier dans l'arbre, ou consultez les échéances de vos campagnes."
-        actions={<NewCaseLink />}
+        actions={!readOnly && <NewCaseLink />}
       />
       {active.map((campaign) => {
         const items = timeline(

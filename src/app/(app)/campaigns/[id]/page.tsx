@@ -18,6 +18,7 @@ import { CampaignSettingsForm } from "@/features/campaigns/components/campaign-s
 import { GroupsManager } from "@/features/campaigns/components/groups-manager";
 import { countdownLabel, timeline } from "@/features/campaigns/timeline";
 import { requireMember } from "@/lib/auth/require-member";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { countCases } from "@/features/cases/case-stats";
@@ -75,7 +76,9 @@ export default async function CampaignPage({
     todayInAppTimezone(),
   );
   const next = items.find((d) => d.days >= 0) ?? null;
-  const canEdit = member?.isOwner === true && !archived;
+  // Abonnement expiré : consultation seulement
+  const readOnly = member ? await isReadOnly(member.agencyId) : false;
+  const canEdit = member?.isOwner === true && !archived && !readOnly;
   const platforms = (campaign.suggested_platforms ?? []) as string[];
   const defaultFee = (campaign.default_fee as number | null) ?? null;
 
@@ -210,10 +213,10 @@ export default async function CampaignPage({
             : "Pour ranger les dossiers. Supprimer un groupe ne supprime aucun dossier."
         }
       >
-        <GroupsManager campaignId={id} groups={groups} readOnly={archived} />
+        <GroupsManager campaignId={id} groups={groups} readOnly={archived || readOnly} />
       </FormSection>
 
-      {member?.isOwner && (
+      {member?.isOwner && !readOnly && (
         <FormSection
           title="Zone sensible"
           description="Archiver met la campagne en pause ; la supprimer est définitif."

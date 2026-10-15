@@ -12,6 +12,8 @@ import {
 import { ReviewBanner } from "@/features/student/components/review-banner";
 import { studentUnreadCount } from "@/features/messages/server/messages";
 import { StudentLogout, StudentTabs } from "@/features/student/components/student-nav";
+import { STUDENT_READ_ONLY } from "@/features/subscription/subscription";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 
 export const metadata: Metadata = { title: "Mon dossier · StudyFlow" };
 
@@ -19,12 +21,13 @@ export const metadata: Metadata = { title: "Mon dossier · StudyFlow" };
 // motivation et de ses formations.
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const session = await requireStudent();
-  const [{ c, agency }, review, hasContent, fingerprint, unread] = await Promise.all([
+  const [{ c, agency }, review, hasContent, fingerprint, unread, readOnly] = await Promise.all([
     getStudentCase(),
     readReview(session.agencyId, session.caseId),
     hasContentToReview(session.agencyId, session.caseId),
     contentFingerprint(session.agencyId, session.caseId),
     studentUnreadCount(session),
+    isReadOnly(session.agencyId),
   ]);
 
   return (
@@ -60,8 +63,14 @@ export default async function StudentLayout({ children }: { children: React.Reac
         </div>
       </header>
       <main className="mx-auto w-full max-w-4xl flex-1 space-y-6 px-4 py-6 md:px-8">
+        {/* Agence en lecture seule (abonnement expiré) : consultation seulement */}
+        {readOnly && (
+          <p role="status" className="rounded-xl border bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
+            {STUDENT_READ_ONLY}
+          </p>
+        )}
         {/* Rien à valider tant que l'agence n'a écrit ni lettre ni formation */}
-        {hasContent && (
+        {hasContent && !readOnly && (
           <ReviewBanner
             status={review?.status ?? "pending"}
             respondedLabel={

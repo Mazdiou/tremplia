@@ -3,6 +3,7 @@ import { cache } from "react";
 import { ApiError, dbError } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { STUDENT_READ_ONLY } from "@/features/subscription/subscription";
 import {
   logCaseActivity,
   type AuthorizedCase,
@@ -140,6 +141,7 @@ export async function sendStudentMessage(session: StudentSession, body: string) 
     throw dbError("student message send", error, {
       "42501": "Votre accès a été fermé par l'agence",
       "54000": "Vous avez envoyé beaucoup de messages : réessayez dans une heure",
+      "25006": STUDENT_READ_ONLY,
       "23514": "Message invalide",
     });
   }

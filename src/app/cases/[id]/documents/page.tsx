@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireMember } from "@/lib/auth/require-member";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 import { formatSize } from "@/features/documents/format";
 import { shortDateFormat } from "@/lib/dates";
 import { getCase } from "@/features/cases/server/get-case";
@@ -34,6 +35,8 @@ export default async function DocumentsPage({
   ]);
   if (!found) notFound();
   const isOwner = caller?.isOwner === true;
+  // Abonnement expiré : rien à créer (la base le refuserait)
+  const readOnly = caller ? await isReadOnly(caller.agencyId) : false;
 
   // Les 4 dossiers de départ sont créés une seule fois par dossier candidat
   // (la fonction SQL est sans effet si c'est déjà fait). Un échec ne bloque
@@ -41,7 +44,7 @@ export default async function DocumentsPage({
   // Les documents (lecture via le RLS : seuls ceux de l'agence reviennent)
   // sont lus en même temps ; les dossiers, seulement une fois créés.
   const [initRes, { data }] = await Promise.all([
-    caller
+    caller && !readOnly
       ? createAdminClient().rpc("ensure_default_document_folders", {
           p_case_id: id,
           p_agency_id: caller.agencyId,

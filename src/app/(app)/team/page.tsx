@@ -7,6 +7,8 @@ import { requireOwner } from "@/lib/auth/require-member";
 import { initialsOf } from "@/lib/names";
 import { AddEmployeeForm } from "@/features/team/components/add-employee-form";
 import { ToggleActiveButton } from "@/features/team/components/toggle-active-button";
+import { SubscriptionPanel } from "@/features/subscription/components/subscription-panel";
+import { getSubscription } from "@/features/subscription/server/subscription";
 
 export default async function TeamPage() {
   const caller = await requireOwner();
@@ -30,6 +32,8 @@ export default async function TeamPage() {
   );
 
   const list = members ?? [];
+  // Abonnement expiré : l'équipe se consulte, mais ne se modifie plus
+  const readOnly = (await getSubscription(caller.agencyId)).state === "expired";
 
   return (
     <PageContainer>
@@ -39,6 +43,8 @@ export default async function TeamPage() {
       />
 
       <div className="space-y-5">
+        <SubscriptionPanel agencyId={caller.agencyId} />
+
         <Panel
           title="Membres"
           description="Un employé qui a créé des dossiers, documents ou notes se désactive : il ne peut plus être supprimé."
@@ -72,7 +78,7 @@ export default async function TeamPage() {
                   </StatusPill>
                 </span>
                 <div className="flex min-w-44 flex-wrap justify-end gap-2 max-md:w-full max-md:justify-start">
-                  {m.id !== caller.userId && (
+                  {m.id !== caller.userId && !readOnly && (
                     <>
                       {m.role === "employee" && !m.is_active && (
                         <DeleteEmployeeButton
@@ -89,12 +95,14 @@ export default async function TeamPage() {
           </ul>
         </Panel>
 
-        <Panel
-          title="Ajouter un employé"
-          description="Un mot de passe temporaire est créé : l'employé le remplace à sa première connexion."
-        >
-          <AddEmployeeForm />
-        </Panel>
+        {!readOnly && (
+          <Panel
+            title="Ajouter un employé"
+            description="Un mot de passe temporaire est créé : l'employé le remplace à sa première connexion."
+          >
+            <AddEmployeeForm />
+          </Panel>
+        )}
       </div>
     </PageContainer>
   );

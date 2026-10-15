@@ -6,6 +6,7 @@ import { getCase } from "@/features/cases/server/get-case";
 import { agencyUnreadCounts, listMessages } from "@/features/messages/server/messages";
 import { MessageThread } from "@/features/messages/components/message-thread";
 import { getStudentAccess } from "@/features/student/server/access";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 
 export default async function CaseMessagesPage({
   params,
@@ -18,10 +19,11 @@ export default async function CaseMessagesPage({
   const member = await requireMember();
   if (!member) notFound();
 
-  const [messages, unread, access] = await Promise.all([
+  const [messages, unread, access, readOnly] = await Promise.all([
     listMessages(member.agencyId, id),
     agencyUnreadCounts(member.agencyId),
     getStudentAccess(member.agencyId, id),
+    isReadOnly(member.agencyId),
   ]);
 
   return (
@@ -40,6 +42,11 @@ export default async function CaseMessagesPage({
         access?.enabled
           ? "Écrivez au candidat : il verra vos messages dans son espace."
           : "Vous pouvez déjà écrire ; le candidat lira vos messages une fois son accès ouvert."
+      }
+      readOnlyNotice={
+        readOnly
+          ? "Abonnement expiré : la conversation reste consultable, mais vous ne pouvez plus écrire."
+          : undefined
       }
     />
   );

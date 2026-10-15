@@ -2,6 +2,7 @@ import { randomInt } from "node:crypto";
 import { ApiError, ok, parseBody, safely } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
 import { requireApiOwner } from "@/lib/auth/require-member";
+import { requireWritableAgency } from "@/features/subscription/server/subscription";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { newEmployeeSchema } from "@/features/auth/schemas";
 
@@ -18,6 +19,8 @@ function generateTemporaryPassword(length = 12) {
 export function POST(request: Request) {
   return safely("team create", async () => {
     const member = await requireApiOwner();
+    // Avant de créer le compte de connexion, qui serait ensuite à supprimer
+    await requireWritableAgency(member.agencyId);
     const d = await parseBody(request, newEmployeeSchema);
 
     const admin = createAdminClient();

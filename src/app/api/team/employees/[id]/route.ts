@@ -1,6 +1,7 @@
 import { ApiError, dbError, ok, parseId, safely } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
 import { requireApiOwner } from "@/lib/auth/require-member";
+import { requireWritableAgency } from "@/features/subscription/server/subscription";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Supprimer un employé désactivé : patron seulement. La base refuse
@@ -9,6 +10,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   return safely("team delete", async () => {
     const member = await requireApiOwner();
+    // Sinon la base refuserait en silence et le message parlerait d'historique
+    await requireWritableAgency(member.agencyId);
     const id = parseId((await params).id);
     if (id === member.userId) {
       throw new ApiError(400, "Vous ne pouvez pas supprimer votre propre compte");
