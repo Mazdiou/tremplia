@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { TreeCase } from "./fetch-campaign-cases";
-import { buildCampaignBranches, matchesPayment, type TreeGroup } from "./tree";
+import { buildCampaignBranches, linkFilter, matchesPayment, type TreeGroup } from "./tree";
 
 const person = (id: string, campaign = "fr"): TreeCase => ({
   id,
@@ -85,5 +85,17 @@ describe("matchesPayment", () => {
     expect([due, paid, free, unset].filter((c) => matchesPayment(c, "due"))).toEqual([due]);
     expect([due, paid, free, unset].filter((c) => matchesPayment(c, "paid"))).toEqual([paid, free]);
     expect([due, paid, free, unset].filter((c) => matchesPayment(c, "unset"))).toEqual([unset]);
+  });
+});
+
+describe("linkFilter", () => {
+  it("traduit les liens du tableau de bord en filtres de l'arbre", () => {
+    expect(linkFilter("mes-dossiers")).toEqual({ level: "", responsible: "", mine: true, payment: "" });
+    expect(linkFilter("reste-a-payer")?.payment).toBe("due");
+    expect(linkFilter("montant-a-fixer")?.payment).toBe("unset");
+  });
+  it("ignore une valeur inconnue", () => {
+    expect(linkFilter("autre")).toBeNull();
+    expect(linkFilter(null)).toBeNull();
   });
 });

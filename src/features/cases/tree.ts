@@ -72,3 +72,19 @@ export function matchesPayment(
   if (filter === "unset") return c.agreed_amount === null;
   return true;
 }
+
+// Filtre de l'arbre demandé par un lien (cartes du tableau de bord) :
+// /cases?filtre=mes-dossiers, reste-a-payer ou montant-a-fixer. Remplace les
+// filtres en cours ; null pour une valeur inconnue.
+export function linkFilter(value: string | null): {
+  level: string;
+  responsible: string;
+  mine: boolean;
+  payment: PaymentFilter;
+} | null {
+  const base = { level: "", responsible: "", mine: false, payment: "" as PaymentFilter };
+  if (value === "mes-dossiers") return { ...base, mine: true };
+  if (value === "reste-a-payer") return { ...base, payment: "due" };
+  if (value === "montant-a-fixer") return { ...base, payment: "unset" };
+  return null;
+}

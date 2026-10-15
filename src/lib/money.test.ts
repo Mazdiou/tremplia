@@ -10,6 +10,10 @@ describe("formatDA", () => {
   it("ne coupe jamais le montant", () => {
     expect(formatDA(150000)).not.toMatch(/ /);
   });
+
+  it("espaces bien visibles entre les milliers (pas d'espace fine)", () => {
+    expect(formatDA(11670000)).toBe(["11", "670", "000", "DA"].join(String.fromCharCode(0xa0)));
+  });
 });
 
 describe("parseAmount", () => {

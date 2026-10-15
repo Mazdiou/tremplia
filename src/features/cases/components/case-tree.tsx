@@ -34,6 +34,7 @@ import {
 } from "@/features/cases/fetch-campaign-cases";
 import {
   buildCampaignBranches,
+  linkFilter,
   matchesPayment,
   type TreeGroup,
 } from "@/features/cases/tree";
@@ -120,6 +121,22 @@ export function CaseTree({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [setPrefs]);
+
+  // Arrivée par un lien du tableau de bord (/cases?filtre=…&campagne=…) :
+  // filtres appliqués, campagne(s) ouverte(s), puis adresse nettoyée
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const filter = linkFilter(params.get("filtre"));
+    if (!filter) return;
+    const only = params.get("campagne");
+    const toOpen = campaigns.filter((c) => c.status === "active" && (!only || c.id === only));
+    setPrefs((p) => ({
+      ...filter,
+      collapsed: false,
+      open: { ...p.open, ...Object.fromEntries(toOpen.map((c) => [c.id, true])) },
+    }));
+    router.replace(pathname, { scroll: false });
+  }, [campaigns, pathname, router, setPrefs]);
 
   const width = dragWidth ?? prefs.width;
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, CalendarRange, MessagesSquare, Wallet } from "lucide-react";
+import { CalendarClock, CalendarRange, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getShellUser } from "@/components/shell/app-shell";
 import { isReadOnly } from "@/features/subscription/server/subscription";
@@ -13,30 +13,26 @@ import {
   StatusPill,
 } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
-import { countdownLabel, nextDeadline } from "@/features/campaigns/timeline";
+import { countdownLabel, nextDeadline, timeline } from "@/features/campaigns/timeline";
 import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
 import { CampaignSelect } from "@/features/dashboard/components/campaign-select";
+import { ActivityPanel } from "@/features/dashboard/components/activity-panel";
+import { Initials, relativeDay } from "@/features/dashboard/components/dashboard-ui";
+import { DeadlinesPanel } from "@/features/dashboard/components/deadlines-panel";
+import { ResultsPanel } from "@/features/dashboard/components/results-panel";
+import { TodoPanel } from "@/features/dashboard/components/todo-panel";
+import { loadActivity, loadResults, loadTodo } from "@/features/dashboard/server/dashboard";
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
 import { countCases, countCreatedLastWeek, sumStat } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
-import { UnreadBadge } from "@/features/messages/components/unread-badge";
-import { activityActor, activityLabel } from "@/features/history/labels";
-import {
-  EDUCATION_LEVELS,
-  EDUCATION_LEVEL_LABELS,
-  labelOf,
-} from "@/features/cases/labels";
-import { APP_TIMEZONE, dayFormat, formatLongDate, todayInAppTimezone } from "@/lib/dates";
-import { displayName, initialsOf } from "@/lib/names";
+import { EDUCATION_LEVEL_LABELS, labelOf } from "@/features/cases/labels";
+import { APP_TIMEZONE, todayInAppTimezone } from "@/lib/dates";
+import { displayName } from "@/lib/names";
 import { formatDA } from "@/lib/money";
+import { cn } from "@/lib/utils";
 import { BRAND } from "@/config/brand";
 import { InstallAppCard } from "@/features/pwa/components/install-app-card";
 
-const timeFmt = new Intl.DateTimeFormat("fr-FR", {
-  timeZone: APP_TIMEZONE,
-  hour: "2-digit",
-  minute: "2-digit",
-});
 const monthName = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIMEZONE, month: "long" });
 const longToday = new Intl.DateTimeFormat("fr-FR", {
   timeZone: APP_TIMEZONE,
@@ -45,35 +41,10 @@ const longToday = new Intl.DateTimeFormat("fr-FR", {
   month: "long",
 });
 
-// « aujourd'hui », « hier », « il y a 2 jours », puis la date
-function relativeDay(iso: string) {
-  const d = new Date(iso);
-  const diff = Math.round(
-    (Date.parse(todayInAppTimezone()) - Date.parse(todayInAppTimezone(d))) / 86_400_000,
-  );
-  if (diff <= 0) return "aujourd'hui";
-  if (diff === 1) return "hier";
-  if (diff < 7) return `il y a ${diff} jours`;
-  return dayFormat.format(d);
-}
-
-// Heure pour aujourd'hui, sinon jour relatif
-function activityWhen(iso: string) {
-  const diff = relativeDay(iso);
-  return diff === "aujourd'hui" ? timeFmt.format(new Date(iso)) : diff;
-}
-
-function Initials({ first, last }: { first: string; last: string }) {
-  return (
-    <span
-      aria-hidden
-      className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-semibold text-accent-foreground"
-    >
-      {initialsOf(first, last)}
-    </span>
-  );
-}
-
+// Tableau de bord, de haut en bas : ce qui attend l'agence (« À traiter »),
+// les chiffres clés (cliquables vers la liste filtrée), les campagnes, les
+// paiements (patron), les échéances et les réponses des établissements,
+// puis l'activité de l'agence (patron).
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -126,71 +97,47 @@ export default async function DashboardPage({
 
   // Lectures indépendantes, lancées ensemble. Tous les compteurs viennent
   // d'une seule lecture de la vue case_stats (via le RLS).
-  // Paiements : chiffres réservés au patron, comme le journal
+  // Paiements et journal : réservés au patron
   const monthStart = `${today.slice(0, 7)}-01`;
-  const [stats, unread, recentRes, activityRes, dates, monthRes, owingRes] = await Promise.all([
-    listCaseStats(ids),
-    // Dossiers dont le candidat a écrit sans réponse lue (toute l'agence)
-    agencyUnreadCounts(u.member.agencyId),
-    supabase
-      .from("cases")
-      .select("id, first_name, last_name, education_level, created_at")
-      .in("campaign_id", ids)
-      .order("created_at", { ascending: false })
-      .limit(5),
-    // Journal : lisible par le patron seulement (règle RLS)
-    u.member.isOwner
-      ? supabase
-          .from("activity_log")
-          .select("id, actor_id, action, created_at")
-          .order("created_at", { ascending: false })
-          .limit(6)
-      : Promise.resolve({ data: null }),
-    listCampaignDates(campaigns),
-    u.member.isOwner
-      ? supabase
-          .from("payment_months")
-          .select("amount, payments")
-          .in("campaign_id", ids)
-          .eq("month", monthStart)
-      : Promise.resolve({ data: null }),
-    // Candidats qui doivent le plus (dossiers non abandonnés)
-    u.member.isOwner
-      ? supabase
-          .from("cases")
-          .select("id, first_name, last_name, remaining_amount")
-          .in("campaign_id", ids)
-          .neq("status", "abandoned")
-          .gt("remaining_amount", 0)
-          .order("remaining_amount", { ascending: false })
-          .limit(5)
-      : Promise.resolve({ data: null }),
-  ]);
+  const [stats, unread, recentRes, dates, monthRes, owingRes, results, activity] =
+    await Promise.all([
+      listCaseStats(ids),
+      // Dossiers dont le candidat a écrit sans réponse lue (toute l'agence)
+      agencyUnreadCounts(u.member.agencyId),
+      supabase
+        .from("cases")
+        .select("id, first_name, last_name, education_level, created_at")
+        .in("campaign_id", ids)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      listCampaignDates(campaigns),
+      u.member.isOwner
+        ? supabase
+            .from("payment_months")
+            .select("amount, payments")
+            .in("campaign_id", ids)
+            .eq("month", monthStart)
+        : Promise.resolve({ data: null }),
+      // Candidats qui doivent le plus (dossiers non abandonnés)
+      u.member.isOwner
+        ? supabase
+            .from("cases")
+            .select("id, first_name, last_name, remaining_amount")
+            .in("campaign_id", ids)
+            .neq("status", "abandoned")
+            .gt("remaining_amount", 0)
+            .order("remaining_amount", { ascending: false })
+            .limit(5)
+        : Promise.resolve({ data: null }),
+      loadResults(supabase, ids),
+      u.member.isOwner ? loadActivity(supabase, campaignList) : Promise.resolve([]),
+    ]);
+  const todo = await loadTodo(supabase, ids, unread);
   const recent = recentRes.data;
-  const activity = activityRes.data;
-
-  const unreadIds = Object.keys(unread);
-  const actorIds = [
-    ...new Set((activity ?? []).flatMap((a) => (a.actor_id ? [a.actor_id as string] : []))),
-  ];
-  // Noms : des dossiers avec messages non lus, et des auteurs du journal
-  const [{ data: unreadCases }, { data: actors }] = await Promise.all([
-    unreadIds.length > 0
-      ? supabase.from("cases").select("id, first_name, last_name").in("id", unreadIds.slice(0, 50))
-      : Promise.resolve({ data: [] }),
-    actorIds.length > 0
-      ? supabase.from("profiles").select("id, first_name, last_name").in("id", actorIds)
-      : Promise.resolve({ data: [] }),
-  ]);
-  const unreadList = ((unreadCases ?? []) as { id: string; first_name: string; last_name: string }[])
-    .map((c) => ({ ...c, count: unread[c.id] }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
 
   const active = countCases(stats, { status: "active" });
   const mine = countCases(stats, { status: "active", assignedTo: u.member.userId });
   const week = countCreatedLastWeek(stats);
-  const ended = countCases(stats, { status: ["closed", "abandoned"] });
 
   const monthRows = (monthRes.data ?? []) as { amount: number | string; payments: number }[];
   const collected = monthRows.reduce((n, r) => n + Number(r.amount), 0);
@@ -206,30 +153,26 @@ export default async function DashboardPage({
   }[];
   const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? "s" : ""}`;
 
-  const actorById = new Map(
-    (actors ?? []).map((a) => [a.id as string, a as { first_name: string; last_name: string }]),
-  );
+  // Liens vers l'arbre des dossiers, filtré (et limité à la campagne choisie)
+  const casesLink = (filtre?: string) => {
+    const q = new URLSearchParams();
+    if (filtre) q.set("filtre", filtre);
+    if (selected) q.set("campagne", selected.id);
+    const query = q.toString();
+    return query ? `/cases?${query}` : "/cases";
+  };
 
-  const next = nextDeadline(dates, today);
-
-  // Vue « toutes les campagnes » : une carte par campagne
+  // Plusieurs campagnes : une carte chacune, avec sa prochaine échéance.
+  // Une seule : le bloc des prochaines échéances.
   const cards =
-    !selected && campaigns.length > 1
+    campaigns.length > 1
       ? campaigns.map((c) => ({
           ...c,
           activeCount: countCases(stats, { campaignId: c.id, status: "active" }),
           next: nextDeadline(dates.filter((d) => d.campaignId === c.id), today),
         }))
       : [];
-
-  // Les niveaux sans dossier ne s'affichent que s'ils sont courants
-  const levelRows = EDUCATION_LEVELS.map((l) => ({
-    l,
-    n: countCases(stats, { status: "active", educationLevel: l }),
-  })).filter(
-    (r) => r.n > 0 || ["terminale", "l1", "l2", "l3", "m1"].includes(r.l),
-  );
-  const maxLevel = Math.max(1, ...levelRows.map((r) => r.n));
+  const single = campaigns.length === 1 ? campaigns[0] : null;
 
   return (
     <PageContainer width="wide">
@@ -256,8 +199,27 @@ export default async function DashboardPage({
       />
       <InstallAppCard appName={BRAND.name} />
 
+      <TodoPanel todo={todo} />
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard label="Dossiers actifs" value={active} href={casesLink()} />
+        <StatCard
+          label="Mes dossiers"
+          value={mine}
+          hint="actifs, dont je suis responsable"
+          href={casesLink("mes-dossiers")}
+        />
+        <StatCard label="Ajoutés cette semaine" value={week} className="max-md:hidden" />
+        <StatCard
+          label="Candidats admis"
+          value={results.admitted}
+          hint="au moins une formation acceptée"
+          className="max-md:hidden"
+        />
+      </div>
+
       {cards.length > 0 && (
-        <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <ul className={cn("grid gap-4 md:grid-cols-2", cards.length > 2 && "xl:grid-cols-3")}>
           {cards.map((c) => (
             <li key={c.id}>
               <Link
@@ -288,39 +250,6 @@ export default async function DashboardPage({
         </ul>
       )}
 
-      {unreadList.length > 0 && (
-        <section className="rounded-2xl border border-primary/30 bg-highlight p-5">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <MessagesSquare className="size-4 text-primary" aria-hidden />
-            Messages non lus
-            <UnreadBadge count={Object.values(unread).reduce((a, b) => a + b, 0)} />
-          </h2>
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {unreadList.map((c) => (
-              <li key={c.id}>
-                <Link
-                  href={`/cases/${c.id}/messages`}
-                  className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2 text-sm transition-colors hover:border-primary/40"
-                >
-                  <Initials first={c.first_name} last={c.last_name} />
-                  <span className="min-w-0 flex-1 truncate font-medium">
-                    {displayName(c.first_name, c.last_name)}
-                  </span>
-                  <UnreadBadge count={c.count} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Dossiers actifs" value={active} />
-        <StatCard label="Mes dossiers" value={mine} hint="actifs, dont je suis responsable" />
-        <StatCard label="Ajoutés cette semaine" value={week} className="max-md:hidden" />
-        <StatCard label="Clos ou abandonnés" value={ended} className="max-md:hidden" />
-      </div>
-
       {u.member.isOwner && (
         <Panel
           title="Paiements"
@@ -332,36 +261,26 @@ export default async function DashboardPage({
           actions={<Wallet className="size-4 text-muted-foreground" aria-hidden />}
         >
           <div className="grid gap-5 px-5 py-4 lg:grid-cols-[1fr_1fr]">
-            <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
-              <div>
-                <dt className="text-sm text-muted-foreground first-letter:uppercase">
-                  Encaissé en {monthName.format(new Date())}
-                </dt>
-                <dd className="mt-0.5 text-xl font-semibold tracking-tight tabular-nums">
-                  {formatDA(collected)}
-                </dd>
-                <dd className="text-xs text-muted-foreground">
-                  {plural(collectedCount, "paiement")}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm text-muted-foreground">Reste à encaisser</dt>
-                <dd className="mt-0.5 text-xl font-semibold tracking-tight tabular-nums">
-                  {formatDA(remaining)}
-                </dd>
-                <dd className="text-xs text-muted-foreground">{plural(owing, "dossier")}</dd>
-              </div>
-              <div className="col-span-2 sm:col-span-1 lg:col-span-2 xl:col-span-1">
-                <dt className="text-sm text-muted-foreground">Montant à fixer</dt>
-                <dd className="mt-0.5 text-xl font-semibold tracking-tight tabular-nums">
-                  {feeUnset}
-                </dd>
-                <dd className="text-xs text-muted-foreground">
-                  dossier{feeUnset > 1 ? "s" : ""} actif{feeUnset > 1 ? "s" : ""} sans montant
-                  convenu
-                </dd>
-              </div>
-            </dl>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+              <PaymentFigure
+                label={`Encaissé en ${monthName.format(new Date())}`}
+                value={formatDA(collected)}
+                hint={plural(collectedCount, "paiement")}
+              />
+              <PaymentFigure
+                label="Reste à encaisser"
+                value={formatDA(remaining)}
+                hint={plural(owing, "dossier")}
+                href={owing > 0 ? casesLink("reste-a-payer") : undefined}
+              />
+              <PaymentFigure
+                label="Montant à fixer"
+                value={String(feeUnset)}
+                hint={`dossier${feeUnset > 1 ? "s" : ""} actif${feeUnset > 1 ? "s" : ""} sans montant convenu`}
+                href={feeUnset > 0 ? casesLink("montant-a-fixer") : undefined}
+                className="col-span-2 sm:col-span-1 lg:col-span-2 xl:col-span-1"
+              />
+            </div>
             <div className="min-w-0">
               <h3 className="text-xs font-medium text-muted-foreground">
                 Restes à payer les plus élevés
@@ -392,48 +311,17 @@ export default async function DashboardPage({
         </Panel>
       )}
 
-      <div className="grid items-start gap-5 lg:grid-cols-3">
-        <section className="rounded-2xl border border-primary/30 bg-highlight p-5">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <CalendarClock className="size-4 text-primary" aria-hidden />
-            Prochaine échéance
-          </h2>
-          {next ? (
-            <>
-              <p className="mt-4 text-4xl font-semibold tracking-tight text-primary tabular-nums">
-                {countdownLabel(next.days)}
-              </p>
-              <p className="mt-2 font-medium">{next.label}</p>
-              <p className="text-sm text-muted-foreground">
-                {formatLongDate(next.date)}
-                {campaigns.length > 1 ? ` · ${next.campaignName}` : ""}
-              </p>
-            </>
-          ) : (
-            <p className="mt-3 text-sm text-muted-foreground">Aucune échéance à venir.</p>
-          )}
-        </section>
-
-        <Panel title="Dossiers actifs par niveau" className="max-md:hidden">
-          <div className="space-y-3 px-5 py-4">
-            {levelRows.map(({ l, n: v }) => (
-              <div
-                key={l}
-                className="grid grid-cols-[6.5rem_1fr_1.5rem] items-center gap-3 text-sm"
-              >
-                <span className="truncate text-muted-foreground">{EDUCATION_LEVEL_LABELS[l]}</span>
-                <span className="h-2 overflow-hidden rounded-full bg-muted">
-                  <span
-                    className="block h-full rounded-full bg-primary"
-                    style={{ width: `${v === 0 ? 0 : Math.max(6, (v / maxLevel) * 100)}%` }}
-                  />
-                </span>
-                <span className="text-right font-medium tabular-nums">{v}</span>
-              </div>
-            ))}
-          </div>
-        </Panel>
-
+      <div className={cn("grid items-start gap-5", single ? "lg:grid-cols-3" : "lg:grid-cols-2")}>
+        {single && (
+          <DeadlinesPanel
+            campaignId={single.id}
+            items={timeline(
+              dates.filter((d) => d.campaignId === single.id),
+              today,
+            )}
+          />
+        )}
+        <ResultsPanel results={results} />
         <Panel title="Ajoutés récemment">
           {(recent ?? []).length === 0 ? (
             <p className="px-5 py-5 text-sm text-muted-foreground">
@@ -467,50 +355,42 @@ export default async function DashboardPage({
         </Panel>
       </div>
 
-      {u.member.isOwner && (
-        <Panel
-          title="Activité récente de l'agence"
-          description="Visible par le patron seulement."
-          className="max-md:hidden"
-        >
-          {(activity ?? []).length === 0 ? (
-            <p className="px-5 py-5 text-sm text-muted-foreground">
-              Aucune activité enregistrée.
-            </p>
-          ) : (
-            <ul>
-              {(activity ?? []).map((a) => {
-                const actor = a.actor_id ? actorById.get(a.actor_id as string) : undefined;
-                return (
-                  <li
-                    key={a.id}
-                    className="flex items-center gap-3 border-b px-5 py-2.5 text-sm last:border-b-0"
-                  >
-                    <Initials first={actor?.first_name ?? "?"} last={actor?.last_name ?? ""} />
-                    <span className="min-w-0 flex-1">
-                      <span className="font-medium">
-                        {activityActor(
-                          a.action,
-                          actor && `${actor.first_name} ${actor.last_name}`,
-                          "agency",
-                        )}
-                      </span>{" "}
-                      <span className="text-muted-foreground">
-                        {activityLabel(a.action, "agency")}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {activityWhen(a.created_at)}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </Panel>
-      )}
+      {u.member.isOwner && <ActivityPanel entries={activity} />}
 
       {!readOnly && <NewCaseLink campaignId={selected?.id} className="w-full md:hidden" />}
     </PageContainer>
+  );
+}
+
+// Chiffre du bloc Paiements ; avec `href`, il mène aux dossiers concernés
+function PaymentFigure({
+  label,
+  value,
+  hint,
+  href,
+  className,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  href?: string;
+  className?: string;
+}) {
+  const body = (
+    <>
+      <p className="text-sm text-muted-foreground first-letter:uppercase">{label}</p>
+      <p className="mt-0.5 text-xl font-semibold tracking-tight tabular-nums">{value}</p>
+      <p className="text-xs text-muted-foreground">{hint}</p>
+    </>
+  );
+  return href ? (
+    <Link
+      href={href}
+      className={cn("-m-2 block rounded-lg p-2 transition-colors hover:bg-muted/60", className)}
+    >
+      {body}
+    </Link>
+  ) : (
+    <div className={className}>{body}</div>
   );
 }
