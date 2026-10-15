@@ -17,6 +17,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { callApi } from "@/lib/api-client";
+import {
+  WhatsAppAccessButton,
+  type WhatsAppMenuContext,
+} from "@/features/whatsapp/components/whatsapp-menu";
 import type { ReviewStatus, StudentAccess } from "@/features/student/schemas";
 
 type Action = "enable" | "disable" | "regenerate";
@@ -28,8 +32,11 @@ export function StudentAccessBar({
   access,
   blockedReason,
   review,
+  whatsapp,
 }: {
   caseId: string;
+  // Envoi du code au candidat par WhatsApp
+  whatsapp: { phone: string; context: WhatsAppMenuContext };
   access: StudentAccess;
   // Accès ouvert mais sans effet (dossier abandonné, campagne archivée)
   blockedReason: string | null;
@@ -95,6 +102,9 @@ export function StudentAccessBar({
             <Button variant="ghost" size="xs" onClick={() => void copy("link")}>
               {copied === "link" ? <Check /> : <Link2 />} Copier le message
             </Button>
+            {whatsapp.context.accessCode && (
+              <WhatsAppAccessButton phone={whatsapp.phone} context={whatsapp.context} />
+            )}
           </>
         ) : (
           <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">

@@ -1,7 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { z } from "zod";
-import { Pencil } from "lucide-react";
+import { Pencil, Phone, UserRound } from "lucide-react";
+import { getAgency } from "@/features/agency/server/get-agency";
+import { WhatsAppMenu } from "@/features/whatsapp/components/whatsapp-menu";
 import { StatusPill } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { requireMember } from "@/lib/auth/require-member";
@@ -46,18 +48,35 @@ export default async function CaseLayout({
   // Tout est lu en même temps. Les lectures avec la clé secrète sont filtrées
   // sur l'agence de la session : un dossier d'une autre agence n'y renvoie
   // rien, et getCase (via le RLS) le déclare introuvable.
-  const [data, usedPlatforms, studentAccess, review, unread] = await Promise.all([
+  const [data, usedPlatforms, studentAccess, review, unread, agency] = await Promise.all([
     getCase(id),
     listUsedPlatforms(),
     isUuid(id) ? getStudentAccess(member.agencyId, id) : null,
     isUuid(id) ? readReview(member.agencyId, id) : null,
     agencyUnreadCounts(member.agencyId),
+    getAgency(member.agencyId),
   ]);
   if (!data) notFound();
   const { c, responsible, campaign, groups, externalAccounts } = data;
   // Plateformes proposées pour un nouveau compte : celles suggérées par la
   // campagne, puis celles déjà utilisées dans l'agence
   const suggestions = mergePlatforms(campaign?.suggested_platforms ?? [], usedPlatforms);
+
+  // Messages WhatsApp proposés : le code seulement si le candidat peut
+  // vraiment se connecter, le rappel seulement pour un dossier non abandonné
+  const blockedReason =
+    c.status === "abandoned"
+      ? "le dossier est abandonné"
+      : campaign?.status === "archived"
+        ? "la campagne est archivée"
+        : null;
+  const whatsapp = {
+    candidate: c.first_name,
+    agencyName: agency?.name ?? "",
+    agencyPhone: agency?.phone ?? "",
+    accessCode: studentAccess?.enabled && !blockedReason ? studentAccess.code : null,
+    remaining: c.status === "abandoned" ? null : c.remaining_amount,
+  };
 
   const summary = [
     campaign?.name,
@@ -118,6 +137,36 @@ export default async function CaseLayout({
                 <div className="min-w-0">
                   {title}
                   <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
+                  <ul className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" aria-label="Contacts">
+                    <li className="flex items-center gap-1">
+                      <Phone className="size-3.5 text-muted-foreground" aria-hidden />
+                      <a href={`tel:${c.phone.replace(/[^0-9+]/g, "")}`} className="hover:underline">
+                        {c.phone}
+                      </a>
+                      <WhatsAppMenu
+                        phone={c.phone}
+                        recipient={displayName(c.first_name, c.last_name)}
+                        context={whatsapp}
+                      />
+                    </li>
+                    {c.secondary_contact_name && c.secondary_contact_phone && (
+                      <li className="flex items-center gap-1">
+                        <UserRound className="size-3.5 text-muted-foreground" aria-hidden />
+                        <span className="text-muted-foreground">{c.secondary_contact_name} ·</span>
+                        <a
+                          href={`tel:${c.secondary_contact_phone.replace(/[^0-9+]/g, "")}`}
+                          className="hover:underline"
+                        >
+                          {c.secondary_contact_phone}
+                        </a>
+                        <WhatsAppMenu
+                          phone={c.secondary_contact_phone}
+                          recipient={c.secondary_contact_name}
+                          context={{ ...whatsapp, parent: c.secondary_contact_name }}
+                        />
+                      </li>
+                    )}
+                  </ul>
                   {groups.length > 0 && (
                     <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Groupes">
                       {groups.map((g) => (
@@ -162,13 +211,8 @@ export default async function CaseLayout({
                 lastRequest:
                   review?.status === "changes_requested" ? (review.lastRequest?.body ?? null) : null,
               }}
-              blockedReason={
-                c.status === "abandoned"
-                  ? "le dossier est abandonné"
-                  : campaign?.status === "archived"
-                    ? "la campagne est archivée"
-                    : null
-              }
+              blockedReason={blockedReason}
+              whatsapp={{ phone: c.phone, context: whatsapp }}
             />
           </CaseHeaderDetails>
 
