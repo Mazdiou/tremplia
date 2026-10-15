@@ -30,6 +30,7 @@ import { APP_TIMEZONE, dayFormat, formatLongDate, todayInAppTimezone } from "@/l
 import { displayName, initialsOf } from "@/lib/names";
 import { formatDA } from "@/lib/money";
 import { BRAND } from "@/config/brand";
+import { InstallAppCard } from "@/features/pwa/components/install-app-card";
 
 const timeFmt = new Intl.DateTimeFormat("fr-FR", {
   timeZone: APP_TIMEZONE,
@@ -99,6 +100,7 @@ export default async function DashboardPage({
     return (
       <PageContainer width="narrow">
         <PageHeader title={`Bonjour ${u.member.firstName}`} subtitle={todayLabel} />
+        <InstallAppCard appName={BRAND.name} />
         <EmptyState
           icon={CalendarRange}
           title={`Bienvenue dans ${BRAND.name}`}
@@ -252,6 +254,7 @@ export default async function DashboardPage({
           </>
         }
       />
+      <InstallAppCard appName={BRAND.name} />
 
       {cards.length > 0 && (
         <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

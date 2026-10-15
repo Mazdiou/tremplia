@@ -14,8 +14,14 @@ import { studentUnreadCount } from "@/features/messages/server/messages";
 import { StudentLogout, StudentTabs } from "@/features/student/components/student-nav";
 import { STUDENT_READ_ONLY } from "@/features/subscription/subscription";
 import { isReadOnly } from "@/features/subscription/server/subscription";
+import { InstallAppCard } from "@/features/pwa/components/install-app-card";
 
-export const metadata: Metadata = { title: "Mon dossier" };
+export const metadata: Metadata = {
+  title: "Mon dossier",
+  // Installée sur le téléphone : l'appli du candidat, distincte de celle de l'agence
+  manifest: "/student/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Mon dossier", statusBarStyle: "default" },
+};
 
 // Espace du candidat : lecture seule de ses informations, de sa lettre de
 // motivation et de ses formations.
@@ -81,6 +87,8 @@ export default async function StudentLayout({ children }: { children: React.Reac
             fingerprint={fingerprint}
           />
         )}
+        {/* Après l'avis attendu, plus important */}
+        <InstallAppCard appName="votre espace candidat" />
         <div>{children}</div>
       </main>
     </div>
