@@ -21,6 +21,8 @@ export const metadata: Metadata = {
   description: "CRM pour agences de démarches d'études à l'étranger",
   // Application ajoutée à l'écran d'accueil d'un iPhone : plein écran
   appleWebApp: { capable: true, title: BRAND.name, statusBarStyle: "default" },
+  // Ancienne balise, encore lue par les iPhone antérieurs à iOS 16.4
+  other: { "apple-mobile-web-app-capable": "yes" },
 };
 
 // Téléphone : la page occupe tout l'écran (encoche comprise, les marges de
