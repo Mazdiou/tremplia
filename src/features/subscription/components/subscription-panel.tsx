@@ -5,6 +5,7 @@ import { dayFormat } from "@/lib/dates";
 import {
   PAYMENT_METHOD_LABELS,
   STATE_LABELS,
+  STATE_TONES,
   daysLeft,
   formatEndDate,
 } from "../subscription";
@@ -20,8 +21,6 @@ type Payment = {
   cancelled_at: string | null;
   cancel_reason: string | null;
 };
-
-const TONE = { trial: "info", active: "ok", expired: "bad" } as const;
 
 // Encart « Abonnement » de la page Équipe (patron) : état, fin, paiements
 export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
@@ -54,7 +53,7 @@ export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
           "Pour le renouveler, contactez-nous."
         )
       }
-      actions={<StatusPill tone={TONE[sub.state]}>{STATE_LABELS[sub.state]}</StatusPill>}
+      actions={<StatusPill tone={STATE_TONES[sub.state]}>{STATE_LABELS[sub.state]}</StatusPill>}
     >
       <div className="space-y-4 px-5 py-4">
         <p className="text-sm">

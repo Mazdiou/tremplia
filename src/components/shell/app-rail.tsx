@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarRange, FolderOpen, LayoutGrid, LogOut, Users } from "lucide-react";
+import { CalendarRange, FolderOpen, LayoutGrid, LogOut, ShieldCheck, Users } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -14,13 +14,18 @@ const ITEMS = [
   { href: "/team", label: "Équipe", icon: Users, ownerOnly: true },
 ];
 
+// Administration de la plateforme : visible de l'administrateur seulement
+const ADMIN_ITEM = { href: "/admin", label: "Administration", icon: ShieldCheck, ownerOnly: false };
+
 // Barre d'icônes : colonne à gauche sur ordinateur, barre en bas sur mobile.
 export function AppRail({
   isOwner,
   initials,
+  isPlatformAdmin = false,
 }: {
   isOwner: boolean;
   initials: string;
+  isPlatformAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -36,7 +41,7 @@ export function AppRail({
       aria-label="Navigation principale"
       className="z-20 flex shrink-0 items-center justify-around border-t bg-background px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:w-14 md:flex-col md:justify-start md:gap-2 md:border-t-0 md:border-r md:px-0 md:py-4"
     >
-      {ITEMS.filter((i) => isOwner || !i.ownerOnly).map(
+      {[...ITEMS, ...(isPlatformAdmin ? [ADMIN_ITEM] : [])].filter((i) => isOwner || !i.ownerOnly).map(
         ({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (

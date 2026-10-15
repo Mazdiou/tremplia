@@ -11,6 +11,7 @@ import { CaseTree, type TreeMember } from "@/features/cases/components/case-tree
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
 import { SubscriptionBanner } from "@/features/subscription/components/subscription-banner";
 import { isReadOnly } from "@/features/subscription/server/subscription";
+import { isPlatformAdmin } from "@/features/admin/server/admin";
 
 export default async function CasesLayout({
   children,
@@ -22,7 +23,7 @@ export default async function CasesLayout({
   // Lecture via le RLS : seules les campagnes, groupes, dossiers et membres
   // de l'agence reviennent.
   const supabase = await createClient();
-  const [campaigns, groups, membersRes, unread, readOnly] = await Promise.all([
+  const [campaigns, groups, membersRes, unread, readOnly, admin] = await Promise.all([
     listCampaigns(),
     listAgencyGroups(),
     supabase
@@ -31,6 +32,7 @@ export default async function CasesLayout({
       .order("first_name"),
     agencyUnreadCounts(member.agencyId),
     isReadOnly(member.agencyId),
+    isPlatformAdmin(member.userId),
   ]);
   if (membersRes.error) console.error("[cases layout] membres", membersRes.error.code);
 
@@ -48,7 +50,7 @@ export default async function CasesLayout({
 
   return (
     <div className="flex h-dvh flex-col-reverse overflow-hidden md:flex-row">
-      <AppRail isOwner={member.isOwner} initials={initials} />
+      <AppRail isOwner={member.isOwner} initials={initials} isPlatformAdmin={admin} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <SubscriptionBanner agencyId={member.agencyId} />
         <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">

@@ -60,6 +60,13 @@ export const STATE_LABELS: Record<SubscriptionState, string> = {
   expired: "Expiré",
 };
 
+// Teinte de la pastille d'état (voir StatusPill)
+export const STATE_TONES = {
+  trial: "info",
+  active: "ok",
+  expired: "bad",
+} as const satisfies Record<SubscriptionState, string>;
+
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "Espèces",
   ccp: "CCP",

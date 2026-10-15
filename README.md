@@ -43,6 +43,23 @@ Voir `.env.example`. Aucune vraie valeur ne doit être commitée.
 | `SUPPORT_PHONE` | Facultatif. Numéro affiché aux agences pour renouveler leur abonnement (bandeaux, page Équipe) |
 | `CLIENT_IP_HEADER` | Facultatif. En-tête qui porte l'adresse IP du visiteur, pour les limites d'essais. Par défaut `x-forwarded-for` (dernière adresse) : correct sur Vercel et derrière nginx ; derrière Cloudflare, `cf-connecting-ip`. À vérifier à chaque changement d'hébergeur |
 
+## Abonnements et administration
+
+Chaque agence a 7 jours d'essai, puis un abonnement payé (espèces, CCP ou
+BaridiMob) que l'administrateur de la plateforme enregistre dans `/admin`
+(« Paiement reçu » : 1, 3 ou 12 mois). Après la date de fin, l'agence est en
+lecture seule : la base refuse toute écriture sur ses données.
+
+L'administrateur se désigne à la main, une seule fois, dans l'éditeur SQL de
+Supabase. Son compte doit aussi être celui d'une agence (la sienne) :
+
+```sql
+insert into public.platform_admins (user_id)
+select id from auth.users where email = 'votre-email@exemple.com';
+```
+
+Pour retirer ce droit : `delete from public.platform_admins where user_id = '…';`.
+
 ## Règles du projet
 
 - **Isolation stricte entre agences**, garantie par la base (RLS et clés
