@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { BRAND } from "@/config/brand";
 
 const sans = Manrope({
   variable: "--font-manrope",
@@ -14,7 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StudyFlow",
+  // Titre de chaque page suivi du nom de l'application : « Page introuvable · <nom> »
+  title: { default: BRAND.name, template: `%s · ${BRAND.name}` },
   description: "CRM pour agences de démarches d'études à l'étranger",
 };
 

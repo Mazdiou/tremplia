@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LogoMark } from "@/components/auth/auth-shell";
 import { NotFoundHomeLink } from "@/components/not-found-home-link";
 
-export const metadata: Metadata = { title: "Page introuvable · StudyFlow" };
+export const metadata: Metadata = { title: "Page introuvable" };
 
 // Toute adresse inconnue (faute de frappe, ancien lien), côté agence comme
 // dans l'espace candidat

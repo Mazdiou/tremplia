@@ -40,6 +40,7 @@ import {
 import { isCasesIndex } from "./cases-content";
 import { TreeSearchResults } from "./tree-search-results";
 import { CampaignMenu, GroupActions, InlineNameInput, groupApi } from "./tree-actions";
+import { BRAND } from "@/config/brand";
 
 export type TreeCampaign = { id: string; name: string; status: string };
 
@@ -316,7 +317,7 @@ export function CaseTree({
             href="/cases"
             className="truncate text-base font-semibold tracking-tight"
           >
-            StudyFlow
+            {BRAND.name}
           </Link>
           <kbd className="ml-auto mr-1 text-[11px] text-muted-foreground max-md:hidden">
             Ctrl B

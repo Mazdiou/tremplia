@@ -147,7 +147,7 @@ html.dark {
   color-scheme: dark;
 }
 
-/* ===== StudyFlow : socle d'interface (lot C) ===== */
+/* ===== Socle d'interface (lot C) ===== */
 :root {
   --background: oklch(0.984 0.003 248);
   --foreground: oklch(0.208 0.042 266);

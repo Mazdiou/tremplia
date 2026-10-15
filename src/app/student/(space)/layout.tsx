@@ -15,7 +15,7 @@ import { StudentLogout, StudentTabs } from "@/features/student/components/studen
 import { STUDENT_READ_ONLY } from "@/features/subscription/subscription";
 import { isReadOnly } from "@/features/subscription/server/subscription";
 
-export const metadata: Metadata = { title: "Mon dossier · StudyFlow" };
+export const metadata: Metadata = { title: "Mon dossier" };
 
 // Espace du candidat : lecture seule de ses informations, de sa lettre de
 // motivation et de ses formations.

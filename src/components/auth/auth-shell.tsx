@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
+import { BRAND } from "@/config/brand";
 
 export function LogoMark({ className }: { className?: string }) {
   return (
@@ -143,7 +144,7 @@ export function AuthShell({
           <span className="grid size-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15">
             <GraduationCap className="size-5" strokeWidth={1.8} />
           </span>
-          <span className="text-xl font-semibold tracking-tight">StudyFlow</span>
+          <span className="text-xl font-semibold tracking-tight">{BRAND.name}</span>
         </Link>
 
         <div className="relative my-auto py-8 [@media(max-height:800px)]:py-4">
@@ -170,7 +171,7 @@ export function AuthShell({
               <LockKeyhole className="size-3.5" /> Mots de passe chiffrés
             </span>
           </span>
-          <span>© {new Date().getFullYear()} StudyFlow</span>
+          <span>© {new Date().getFullYear()} {BRAND.name}</span>
         </div>
       </aside>
 
@@ -183,7 +184,7 @@ export function AuthShell({
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:invisible">
             <LogoMark />
-            <span className="text-lg font-semibold tracking-tight">StudyFlow</span>
+            <span className="text-lg font-semibold tracking-tight">{BRAND.name}</span>
           </Link>
           <ThemeToggle className="size-9 rounded-xl text-muted-foreground" />
         </div>

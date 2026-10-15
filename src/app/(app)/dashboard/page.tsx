@@ -29,6 +29,7 @@ import {
 import { APP_TIMEZONE, dayFormat, formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { displayName, initialsOf } from "@/lib/names";
 import { formatDA } from "@/lib/money";
+import { BRAND } from "@/config/brand";
 
 const timeFmt = new Intl.DateTimeFormat("fr-FR", {
   timeZone: APP_TIMEZONE,
@@ -100,7 +101,7 @@ export default async function DashboardPage({
         <PageHeader title={`Bonjour ${u.member.firstName}`} subtitle={todayLabel} />
         <EmptyState
           icon={CalendarRange}
-          title="Bienvenue dans StudyFlow"
+          title={`Bienvenue dans ${BRAND.name}`}
           description={
             u.member.isOwner
               ? "Commencez par créer une campagne ou importer un modèle (Campus France, par exemple) : vous pourrez ensuite y ajouter vos dossiers."

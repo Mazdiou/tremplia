@@ -4,7 +4,7 @@ import { AgenciesTable } from "@/features/admin/components/agencies-table";
 import { listAgencies, requirePlatformAdminPage } from "@/features/admin/server/admin";
 import { RENEWAL_NOTICE_DAYS, daysLeft } from "@/features/subscription/subscription";
 
-export const metadata: Metadata = { title: "Administration · StudyFlow" };
+export const metadata: Metadata = { title: "Administration" };
 
 // Espace de l'administrateur de la plateforme : toutes les agences, leur
 // abonnement, et l'enregistrement des paiements reçus
