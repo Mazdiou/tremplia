@@ -18,6 +18,7 @@ export function codeLookup(code: string) {
 }
 
 // Empreinte d'une adresse IP, pour limiter les essais sans la garder
+// (connexion des candidats et inscription des agences)
 export function ipHash(ip: string) {
   return hmac("studyflow:student-ip", ip);
 }

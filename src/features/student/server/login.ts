@@ -8,14 +8,9 @@ import { sessionCookie } from "./session";
 
 const WRONG = "Code incorrect, ou accès pas encore ouvert par votre agence.";
 
-// Adresse du visiteur (Vercel et la plupart des hébergeurs la transmettent)
-export function clientIp(request: Request) {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || request.headers.get("x-real-ip") || "inconnue";
-}
-
 // Vérifie le code et renvoie le cookie de session. Le message d'échec ne dit
-// jamais si le code existe.
+// jamais si le code existe. Essais limités par adresse et pour tout le
+// service (fonction SQL student_login).
 export async function studentLogin(input: string, ip: string) {
   const code = normalizeCode(input);
   if (!code) throw new ApiError(400, WRONG);

@@ -1,6 +1,7 @@
 import { ok, parseBody, safely } from "@/lib/api-errors";
+import { clientIp } from "@/lib/client-ip";
 import { studentLoginSchema } from "@/features/student/schemas";
-import { clientIp, studentLogin } from "@/features/student/server/login";
+import { studentLogin } from "@/features/student/server/login";
 
 // Connexion du candidat avec le code de son dossier (route publique)
 export function POST(request: Request) {

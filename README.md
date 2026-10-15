@@ -40,6 +40,7 @@ Voir `.env.example`. Aucune vraie valeur ne doit être commitée.
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clé publique (lecture via le RLS) |
 | `SUPABASE_SECRET_KEY` | Clé secrète, routes serveur seulement |
 | `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY` | Chiffre les mots de passe des comptes externes et les codes candidats, signe les sessions candidat (32 octets, base64) ; à sauvegarder hors du dépôt |
+| `CLIENT_IP_HEADER` | Facultatif. En-tête qui porte l'adresse IP du visiteur, pour les limites d'essais. Par défaut `x-forwarded-for` (dernière adresse) : correct sur Vercel et derrière nginx ; derrière Cloudflare, `cf-connecting-ip`. À vérifier à chaque changement d'hébergeur |
 
 ## Règles du projet
 

@@ -1,4 +1,6 @@
-import { ApiError, ok, parseBody, safely } from "@/lib/api-errors";
+import { ApiError, dbError, ok, parseBody, safely } from "@/lib/api-errors";
+import { clientIp } from "@/lib/client-ip";
+import { ipHash } from "@/features/student/server/keys";
 import { logActivity } from "@/lib/audit/log-activity";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { registerSchema } from "@/features/auth/schemas";
@@ -8,6 +10,16 @@ export function POST(request: Request) {
   return safely("register", async () => {
     const d = await parseBody(request, registerSchema);
     const admin = createAdminClient();
+
+    // 0. Essais limités : 3 par heure et par adresse, 30 en tout
+    const { error: limitError } = await admin.rpc("register_attempt", {
+      p_ip_hash: ipHash(clientIp(request)),
+    });
+    if (limitError) {
+      throw dbError("register limit", limitError, {
+        "54000": "Trop d'inscriptions pour le moment. Réessayez dans une heure.",
+      });
+    }
 
     // 1. Création du compte Auth
     const { data: created, error: authError } = await admin.auth.admin.createUser({
