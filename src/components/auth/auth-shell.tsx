@@ -51,11 +51,11 @@ export function AppPreview() {
       <Glass className="absolute top-16 right-12 left-0 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
         <div className="flex items-center gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-decor-accent/15 text-sm font-semibold text-decor-accent">
-            SB
+            AM
           </span>
           <div className="min-w-0 flex-1 pr-24">
             <p className="flex items-center gap-2 font-semibold text-decor-foreground">
-              <span className="truncate">BENALI Sara</span>
+              <span className="truncate">MADIOU Amine</span>
               <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
                 Actif
               </span>

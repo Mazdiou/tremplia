@@ -21,7 +21,7 @@ export function LetterEditor({
 }: {
   caseId: string;
   initial: string;
-  // « par Sara Benali, le 14 oct. 2026 à 10:32 », ou null si jamais écrite
+  // « par Amine Madiou, le 14 oct. 2026 à 10:32 », ou null si jamais écrite
   lastEdit: string | null;
 }) {
   const router = useRouter();

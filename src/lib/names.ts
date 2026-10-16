@@ -9,7 +9,7 @@ export function normalizeName(s: string) {
     .trim();
 }
 
-// Initiales d'un avatar : « BS » pour Sara Benali
+// Initiales d'un avatar : « AM » pour Amine Madiou
 export function initialsOf(firstName: string, lastName: string) {
   return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase() || "?";
 }
