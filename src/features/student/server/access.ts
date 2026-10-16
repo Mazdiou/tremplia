@@ -47,7 +47,7 @@ function newCode(auth: AuthorizedCase, caseId: string) {
   };
 }
 
-export type AccessAction = "enable" | "disable" | "regenerate";
+type AccessAction = "enable" | "disable" | "regenerate";
 
 export async function changeStudentAccess(
   auth: AuthorizedCase,

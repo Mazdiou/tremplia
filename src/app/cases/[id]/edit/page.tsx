@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireMember } from "@/lib/auth/require-member";
 import { toCaseDraft } from "@/features/cases/case-record";
-import { CaseForm, type Member } from "@/features/cases/components/case-form";
+import { CaseForm, type FormMember } from "@/features/cases/components/case-form";
 import { getCase } from "@/features/cases/server/get-case";
 import { ReadOnlyNotice } from "@/features/subscription/components/read-only-notice";
 import { isReadOnly } from "@/features/subscription/server/subscription";
@@ -25,14 +25,14 @@ export default async function EditCasePage({
 
   // Seul le patron choisit le responsable. Le responsable actuel est
   // toujours dans la liste, même s'il est devenu inactif.
-  let members: Member[] = [];
+  let members: FormMember[] = [];
   if (member.isOwner) {
     const supabase = await createClient();
     const { data: list } = await supabase
       .from("profiles")
       .select("id, first_name, last_name, is_active")
       .order("first_name");
-    members = ((list ?? []) as Member[]).filter(
+    members = ((list ?? []) as FormMember[]).filter(
       (m) => m.is_active || m.id === c.assigned_to,
     );
   }

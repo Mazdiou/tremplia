@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AmountField, SelectField, TextField, optionsOf } from "@/components/form-fields";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { PAYMENT_METHOD_LABELS, formatEndDate } from "@/features/subscription/subscription";
+import { PLATFORM_PAYMENT_METHOD_LABELS, formatEndDate } from "@/features/subscription/subscription";
 import {
   PLATFORM_PAYMENT_METHODS,
   SUBSCRIPTION_MONTHS,
@@ -15,7 +15,7 @@ import {
 } from "../schemas";
 import { useModalDialog } from "@/hooks/use-modal-dialog";
 
-const methodOptions = optionsOf(PLATFORM_PAYMENT_METHODS, PAYMENT_METHOD_LABELS);
+const methodOptions = optionsOf(PLATFORM_PAYMENT_METHODS, PLATFORM_PAYMENT_METHOD_LABELS);
 
 // Fenêtre « Paiement reçu » : durée, montant, moyen et note ; la nouvelle
 // date de fin s'affiche avant d'enregistrer

@@ -53,7 +53,7 @@ export type ExportPayment = {
   cancel_reason: string | null;
 };
 
-export type CampaignExportData = {
+type CampaignExportData = {
   cases: ExportCase[];
   groups: { id: string; name: string }[];
   // Étapes de la campagne, dans l'ordre

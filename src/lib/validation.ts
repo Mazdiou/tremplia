@@ -48,6 +48,9 @@ export const optionalIsoDateSchema = z.preprocess(
 
 export const uuidSchema = z.string().uuid("Identifiant invalide");
 
+// Identifiant venu d'une adresse : inutile d'interroger la base sinon
+export const isUuid = (value: string) => uuidSchema.safeParse(value).success;
+
 export const optionalUuidSchema = z.preprocess(
   emptyToUndefined,
   uuidSchema.optional(),

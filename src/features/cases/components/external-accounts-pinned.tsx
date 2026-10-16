@@ -17,7 +17,7 @@ import { TRACK_INDENT, TrackRow } from "./case-header";
 import { cn } from "@/lib/utils";
 import { plural } from "@/lib/plural";
 
-export type PinnedAccount = {
+type PinnedAccount = {
   id: string;
   platform: string;
   url: string | null;
@@ -299,9 +299,9 @@ function AccountForm({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Un compte existant ne redevient pas « à créer »
-  const statusLocked = account?.status === "existing";
-  const hadPassword = account?.status === "existing";
+  // Compte déjà existant : il ne redevient pas « à créer », et son mot de
+  // passe enregistré est gardé si le champ reste vide
+  const wasExisting = account?.status === "existing";
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -366,9 +366,9 @@ function AccountForm({
         <select
           id={id("status")}
           value={status}
-          disabled={statusLocked}
+          disabled={wasExisting}
           onChange={(e) => setStatus(e.target.value as ExternalAccountStatus)}
-          className={cn(selectClass, statusLocked && "opacity-60")}
+          className={cn(selectClass, wasExisting && "opacity-60")}
         >
           <option value="existing">{EXTERNAL_ACCOUNT_STATUS_LABELS.existing}</option>
           <option value="to_create">{EXTERNAL_ACCOUNT_STATUS_LABELS.to_create}</option>
@@ -395,11 +395,11 @@ function AccountForm({
             name="password"
             type="password"
             autoComplete="new-password"
-            required={!hadPassword}
+            required={!wasExisting}
           />
           <FieldError message={fieldErrors.password} />
           <p className="text-xs text-muted-foreground">
-            {hadPassword
+            {wasExisting
               ? "Laissez vide pour garder le mot de passe actuel. "
               : ""}
             Il est chiffré avant d&apos;être enregistré et n&apos;apparaît jamais

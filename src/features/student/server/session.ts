@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { timingSafeEqual } from "node:crypto";
+import { ApiError } from "@/lib/api-errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { signSession } from "./keys";
 
@@ -67,3 +68,10 @@ export const getStudentSession = cache(async (): Promise<StudentSession | null> 
     ? { caseId: p.c, agencyId: p.a, generation: p.g }
     : null;
 });
+
+// Pour les routes API du candidat : refuse (401) au lieu de renvoyer null
+export async function requireApiStudent(): Promise<StudentSession> {
+  const session = await getStudentSession();
+  if (!session) throw new ApiError(401, "Votre session a expiré : reconnectez-vous");
+  return session;
+}

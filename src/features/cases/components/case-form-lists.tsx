@@ -2,6 +2,7 @@
 
 import { KeyRound, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { CaseFieldsDraft } from "@/features/cases/case-record";
 import {
   DIPLOMA_TYPES,
   DIPLOMA_TYPE_LABELS,
@@ -24,13 +25,8 @@ import {
 // Listes répétables du formulaire de dossier. Chaque ligne a ses propres
 // champs ; `errors` est indexé par chemin (« diplomas.0.year »).
 
-export type DiplomaDraft = { type: string; title: string; year: string };
-export type LanguageTestDraft = {
-  test: string;
-  otherName: string;
-  result: string;
-  date: string;
-};
+type DiplomaDraft = CaseFieldsDraft["diplomas"][number];
+type LanguageTestDraft = CaseFieldsDraft["languageTests"][number];
 export type AccountDraft = {
   platform: string;
   url: string;
@@ -256,27 +252,17 @@ export function AccountsEditor({
             </span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label htmlFor={`account-${i}-platform`} className="flex gap-0.5 text-sm font-medium">
-                Plateforme<span aria-hidden className="text-destructive">*</span>
-              </label>
-              <input
-                id={`account-${i}-platform`}
-                list="platform-suggestions"
-                value={a.platform}
-                maxLength={80}
-                required
-                placeholder="Choisir ou saisir"
-                onChange={(e) => onChange(update(value, i, { platform: e.target.value }))}
-                aria-invalid={errors[`externalAccounts.${i}.platform`] ? true : undefined}
-                className="h-10 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive dark:bg-input/30"
-              />
-              {errors[`externalAccounts.${i}.platform`] && (
-                <p className="text-xs font-medium text-destructive">
-                  {errors[`externalAccounts.${i}.platform`]}
-                </p>
-              )}
-            </div>
+            <TextField
+              id={`account-${i}-platform`}
+              label="Plateforme"
+              required
+              list="platform-suggestions"
+              placeholder="Choisir ou saisir"
+              value={a.platform}
+              maxLength={80}
+              onChange={(platform) => onChange(update(value, i, { platform }))}
+              error={errors[`externalAccounts.${i}.platform`]}
+            />
             <SelectField
               id={`account-${i}-status`}
               label="Compte"

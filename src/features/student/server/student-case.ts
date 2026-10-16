@@ -3,7 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CASE_FIELD_COLUMNS, type CaseFieldsRecord } from "@/features/cases/case-record";
-import type { ProgramItem } from "@/features/programs/components/programs-panel";
+import type { ProgramItem } from "@/features/programs/schemas";
 import { getStudentSession, type StudentSession } from "./session";
 
 // Lectures de l'espace candidat. Le candidat n'a pas de compte Supabase :

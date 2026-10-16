@@ -2,11 +2,11 @@ import { Panel, StatusPill } from "@/components/page-ui";
 import { formatDA } from "@/lib/money";
 import { dayFormat } from "@/lib/dates";
 import {
-  PAYMENT_METHOD_LABELS,
   STATE_LABELS,
   STATE_TONES,
   daysLeft,
   formatEndDate,
+  platformPaymentMethodLabel,
 } from "../subscription";
 import { getSubscription, listPlatformPayments, supportPhone } from "../server/subscription";
 import { plural } from "@/lib/plural";
@@ -74,7 +74,7 @@ export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
                     {formatDA(p.amount)}
                   </span>
                   <span>
-                    {p.months} mois · {PAYMENT_METHOD_LABELS[p.method] ?? p.method}
+                    {p.months} mois · {platformPaymentMethodLabel(p.method)}
                   </span>
                   {p.cancelled_at && (
                     <span className="text-xs">Annulé{p.cancel_reason ? ` : ${p.cancel_reason}` : ""}</span>

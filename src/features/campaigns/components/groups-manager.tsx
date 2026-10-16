@@ -11,7 +11,7 @@ import { callApiError } from "@/lib/api-client";
 import { MAX_CAMPAIGN_GROUPS } from "../schemas";
 import { plural } from "@/lib/plural";
 
-export type ManagedGroup = { id: string; name: string; activeCases: number };
+type ManagedGroup = { id: string; name: string; activeCases: number };
 
 // Groupes d'une campagne : tout membre actif les gère, sauf si la campagne
 // est archivée (ils sont alors figés).

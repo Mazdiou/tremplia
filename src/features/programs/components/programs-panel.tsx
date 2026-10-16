@@ -31,20 +31,11 @@ import {
   programLevelLabel,
   programResult,
   programResultsSummary,
+  type ProgramItem,
   type ProgramResult,
 } from "@/features/programs/schemas";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-
-export type ProgramItem = {
-  id: string;
-  title: string;
-  level: string;
-  city: string;
-  institution: string | null;
-  // Réponse de l'établissement (voir PROGRAM_RESULTS)
-  result: string;
-};
 
 type Draft = { title: string; level: string; city: string; institution: string };
 const EMPTY: Draft = { title: "", level: "", city: "", institution: "" };

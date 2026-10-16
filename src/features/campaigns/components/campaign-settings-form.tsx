@@ -24,7 +24,7 @@ import {
 import { MAX_STAGES } from "@/features/stages/schemas";
 import { DEFAULT_STAGES } from "@/features/stages/stages";
 
-export type CampaignSettingsDraft = {
+type CampaignSettingsDraft = {
   name: string;
   dates: { label: string; date: string }[];
   infos: { label: string; value: string }[];

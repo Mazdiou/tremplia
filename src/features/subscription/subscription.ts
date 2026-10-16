@@ -1,4 +1,4 @@
-import { APP_TIMEZONE } from "@/lib/dates";
+import { dayFormat } from "@/lib/dates";
 import { plural } from "@/lib/plural";
 
 // Abonnement d'une agence (voir la migration subscriptions) : essai, actif
@@ -24,10 +24,10 @@ export function daysLeft(endsAt: string, now = new Date()): number {
 
 // « 22/10/2026 », dans le fuseau de l'application
 export function formatEndDate(endsAt: string): string {
-  return new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIMEZONE }).format(new Date(endsAt));
+  return dayFormat.format(new Date(endsAt));
 }
 
-export type SubscriptionNotice = { tone: "info" | "warn" | "bad"; text: string } | null;
+type SubscriptionNotice = { tone: "info" | "warn" | "bad"; text: string } | null;
 
 // Texte du bandeau, sans le moyen de contact (ajouté par l'affichage) ; rien
 // pour un abonnement payé qui court encore plus de 7 jours
@@ -71,11 +71,17 @@ export const STATE_TONES = {
   exempt: "off",
 } as const satisfies Record<SubscriptionState, string>;
 
-export const PAYMENT_METHOD_LABELS: Record<string, string> = {
+// Moyens de paiement de l'abonnement (voir PLATFORM_PAYMENT_METHODS)
+export const PLATFORM_PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "Espèces",
   ccp: "CCP",
   baridimob: "BaridiMob",
 };
+
+// Un moyen inconnu s'affiche tel quel
+export function platformPaymentMethodLabel(method: string) {
+  return PLATFORM_PAYMENT_METHOD_LABELS[method] ?? method;
+}
 
 // Message montré au candidat d'une agence en lecture seule
 export const STUDENT_READ_ONLY =

@@ -18,9 +18,9 @@ const selectClass =
 const textareaClass =
   "min-h-24 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive dark:bg-input/30";
 
-export function FieldError({ message }: { message?: string }) {
+export function FieldError({ message, className }: { message?: string; className?: string }) {
   if (!message) return null;
-  return <p className="text-xs font-medium text-destructive">{message}</p>;
+  return <p className={cn("text-xs font-medium text-destructive", className)}>{message}</p>;
 }
 
 function FieldLabel({
@@ -72,6 +72,7 @@ export function TextField({
   hideLabel,
   hint,
   placeholder,
+  list,
 }: Common & {
   value: string;
   onChange: (value: string) => void;
@@ -79,6 +80,8 @@ export function TextField({
   maxLength?: number;
   autoComplete?: string;
   placeholder?: string;
+  // Identifiant d'une <datalist> de suggestions
+  list?: string;
 }) {
   return (
     <div className={cn("space-y-1.5", className)}>
@@ -92,6 +95,7 @@ export function TextField({
         maxLength={maxLength}
         autoComplete={autoComplete}
         placeholder={placeholder}
+        list={list}
         aria-invalid={error ? true : undefined}
       />
       {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}

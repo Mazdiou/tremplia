@@ -14,7 +14,7 @@ import { MAX_STAGES } from "../schemas";
 import { removalTargets } from "../stages";
 import { plural } from "@/lib/plural";
 
-export type StageWithCounts = {
+type StageWithCounts = {
   id: string;
   name: string;
   // Dossiers actifs à cette étape, et tous statuts confondus

@@ -29,16 +29,7 @@ import { callApi } from "@/lib/api-client";
 import { dateTimeFormat, formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { amountInputValue, formatDA, parseAmount } from "@/lib/money";
 import { cn } from "@/lib/utils";
-
-export type PaymentRow = {
-  id: string;
-  amount: number;
-  paidOn: string;
-  method: string;
-  note: string | null;
-  createdBy: string;
-  cancelled: { by: string; at: string; reason: string } | null;
-};
+import type { PaymentItem } from "@/features/payments/server/payments";
 
 const methodOptions = optionsOf(PAYMENT_METHODS, PAYMENT_METHOD_LABELS);
 
@@ -263,7 +254,7 @@ function PaymentLine({
   canCancel,
   onCancel,
 }: {
-  payment: PaymentRow;
+  payment: PaymentItem;
   canCancel: boolean;
   onCancel: () => void;
 }) {
@@ -333,7 +324,7 @@ export function PaymentsPanel({
   agreed: number | null;
   // Total des paiements non annulés, tenu par la base
   paid: number;
-  payments: PaymentRow[];
+  payments: PaymentItem[];
   isOwner: boolean;
   // Tarif de la campagne, proposé quand le montant n'est pas encore fixé
   defaultFee: number | null;
@@ -344,7 +335,7 @@ export function PaymentsPanel({
 
   const [mode, setMode] = useState<"idle" | "pay" | "agreed">("idle");
   const [message, setMessage] = useState<ActionMessage>(null);
-  const [toCancel, setToCancel] = useState<PaymentRow | null>(null);
+  const [toCancel, setToCancel] = useState<PaymentItem | null>(null);
   const [reason, setReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
 

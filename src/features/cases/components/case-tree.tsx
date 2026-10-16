@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import { PILL_TONE_CLASSES } from "@/components/page-ui";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   EDUCATION_LEVELS,
@@ -25,7 +26,7 @@ import { displayName, fullName } from "@/lib/names";
 import { formatDA } from "@/lib/money";
 import { UnreadBadge } from "@/features/messages/components/unread-badge";
 import { cn } from "@/lib/utils";
-import { useUiPrefs } from "@/lib/ui-prefs";
+import { TREE_WIDTH, useUiPrefs } from "@/lib/ui-prefs";
 import { createClient } from "@/lib/supabase/client";
 import {
   fetchCampaignCases,
@@ -50,7 +51,7 @@ import { CampaignMenu, GroupActions, InlineNameInput, groupApi } from "./tree-ac
 import { BRAND } from "@/config/brand";
 import { plural } from "@/lib/plural";
 
-export type TreeCampaign = { id: string; name: string; status: string };
+type TreeCampaign = { id: string; name: string; status: string };
 
 export type TreeMember = {
   id: string;
@@ -74,6 +75,16 @@ function byLevel(a: TreeCase, b: TreeCase) {
     byName(a, b)
   );
 }
+
+// Réglages d'affichage (bouton à côté du nom de l'application)
+const DISPLAY_OPTIONS = [
+  { key: "showLevel", label: "Afficher le niveau d'études" },
+  { key: "showPayments", label: "Afficher le reste à payer" },
+  { key: "showStage", label: "Afficher l'étape" },
+  { key: "showClosed", label: "Afficher clos et abandonnés" },
+  { key: "showArchived", label: "Afficher les campagnes archivées" },
+] as const;
+type DisplayOption = (typeof DISPLAY_OPTIONS)[number]["key"];
 
 const selectClass =
   "h-8 min-w-0 flex-1 rounded-lg border bg-card px-2 text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
@@ -309,7 +320,7 @@ export function CaseTree({
     const startWidth = prefs.width;
     let last = startWidth;
     function onMove(ev: PointerEvent) {
-      last = Math.min(520, Math.max(220, startWidth + ev.clientX - startX));
+      last = Math.min(TREE_WIDTH.max, Math.max(TREE_WIDTH.min, startWidth + ev.clientX - startX));
       setDragWidth(last);
     }
     function onUp() {
@@ -398,46 +409,18 @@ export function CaseTree({
 
         {settingsOpen && (
           <div className="absolute top-12 right-3 left-3 z-20 space-y-2 rounded-xl border bg-popover p-3 text-sm shadow-lg">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={prefs.showLevel}
-                onChange={(e) => setPrefs({ showLevel: e.target.checked })}
-              />
-              Afficher le niveau d&apos;études
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={prefs.showPayments}
-                onChange={(e) => setPrefs({ showPayments: e.target.checked })}
-              />
-              Afficher le reste à payer
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={prefs.showStage}
-                onChange={(e) => setPrefs({ showStage: e.target.checked })}
-              />
-              Afficher l&apos;étape
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={prefs.showClosed}
-                onChange={(e) => setPrefs({ showClosed: e.target.checked })}
-              />
-              Afficher clos et abandonnés
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={prefs.showArchived}
-                onChange={(e) => setPrefs({ showArchived: e.target.checked })}
-              />
-              Afficher les campagnes archivées
-            </label>
+            {DISPLAY_OPTIONS.map(({ key, label }) => (
+              <label key={key} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={prefs[key]}
+                  onChange={(e) =>
+                    setPrefs({ [key]: e.target.checked } as Partial<Record<DisplayOption, boolean>>)
+                  }
+                />
+                {label}
+              </label>
+            ))}
             <label className="flex items-center justify-between gap-2">
               Trier par
               <select
@@ -795,7 +778,7 @@ export function CaseTree({
                                         )}
                                         {prefs.showPayments &&
                                           (c.remaining_amount ?? 0) > 0 && (
-                                            <span className="rounded-full bg-amber-100 px-1.5 py-px text-[11px] font-medium text-amber-900 tabular-nums dark:bg-amber-950 dark:text-amber-200">
+                                            <span className={cn("rounded-full px-1.5 py-px text-[11px] font-medium tabular-nums", PILL_TONE_CLASSES.warn)}>
                                               <span className="sr-only">Reste à payer : </span>
                                               {formatDA(c.remaining_amount ?? 0)}
                                             </span>
@@ -848,8 +831,8 @@ export function CaseTree({
         aria-orientation="vertical"
         aria-label="Redimensionner le panneau"
         aria-valuenow={width}
-        aria-valuemin={220}
-        aria-valuemax={520}
+        aria-valuemin={TREE_WIDTH.min}
+        aria-valuemax={TREE_WIDTH.max}
         tabIndex={0}
         onPointerDown={startResize}
         onKeyDown={(e) => {

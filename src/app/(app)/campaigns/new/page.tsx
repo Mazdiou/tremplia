@@ -5,6 +5,9 @@ import { CampaignSettingsForm } from "@/features/campaigns/components/campaign-s
 import { ReadOnlyNotice } from "@/features/subscription/components/read-only-notice";
 import { isReadOnly } from "@/features/subscription/server/subscription";
 import { requireOwner } from "@/lib/auth/require-member";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Nouvelle campagne" };
 
 export default async function NewCampaignPage() {
   const owner = await requireOwner();

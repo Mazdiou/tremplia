@@ -20,6 +20,9 @@ import { countCases } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
 import { cn } from "@/lib/utils";
 import { pluralWord } from "@/lib/plural";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Campagnes" };
 
 type CardData = CampaignSummary & {
   activeCases: number;

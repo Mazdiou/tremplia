@@ -9,6 +9,9 @@ import { requireMember } from "@/lib/auth/require-member";
 import { isReadOnly } from "@/features/subscription/server/subscription";
 import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Dossiers" };
 
 // Aucun dossier sélectionné : les dates des campagnes actives
 export default async function CasesHomePage() {

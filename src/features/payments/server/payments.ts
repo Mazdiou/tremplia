@@ -1,5 +1,4 @@
 import "server-only";
-import { z } from "zod";
 import { ApiError, dbError } from "@/lib/api-errors";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -8,6 +7,7 @@ import {
 } from "@/features/cases/server/authorize-case";
 import type { RecordPaymentInput } from "@/features/payments/schemas";
 import { fullName } from "@/lib/names";
+import { isUuid } from "@/lib/validation";
 
 // Paiements du candidat à l'agence. Tout membre actif enregistre un paiement
 // et fixe un montant convenu encore vide ; seul le patron annule un paiement
@@ -40,7 +40,7 @@ const memberName = (p: { first_name: string; last_name: string } | null) =>
 // Lecture via le RLS : seuls les paiements de l'agence reviennent. Les plus
 // récents d'abord.
 export async function listPayments(caseId: string): Promise<PaymentItem[]> {
-  if (!z.string().uuid().safeParse(caseId).success) return [];
+  if (!isUuid(caseId)) return [];
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("case_payments")

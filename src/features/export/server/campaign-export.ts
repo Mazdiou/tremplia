@@ -6,7 +6,7 @@ import { todayInAppTimezone } from "@/lib/dates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { buildXlsx } from "@/lib/xlsx";
-import { readAll } from "@/features/cases/fetch-campaign-cases";
+import { readAll } from "@/lib/supabase/read-all";
 import {
   campaignWorkbook,
   exportFileName,

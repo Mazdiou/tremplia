@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCase } from "@/features/cases/server/get-case";
-import {
-  ProgramsPanel,
-  type ProgramItem,
-} from "@/features/programs/components/programs-panel";
+import { ProgramsPanel } from "@/features/programs/components/programs-panel";
+import type { ProgramItem } from "@/features/programs/schemas";
 
 export default async function ProgramsPage({
   params,

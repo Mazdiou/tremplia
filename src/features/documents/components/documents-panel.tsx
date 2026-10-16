@@ -46,6 +46,9 @@ const NO_FOLDER = "none";
 // Type propre au glisser-déposer d'un document de cette page
 const DOC_DRAG_TYPE = "application/x-studyflow-doc";
 
+const lockedMessage = (verb: string) =>
+  `Ce document est verrouillé par le patron : il ne peut plus être ${verb}.`;
+
 function hasType(e: React.DragEvent, type: string) {
   return Array.from(e.dataTransfer.types).includes(type);
 }
@@ -177,7 +180,7 @@ export function DocumentsPanel({
 
   function startRename(d: DocItem) {
     if (d.locked) {
-      say("Ce document est verrouillé par le patron : il ne peut plus être renommé.", true);
+      say(lockedMessage("renommé"), true);
       return;
     }
     setMessage(null);
@@ -209,7 +212,7 @@ export function DocumentsPanel({
 
   function askDelete(d: DocItem) {
     if (d.locked) {
-      say("Ce document est verrouillé par le patron : il ne peut plus être supprimé.", true);
+      say(lockedMessage("supprimé"), true);
       return;
     }
     setMessage(null);
@@ -266,7 +269,7 @@ export function DocumentsPanel({
     const current = d.folderId && folderIds.has(d.folderId) ? d.folderId : null;
     if (current === folderId) return;
     if (d.locked) {
-      say("Ce document est verrouillé par le patron : il ne peut plus être déplacé.", true);
+      say(lockedMessage("déplacé"), true);
       return;
     }
     setMessage(null);
@@ -490,10 +493,7 @@ export function DocumentsPanel({
                   disabled={working === d.id}
                   onClick={() => {
                     if (d.locked) {
-                      say(
-                        "Ce document est verrouillé par le patron : il ne peut plus être déplacé.",
-                        true,
-                      );
+                      say(lockedMessage("déplacé"), true);
                       return;
                     }
                     setMessage(null);

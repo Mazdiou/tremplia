@@ -8,7 +8,7 @@ import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { MAX_MESSAGE_LENGTH, type MessageItem } from "@/features/messages/schemas";
 
-export type ThreadMessage = MessageItem & { timeLabel: string };
+type ThreadMessage = MessageItem & { timeLabel: string };
 
 // Nouveaux messages de l'autre côté : vérifiés régulièrement tant que la
 // page est visible. Le candidat n'a pas de temps réel ; côté agence,

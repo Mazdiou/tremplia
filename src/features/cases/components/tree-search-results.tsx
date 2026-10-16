@@ -7,15 +7,7 @@ import { CASE_SEARCH_LIMIT } from "@/features/cases/schemas";
 import { displayName } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import { plural } from "@/lib/plural";
-
-type Result = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  status: string;
-  educationLevel: string;
-  campaignName: string;
-};
+import type { CaseSearchResult } from "@/features/cases/server/lookups";
 
 const DEBOUNCE_MS = 300;
 
@@ -31,7 +23,7 @@ export function TreeSearchResults({
   showLevel: boolean;
 }) {
   const trimmed = query.trim();
-  const [results, setResults] = useState<Result[] | null>(null);
+  const [results, setResults] = useState<CaseSearchResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchedFor, setSearchedFor] = useState("");
 
@@ -52,7 +44,7 @@ export function TreeSearchResults({
           setResults(null);
         } else {
           setError(null);
-          setResults(data.results as Result[]);
+          setResults(data.results as CaseSearchResult[]);
         }
         setSearchedFor(trimmed);
       } catch {

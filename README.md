@@ -148,6 +148,7 @@ Pour retirer ce droit : `delete from public.platform_admins where user_id = '…
 src/
   app/                  pages, layouts et routes API (minces)
   components/           partagés : ui/ (shadcn), shell/, auth/, page-ui, form-fields
+  hooks/                hooks React partagés (menus, fenêtres, valeurs du navigateur)
   config/
     campaign-templates/ modèles de campagne (un fichier par modèle)
   features/
@@ -158,9 +159,10 @@ src/
       server/           lectures et écritures serveur (« server-only »)
       schemas.ts        schémas zod partagés formulaires / routes
       labels.ts         listes métier et libellés français
-  lib/                  transverse : supabase/, auth/, crypto/, audit/, api-errors,
-                        api-client (appels depuis le navigateur), dates, money,
-                        xlsx (classeurs Excel)…
+  lib/                  transverse : supabase/ (clients, lecture par pages), auth/,
+                        crypto/, audit/, api-errors, api-client (appels depuis le
+                        navigateur), dates, money, names, plural, phone,
+                        validation, xlsx (classeurs Excel)…
 supabase/
   migrations/           une migration par domaine
   tests/                un fichier pgTAP par domaine

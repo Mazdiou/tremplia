@@ -38,7 +38,7 @@ export async function requireApiPlatformAdmin(): Promise<Member> {
   return member;
 }
 
-export type AdminAgency = {
+type AdminAgency = {
   id: string;
   name: string;
   city: string;
@@ -84,7 +84,7 @@ export async function listAgencies(adminId: string): Promise<AdminAgency[]> {
   }));
 }
 
-export type AdminPayment = {
+type AdminPayment = {
   id: string;
   months: number;
   amount: number;

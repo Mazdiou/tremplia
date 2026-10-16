@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { readAll } from "@/lib/supabase/read-all";
 
 export type TreeCase = {
   id: string;
@@ -22,25 +23,9 @@ export type CampaignCases = { cases: TreeCase[]; caseGroups: TreeCaseGroup[] };
 const CASE_COLUMNS =
   "id, campaign_id, first_name, last_name, education_level, status, assigned_to, agreed_amount, remaining_amount, stage_id";
 
-// Supabase renvoie au plus 1000 lignes par requête (réglage max_rows). On lit
-// donc par pages de 500, triées sur une colonne stable, jusqu'à la dernière.
-// Utilisé par le serveur (campagne ouverte par défaut) et par le navigateur
-// (autres campagnes, à l'ouverture). Lecture via le RLS dans les deux cas.
-const PAGE_SIZE = 500;
-
-export async function readAll<T>(
-  page: (from: number, to: number) => PromiseLike<{ data: unknown; error: { message: string } | null }>,
-): Promise<T[]> {
-  const rows: T[] = [];
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await page(from, from + PAGE_SIZE - 1);
-    if (error) throw new Error("lecture impossible");
-    const batch = (data ?? []) as T[];
-    rows.push(...batch);
-    if (batch.length < PAGE_SIZE) return rows;
-  }
-}
-
+// Dossiers d'une campagne et leur classement, lus via le RLS : par le serveur
+// (campagne ouverte par défaut) ou par le navigateur (autres campagnes, à
+// l'ouverture)
 export async function fetchCampaignCases(
   supabase: SupabaseClient,
   campaignId: string,

@@ -7,7 +7,7 @@ import { isoDateSchema, optionalText, requiredText } from "@/lib/validation";
 // mêmes valeurs et limites (migration case_payments).
 
 export const PAYMENT_METHODS = ["cash", "ccp", "card"] as const;
-export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   cash: "Espèces",

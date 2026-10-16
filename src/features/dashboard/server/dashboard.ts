@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { readAll } from "@/features/cases/fetch-campaign-cases";
+import { readAll } from "@/lib/supabase/read-all";
 import { PROGRAM_RESULTS, type ProgramResult } from "@/features/programs/schemas";
 import { groupActivity, type ActivityGroup, type ActivityRow } from "../activity";
 import { plural } from "@/lib/plural";

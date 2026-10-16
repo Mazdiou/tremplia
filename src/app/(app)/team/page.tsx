@@ -10,6 +10,9 @@ import { ToggleActiveButton } from "@/features/team/components/toggle-active-but
 import { SubscriptionPanel } from "@/features/subscription/components/subscription-panel";
 import { getSubscription, listPlatformPayments } from "@/features/subscription/server/subscription";
 import { plural } from "@/lib/plural";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Équipe" };
 
 export default async function TeamPage() {
   const caller = await requireOwner();

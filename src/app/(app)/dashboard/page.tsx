@@ -34,6 +34,9 @@ import { BRAND } from "@/config/brand";
 import { InstallAppCard } from "@/features/pwa/components/install-app-card";
 import { StagePipeline } from "@/features/stages/components/stage-pipeline";
 import { plural, pluralWord } from "@/lib/plural";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Tableau de bord" };
 
 const monthName = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIMEZONE, month: "long" });
 const longToday = new Intl.DateTimeFormat("fr-FR", {

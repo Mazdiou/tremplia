@@ -12,7 +12,7 @@ export type CampaignSummary = {
   template_key: string | null;
 };
 
-export type GroupSummary = {
+type GroupSummary = {
   id: string;
   campaign_id: string;
   name: string;

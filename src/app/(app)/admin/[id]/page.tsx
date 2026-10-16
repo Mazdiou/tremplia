@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { z } from "zod";
 import { PageContainer, PageHeader, Panel, StatusPill } from "@/components/page-ui";
 import { PaymentButton } from "@/features/admin/components/payment-dialog";
 import { PaymentsHistory } from "@/features/admin/components/payments-history";
@@ -18,6 +17,7 @@ import {
 } from "@/features/subscription/subscription";
 import { dayFormat } from "@/lib/dates";
 import { plural } from "@/lib/plural";
+import { isUuid } from "@/lib/validation";
 
 export const metadata: Metadata = { title: "Agence · Administration" };
 
@@ -25,7 +25,7 @@ export const metadata: Metadata = { title: "Agence · Administration" };
 export default async function AdminAgencyPage({ params }: { params: Promise<{ id: string }> }) {
   const admin = await requirePlatformAdminPage();
   const { id } = await params;
-  if (!z.string().uuid().safeParse(id).success) notFound();
+  if (!isUuid(id)) notFound();
 
   const [agencies, payments] = await Promise.all([
     listAgencies(admin.userId),

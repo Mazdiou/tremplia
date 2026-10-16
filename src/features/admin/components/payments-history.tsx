@@ -7,9 +7,10 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { callApi } from "@/lib/api-client";
 import { formatDA } from "@/lib/money";
 import { cn } from "@/lib/utils";
-import { PAYMENT_METHOD_LABELS, formatEndDate } from "@/features/subscription/subscription";
+import { formatEndDate, platformPaymentMethodLabel } from "@/features/subscription/subscription";
+import { TextField } from "@/components/form-fields";
 
-export type HistoryPayment = {
+type HistoryPayment = {
   id: string;
   months: number;
   amount: number;
@@ -70,7 +71,7 @@ export function PaymentsHistory({ payments }: { payments: HistoryPayment[] }) {
               {formatDA(p.amount)}
             </span>
             <span className="min-w-0 flex-1">
-              {p.months} mois · {PAYMENT_METHOD_LABELS[p.method] ?? p.method}
+              {p.months} mois · {platformPaymentMethodLabel(p.method)}
               {p.note && <span className="text-muted-foreground"> · {p.note}</span>}
               {p.cancelledAt ? (
                 <span className="block text-xs">Annulé : {p.cancelReason}</span>
@@ -112,16 +113,13 @@ export function PaymentsHistory({ payments }: { payments: HistoryPayment[] }) {
         onConfirm={() => void cancel()}
         onCancel={() => setTarget(null)}
       >
-        <label htmlFor="cancel-reason" className="mb-1.5 block text-sm font-medium">
-          Motif
-        </label>
-        <input
+        <TextField
           id="cancel-reason"
-          value={reason}
+          label="Motif"
           maxLength={300}
-          onChange={(e) => setReason(e.target.value)}
+          value={reason}
+          onChange={setReason}
           placeholder="Ex. : erreur de montant"
-          className="h-9 w-full rounded-lg border border-input bg-card px-3 text-sm"
         />
       </ConfirmDialog>
     </>

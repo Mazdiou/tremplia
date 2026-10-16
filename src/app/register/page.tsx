@@ -23,6 +23,11 @@ import {
 } from "@/components/auth/auth-field";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import {
+  MAX_PASSWORD_LENGTH,
+  MIN_PASSWORD_LENGTH,
+  PASSWORD_TOO_SHORT,
+} from "@/features/auth/schemas";
 
 type Values = {
   agencyName: string;
@@ -117,8 +122,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
 
-    if (values.password.length < 8)
-      return setError("Mot de passe trop court (8 caractères minimum).");
+    if (values.password.length < MIN_PASSWORD_LENGTH) return setError(`${PASSWORD_TOO_SHORT}.`);
     if (values.password !== values.confirm)
       return setError("Les mots de passe ne correspondent pas.");
 
@@ -253,17 +257,17 @@ export default function RegisterPage() {
           <PasswordField
             label="Mot de passe"
             autoComplete="new-password"
-            hint="8 caractères minimum"
-            minLength={8}
-            maxLength={72}
+            hint={`${MIN_PASSWORD_LENGTH} caractères minimum`}
+            minLength={MIN_PASSWORD_LENGTH}
+            maxLength={MAX_PASSWORD_LENGTH}
             required
             {...bind("password")}
           />
           <PasswordField
             label="Confirmer le mot de passe"
             autoComplete="new-password"
-            minLength={8}
-            maxLength={72}
+            minLength={MIN_PASSWORD_LENGTH}
+            maxLength={MAX_PASSWORD_LENGTH}
             required
             {...bind("confirm")}
           />

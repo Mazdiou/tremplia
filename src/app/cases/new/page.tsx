@@ -11,6 +11,9 @@ import type { SourceCampaign } from "@/features/cases/components/import-panel";
 import { listUsedPlatforms } from "@/features/cases/server/lookups";
 import { ReadOnlyNotice } from "@/features/subscription/components/read-only-notice";
 import { isReadOnly } from "@/features/subscription/server/subscription";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Nouveau dossier" };
 
 export default async function NewCasePage({
   searchParams,

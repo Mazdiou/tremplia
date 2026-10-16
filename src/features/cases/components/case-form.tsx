@@ -23,6 +23,7 @@ import {
 } from "./case-form-lists";
 import {
   AmountField,
+  FieldError,
   SelectField,
   TextAreaField,
   TextField,
@@ -45,7 +46,7 @@ export type FormCampaign = {
   defaultFee: number | null;
 };
 
-export type Member = {
+export type FormMember = {
   id: string;
   first_name: string;
   last_name: string;
@@ -89,7 +90,7 @@ export function CaseForm(
         defaultCampaignId: string | null;
         sources: SourceCampaign[];
         platformSuggestions: string[];
-        members: Member[];
+        members: FormMember[];
         isOwner: boolean;
         currentUserId: string;
       }
@@ -98,7 +99,7 @@ export function CaseForm(
         caseId: string;
         campaign: FormCampaign;
         initial: { fields: CaseFieldsDraft; groupIds: string[]; assignedTo: string | null };
-        members: Member[];
+        members: FormMember[];
         isOwner: boolean;
         currentUserId: string;
       },
@@ -496,9 +497,7 @@ export function CaseForm(
                   )}
                   passwordHint={imported !== null}
                 />
-                {e.externalAccounts && (
-                  <p className="mt-2 text-xs font-medium text-destructive">{e.externalAccounts}</p>
-                )}
+                <FieldError message={e.externalAccounts} className="mt-2" />
               </div>
               <div className="border-t pt-5">
                 <TextAreaField id="initialNote" label="Note initiale" maxLength={MAX_NOTE_LENGTH}

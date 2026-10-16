@@ -5,7 +5,7 @@ import { strToU8, zipSync } from "fflate";
 // (triables, additionnables). Les textes sont écrits en chaînes : un texte
 // qui commence par « = » reste un texte, jamais une formule.
 
-export type ColumnKind = "text" | "date" | "amount" | "number";
+type ColumnKind = "text" | "date" | "amount" | "number";
 
 export type Column = { header: string; width: number; kind?: ColumnKind };
 

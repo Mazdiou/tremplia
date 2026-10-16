@@ -14,7 +14,7 @@ export const EDUCATION_LEVELS = [
   "doctorate",
   "other",
 ] as const;
-export type EducationLevel = (typeof EDUCATION_LEVELS)[number];
+type EducationLevel = (typeof EDUCATION_LEVELS)[number];
 
 export const EDUCATION_LEVEL_LABELS: Record<EducationLevel, string> = {
   terminale: "Terminale",
@@ -50,7 +50,7 @@ export const DIPLOMA_TYPES = [
   "doctorate",
   "other",
 ] as const;
-export type DiplomaType = (typeof DIPLOMA_TYPES)[number];
+type DiplomaType = (typeof DIPLOMA_TYPES)[number];
 
 export const DIPLOMA_TYPE_LABELS: Record<DiplomaType, string> = {
   baccalaureate: "Baccalauréat",
@@ -61,7 +61,7 @@ export const DIPLOMA_TYPE_LABELS: Record<DiplomaType, string> = {
 };
 
 export const LANGUAGE_TESTS = ["tcf", "delf", "dalf", "ielts", "toefl", "other"] as const;
-export type LanguageTest = (typeof LANGUAGE_TESTS)[number];
+type LanguageTest = (typeof LANGUAGE_TESTS)[number];
 
 export const LANGUAGE_TEST_LABELS: Record<LanguageTest, string> = {
   tcf: "TCF",

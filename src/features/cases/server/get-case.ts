@@ -1,12 +1,12 @@
 import "server-only";
 import { cache } from "react";
-import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import type { CaseFieldsRecord } from "../case-record";
 import type { CaseStatus, ExternalAccountStatus } from "../labels";
 import { fullName } from "@/lib/names";
+import { isUuid } from "@/lib/validation";
 
-export type CaseRow = CaseFieldsRecord & {
+type CaseRow = CaseFieldsRecord & {
   id: string;
   campaign_id: string;
   assigned_to: string | null;
@@ -23,7 +23,7 @@ export type CaseRow = CaseFieldsRecord & {
   created_at: string;
 };
 
-export type CaseExternalAccount = {
+type CaseExternalAccount = {
   id: string;
   platform: string;
   url: string | null;
@@ -32,15 +32,15 @@ export type CaseExternalAccount = {
   status: ExternalAccountStatus;
 };
 
-export type CaseGroup = { id: string; name: string };
+type CaseGroup = { id: string; name: string };
 
-export type CaseStage = { id: string; name: string };
+type CaseStage = { id: string; name: string };
 
 // Mis en cache pour la durée de la requête : le layout et les onglets
 // partagent la même lecture. Lecture via le RLS : un dossier d'une autre
 // agence n'est jamais trouvé (donc « introuvable » partout).
 export const getCase = cache(async (id: string) => {
-  if (!z.string().uuid().safeParse(id).success) return null;
+  if (!isUuid(id)) return null;
 
   // Une seule requête : le dossier et ce qui s'y rattache, par ses liens
   const supabase = await createClient();

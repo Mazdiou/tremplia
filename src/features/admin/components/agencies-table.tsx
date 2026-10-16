@@ -15,7 +15,7 @@ import { normalizeName as normalize } from "@/lib/names";
 import { PaymentButton } from "./payment-dialog";
 import { plural } from "@/lib/plural";
 
-export type AgencyRow = {
+type AgencyRow = {
   id: string;
   name: string;
   city: string;

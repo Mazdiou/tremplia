@@ -30,7 +30,7 @@ export function whatsAppUrl(number: string, text = ""): string {
     : `https://wa.me/${number}`;
 }
 
-export type WhatsAppTemplate = "empty" | "access" | "newMessage" | "payment" | "visit";
+type WhatsAppTemplate = "empty" | "access" | "newMessage" | "payment" | "visit";
 
 export const TEMPLATE_LABELS: Record<WhatsAppTemplate, string> = {
   empty: "Message vide",

@@ -8,7 +8,7 @@ import { useSyncExternalStore } from "react";
 export const PAYMENT_FILTERS = ["", "due", "paid", "unset"] as const;
 export type PaymentFilter = (typeof PAYMENT_FILTERS)[number];
 
-export type UiPrefs = {
+type UiPrefs = {
   width: number;
   collapsed: boolean;
   open: Record<string, boolean>;
@@ -49,6 +49,9 @@ export const DEFAULT_PREFS: UiPrefs = {
   caseHeaderCollapsed: false,
 };
 
+// Largeur du panneau des dossiers, en pixels
+export const TREE_WIDTH = { min: 220, max: 520 } as const;
+
 const KEY = "sf:ui";
 const listeners = new Set<() => void>();
 let cache: UiPrefs = DEFAULT_PREFS;
@@ -62,7 +65,7 @@ export function sanitize(raw: unknown): UiPrefs {
   return {
     width:
       Number.isFinite(r.width)
-        ? Math.min(520, Math.max(220, r.width as number))
+        ? Math.min(TREE_WIDTH.max, Math.max(TREE_WIDTH.min, r.width as number))
         : d.width,
     collapsed: r.collapsed === true,
     open: r.open && typeof r.open === "object" ? r.open : d.open,

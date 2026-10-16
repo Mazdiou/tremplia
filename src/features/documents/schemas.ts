@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { uuidSchema } from "@/lib/validation";
 
 // Règles partagées entre le navigateur et le serveur (aucune donnée sensible).
 
@@ -42,17 +43,17 @@ export const uploadRequestSchema = z.object({
 
 // Étape 2 de l'envoi : enregistrement du fichier reçu
 export const addDocumentSchema = z.object({
-  documentId: z.string().uuid(),
+  documentId: uuidSchema,
   name: documentNameSchema,
   originalFileName: z.string().trim().min(1).max(255),
   // Dossier de rangement (absent ou null : « Sans dossier »)
-  folderId: z.string().uuid().nullish(),
+  folderId: uuidSchema.nullish(),
 });
 
 export const renameDocumentSchema = z.object({ name: documentNameSchema });
 
 // folderId null : « Sans dossier »
-export const moveDocumentSchema = z.object({ folderId: z.string().uuid().nullable() });
+export const moveDocumentSchema = z.object({ folderId: uuidSchema.nullable() });
 
 export const lockDocumentSchema = z.object({ locked: z.boolean() });
 

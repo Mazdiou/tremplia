@@ -9,7 +9,7 @@ export type TreeGroup = {
   position: number;
 };
 
-export type TreeBranch = {
+type TreeBranch = {
   key: string;
   // null : « Non classés », qui n'est pas un vrai groupe
   groupId: string | null;

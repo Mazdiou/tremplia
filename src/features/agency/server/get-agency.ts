@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
-export type Agency = { name: string; phone: string };
+type Agency = { name: string; phone: string };
 
 // Nom et téléphone de l'agence de la session (lecture via le RLS : seule la
 // sienne est visible). Mis en cache pour la durée d'un affichage.

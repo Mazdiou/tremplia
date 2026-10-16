@@ -2,7 +2,7 @@ import { normalizeName } from "@/lib/names";
 
 // Saisie de la recherche globale : un numéro de téléphone (4 chiffres au
 // moins, séparateurs ignorés) ou des mots du nom. Fonction pure.
-export type SearchQuery =
+type SearchQuery =
   | { kind: "phone"; pattern: string }
   | { kind: "name"; words: string[] };
 

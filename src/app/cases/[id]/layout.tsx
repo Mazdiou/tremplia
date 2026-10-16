@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { z } from "zod";
 import { Pencil, Phone, UserRound } from "lucide-react";
 import { getAgency } from "@/features/agency/server/get-agency";
 import { isReadOnly } from "@/features/subscription/server/subscription";
@@ -33,8 +32,7 @@ import {
   TrackPanel,
 } from "@/features/cases/components/case-header";
 import { telHref } from "@/lib/phone";
-
-const isUuid = (id: string) => z.string().uuid().safeParse(id).success;
+import { isUuid } from "@/lib/validation";
 
 const STATUS_TONE = { active: "ok", closed: "off", abandoned: "bad" } as const;
 

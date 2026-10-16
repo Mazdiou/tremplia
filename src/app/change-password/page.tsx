@@ -8,6 +8,11 @@ import { FormError, PasswordField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/api-client";
 import { createClient } from "@/lib/supabase/client";
+import {
+  MAX_PASSWORD_LENGTH,
+  MIN_PASSWORD_LENGTH,
+  PASSWORD_TOO_SHORT,
+} from "@/features/auth/schemas";
 
 // Première connexion d'un employé : le mot de passe temporaire donné par le
 // patron doit être remplacé avant d'accéder au reste de l'application.
@@ -23,8 +28,7 @@ export default function ChangePasswordPage() {
     const password = String(form.get("password"));
     const confirm = String(form.get("confirm"));
 
-    if (password.length < 8)
-      return setError("Mot de passe trop court (8 caractères minimum).");
+    if (password.length < MIN_PASSWORD_LENGTH) return setError(`${PASSWORD_TOO_SHORT}.`);
     if (password !== confirm)
       return setError("Les mots de passe ne correspondent pas.");
 
@@ -75,9 +79,9 @@ export default function ChangePasswordPage() {
           label="Nouveau mot de passe"
           name="password"
           autoComplete="new-password"
-          hint="8 caractères minimum."
-          minLength={8}
-          maxLength={72}
+          hint={`${MIN_PASSWORD_LENGTH} caractères minimum`}
+          minLength={MIN_PASSWORD_LENGTH}
+          maxLength={MAX_PASSWORD_LENGTH}
           required
           autoFocus
         />
@@ -85,7 +89,7 @@ export default function ChangePasswordPage() {
           label="Confirmer le mot de passe"
           name="confirm"
           autoComplete="new-password"
-          maxLength={72}
+          maxLength={MAX_PASSWORD_LENGTH}
           required
         />
         <Button type="submit" size="lg" disabled={loading} className="w-full">

@@ -1,6 +1,7 @@
 import "server-only";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { isUuid } from "@/lib/validation";
 
 // Réponses sans cache : elles peuvent contenir un lien signé ou un secret.
 const NO_STORE = { "Cache-Control": "no-store" };
@@ -60,10 +61,8 @@ export async function parseBody<T extends z.ZodType>(
   return parsed.data;
 }
 
-const uuid = z.string().uuid();
-
 export function parseId(value: string): string {
-  if (!uuid.safeParse(value).success) {
+  if (!isUuid(value)) {
     throw new ApiError(400, "Identifiant invalide");
   }
   return value;

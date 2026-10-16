@@ -21,7 +21,7 @@ export const getSubscription = cache(async (agencyId: string): Promise<Subscript
   return { state: row.state, endsAt: row.ends_at };
 });
 
-export type PlatformPayment = {
+type PlatformPayment = {
   id: string;
   months: number;
   amount: number;

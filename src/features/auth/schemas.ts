@@ -3,12 +3,16 @@ import { phoneSchema, requiredText } from "@/lib/validation";
 
 // Règles partagées par les pages d'inscription et de mot de passe et par
 // leurs routes. 72 caractères : limite de bcrypt, utilisé par Supabase Auth.
+export const MIN_PASSWORD_LENGTH = 8;
+export const MAX_PASSWORD_LENGTH = 72;
+export const PASSWORD_TOO_SHORT = `Mot de passe trop court (${MIN_PASSWORD_LENGTH} caractères minimum)`;
+
 const passwordSchema = z
   .string()
-  .min(8, "Mot de passe trop court (8 caractères minimum)")
-  .max(72, "Mot de passe trop long (72 caractères maximum)");
+  .min(MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT)
+  .max(MAX_PASSWORD_LENGTH, `Mot de passe trop long (${MAX_PASSWORD_LENGTH} caractères maximum)`);
 
-const emailSchema = z
+export const emailSchema = z
   .string()
   .trim()
   .toLowerCase()
@@ -24,11 +28,6 @@ export const registerSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
 });
+export type RegisterInput = z.infer<typeof registerSchema>;
 
 export const changePasswordSchema = z.object({ password: passwordSchema });
-
-export const newEmployeeSchema = z.object({
-  firstName: requiredText(100, "Saisissez le prénom"),
-  lastName: requiredText(100, "Saisissez le nom"),
-  email: emailSchema,
-});

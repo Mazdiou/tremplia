@@ -9,7 +9,6 @@ export const SUBSCRIPTION_MONTHS = [1, 3, 12] as const;
 export type SubscriptionMonths = (typeof SUBSCRIPTION_MONTHS)[number];
 
 export const PLATFORM_PAYMENT_METHODS = ["cash", "ccp", "baridimob"] as const;
-export type PlatformPaymentMethod = (typeof PLATFORM_PAYMENT_METHODS)[number];
 
 export const platformPaymentSchema = z.object({
   months: z.union([z.literal(1), z.literal(3), z.literal(12)], "Choisissez une durée"),

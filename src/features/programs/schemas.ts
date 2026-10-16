@@ -19,7 +19,7 @@ export const PROGRAM_LEVELS = [
   "doctorate",
   "other",
 ] as const;
-export type ProgramLevel = (typeof PROGRAM_LEVELS)[number];
+type ProgramLevel = (typeof PROGRAM_LEVELS)[number];
 
 export const PROGRAM_LEVEL_LABELS: Record<ProgramLevel, string> = {
   l1: "L1",
@@ -47,6 +47,17 @@ export const programSchema = z.object({
   institution: optionalText(150),
 });
 export type ProgramInput = z.infer<typeof programSchema>;
+
+// Formation telle qu'affichée (agence et espace candidat)
+export type ProgramItem = {
+  id: string;
+  title: string;
+  level: string;
+  city: string;
+  institution: string | null;
+  // Réponse de l'établissement (voir PROGRAM_RESULTS)
+  result: string;
+};
 
 export const moveProgramSchema = z.object({
   direction: z.union([z.literal(-1), z.literal(1)], "Direction invalide"),

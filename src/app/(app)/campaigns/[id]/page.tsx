@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Plus } from "lucide-react";
-import { z } from "zod";
 import {
   FormSection,
   KeyRow,
@@ -27,6 +26,7 @@ import { countCases } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
 import { amountInputValue, formatDA } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { isUuid } from "@/lib/validation";
 
 export default async function CampaignPage({
   params,
@@ -34,7 +34,7 @@ export default async function CampaignPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  if (!z.string().uuid().safeParse(id).success) notFound();
+  if (!isUuid(id)) notFound();
   const [member, supabase] = await Promise.all([requireMember(), createClient()]);
 
   // Toutes les lectures partent ensemble ; via le RLS, une campagne d'une
