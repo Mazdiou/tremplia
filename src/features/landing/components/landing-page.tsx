@@ -19,6 +19,7 @@ import { AppPreview } from "@/components/auth/auth-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { BRAND } from "@/config/brand";
 import { cn } from "@/lib/utils";
+import { DecorLayers } from "@/components/decor";
 import { LandingHeader } from "./landing-header";
 
 // Page d'accueil publique. Aucune affirmation inventée : pas de témoignage,
@@ -210,7 +211,7 @@ function StudentMock() {
   );
 }
 
-function ContactButtons({ contact, onDark = false }: { contact: LandingContact; onDark?: boolean }) {
+function ContactButtons({ contact, onDecor = false }: { contact: LandingContact; onDecor?: boolean }) {
   if (!contact) return null;
   return (
     <div className="grid gap-3 sm:flex sm:flex-wrap sm:justify-center">
@@ -221,7 +222,7 @@ function ContactButtons({ contact, onDark = false }: { contact: LandingContact; 
           rel="noopener noreferrer"
           className={cn(
             buttonVariants({ size: "lg", variant: "outline" }),
-            onDark && "border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+            onDecor && "border-decor-foreground/15 bg-card/80 text-decor-foreground hover:bg-card hover:text-decor-foreground dark:bg-decor-foreground/5 dark:hover:bg-decor-foreground/10",
           )}
         >
           <MessageCircle /> WhatsApp
@@ -231,7 +232,7 @@ function ContactButtons({ contact, onDark = false }: { contact: LandingContact; 
         href={`tel:${contact.phone.replace(/[^0-9+]/g, "")}`}
         className={cn(
           buttonVariants({ size: "lg", variant: "outline" }),
-          onDark && "border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+          onDecor && "border-decor-foreground/15 bg-card/80 text-decor-foreground hover:bg-card hover:text-decor-foreground dark:bg-decor-foreground/5 dark:hover:bg-decor-foreground/10",
         )}
       >
         <Phone /> {contact.phone}
@@ -246,32 +247,23 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
     <div className="min-h-dvh bg-background">
       <LandingHeader heroId={HERO_ID} />
       {/* En-tête et accroche, sur le même fond que la page de connexion */}
-      <div id={HERO_ID} className="relative overflow-hidden bg-[oklch(0.18_0.035_265)] pt-16 text-white">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-48 left-1/2 size-[56rem] -translate-x-1/2 rounded-full bg-[oklch(0.55_0.22_262)] opacity-25 blur-[140px]"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.07] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
-          style={{
-            backgroundImage:
-              "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
-            backgroundSize: "44px 44px",
-          }}
-        />
+      <div
+        id={HERO_ID}
+        className="relative overflow-hidden border-b bg-decor pt-16 text-decor-foreground dark:border-transparent"
+      >
+        <DecorLayers glowClassName="-top-48 size-[56rem] blur-[140px]" />
 
 
         <section className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-10 pb-20 sm:px-8 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-32">
           <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
-            <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/75">
+            <p className="inline-flex items-center gap-2 rounded-full border border-decor-foreground/15 bg-decor-foreground/5 px-3 py-1 text-xs font-medium text-decor-muted">
               <span className="size-1.5 rounded-full bg-emerald-400" />
               {BRAND.tagline}
             </p>
             <h1 className="mt-6 text-4xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
               Tous vos dossiers étudiants, au même endroit.
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-pretty text-white/65">
+            <p className="mt-6 max-w-xl text-lg text-pretty text-decor-muted">
               Candidats, pièces, lettres, formations, paiements et échéances : toute
               l&apos;équipe travaille sur les mêmes dossiers, et chaque candidat suit le sien.
             </p>
@@ -283,16 +275,16 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
                 href="/login"
                 className={cn(
                   buttonVariants({ size: "lg", variant: "outline" }),
-                  "h-12 border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white sm:h-11",
+                  "h-12 border-decor-foreground/15 bg-card/80 text-decor-foreground hover:bg-card hover:text-decor-foreground dark:bg-decor-foreground/5 dark:hover:bg-decor-foreground/10 sm:h-11",
                 )}
               >
                 Se connecter
               </Link>
             </div>
-            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/60">
+            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-decor-muted">
               {["Sans carte bancaire", "Prêt en 2 minutes", "Sur ordinateur et téléphone"].map((t) => (
                 <li key={t} className="flex items-center gap-1.5">
-                  <Check className="size-3.5 text-emerald-400" strokeWidth={2.5} aria-hidden />
+                  <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} aria-hidden />
                   {t}
                 </li>
               ))}
@@ -485,16 +477,13 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
 
         {/* Appel final */}
         <section className="px-5 pb-20 sm:px-8 md:pb-28">
-          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-[oklch(0.18_0.035_265)] px-6 py-16 text-center text-white sm:px-12">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -bottom-40 left-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-[oklch(0.55_0.22_262)] opacity-30 blur-[120px]"
-            />
+          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl border bg-decor px-6 py-16 text-center text-decor-foreground sm:px-12 dark:border-transparent">
+            <DecorLayers glowClassName="-bottom-40 size-[36rem] blur-[120px]" />
             <div className="relative">
               <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
                 Prêt à mettre de l&apos;ordre dans vos dossiers ?
               </h2>
-              <p className="mx-auto mt-4 max-w-xl text-white/65">
+              <p className="mx-auto mt-4 max-w-xl text-decor-muted">
                 Créez votre agence et essayez {BRAND.name} gratuitement pendant 7 jours.
               </p>
               <div className="mt-8 grid gap-3 sm:flex sm:justify-center">
@@ -504,8 +493,8 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
               </div>
               {contact && (
                 <div className="mt-6">
-                  <p className="mb-3 text-sm text-white/50">Une question ? Parlons-en.</p>
-                  <ContactButtons contact={contact} onDark />
+                  <p className="mb-3 text-sm text-decor-subtle">Une question ? Parlons-en.</p>
+                  <ContactButtons contact={contact} onDecor />
                 </div>
               )}
             </div>

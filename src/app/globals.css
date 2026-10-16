@@ -200,6 +200,48 @@ html.dark {
   --color-success-bg: var(--success-bg);
 }
 
+/* ===== Décor des pages publiques (accueil, connexion, inscription) =====
+   Fond, quadrillage, halo et cartes « verre » suivent le thème : clair et
+   bleuté en mode clair, bleu nuit en mode sombre. Voir components/decor.tsx. */
+:root {
+  --decor: oklch(0.975 0.012 262);
+  --decor-foreground: oklch(0.208 0.042 266);
+  --decor-muted: oklch(0.46 0.04 262);
+  --decor-subtle: oklch(0.58 0.03 260);
+  /* Chiffres et repères de l'aperçu (échéance, étape) */
+  --decor-accent: oklch(0.546 0.245 263);
+  --decor-glow: oklch(0.8 0.12 258);
+  --decor-glow-opacity: 0.42;
+  --decor-grid: oklch(0.45 0.06 262 / 0.09);
+  --glass: oklch(1 0 0 / 0.85);
+  --glass-border: oklch(0.91 0.012 262);
+  --glass-row: oklch(0.965 0.008 262);
+}
+.dark {
+  --decor: oklch(0.18 0.035 265);
+  --decor-foreground: oklch(1 0 0);
+  --decor-muted: oklch(1 0 0 / 0.65);
+  --decor-subtle: oklch(1 0 0 / 0.45);
+  --decor-accent: oklch(0.8 0.12 255);
+  --decor-glow: oklch(0.55 0.22 262);
+  --decor-glow-opacity: 0.25;
+  --decor-grid: oklch(1 0 0 / 0.07);
+  --glass: oklch(1 0 0 / 0.06);
+  --glass-border: oklch(1 0 0 / 0.1);
+  --glass-row: oklch(1 0 0 / 0.04);
+}
+@theme inline {
+  --color-decor: var(--decor);
+  --color-decor-foreground: var(--decor-foreground);
+  --color-decor-muted: var(--decor-muted);
+  --color-decor-subtle: var(--decor-subtle);
+  --color-decor-accent: var(--decor-accent);
+  --color-decor-glow: var(--decor-glow);
+  --color-glass: var(--glass);
+  --color-glass-border: var(--glass-border);
+  --color-glass-row: var(--glass-row);
+}
+
 /* ===== Téléphone et application installée ===== */
 /* Hors des couches Tailwind : ces règles passent avant les utilitaires. */
 html {

@@ -9,6 +9,7 @@ import {
   LockKeyhole,
   ShieldCheck,
 } from "lucide-react";
+import { DecorLayers } from "@/components/decor";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 import { BRAND } from "@/config/brand";
@@ -32,7 +33,7 @@ function Glass({ className, children }: { className?: string; children: ReactNod
   return (
     <div
       className={cn(
-        "rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-2xl shadow-black/40 ring-1 ring-inset ring-white/5 backdrop-blur-md",
+        "rounded-2xl border border-glass-border bg-glass p-4 shadow-xl shadow-black/[0.06] backdrop-blur-md dark:shadow-2xl dark:shadow-black/40",
         className,
       )}
     >
@@ -49,17 +50,17 @@ export function AppPreview() {
       {/* Fiche candidat */}
       <Glass className="absolute top-16 right-12 left-0 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700">
         <div className="flex items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[oklch(0.62_0.19_260)]/25 text-sm font-semibold text-[oklch(0.85_0.08_260)]">
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-decor-accent/15 text-sm font-semibold text-decor-accent">
             SB
           </span>
           <div className="min-w-0 flex-1 pr-24">
-            <p className="flex items-center gap-2 font-semibold text-white">
+            <p className="flex items-center gap-2 font-semibold text-decor-foreground">
               <span className="truncate">BENALI Sara</span>
-              <span className="shrink-0 rounded-full bg-emerald-400/15 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+              <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
                 Actif
               </span>
             </p>
-            <p className="truncate text-xs text-white/55">Campus France 2026/2027 · L3</p>
+            <p className="truncate text-xs text-decor-muted">Campus France 2026/2027 · L3</p>
           </div>
         </div>
         {/* Étape du dossier */}
@@ -68,12 +69,12 @@ export function AppPreview() {
             {[0, 1, 2, 3, 4].map((i) => (
               <span
                 key={i}
-                className={i < 3 ? "h-1 flex-1 rounded-full bg-[oklch(0.7_0.16_258)]" : "h-1 flex-1 rounded-full bg-white/15"}
+                className={i < 3 ? "h-1 flex-1 rounded-full bg-decor-accent" : "h-1 flex-1 rounded-full bg-decor-foreground/15"}
               />
             ))}
           </span>
-          <span className="truncate text-white/55">
-            3/5 · <span className="font-medium text-white/85">Entretien</span>
+          <span className="truncate text-decor-muted">
+            3/5 · <span className="font-medium text-decor-foreground/85">Entretien</span>
           </span>
         </div>
         <div className="mt-3 space-y-1.5 text-[13px]">
@@ -83,41 +84,41 @@ export function AppPreview() {
           ].map((f) => (
             <div
               key={f.name}
-              className="flex items-center gap-2 rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-white/80"
+              className="flex items-center gap-2 rounded-lg bg-glass-row px-2.5 py-1.5 text-decor-foreground/85"
             >
-              <Folder className="size-3.5 text-white/45" />
+              <Folder className="size-3.5 text-decor-subtle" />
               <span className="flex-1 truncate">{f.name}</span>
-              <span className="text-xs tabular-nums text-white/45">{f.count}</span>
+              <span className="text-xs tabular-nums text-decor-subtle">{f.count}</span>
             </div>
           ))}
-          <div className="flex items-center gap-2 rounded-lg bg-white/[0.04] px-2.5 py-1.5 text-white/80">
-            <FileText className="size-3.5 text-white/45" />
+          <div className="flex items-center gap-2 rounded-lg bg-glass-row px-2.5 py-1.5 text-decor-foreground/85">
+            <FileText className="size-3.5 text-decor-subtle" />
             <span className="flex-1">Lettre de motivation</span>
-            <Check className="size-3.5 text-emerald-300" />
+            <Check className="size-3.5 text-emerald-600 dark:text-emerald-300" />
           </div>
         </div>
       </Glass>
 
       {/* Prochaine échéance */}
       <Glass className="absolute top-0 right-0 w-44 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700 motion-safe:delay-150 motion-safe:fill-mode-backwards">
-        <p className="flex items-center gap-1.5 text-xs font-medium text-white/60">
+        <p className="flex items-center gap-1.5 text-xs font-medium text-decor-muted">
           <CalendarClock className="size-3.5" /> Prochaine échéance
         </p>
-        <p className="mt-2 text-3xl font-semibold tracking-tight text-[oklch(0.8_0.12_255)] tabular-nums">
+        <p className="mt-2 text-3xl font-semibold tracking-tight text-decor-accent tabular-nums">
           J-47
         </p>
-        <p className="mt-0.5 text-xs text-white/55">Date limite DAP · 15 déc.</p>
+        <p className="mt-0.5 text-xs text-decor-muted">Date limite DAP · 15 déc.</p>
       </Glass>
 
       {/* Activité */}
       <Glass className="absolute right-0 bottom-0 left-10 flex items-center gap-3 py-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700 motion-safe:delay-300 motion-safe:fill-mode-backwards">
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white/10 text-[11px] font-semibold text-white/80">
+        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-decor-foreground/10 text-[11px] font-semibold text-decor-foreground/85">
           YK
         </span>
-        <p className="min-w-0 flex-1 truncate text-[13px] text-white/70">
-          <span className="font-medium text-white">Yasmine</span> a ajouté un document
+        <p className="min-w-0 flex-1 truncate text-[13px] text-decor-muted">
+          <span className="font-medium text-decor-foreground">Yasmine</span> a ajouté un document
         </p>
-        <span className="shrink-0 text-[11px] text-white/40">il y a 2 min</span>
+        <span className="shrink-0 text-[11px] text-decor-subtle">il y a 2 min</span>
       </Glass>
     </div>
   );
@@ -136,25 +137,13 @@ export function AuthShell({
 }) {
   return (
     <div className="grid min-h-dvh lg:h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:overflow-hidden">
-      <aside className="relative hidden overflow-hidden bg-[oklch(0.18_0.035_265)] p-12 text-white lg:flex lg:flex-col [@media(max-height:800px)]:p-10">
+      <aside className="relative hidden overflow-hidden border-r bg-decor p-12 text-decor-foreground lg:flex lg:flex-col dark:border-transparent [@media(max-height:800px)]:p-10">
         {/* Halo et quadrillage discret, estompés vers les bords */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-40 left-1/2 size-[42rem] -translate-x-1/2 rounded-full bg-[oklch(0.55_0.22_262)] opacity-25 blur-[120px]"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.07] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
-          style={{
-            backgroundImage:
-              "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
-            backgroundSize: "44px 44px",
-          }}
-        />
+        <DecorLayers glowClassName="-top-40 size-[42rem] blur-[120px]" />
 
         {/* Logo : retour à la page d'accueil */}
-        <Link href="/" className="relative flex w-fit items-center gap-3 rounded-xl focus-visible:ring-3 focus-visible:ring-white/40 focus-visible:outline-none">
-          <span className="grid size-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15">
+        <Link href="/" className="relative flex w-fit items-center gap-3 rounded-xl focus-visible:ring-3 focus-visible:ring-decor-foreground/30 focus-visible:outline-none">
+          <span className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground">
             <GraduationCap className="size-5" strokeWidth={1.8} />
           </span>
           <span className="text-xl font-semibold tracking-tight">{BRAND.name}</span>
@@ -164,7 +153,7 @@ export function AuthShell({
           <h2 className="max-w-md text-4xl leading-[1.1] font-semibold tracking-tight text-balance">
             Le CRM des agences d&apos;études à l&apos;étranger.
           </h2>
-          <p className="mt-4 max-w-md text-base text-white/60">
+          <p className="mt-4 max-w-md text-base text-decor-muted">
             Candidats, pièces, lettres et échéances au même endroit, pour toute
             l&apos;équipe.
           </p>
@@ -175,7 +164,7 @@ export function AuthShell({
           </div>
         </div>
 
-        <div className="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-xs whitespace-nowrap text-white/45">
+        <div className="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-xs whitespace-nowrap text-decor-subtle">
           <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="size-3.5" /> Données isolées par agence

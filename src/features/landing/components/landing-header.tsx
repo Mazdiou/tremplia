@@ -44,7 +44,7 @@ export function LandingHeader({ heroId }: { heroId: string }) {
   }, [heroId]);
 
   const link = overHero
-    ? "text-white/75 hover:bg-white/10 hover:text-white"
+    ? "text-decor-muted hover:bg-decor-foreground/10 hover:text-decor-foreground"
     : "text-muted-foreground hover:bg-muted hover:text-foreground";
 
   return (
@@ -53,18 +53,13 @@ export function LandingHeader({ heroId }: { heroId: string }) {
       className={cn(
         "fixed inset-x-0 top-0 z-40 border-b transition-[background-color,border-color,color] duration-300",
         overHero
-          ? "border-transparent bg-transparent text-white"
+          ? "border-transparent bg-transparent text-decor-foreground"
           : "border-border bg-background/90 text-foreground backdrop-blur-xl backdrop-saturate-150",
       )}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3 sm:px-8">
         <Link href="/" className="flex items-center gap-2.5">
-          <span
-            className={cn(
-              "grid size-9 place-items-center rounded-xl transition-colors duration-300",
-              overHero ? "bg-white/10 ring-1 ring-white/15" : "bg-primary text-primary-foreground",
-            )}
-          >
+          <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground">
             <GraduationCap className="size-5" strokeWidth={1.8} />
           </span>
           <span className="text-lg font-semibold tracking-tight">{BRAND.name}</span>
