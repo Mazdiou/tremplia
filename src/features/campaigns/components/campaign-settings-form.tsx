@@ -21,6 +21,8 @@ import {
   MAX_CAMPAIGN_INFOS,
   MAX_SUGGESTED_PLATFORMS,
 } from "../schemas";
+import { MAX_STAGES } from "@/features/stages/schemas";
+import { DEFAULT_STAGES } from "@/features/stages/stages";
 
 export type CampaignSettingsDraft = {
   name: string;
@@ -48,6 +50,7 @@ export function CampaignSettingsForm({
   const isEdit = Boolean(campaignId);
   const [draft, setDraft] = useState(initial);
   const [groups, setGroups] = useState<string[]>([]);
+  const [stages, setStages] = useState<string[]>([...DEFAULT_STAGES]);
   const [platformInput, setPlatformInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -76,7 +79,7 @@ export function CampaignSettingsForm({
     setSaving(true);
     const res = await callApi<{ id: string }>(
       isEdit ? `/api/campaigns/${campaignId}` : "/api/campaigns",
-      { method: isEdit ? "PATCH" : "POST", body: isEdit ? draft : { ...draft, groups } },
+      { method: isEdit ? "PATCH" : "POST", body: isEdit ? draft : { ...draft, groups, stages } },
     );
     setSaving(false);
     if (!res.ok) {
@@ -323,6 +326,57 @@ export function CampaignSettingsForm({
             </Button>
           )}
           <FieldError message={errors.groups} />
+        </FormSection>
+      )}
+
+      {!isEdit && (
+        <FormSection
+          title="Étapes des dossiers"
+          description="Le parcours d'un dossier, dans l'ordre : chaque nouveau dossier commence à la première. Modifiables ensuite."
+        >
+          {stages.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Sans étape, les dossiers n&apos;affichent pas leur avancement.
+            </p>
+          )}
+          <ol className="space-y-2">
+            {stages.map((s, i) => (
+              <li key={i} className="flex max-w-md items-start gap-2">
+                <span
+                  aria-hidden
+                  className="mt-2 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-medium text-muted-foreground tabular-nums"
+                >
+                  {i + 1}
+                </span>
+                <Label htmlFor={`stage-${i}`} className="sr-only">
+                  Étape {i + 1}
+                </Label>
+                <Input
+                  id={`stage-${i}`}
+                  value={s}
+                  maxLength={60}
+                  placeholder="Nom de l'étape"
+                  onChange={(e) => setStages(stages.map((x, j) => (j === i ? e.target.value : x)))}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Retirer l'étape ${i + 1}`}
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={() => setStages(stages.filter((_, j) => j !== i))}
+                >
+                  <Trash2 />
+                </Button>
+              </li>
+            ))}
+          </ol>
+          {stages.length < MAX_STAGES && (
+            <Button type="button" variant="outline" size="sm" onClick={() => setStages([...stages, ""])}>
+              <Plus /> Ajouter une étape
+            </Button>
+          )}
+          <FieldError message={errors.stages ?? Object.entries(errors).find(([k]) => k.startsWith("stages."))?.[1]} />
         </FormSection>
       )}
 

@@ -17,6 +17,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "campaign.unarchived": "a réactivé une campagne",
   "campaign.deleted": "a supprimé une campagne",
   "campaign.exported": "a exporté une campagne en Excel",
+  "campaign.stages_updated": "a modifié les étapes d'une campagne",
   "group.created": "a créé un groupe",
   "group.renamed": "a renommé un groupe",
   "group.deleted": "a supprimé un groupe",
@@ -25,6 +26,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "case.assigned": "a changé le responsable d'un dossier",
   "case.status_changed": "a changé le statut d'un dossier",
   "case.groups_updated": "a changé le classement d'un dossier",
+  "case.stage_changed": "a changé l'étape d'un dossier",
   "external_account.saved": "a enregistré un compte externe",
   "external_account.password_viewed": "a affiché le mot de passe d'un compte externe",
   "document.added": "a ajouté un document",
@@ -33,6 +35,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "document.locked": "a verrouillé un document",
   "document.unlocked": "a déverrouillé un document",
   "document.moved": "a déplacé un document",
+  "document.archive_downloaded": "a téléchargé les documents d'un dossier (ZIP)",
   "document_folder.created": "a créé un dossier de documents",
   "document_folder.renamed": "a renommé un dossier de documents",
   "document_folder.deleted": "a supprimé un dossier de documents",
@@ -65,12 +68,14 @@ const CASE_LABELS: Record<ActivityAction, string> = {
   "case.assigned": "a changé le responsable",
   "case.status_changed": "a changé le statut du dossier",
   "case.groups_updated": "a changé le classement du dossier",
+  "case.stage_changed": "a changé l'étape du dossier",
   "motivation_letter.saved": "a modifié la lettre de motivation",
   "student_access.enabled": "a ouvert l'accès du candidat",
   "student_access.disabled": "a fermé l'accès du candidat",
   "student_access.regenerated": "a créé un nouveau code candidat",
   "message.sent": "a écrit au candidat",
   "payment.agreed_amount_set": "a fixé le montant convenu",
+  "document.archive_downloaded": "a téléchargé tous les documents (ZIP)",
 };
 
 const UNKNOWN = "a effectué une action";

@@ -6,6 +6,7 @@ import {
   logCaseActivity,
   type AuthorizedCase,
 } from "@/features/cases/server/authorize-case";
+import { archiveEntries, archiveFileName } from "../archive";
 import { documentPath } from "../format";
 import {
   DOCUMENTS_BUCKET,
@@ -230,4 +231,70 @@ export async function setDocumentLock(
     targetType: "document",
     targetId: docId,
   });
+}
+
+// Archive ZIP de tous les documents du dossier : liens signés valables cinq
+// minutes et chemin de chaque fichier dans l'archive. Le navigateur télécharge
+// les fichiers et construit l'archive lui-même (une réponse du serveur ne peut
+// pas dépasser quelques Mo sur Vercel). Inscrit au journal : c'est une copie
+// de toutes les pièces du candidat.
+export async function prepareArchive(auth: AuthorizedCase, caseId: string) {
+  const [docsRes, foldersRes, caseRes] = await Promise.all([
+    auth.admin
+      .from("documents")
+      .select("id, name, folder_id, storage_path")
+      .eq("case_id", caseId)
+      .eq("agency_id", auth.agencyId)
+      .order("created_at"),
+    auth.admin
+      .from("document_folders")
+      .select("id, name")
+      .eq("case_id", caseId)
+      .eq("agency_id", auth.agencyId),
+    auth.admin
+      .from("cases")
+      .select("first_name, last_name")
+      .eq("id", caseId)
+      .eq("agency_id", auth.agencyId)
+      .single(),
+  ]);
+  if (docsRes.error) throw dbError("documents archive", docsRes.error);
+  if (foldersRes.error) throw dbError("documents archive folders", foldersRes.error);
+  if (caseRes.error) throw dbError("documents archive case", caseRes.error);
+
+  const docs = docsRes.data as { id: string; name: string; folder_id: string | null; storage_path: string }[];
+  if (docs.length === 0) throw new ApiError(404, "Aucun document dans ce dossier");
+
+  const { data: signed, error } = await auth.admin.storage
+    .from(DOCUMENTS_BUCKET)
+    .createSignedUrls(
+      docs.map((d) => d.storage_path),
+      300,
+    );
+  if (error || !signed) {
+    console.error("[documents archive]", error?.name ?? "erreur");
+    throw new ApiError(500, "Impossible de préparer l'archive");
+  }
+  const urlByPath = new Map(signed.map((s) => [s.path, s.signedUrl]));
+  const paths = new Map(archiveEntries(docs, foldersRes.data ?? []).map((e) => [e.id, e.path]));
+
+  const files = docs.flatMap((d) => {
+    const url = urlByPath.get(d.storage_path);
+    return url ? [{ path: paths.get(d.id) as string, url }] : [];
+  });
+  if (files.length < docs.length) {
+    console.error("[documents archive] liens manquants", docs.length - files.length);
+  }
+
+  await logCaseActivity(auth, caseId, {
+    action: "document.archive_downloaded",
+    targetType: "case",
+    targetId: caseId,
+    details: { documents: files.length },
+  });
+
+  return {
+    fileName: archiveFileName(caseRes.data.first_name as string, caseRes.data.last_name as string),
+    files,
+  };
 }

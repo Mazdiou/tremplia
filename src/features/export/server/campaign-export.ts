@@ -19,7 +19,7 @@ const CASE_COLUMNS =
   "id, first_name, last_name, birth_date, phone, email, city, nationality, " +
   "secondary_contact_name, secondary_contact_phone, education_level, current_field, " +
   "current_institution, diplomas, language_tests, status, assigned_to, created_at, " +
-  "agreed_amount, paid_amount, remaining_amount";
+  "agreed_amount, paid_amount, remaining_amount, stage_id";
 
 // Classeur Excel d'une campagne. Lecture via le RLS : une campagne d'une
 // autre agence est introuvable et ses lignes ne reviennent pas.
@@ -33,11 +33,12 @@ export async function exportCampaign(member: Member, campaignId: string) {
   if (error) throw new Error("lecture impossible");
   if (!campaign) throw new ApiError(404, "Campagne introuvable");
 
-  const [cases, groupsRes, caseGroups, membersRes, programs, payments] = await Promise.all([
+  const [cases, groupsRes, stagesRes, caseGroups, membersRes, programs, payments] = await Promise.all([
     readAll<ExportCase>((from, to) =>
       supabase.from("cases").select(CASE_COLUMNS).eq("campaign_id", campaignId).order("id").range(from, to),
     ),
     supabase.from("campaign_groups").select("id, name").eq("campaign_id", campaignId).order("position"),
+    supabase.from("campaign_stages").select("id, name").eq("campaign_id", campaignId).order("position"),
     readAll<{ case_id: string; group_id: string }>((from, to) =>
       supabase
         .from("case_groups")
@@ -68,12 +69,13 @@ export async function exportCampaign(member: Member, campaignId: string) {
         .range(from, to),
     ),
   ]);
-  if (groupsRes.error || membersRes.error) throw new Error("lecture impossible");
+  if (groupsRes.error || stagesRes.error || membersRes.error) throw new Error("lecture impossible");
 
   const workbook = buildXlsx(
     campaignWorkbook({
       cases,
       groups: groupsRes.data ?? [],
+      stages: stagesRes.data ?? [],
       caseGroups,
       members: membersRes.data ?? [],
       programs,

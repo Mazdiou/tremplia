@@ -24,6 +24,7 @@ import { createClient } from "@/lib/supabase/client";
 import { DOCUMENTS_BUCKET, MAX_DOCUMENT_BYTES } from "@/features/documents/schemas";
 import { useDragAutoScroll } from "@/features/documents/drag-autoscroll";
 import { callApi } from "@/lib/api-client";
+import { DownloadArchiveButton } from "./download-archive-button";
 import { cn } from "@/lib/utils";
 
 export type DocItem = {
@@ -749,7 +750,7 @@ export function DocumentsPanel({
         />
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p
           role="status"
           aria-live="polite"
@@ -760,6 +761,7 @@ export function DocumentsPanel({
         >
           {message?.text}
         </p>
+        {docs.length > 0 && <DownloadArchiveButton caseId={caseId} onMessage={say} />}
         {creatingFolder ? (
           <input
             autoFocus

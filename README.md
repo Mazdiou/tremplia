@@ -2,7 +2,8 @@
 
 CRM pour les agences de démarches d'études à l'étranger : chaque agence crée
 ses campagnes (ou importe un modèle comme Campus France), range ses dossiers
-candidats dans des groupes, et suit documents, lettre de motivation, formations visées, notes,
+candidats dans des groupes, suit l'étape de chaque dossier (parcours propre à
+chaque campagne), et suit documents (téléchargeables en un ZIP), lettre de motivation, formations visées, notes,
 comptes sur les plateformes externes et paiements du candidat à l'agence (en dinars).
 Le tableau de bord rassemble ce qui attend l'agence (« À traiter »), chaque
 campagne s'exporte en Excel (patron), et l'application s'installe sur
@@ -121,6 +122,7 @@ Pour retirer ce droit : `delete from public.platform_admins where user_id = '…
 | Patron / Employé | `owner` / `employee` |
 | Campagne | `campaign` |
 | Groupe (DAP, Hors-DAP, École…) | `campaign_group` |
+| Étape (Constitution du dossier, Entretien…) | `campaign_stage` / `cases.stage_id` |
 | Dossier (candidat) | `case` |
 | Dossier de documents | `document_folder` |
 | Compte externe | `external_account` |
@@ -140,8 +142,8 @@ src/
     campaign-templates/ modèles de campagne (un fichier par modèle)
   features/
     admin/ agency/ auth/ campaigns/ cases/ dashboard/ documents/ export/ history/
-    landing/ messages/ motivation-letter/ notes/ payments/ programs/ pwa/ student/
-    subscription/ team/ whatsapp/
+    landing/ messages/ motivation-letter/ notes/ payments/ programs/ pwa/ stages/
+    student/ subscription/ team/ whatsapp/
       components/       composants React de la fonctionnalité
       server/           lectures et écritures serveur (« server-only »)
       schemas.ts        schémas zod partagés formulaires / routes

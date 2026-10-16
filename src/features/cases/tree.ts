@@ -73,18 +73,26 @@ export function matchesPayment(
   return true;
 }
 
-// Filtre de l'arbre demandé par un lien (cartes du tableau de bord) :
-// /cases?filtre=mes-dossiers, reste-a-payer ou montant-a-fixer. Remplace les
-// filtres en cours ; null pour une valeur inconnue.
-export function linkFilter(value: string | null): {
-  level: string;
-  responsible: string;
-  mine: boolean;
-  payment: PaymentFilter;
-} | null {
-  const base = { level: "", responsible: "", mine: false, payment: "" as PaymentFilter };
-  if (value === "mes-dossiers") return { ...base, mine: true };
-  if (value === "reste-a-payer") return { ...base, payment: "due" };
-  if (value === "montant-a-fixer") return { ...base, payment: "unset" };
+// Filtres vides de l'arbre (bouton « Réinitialiser »)
+export const NO_FILTERS = {
+  level: "",
+  responsible: "",
+  mine: false,
+  payment: "" as PaymentFilter,
+  stage: "",
+};
+
+// Filtre de l'arbre demandé par un lien (cartes du tableau de bord, étapes
+// d'une campagne) : /cases?filtre=mes-dossiers, reste-a-payer ou
+// montant-a-fixer, ou /cases?etape=<clé d'étape>. Remplace les filtres en
+// cours ; null pour une valeur inconnue.
+export function linkFilter(
+  value: string | null,
+  stageKey: string | null = null,
+): typeof NO_FILTERS | null {
+  if (stageKey) return { ...NO_FILTERS, stage: stageKey };
+  if (value === "mes-dossiers") return { ...NO_FILTERS, mine: true };
+  if (value === "reste-a-payer") return { ...NO_FILTERS, payment: "due" };
+  if (value === "montant-a-fixer") return { ...NO_FILTERS, payment: "unset" };
   return null;
 }

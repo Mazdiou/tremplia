@@ -32,6 +32,7 @@ import { formatDA } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { BRAND } from "@/config/brand";
 import { InstallAppCard } from "@/features/pwa/components/install-app-card";
+import { StagePipeline } from "@/features/stages/components/stage-pipeline";
 
 const monthName = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIMEZONE, month: "long" });
 const longToday = new Intl.DateTimeFormat("fr-FR", {
@@ -102,7 +103,9 @@ export default async function DashboardPage({
   // Messages non lus : servent aussi à « À traiter », lancé dès leur arrivée
   // sans attendre les autres lectures
   const unreadPromise = agencyUnreadCounts(u.member.agencyId);
-  const [stats, todo, recentRes, dates, monthRes, owingRes, results, activity] =
+  // Une seule campagne affichée : l'avancement de ses dossiers par étape
+  const single = campaigns.length === 1 ? campaigns[0] : null;
+  const [stats, todo, recentRes, dates, monthRes, owingRes, results, activity, stagesRes, stageStatsRes] =
     await Promise.all([
       listCaseStats(ids),
       unreadPromise.then((unread) => loadTodo(supabase, ids, unread)),
@@ -133,6 +136,16 @@ export default async function DashboardPage({
         : Promise.resolve({ data: null }),
       loadResults(supabase, ids),
       u.member.isOwner ? loadActivity(supabase, campaignList) : Promise.resolve([]),
+      single
+        ? supabase.from("campaign_stages").select("id, name").eq("campaign_id", single.id).order("position")
+        : Promise.resolve({ data: null }),
+      single
+        ? supabase
+            .from("case_stage_stats")
+            .select("stage_id, cases")
+            .eq("campaign_id", single.id)
+            .eq("status", "active")
+        : Promise.resolve({ data: null }),
     ]);
   const recent = recentRes.data;
 
@@ -173,7 +186,16 @@ export default async function DashboardPage({
           next: nextDeadline(dates.filter((d) => d.campaignId === c.id), today),
         }))
       : [];
-  const single = campaigns.length === 1 ? campaigns[0] : null;
+  const activeByStage = new Map(
+    ((stageStatsRes.data ?? []) as { stage_id: string | null; cases: number }[]).map((r) => [
+      r.stage_id,
+      r.cases,
+    ]),
+  );
+  const pipeline = ((stagesRes.data ?? []) as { id: string; name: string }[]).map((st) => ({
+    ...st,
+    activeCases: activeByStage.get(st.id) ?? 0,
+  }));
 
   return (
     <PageContainer width="wide">
@@ -218,6 +240,8 @@ export default async function DashboardPage({
           className="max-md:hidden"
         />
       </div>
+
+      {single && <StagePipeline campaignId={single.id} stages={pipeline} />}
 
       {cards.length > 0 && (
         <ul className={cn("grid gap-4 md:grid-cols-2", cards.length > 2 && "xl:grid-cols-3")}>

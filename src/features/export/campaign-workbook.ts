@@ -29,6 +29,7 @@ export type ExportCase = CaseFieldsRecord & {
   agreed_amount: number | null;
   paid_amount: number;
   remaining_amount: number | null;
+  stage_id: string | null;
 };
 
 export type ExportProgram = {
@@ -55,6 +56,8 @@ export type ExportPayment = {
 export type CampaignExportData = {
   cases: ExportCase[];
   groups: { id: string; name: string }[];
+  // Étapes de la campagne, dans l'ordre
+  stages: { id: string; name: string }[];
   caseGroups: { case_id: string; group_id: string }[];
   members: { id: string; first_name: string; last_name: string }[];
   programs: ExportProgram[];
@@ -95,6 +98,8 @@ export function campaignWorkbook(data: CampaignExportData): Sheet[] {
   const memberName = new Map(data.members.map((m) => [m.id, displayName(m.first_name, m.last_name)]));
   const groupName = new Map(data.groups.map((g) => [g.id, g.name]));
   const groupOrder = new Map(data.groups.map((g, i) => [g.id, i]));
+  // « 3. Entretien » : le numéro garde l'ordre quand on trie la colonne
+  const stageLabel = new Map(data.stages.map((s, i) => [s.id, `${i + 1}. ${s.name}`]));
 
   const groupsOf = new Map<string, string[]>();
   for (const cg of [...data.caseGroups].sort(
@@ -128,6 +133,7 @@ export function campaignWorkbook(data: CampaignExportData): Sheet[] {
       { header: "Groupes", width: 18 },
       { header: "Responsable", width: 18 },
       { header: "Statut", width: 11 },
+      { header: "Étape", width: 26 },
       { header: "Créé le", width: 12, kind: "date" },
       { header: "Formations", width: 9, kind: "number" },
       { header: "Réponses", width: 30 },
@@ -155,6 +161,7 @@ export function campaignWorkbook(data: CampaignExportData): Sheet[] {
         (groupsOf.get(c.id) ?? []).join(", "),
         c.assigned_to ? memberName.get(c.assigned_to) : null,
         labelOf(STATUS_LABELS, c.status),
+        c.stage_id ? (stageLabel.get(c.stage_id) ?? null) : null,
         todayInAppTimezone(new Date(c.created_at)),
         results.length,
         programResultsSummary(results),

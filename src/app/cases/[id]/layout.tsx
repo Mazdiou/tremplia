@@ -20,6 +20,7 @@ import { getCase } from "@/features/cases/server/get-case";
 import { ExternalAccountsPinned } from "@/features/cases/components/external-accounts-pinned";
 import { CaseStatusButtons } from "@/features/cases/components/case-status-buttons";
 import { CaseTabs } from "@/features/cases/components/case-tabs";
+import { CaseStageControl } from "@/features/stages/components/case-stage-control";
 import { getStudentAccess } from "@/features/student/server/access";
 import { readReview } from "@/features/student/server/review";
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
@@ -59,7 +60,7 @@ export default async function CaseLayout({
     isReadOnly(member.agencyId),
   ]);
   if (!data) notFound();
-  const { c, responsible, campaign, groups, externalAccounts } = data;
+  const { c, responsible, campaign, groups, stages, externalAccounts } = data;
   // Plateformes proposées pour un nouveau compte : celles suggérées par la
   // campagne, puis celles déjà utilisées dans l'agence
   const suggestions = mergePlatforms(campaign?.suggested_platforms ?? [], usedPlatforms);
@@ -200,6 +201,13 @@ export default async function CaseLayout({
               </div>
             </div>
 
+            <CaseStageControl
+              key={`stage-${c.id}`}
+              caseId={c.id}
+              stages={stages}
+              stageId={c.stage_id}
+              readOnly={readOnly}
+            />
             <ExternalAccountsPinned
               key={c.id}
               caseId={c.id}

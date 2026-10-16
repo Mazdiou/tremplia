@@ -7,6 +7,14 @@ export const campusFrance20262027: CampaignTemplate = {
     "Procédure Études en France (Algérie) : dossiers DAP, hors-DAP et écoles.",
   suggestedPlatforms: ["Pastel"],
   groups: ["DAP", "Hors-DAP", "École"],
+  stages: [
+    "Constitution du dossier",
+    "Dossier soumis à Campus France",
+    "Entretien",
+    "Réponses des établissements",
+    "Demande de visa",
+    "Visa obtenu",
+  ],
   dates: [
     { label: "Ouverture des candidatures", date: "2026-10-01" },
     { label: "Date limite hors-DAP", date: "2026-11-30" },

@@ -13,7 +13,7 @@ const NAME_TAKEN = { "23505": "Une campagne de votre agence porte déjà ce nom"
 
 async function create(
   member: Member,
-  settings: CampaignSettings & { groups: string[] },
+  settings: CampaignSettings & { groups: string[]; stages: string[] },
   templateKey: string | null,
 ) {
   const admin = createAdminClient();
@@ -27,6 +27,7 @@ async function create(
     p_infos: settings.infos,
     p_groups: settings.groups,
     p_default_fee: settings.defaultFee ?? null,
+    p_stages: settings.stages,
   });
   if (error || typeof data !== "string") {
     throw error ? dbError("campaigns create", error, NAME_TAKEN) : new ApiError(500, "Erreur serveur");
@@ -36,7 +37,7 @@ async function create(
 
 export async function createCampaign(
   member: Member,
-  input: CampaignSettings & { groups: string[] },
+  input: CampaignSettings & { groups: string[]; stages: string[] },
 ) {
   const { admin, id } = await create(member, input, null);
   await logActivity(admin, {

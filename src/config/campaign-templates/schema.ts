@@ -8,6 +8,7 @@ import {
   MAX_CAMPAIGN_INFOS,
   suggestedPlatformsSchema,
 } from "@/features/campaigns/schemas";
+import { stageNamesSchema } from "@/features/stages/schemas";
 
 // Modèle de campagne préconfiguré. L'import en fait une COPIE dans l'agence,
 // entièrement modifiable ensuite ; le modèle n'y reste pas relié.
@@ -19,6 +20,8 @@ export const campaignTemplateSchema = z.object({
   description: z.string().trim().min(1).max(300).optional(),
   suggestedPlatforms: suggestedPlatformsSchema,
   groups: groupNamesSchema,
+  // Étapes des dossiers, dans l'ordre du parcours
+  stages: stageNamesSchema,
   dates: z.array(campaignDateSchema).max(MAX_CAMPAIGN_DATES),
   infos: z.array(campaignInfoSchema).max(MAX_CAMPAIGN_INFOS),
 });

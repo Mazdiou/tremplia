@@ -17,12 +17,16 @@ export type UiPrefs = {
   showArchived: boolean;
   // Reste à payer affiché à côté du nom
   showPayments: boolean;
+  // Étape du dossier affichée à côté du nom
+  showStage: boolean;
   sortBy: "name" | "level";
   level: string;
   responsible: string;
   mine: boolean;
   // Filtre des paiements : reste à payer, soldés, montant à fixer
   payment: PaymentFilter;
+  // Filtre d'étape : nom d'étape en minuscules (voir stageKey)
+  stage: string;
   // En-tête de la fiche d'un dossier réduit à une ligne
   caseHeaderCollapsed: boolean;
 };
@@ -35,11 +39,13 @@ export const DEFAULT_PREFS: UiPrefs = {
   showClosed: false,
   showArchived: false,
   showPayments: true,
+  showStage: false,
   sortBy: "name",
   level: "",
   responsible: "",
   mine: false,
   payment: "",
+  stage: "",
   caseHeaderCollapsed: false,
 };
 
@@ -64,6 +70,7 @@ export function sanitize(raw: unknown): UiPrefs {
     showClosed: r.showClosed === true,
     showArchived: r.showArchived === true,
     showPayments: r.showPayments !== false,
+    showStage: r.showStage === true,
     sortBy: r.sortBy === "level" ? "level" : "name",
     level: typeof r.level === "string" ? r.level : "",
     responsible: typeof r.responsible === "string" ? r.responsible : "",
@@ -71,6 +78,7 @@ export function sanitize(raw: unknown): UiPrefs {
     payment: (PAYMENT_FILTERS as readonly unknown[]).includes(r.payment)
       ? (r.payment as PaymentFilter)
       : "",
+    stage: typeof r.stage === "string" ? r.stage : "",
     caseHeaderCollapsed: r.caseHeaderCollapsed === true,
   };
 }

@@ -36,5 +36,8 @@ describe("modèles de campagne", () => {
     expect(
       campaignTemplateSchema.safeParse({ ...base, groups: ["DAP", "dap"] }).success,
     ).toBe(false);
+    expect(
+      campaignTemplateSchema.safeParse({ ...base, stages: ["Visa", "VISA"] }).success,
+    ).toBe(false);
   });
 });

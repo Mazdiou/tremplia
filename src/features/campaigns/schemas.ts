@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { optionalAmountSchema } from "@/features/payments/schemas";
+import { stageNamesSchema } from "@/features/stages/schemas";
 import {
   isoDateSchema,
   isUniqueIgnoringCase,
@@ -57,6 +58,8 @@ export const campaignSettingsSchema = z.object({
 
 export const createCampaignSchema = campaignSettingsSchema.extend({
   groups: groupNamesSchema,
+  // Étapes de départ des dossiers (modifiables ensuite sur la campagne)
+  stages: stageNamesSchema,
 });
 
 export const importCampaignSchema = z.object({

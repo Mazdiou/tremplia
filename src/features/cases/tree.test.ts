@@ -12,6 +12,7 @@ const person = (id: string, campaign = "fr"): TreeCase => ({
   assigned_to: null,
   agreed_amount: null,
   remaining_amount: null,
+  stage_id: null,
 });
 
 const groups: TreeGroup[] = [
@@ -90,9 +91,18 @@ describe("matchesPayment", () => {
 
 describe("linkFilter", () => {
   it("traduit les liens du tableau de bord en filtres de l'arbre", () => {
-    expect(linkFilter("mes-dossiers")).toEqual({ level: "", responsible: "", mine: true, payment: "" });
+    expect(linkFilter("mes-dossiers")).toEqual({
+      level: "",
+      responsible: "",
+      mine: true,
+      payment: "",
+      stage: "",
+    });
     expect(linkFilter("reste-a-payer")?.payment).toBe("due");
     expect(linkFilter("montant-a-fixer")?.payment).toBe("unset");
+  });
+  it("traduit le lien d'une étape en filtre d'étape", () => {
+    expect(linkFilter(null, "entretien")).toMatchObject({ stage: "entretien", payment: "" });
   });
   it("ignore une valeur inconnue", () => {
     expect(linkFilter("autre")).toBeNull();

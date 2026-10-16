@@ -36,8 +36,14 @@ import {
   buildCampaignBranches,
   linkFilter,
   matchesPayment,
+  NO_FILTERS,
   type TreeGroup,
 } from "@/features/cases/tree";
+import {
+  stageFilterOptions,
+  stageKey,
+  type CampaignStage,
+} from "@/features/stages/stages";
 import { isCasesIndex } from "./cases-content";
 import { TreeSearchResults } from "./tree-search-results";
 import { CampaignMenu, GroupActions, InlineNameInput, groupApi } from "./tree-actions";
@@ -74,6 +80,7 @@ const selectClass =
 export function CaseTree({
   campaigns,
   groups,
+  stages,
   initialData,
   members,
   currentUserId,
@@ -82,6 +89,8 @@ export function CaseTree({
 }: {
   campaigns: TreeCampaign[];
   groups: TreeGroup[];
+  // Étapes de toutes les campagnes de l'agence
+  stages: CampaignStage[];
   // Dossiers déjà chargés par le serveur (campagne ouverte par défaut)
   initialData: Record<string, CampaignCases>;
   members: TreeMember[];
@@ -122,21 +131,34 @@ export function CaseTree({
     return () => window.removeEventListener("keydown", onKey);
   }, [setPrefs]);
 
-  // Arrivée par un lien du tableau de bord (/cases?filtre=…&campagne=…) :
-  // filtres appliqués, campagne(s) ouverte(s), puis adresse nettoyée
+  // Arrivée par un lien du tableau de bord (/cases?filtre=…&campagne=…) ou
+  // d'une étape de campagne (/cases?etape=…&campagne=…) : filtres appliqués,
+  // campagne(s) ouverte(s), puis adresse nettoyée
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const filter = linkFilter(params.get("filtre"));
+    const linkedStage = stages.find((s) => s.id === params.get("etape"));
+    const filter = linkFilter(
+      params.get("filtre"),
+      linkedStage ? stageKey(linkedStage.name) : null,
+    );
     if (!filter) return;
     const only = params.get("campagne");
     const toOpen = campaigns.filter((c) => c.status === "active" && (!only || c.id === only));
+    // Branches de ces campagnes : repliage oublié, celles qui ont des
+    // résultats s'ouvrent (voir branchOpen)
+    const prefixes = toOpen.map((c) => `${c.id}:`);
     setPrefs((p) => ({
       ...filter,
       collapsed: false,
-      open: { ...p.open, ...Object.fromEntries(toOpen.map((c) => [c.id, true])) },
+      open: {
+        ...Object.fromEntries(
+          Object.entries(p.open).filter(([k]) => !prefixes.some((x) => k.startsWith(x))),
+        ),
+        ...Object.fromEntries(toOpen.map((c) => [c.id, true])),
+      },
     }));
     router.replace(pathname, { scroll: false });
-  }, [campaigns, pathname, router, setPrefs]);
+  }, [campaigns, stages, pathname, router, setPrefs]);
 
   const width = dragWidth ?? prefs.width;
 
@@ -198,7 +220,7 @@ export function CaseTree({
   // --- Recherche globale (serveur) et filtres (sur les dossiers chargés) ---
   const searching = query.trim() !== "";
   const filtersActive = Boolean(
-    prefs.level || prefs.responsible || prefs.mine || prefs.payment,
+    prefs.level || prefs.responsible || prefs.mine || prefs.payment || prefs.stage,
   );
 
   const activeCampaigns = campaigns.filter((c) => c.status === "active");
@@ -234,8 +256,19 @@ export function CaseTree({
     return () => clearTimeout(t);
   }, [wantedKey, extra, errors, load]);
 
+  // Nom de l'étape de chaque dossier, par identifiant d'étape
+  const stageNames = useMemo(() => new Map(stages.map((s) => [s.id, s.name])), [stages]);
+  const stageOptions = stageFilterOptions(
+    stages,
+    shownCampaigns.map((c) => c.id),
+  );
+
   function matches(c: TreeCase) {
     if (prefs.level && c.education_level !== prefs.level) return false;
+    if (prefs.stage) {
+      const name = c.stage_id ? stageNames.get(c.stage_id) : undefined;
+      if (!name || stageKey(name) !== prefs.stage) return false;
+    }
     if (prefs.responsible && c.assigned_to !== prefs.responsible) return false;
     if (prefs.mine && c.assigned_to !== currentUserId) return false;
     return matchesPayment(c, prefs.payment);
@@ -265,7 +298,7 @@ export function CaseTree({
 
   function reset() {
     setQuery("");
-    setPrefs({ level: "", responsible: "", mine: false, payment: "" });
+    setPrefs(NO_FILTERS);
   }
 
   function startResize(e: React.PointerEvent) {
@@ -378,6 +411,14 @@ export function CaseTree({
                 onChange={(e) => setPrefs({ showPayments: e.target.checked })}
               />
               Afficher le reste à payer
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={prefs.showStage}
+                onChange={(e) => setPrefs({ showStage: e.target.checked })}
+              />
+              Afficher l&apos;étape
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -501,6 +542,24 @@ export function CaseTree({
             <option value="paid">Soldés</option>
             <option value="unset">Montant à fixer</option>
           </select>
+          {stageOptions.length > 0 && (
+            <select
+              value={prefs.stage}
+              onChange={(e) => setPrefs({ stage: e.target.value })}
+              aria-label="Filtrer par étape"
+              className={cn(selectClass, "basis-full")}
+            >
+              <option value="">Toutes étapes</option>
+              {stageOptions.map((o) => (
+                <option key={o.key} value={o.key}>
+                  {o.name}
+                </option>
+              ))}
+              {prefs.stage && !stageOptions.some((o) => o.key === prefs.stage) && (
+                <option value={prefs.stage}>{prefs.stage}</option>
+              )}
+            </select>
+          )}
           {!prefs.mine && (
             <select
               value={prefs.responsible}
@@ -635,9 +694,12 @@ export function CaseTree({
                           const count = branch.cases.filter(
                             (c) => c.status === "active",
                           ).length;
+                          // Ouverte par défaut si elle contient le dossier ouvert,
+                          // ou des résultats quand des filtres sont actifs
                           const branchOpen =
                             prefs.open[key] ??
-                            branch.cases.some((c) => c.id === selectedId);
+                            (branch.cases.some((c) => c.id === selectedId) ||
+                              (filtersActive && count > 0));
                           // Le dossier sélectionné reste visible même s'il est clos
                           const visible = branch.cases
                             .filter(
@@ -737,6 +799,12 @@ export function CaseTree({
                                               {formatDA(c.remaining_amount ?? 0)}
                                             </span>
                                           )}
+                                        {prefs.showStage && c.stage_id && stageNames.has(c.stage_id) && (
+                                          <span className="max-w-28 truncate text-xs text-muted-foreground">
+                                            <span className="sr-only">Étape : </span>
+                                            {stageNames.get(c.stage_id)}
+                                          </span>
+                                        )}
                                         {prefs.showLevel && (
                                           <span className="text-xs text-muted-foreground">
                                             {labelOf(EDUCATION_LEVEL_LABELS, c.education_level)}

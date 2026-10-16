@@ -16,6 +16,7 @@ import { CAMPAIGN_STATUS_LABELS, type CampaignStatus } from "@/features/campaign
 import { CampaignDangerZone } from "@/features/campaigns/components/campaign-danger-zone";
 import { CampaignSettingsForm } from "@/features/campaigns/components/campaign-settings-form";
 import { GroupsManager } from "@/features/campaigns/components/groups-manager";
+import { CampaignStages } from "@/features/stages/components/campaign-stages";
 import { ExportCampaignButton } from "@/features/export/components/export-campaign-button";
 import { countdownLabel, timeline } from "@/features/campaigns/timeline";
 import { requireMember } from "@/lib/auth/require-member";
@@ -38,7 +39,16 @@ export default async function CampaignPage({
 
   // Toutes les lectures partent ensemble ; via le RLS, une campagne d'une
   // autre agence est introuvable et ses lignes ne reviennent pas.
-  const [{ data: campaign }, datesRes, infosRes, groupsRes, caseGroupsRes, stats] = await Promise.all([
+  const [
+    { data: campaign },
+    datesRes,
+    infosRes,
+    groupsRes,
+    caseGroupsRes,
+    stats,
+    stagesRes,
+    stageStatsRes,
+  ] = await Promise.all([
     supabase
       .from("campaigns")
       .select("id, name, status, suggested_platforms, default_fee")
@@ -54,6 +64,8 @@ export default async function CampaignPage({
       .eq("cases.status", "active"),
     // Dossiers de la campagne, tous et actifs : une lecture (vue case_stats)
     listCaseStats([id]),
+    supabase.from("campaign_stages").select("id, name").eq("campaign_id", id).order("position"),
+    supabase.from("case_stage_stats").select("stage_id, status, cases").eq("campaign_id", id),
   ]);
   if (!campaign) notFound();
 
@@ -71,6 +83,23 @@ export default async function CampaignPage({
   const groups = ((groupsRes.data ?? []) as { id: string; name: string }[]).map((g) => ({
     ...g,
     activeCases: activeByGroup.get(g.id) ?? 0,
+  }));
+  const stageCounts = new Map<string, { active: number; all: number }>();
+  for (const row of (stageStatsRes.data ?? []) as {
+    stage_id: string | null;
+    status: string;
+    cases: number;
+  }[]) {
+    if (!row.stage_id) continue;
+    const c = stageCounts.get(row.stage_id) ?? { active: 0, all: 0 };
+    c.all += row.cases;
+    if (row.status === "active") c.active += row.cases;
+    stageCounts.set(row.stage_id, c);
+  }
+  const stages = ((stagesRes.data ?? []) as { id: string; name: string }[]).map((st) => ({
+    ...st,
+    activeCases: stageCounts.get(st.id)?.active ?? 0,
+    cases: stageCounts.get(st.id)?.all ?? 0,
   }));
   const items = timeline(
     dates.map((d) => ({ ...d, campaignId: id, campaignName: campaign.name as string })),
@@ -209,6 +238,17 @@ export default async function CampaignPage({
           </div>
         </div>
       )}
+
+      <FormSection
+        title="Étapes des dossiers"
+        description={
+          archived
+            ? "Figées tant que la campagne est archivée. L'étape de chaque dossier reste modifiable."
+            : "Le parcours d'un dossier, dans l'ordre. Nombre de dossiers actifs à chaque étape."
+        }
+      >
+        <CampaignStages campaignId={id} stages={stages} canEdit={canEdit} />
+      </FormSection>
 
       <FormSection
         title="Groupes"

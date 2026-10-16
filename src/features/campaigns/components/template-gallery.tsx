@@ -62,6 +62,11 @@ export function TemplateGallery({
                     ))}
                   </ul>
                 )}
+                {t.stages.length > 0 && (
+                  <p className="pt-2 text-xs text-muted-foreground">
+                    {t.stages.length} étapes : {t.stages.join(" → ")}
+                  </p>
+                )}
               </div>
               {t.dates.length > 0 && (
                 <ul className="mx-5 space-y-1.5 border-t py-3 text-sm">

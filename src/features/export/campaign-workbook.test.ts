@@ -30,6 +30,7 @@ function aCase(over: Partial<ExportCase>): ExportCase {
     agreed_amount: null,
     paid_amount: 0,
     remaining_amount: null,
+    stage_id: null,
     ...over,
   };
 }
@@ -56,12 +57,16 @@ describe("résumés", () => {
 describe("campaignWorkbook", () => {
   const [dossiers, formations, paiements] = campaignWorkbook({
     cases: [
-      aCase({ id: "c2", first_name: "Amine", last_name: "Zerrouki", agreed_amount: 100000, paid_amount: 40000, remaining_amount: 60000, assigned_to: "u1" }),
+      aCase({ id: "c2", first_name: "Amine", last_name: "Zerrouki", agreed_amount: 100000, paid_amount: 40000, remaining_amount: 60000, assigned_to: "u1", stage_id: "s2" }),
       aCase({ id: "c1" }),
     ],
     groups: [
       { id: "g1", name: "Groupe A" },
       { id: "g2", name: "Groupe B" },
+    ],
+    stages: [
+      { id: "s1", name: "Constitution du dossier" },
+      { id: "s2", name: "Entretien" },
     ],
     caseGroups: [
       { case_id: "c2", group_id: "g2" },
@@ -86,6 +91,7 @@ describe("campaignWorkbook", () => {
     expect(col("Groupes")).toBe("Groupe A, Groupe B");
     expect(col("Responsable")).toBe("HADDAD Nadia");
     expect(col("Niveau")).toBe("L3");
+    expect(col("Étape")).toBe("2. Entretien");
     expect(col("Formations")).toBe(2);
     expect(col("Réponses")).toBe("1 acceptée · 1 sans réponse");
     expect([col("Montant convenu"), col("Payé"), col("Reste à payer")]).toEqual([100000, 40000, 60000]);

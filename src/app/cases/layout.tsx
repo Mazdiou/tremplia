@@ -6,6 +6,7 @@ import {
   type CampaignCases,
 } from "@/features/cases/fetch-campaign-cases";
 import { listAgencyGroups, listCampaigns } from "@/features/campaigns/server/queries";
+import { listAgencyStages } from "@/features/stages/server/stages";
 import { CasesContent } from "@/features/cases/components/cases-content";
 import { CaseTree, type TreeMember } from "@/features/cases/components/case-tree";
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
@@ -23,9 +24,10 @@ export default async function CasesLayout({
   // Lecture via le RLS : seules les campagnes, groupes, dossiers et membres
   // de l'agence reviennent.
   const supabase = await createClient();
-  const [campaigns, groups, membersRes, unread, readOnly, admin] = await Promise.all([
+  const [campaigns, groups, stages, membersRes, unread, readOnly, admin] = await Promise.all([
     listCampaigns(),
     listAgencyGroups(),
+    listAgencyStages(),
     supabase
       .from("profiles")
       .select("id, first_name, last_name, is_active")
@@ -57,6 +59,7 @@ export default async function CasesLayout({
           <CaseTree
             campaigns={campaigns}
             groups={groups}
+            stages={stages}
             initialData={initialData}
             members={(membersRes.data ?? []) as TreeMember[]}
             currentUserId={member.userId}
