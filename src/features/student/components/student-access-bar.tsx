@@ -17,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { callApi } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
+import { TRACK_INDENT, TrackRow } from "@/features/cases/components/case-header";
 import {
   WhatsAppAccessButton,
   type WhatsAppMenuContext,
@@ -84,40 +86,13 @@ export function StudentAccessBar({
   const enabled = access?.enabled === true;
 
   return (
-    <div className="mt-2 rounded-xl border bg-muted/40 text-sm">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2">
-        <span className="flex items-center gap-1.5 font-medium">
-          <UserRound className="size-4 text-muted-foreground" aria-hidden />
-          Espace candidat
-        </span>
-
-        {enabled ? (
-          <>
-            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-              Ouvert
-            </span>
-            <code className="rounded-md bg-background px-2 py-0.5 font-mono font-semibold tracking-wider">
-              {access.code}
-            </code>
-            <Button variant="ghost" size="xs" onClick={() => void copy("code")}>
-              {copied === "code" ? <Check /> : <Copy />} Copier le code
-            </Button>
-            <Button variant="ghost" size="xs" onClick={() => void copy("link")}>
-              {copied === "link" ? <Check /> : <Link2 />} Copier le message
-            </Button>
-            {whatsapp.context.accessCode && (
-              <WhatsAppAccessButton phone={whatsapp.phone} context={whatsapp.context} />
-            )}
-          </>
-        ) : (
-          <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-            Fermé
-          </span>
-        )}
-
-        {!readOnly && (
-        <span className="ml-auto flex items-center gap-1">
-          {enabled ? (
+    <div>
+      <TrackRow
+        icon={UserRound}
+        label="Espace candidat"
+        actions={
+          !readOnly &&
+          (enabled ? (
             <>
               <Button variant="ghost" size="xs" disabled={busy !== null}
                 onClick={() => setConfirm("regenerate")}>
@@ -134,13 +109,38 @@ export function StudentAccessBar({
               {busy === "enable" && <Loader2 className="animate-spin" aria-hidden />}
               {access ? "Rouvrir l'accès" : "Ouvrir l'accès"}
             </Button>
-          )}
-        </span>
+          ))
+        }
+      >
+        {enabled ? (
+          <>
+            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+              Ouvert
+            </span>
+            <code className="rounded-md bg-muted px-2 py-0.5 font-mono font-semibold tracking-wider">
+              {access.code}
+            </code>
+            <span className="flex flex-wrap items-center gap-1">
+              <Button variant="ghost" size="xs" onClick={() => void copy("code")}>
+                {copied === "code" ? <Check /> : <Copy />} Copier le code
+              </Button>
+              <Button variant="ghost" size="xs" onClick={() => void copy("link")}>
+                {copied === "link" ? <Check /> : <Link2 />} Copier le message
+              </Button>
+              {whatsapp.context.accessCode && (
+                <WhatsAppAccessButton phone={whatsapp.phone} context={whatsapp.context} />
+              )}
+            </span>
+          </>
+        ) : (
+          <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+            Fermé
+          </span>
         )}
-      </div>
+      </TrackRow>
 
       {access && (
-        <div className="flex gap-2 border-t px-3 py-2 text-sm">
+        <div className={cn("flex gap-2 pb-2.5 text-sm", TRACK_INDENT)}>
           {review.status === "approved" ? (
             <>
               <CircleCheck className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
@@ -186,13 +186,13 @@ export function StudentAccessBar({
       )}
 
       {enabled && blockedReason && (
-        <p className="border-t px-3 py-1.5 text-xs text-muted-foreground">
+        <p className={cn("pb-2 text-xs text-muted-foreground", TRACK_INDENT)}>
           Le candidat ne peut pas se connecter : {blockedReason}.
         </p>
       )}
 
       {error && (
-        <p className="border-t px-3 py-2 text-sm text-destructive" role="alert">
+        <p className={cn("pb-2 text-sm text-destructive", TRACK_INDENT)} role="alert">
           {error}
         </p>
       )}

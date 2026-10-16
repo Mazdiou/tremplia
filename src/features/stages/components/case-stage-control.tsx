@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronDown, Milestone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TRACK_INDENT, TrackRow } from "@/features/cases/components/case-header";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { stageProgress } from "../stages";
 
 type Stage = { id: string; name: string };
 
-// Étape du dossier dans l'en-tête de sa fiche : barre d'avancement, choix de
-// l'étape et passage à la suivante (tout membre actif). Rien si la campagne
-// n'a pas d'étape.
+// Étape du dossier, première ligne du panneau de suivi de sa fiche : barre
+// d'avancement, nom de l'étape (qui sert aussi à en choisir une autre) et
+// passage à la suivante (tout membre actif). Rien si la campagne n'a pas
+// d'étape.
 export function CaseStageControl({
   caseId,
   stages,
@@ -37,6 +39,7 @@ export function CaseStageControl({
   const current = optimistic && optimistic.from === stageId ? optimistic.to : stageId;
   const progress = stageProgress(stages, current);
   const busy = optimistic !== null && optimistic.from === stageId;
+  const next = progress ? progress.next : stages[0];
 
   async function change(to: string) {
     if (to === current) return;
@@ -55,79 +58,82 @@ export function CaseStageControl({
   }
 
   return (
-    <section aria-label="Étape du dossier" className="mt-3 rounded-xl border bg-card px-3 py-2.5">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <ol aria-hidden className="flex w-24 shrink-0 gap-0.5 sm:w-36">
-            {stages.map((s, i) => (
-              <li
-                key={s.id}
-                title={s.name}
-                className={cn(
-                  "h-1.5 flex-1 rounded-full",
-                  progress && i <= progress.index ? "bg-primary" : "bg-muted",
-                )}
-              />
-            ))}
-          </ol>
-          <p className="min-w-0 truncate text-sm">
-            {progress ? (
-              <>
-                <span className="text-muted-foreground tabular-nums">
-                  Étape {progress.index + 1} sur {progress.total} ·{" "}
-                </span>
-                <span className="font-medium">{progress.stage.name}</span>
-              </>
-            ) : (
-              <span className="text-muted-foreground">Aucune étape choisie</span>
-            )}
-          </p>
-        </div>
-
-        {!readOnly && (
-          <div className="flex w-full items-center gap-2 sm:w-auto">
+    <div>
+      <TrackRow
+        icon={Milestone}
+        label="Étape"
+        actions={
+          !readOnly &&
+          next && (
+            <Button
+              type="button"
+              size="xs"
+              variant="ghost"
+              disabled={busy}
+              onClick={() => void change(next.id)}
+              title={`Passer à « ${next.name} »`}
+            >
+              {progress ? "Étape suivante" : "Commencer"} <ArrowRight />
+            </Button>
+          )
+        }
+      >
+        <ol aria-hidden className="flex w-20 shrink-0 gap-0.5">
+          {stages.map((s, i) => (
+            <li
+              key={s.id}
+              className={cn(
+                "h-1.5 flex-1 rounded-full",
+                progress && i <= progress.index ? "bg-primary" : "bg-muted",
+              )}
+            />
+          ))}
+        </ol>
+        {progress && (
+          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+            {progress.index + 1}/{progress.total}
+          </span>
+        )}
+        {readOnly ? (
+          <span className="min-w-0 truncate font-medium">
+            {progress?.stage.name ?? "Aucune étape"}
+          </span>
+        ) : (
+          // Le nom de l'étape est la liste elle-même : un clic pour en changer
+          <span className="relative min-w-0 max-w-full">
             <label className="sr-only" htmlFor={`stage-${caseId}`}>
-              Changer l&apos;étape du dossier
+              Étape du dossier
             </label>
             <select
               id={`stage-${caseId}`}
               value={current ?? ""}
               disabled={busy}
               onChange={(e) => void change(e.target.value)}
-              className="h-8 min-w-0 flex-1 rounded-lg border sm:max-w-52 sm:flex-none bg-background px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="h-7 max-w-full cursor-pointer appearance-none truncate rounded-md border border-transparent bg-transparent pr-6 pl-1.5 font-medium outline-none hover:border-border hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
             >
               {!progress && (
                 <option value="" disabled>
                   Choisir une étape
                 </option>
               )}
-              {stages.map((s, i) => (
+              {stages.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {i + 1}. {s.name}
+                  {s.name}
                 </option>
               ))}
             </select>
-            {(progress?.next ?? (!progress ? stages[0] : null)) && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                onClick={() => void change((progress?.next ?? stages[0]).id)}
-                title={`Passer à « ${(progress?.next ?? stages[0]).name} »`}
-                className="shrink-0"
-              >
-                {progress ? "Étape suivante" : "Commencer"} <ArrowRight />
-              </Button>
-            )}
-          </div>
+            <ChevronDown
+              className="pointer-events-none absolute top-1/2 right-1.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+          </span>
         )}
-      </div>
+      </TrackRow>
       {error && (
-        <p className="mt-1.5 text-sm text-destructive" role="alert">
+        <p className={cn("pb-2 text-sm text-destructive", TRACK_INDENT)} role="alert">
           {error}
         </p>
       )}
-    </section>
+    </div>
   );
 }

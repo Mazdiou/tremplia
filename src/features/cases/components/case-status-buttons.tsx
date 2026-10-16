@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { MoreHorizontal, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import type { CaseStatus } from "@/features/cases/labels";
 import { callApi } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 
 type Action = {
   to: CaseStatus;
@@ -21,12 +23,12 @@ const ACTIONS: Record<CaseStatus, Action[]> = {
   active: [
     {
       to: "closed",
-      label: "Clore",
+      label: "Clore le dossier",
       confirm: { title: "Clore ce dossier ?", body: HIDDEN_FROM_TREE, label: "Clore le dossier" },
     },
     {
       to: "abandoned",
-      label: "Abandonner",
+      label: "Marquer abandonné",
       confirm: {
         title: "Marquer ce dossier comme abandonné ?",
         body: HIDDEN_FROM_TREE,
@@ -49,6 +51,25 @@ export function CaseStatusButtons({
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState<Action | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Fermeture du menu au clic à l'extérieur ou avec Échap
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onDown(e: MouseEvent) {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
 
   async function change(to: CaseStatus) {
     setError(null);
@@ -64,23 +85,61 @@ export function CaseStatusButtons({
     router.refresh();
   }
 
+  const actions = ACTIONS[status];
+  // Dossier actif : clore ou abandonner, rares et confirmés, dans un menu.
+  // Sinon, « Rouvrir » reste visible : c'est la seule action utile.
+  const asMenu = status === "active";
+
   return (
     <>
-      <div className="flex flex-col items-end gap-1">
-        <div className="flex gap-2">
-          {ACTIONS[status].map((a) => (
-            <Button
-              key={a.to}
-              variant="outline"
-              disabled={loading}
-              onClick={() => (a.confirm ? setPending(a) : void change(a.to))}
-            >
-              {a.label}
+      <div className="relative" ref={menuRef}>
+        {asMenu ? (
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Autres actions sur le dossier"
+            title="Autres actions"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            disabled={loading}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <MoreHorizontal />
+          </Button>
+        ) : (
+          actions.map((a) => (
+            <Button key={a.to} variant="outline" disabled={loading} onClick={() => void change(a.to)}>
+              <RotateCcw /> {a.label}
             </Button>
-          ))}
-        </div>
+          ))
+        )}
+        {menuOpen && (
+          <div
+            role="menu"
+            className="absolute top-11 right-0 z-30 w-48 rounded-xl border bg-popover p-1 shadow-lg"
+          >
+            {actions.map((a) => (
+              <button
+                key={a.to}
+                role="menuitem"
+                type="button"
+                className={cn(
+                  "block w-full rounded-md px-2.5 py-1.5 text-left text-sm hover:bg-muted focus-visible:bg-muted focus-visible:outline-none",
+                  a.to === "abandoned" && "text-destructive",
+                )}
+                onClick={() => {
+                  setMenuOpen(false);
+                  if (a.confirm) setPending(a);
+                  else void change(a.to);
+                }}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+        )}
         {error && (
-          <p className="max-w-xs text-right text-xs text-destructive" role="alert">
+          <p className="absolute top-11 right-0 w-64 text-right text-xs text-destructive" role="alert">
             {error}
           </p>
         )}

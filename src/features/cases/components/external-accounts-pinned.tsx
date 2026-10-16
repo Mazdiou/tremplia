@@ -13,6 +13,7 @@ import {
   type ExternalAccountStatus,
 } from "@/features/cases/labels";
 import { callApi } from "@/lib/api-client";
+import { TRACK_INDENT, TrackRow } from "./case-header";
 import { cn } from "@/lib/utils";
 
 export type PinnedAccount = {
@@ -49,41 +50,53 @@ export function ExternalAccountsPinned({
   const used = new Set(accounts.map((a) => a.platform.toLocaleLowerCase("fr")));
   const free = suggestions.filter((s) => !used.has(s.toLocaleLowerCase("fr")));
 
+  const canAdd = !readOnly && !adding && accounts.length < MAX_EXTERNAL_ACCOUNTS;
+
+  // Section du panneau de suivi : une ligne d'en-tête, puis un compte par
+  // ligne, alignés sous le contenu de l'en-tête
   return (
-    <div className="mt-3 rounded-xl border bg-muted/40 text-sm">
+    <div className="divide-y">
       <datalist id={listId}>
         {free.map((s) => (
           <option key={s} value={s} />
         ))}
       </datalist>
 
-      {accounts.length === 0 && !adding && (
-        <p className="flex items-center gap-1.5 px-3 py-2 text-muted-foreground">
-          <KeyRound className="size-4" aria-hidden />
-          Aucun compte externe.
-        </p>
+      <TrackRow
+        icon={KeyRound}
+        label="Comptes externes"
+        summary={accounts.length > 0}
+        actions={
+          canAdd && (
+            <Button variant="ghost" size="xs" onClick={() => setAdding(true)}>
+              <Plus /> Ajouter
+            </Button>
+          )
+        }
+      >
+        {accounts.length === 0 ? (
+          <span className="text-muted-foreground">{adding ? "Nouveau compte" : "Aucun"}</span>
+        ) : (
+          <span className="text-muted-foreground tabular-nums">
+            {accounts.length} compte{accounts.length > 1 ? "s" : ""}
+          </span>
+        )}
+      </TrackRow>
+
+      {accounts.length > 0 && (
+        <ul className="divide-y">
+          {accounts.map((a) => (
+            <AccountRow key={a.id} caseId={caseId} account={a} listId={listId} readOnly={readOnly} />
+          ))}
+        </ul>
       )}
 
-      <ul className="divide-y">
-        {accounts.map((a) => (
-          <AccountRow key={a.id} caseId={caseId} account={a} listId={listId} readOnly={readOnly} />
-        ))}
-      </ul>
-
-      {adding ? (
+      {adding && (
         <AccountForm
           caseId={caseId}
           listId={listId}
           onDone={() => setAdding(false)}
         />
-      ) : (
-        !readOnly && accounts.length < MAX_EXTERNAL_ACCOUNTS && (
-          <div className="border-t px-3 py-1.5">
-            <Button variant="ghost" size="xs" onClick={() => setAdding(true)}>
-              <Plus /> Ajouter un compte
-            </Button>
-          </div>
-        )
       )}
     </div>
   );
@@ -175,9 +188,8 @@ function AccountRow({
 
   return (
     <li>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-2">
+      <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2", TRACK_INDENT)}>
         <span className="flex items-center gap-1.5 font-medium">
-          <KeyRound className="size-4 text-muted-foreground" aria-hidden />
           {account.url ? (
             <a
               href={account.url}
@@ -253,12 +265,12 @@ function AccountRow({
       </div>
 
       {password !== null && (
-        <p className="border-t px-3 py-1.5 text-xs text-muted-foreground">
+        <p className={cn("pb-2 text-xs text-muted-foreground", TRACK_INDENT)}>
           Cet affichage est enregistré dans le journal de l&apos;agence.
         </p>
       )}
       {error && (
-        <p className="border-t px-3 py-2 text-sm text-destructive" role="alert">
+        <p className={cn("pb-2 text-sm text-destructive", TRACK_INDENT)} role="alert">
           {error}
         </p>
       )}
@@ -325,7 +337,7 @@ function AccountForm({
   const id = (name: string) => `${formId}-${name}`;
 
   return (
-    <form onSubmit={submit} className="grid gap-3 border-t px-3 py-3 sm:grid-cols-2">
+    <form onSubmit={submit} className={cn("grid gap-3 py-3 sm:grid-cols-2", TRACK_INDENT)}>
       <div className="space-y-1">
         <Label htmlFor={id("platform")}>Plateforme</Label>
         <Input

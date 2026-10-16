@@ -30,6 +30,7 @@ import { StudentAccessBar } from "@/features/student/components/student-access-b
 import {
   CaseHeaderDetails,
   CaseHeaderToggle,
+  TrackPanel,
 } from "@/features/cases/components/case-header";
 
 const isUuid = (id: string) => z.string().uuid().safeParse(id).success;
@@ -139,7 +140,21 @@ export default async function CaseLayout({
                 </span>
                 <div className="min-w-0">
                   {title}
-                  <p className="mt-1 text-sm text-muted-foreground">{summary}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                    <span>{summary}</span>
+                    {groups.length > 0 && (
+                      <ul className="flex flex-wrap gap-1.5" aria-label="Groupes">
+                        {groups.map((g) => (
+                          <li
+                            key={g.id}
+                            className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground"
+                          >
+                            {g.name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                   <ul className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" aria-label="Contacts">
                     <li className="flex items-center gap-1">
                       <Phone className="size-3.5 text-muted-foreground" aria-hidden />
@@ -170,21 +185,9 @@ export default async function CaseLayout({
                       </li>
                     )}
                   </ul>
-                  {groups.length > 0 && (
-                    <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Groupes">
-                      {groups.map((g) => (
-                        <li
-                          key={g.id}
-                          className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground"
-                        >
-                          {g.name}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 max-sm:w-full">
                 {/* Abonnement expiré : rien à modifier */}
                 {!readOnly && (
                   <>
@@ -197,40 +200,44 @@ export default async function CaseLayout({
                     <CaseStatusButtons id={c.id} status={c.status} />
                   </>
                 )}
-                <CaseHeaderToggle />
+                <span className="max-sm:ml-auto">
+                  <CaseHeaderToggle />
+                </span>
               </div>
             </div>
 
-            <CaseStageControl
-              key={`stage-${c.id}`}
-              caseId={c.id}
-              stages={stages}
-              stageId={c.stage_id}
-              readOnly={readOnly}
-            />
-            <ExternalAccountsPinned
-              key={c.id}
-              caseId={c.id}
-              accounts={externalAccounts}
-              suggestions={suggestions}
-              readOnly={readOnly}
-            />
-            <StudentAccessBar
-              key={`student-${c.id}`}
-              caseId={c.id}
-              access={studentAccess}
-              review={{
-                status: review?.status ?? "pending",
-                respondedLabel: review?.respondedAt
-                  ? dateTimeFormat.format(new Date(review.respondedAt))
-                  : null,
-                lastRequest:
-                  review?.status === "changes_requested" ? (review.lastRequest?.body ?? null) : null,
-              }}
-              blockedReason={blockedReason}
-              whatsapp={{ phone: c.phone, context: whatsapp }}
-              readOnly={readOnly}
-            />
+            <TrackPanel>
+              <CaseStageControl
+                key={`stage-${c.id}`}
+                caseId={c.id}
+                stages={stages}
+                stageId={c.stage_id}
+                readOnly={readOnly}
+              />
+              <ExternalAccountsPinned
+                key={c.id}
+                caseId={c.id}
+                accounts={externalAccounts}
+                suggestions={suggestions}
+                readOnly={readOnly}
+              />
+              <StudentAccessBar
+                key={`student-${c.id}`}
+                caseId={c.id}
+                access={studentAccess}
+                review={{
+                  status: review?.status ?? "pending",
+                  respondedLabel: review?.respondedAt
+                    ? dateTimeFormat.format(new Date(review.respondedAt))
+                    : null,
+                  lastRequest:
+                    review?.status === "changes_requested" ? (review.lastRequest?.body ?? null) : null,
+                }}
+                blockedReason={blockedReason}
+                whatsapp={{ phone: c.phone, context: whatsapp }}
+                readOnly={readOnly}
+              />
+            </TrackPanel>
           </CaseHeaderDetails>
 
           <CaseTabs id={c.id} isOwner={member.isOwner} unreadMessages={unread[c.id] ?? 0} />
