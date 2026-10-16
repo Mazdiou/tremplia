@@ -2,11 +2,17 @@
 
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // Les deux icônes sont dans le HTML ; le CSS (classe .dark posée avant
 // l'hydratation par le script du layout) choisit laquelle s'affiche.
+// Fondu en cours : les appuis suivants sont ignorés (sur téléphone, un double
+// appui remettait aussitôt l'ancien thème)
+let busy = false;
+
 export function ThemeToggle({ className }: { className?: string }) {
   function toggle() {
+    if (busy) return;
     const root = document.documentElement;
     const dark = !root.classList.contains("dark");
 
@@ -22,11 +28,16 @@ export function ThemeToggle({ className }: { className?: string }) {
       setTimeout(() => freeze.remove(), 1);
     };
 
-    // Fondu léger de toute la page (globals.css), si le navigateur le permet
-    // et si l'utilisateur n'a pas demandé moins d'animations
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (document.startViewTransition && !reduced) {
-      document.startViewTransition(apply);
+    // Fondu léger de toute la page (globals.css), si le navigateur le permet.
+    // Gardé même quand l'utilisateur réduit les animations : un fondu ne
+    // déplace rien à l'écran.
+    if (document.startViewTransition) {
+      busy = true;
+      document
+        .startViewTransition(apply)
+        .finished.finally(() => {
+          busy = false;
+        });
     } else {
       apply();
     }
@@ -43,7 +54,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       variant="ghost"
       size="icon-sm"
       onClick={toggle}
-      className={className}
+      className={cn("touch-manipulation", className)}
       aria-label="Changer de thème"
       title="Changer de thème"
     >

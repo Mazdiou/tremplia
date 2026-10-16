@@ -150,7 +150,7 @@ html.dark {
 /* Changement de thème : fondu léger de toute la page (theme-toggle.tsx) */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 260ms;
+  animation-duration: 350ms;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 

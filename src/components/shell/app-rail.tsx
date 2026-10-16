@@ -63,7 +63,7 @@ export function AppRail({
       )}
 
       <div className="hidden flex-1 md:block" />
-      <ThemeToggle className="size-10 rounded-xl text-muted-foreground" />
+      <ThemeToggle className="size-10 rounded-xl text-muted-foreground max-md:h-11 max-md:w-16" />
       <button
         type="button"
         onClick={logout}
