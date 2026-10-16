@@ -97,7 +97,7 @@ function read(): UiPrefs {
   return cache;
 }
 
-export function setPrefs(
+function setPrefs(
   patch: Partial<UiPrefs> | ((p: UiPrefs) => Partial<UiPrefs>),
 ) {
   const current = read();
@@ -108,7 +108,7 @@ export function setPrefs(
   try {
     window.localStorage.setItem(KEY, JSON.stringify(cache));
   } catch {
-    // ignoré
+    // Stockage indisponible : le réglage vaut pour cette visite seulement
   }
   listeners.forEach((l) => l());
 }

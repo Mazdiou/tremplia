@@ -37,7 +37,6 @@ const isUuid = (id: string) => z.string().uuid().safeParse(id).success;
 
 const STATUS_TONE = { active: "ok", closed: "off", abandoned: "bad" } as const;
 
-
 export default async function CaseLayout({
   children,
   params,

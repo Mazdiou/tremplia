@@ -22,7 +22,7 @@ export function DownloadArchiveButton({
   const [progress, setProgress] = useState<string | null>(null);
 
   async function download() {
-    setProgress("Préparation...");
+    setProgress("Préparation…");
     const res = await callApi<Archive>(`/api/cases/${caseId}/documents/archive`);
     if (!res.ok) {
       setProgress(null);

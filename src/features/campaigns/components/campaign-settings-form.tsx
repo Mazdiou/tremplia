@@ -392,7 +392,7 @@ export function CampaignSettingsForm({
           </p>
         )}
         <Button type="submit" disabled={saving}>
-          {saving ? "Enregistrement..." : isEdit ? "Enregistrer les réglages" : "Créer la campagne"}
+          {saving ? "Enregistrement…" : isEdit ? "Enregistrer les réglages" : "Créer la campagne"}
         </Button>
       </FormActions>
     </form>

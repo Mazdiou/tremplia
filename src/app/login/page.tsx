@@ -76,7 +76,7 @@ export default function LoginPage() {
           {loading ? (
             <>
               <LoaderCircle className="animate-spin" />
-              Connexion...
+              Connexion…
             </>
           ) : (
             <>

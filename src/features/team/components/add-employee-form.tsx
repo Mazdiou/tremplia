@@ -79,7 +79,7 @@ export function AddEmployeeForm() {
         </div>
         <div className="sm:col-span-3">
           <Button type="submit" disabled={loading}>
-            {loading ? "Création..." : "Créer le compte"}
+            {loading ? "Création…" : "Créer le compte"}
           </Button>
         </div>
       </form>

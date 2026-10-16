@@ -167,7 +167,7 @@ function ProgramForm({
           placeholder="Ex. : Licence Informatique" error={errors.title}
           className="sm:col-span-2" />
         <SelectField id="program-level" label="Niveau" required value={draft.level}
-          onChange={set("level")} options={levelOptions} placeholder="Choisir..."
+          onChange={set("level")} options={levelOptions} placeholder="Choisir…"
           error={errors.level} />
         <TextField id="program-city" label="Ville" required maxLength={100}
           value={draft.city} onChange={set("city")} placeholder="Ex. : Lyon"

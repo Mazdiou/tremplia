@@ -189,7 +189,7 @@ export function CampaignStages({
             disabled={saving}
             onClick={() => (pending.length > 0 ? setConfirming(true) : save())}
           >
-            {saving ? "Enregistrement..." : "Enregistrer les étapes"}
+            {saving ? "Enregistrement…" : "Enregistrer les étapes"}
           </Button>
           <Button type="button" variant="ghost" disabled={saving} onClick={() => setDraft(null)}>
             Annuler

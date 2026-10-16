@@ -44,7 +44,7 @@ function amount(min: number, emptyMessage: string) {
   );
 }
 
-export const agreedAmountSchema = amount(0, "Indiquez le montant convenu");
+const agreedAmountSchema = amount(0, "Indiquez le montant convenu");
 export const paymentAmountSchema = amount(1, "Indiquez le montant payé");
 
 // Montant facultatif (montant convenu, tarif d'une campagne) : vide = absent

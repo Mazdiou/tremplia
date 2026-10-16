@@ -29,7 +29,6 @@ const HIDE_AFTER_MS = 30_000;
 const selectClass =
   "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
 
-
 // En-tête de la fiche : comptes du candidat sur les plateformes externes.
 // Le mot de passe n'est jamais dans la page : il est demandé au serveur, qui
 // inscrit l'affichage au journal avant de le renvoyer.
@@ -222,7 +221,7 @@ function AccountRow({
         {isExisting ? (
           password === null ? (
             <Button variant="outline" size="xs" onClick={reveal} disabled={revealing}>
-              <Eye /> {revealing ? "Chargement..." : "Afficher le mot de passe"}
+              <Eye /> {revealing ? "Chargement…" : "Afficher le mot de passe"}
             </Button>
           ) : (
             <span className="flex flex-wrap items-center gap-2">
@@ -414,7 +413,7 @@ function AccountForm({
       )}
       <div className="flex gap-2 sm:col-span-2">
         <Button type="submit" size="sm" disabled={saving}>
-          {saving ? "Enregistrement..." : "Enregistrer"}
+          {saving ? "Enregistrement…" : "Enregistrer"}
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={onDone}>
           Annuler

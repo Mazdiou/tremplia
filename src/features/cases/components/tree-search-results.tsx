@@ -78,7 +78,7 @@ export function TreeSearchResults({
     <div className="py-1" aria-busy={pending}>
       <p className="px-4 py-1.5 text-xs text-muted-foreground" role="status">
         {pending
-          ? "Recherche..."
+          ? "Recherche…"
           : error
             ? error
             : results && results.length === 0

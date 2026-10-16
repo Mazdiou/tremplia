@@ -1,7 +1,7 @@
 import { formatDA } from "@/lib/money";
 
 // Indicatif ajouté aux numéros saisis sans indicatif (Algérie)
-export const DEFAULT_COUNTRY_CODE = "213";
+const DEFAULT_COUNTRY_CODE = "213";
 
 // Numéro au format attendu par WhatsApp (chiffres seuls, indicatif compris),
 // ou null s'il ne peut pas être converti.

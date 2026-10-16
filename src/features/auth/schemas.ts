@@ -3,12 +3,12 @@ import { phoneSchema, requiredText } from "@/lib/validation";
 
 // Règles partagées par les pages d'inscription et de mot de passe et par
 // leurs routes. 72 caractères : limite de bcrypt, utilisé par Supabase Auth.
-export const passwordSchema = z
+const passwordSchema = z
   .string()
   .min(8, "Mot de passe trop court (8 caractères minimum)")
   .max(72, "Mot de passe trop long (72 caractères maximum)");
 
-export const emailSchema = z
+const emailSchema = z
   .string()
   .trim()
   .toLowerCase()

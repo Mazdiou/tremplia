@@ -5,7 +5,7 @@ import { z } from "zod";
 export const DOCUMENTS_BUCKET = "case-documents";
 export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024; // 10 Mo
 
-export const documentNameSchema = z
+const documentNameSchema = z
   .string()
   .trim()
   .min(1, "Saisissez un nom pour le document")

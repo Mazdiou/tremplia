@@ -291,7 +291,7 @@ export function CaseForm(
                 );
               }
             }}
-            placeholder="Choisir une campagne..."
+            placeholder="Choisir une campagne…"
             options={campaigns.map((c) => ({ value: c.id, label: c.name }))}
             error={e.campaignId}
           />
@@ -373,7 +373,7 @@ export function CaseForm(
           <div className="grid gap-4 sm:grid-cols-2">
             <SelectField id="educationLevel" label="Niveau d'études atteint" required
               value={fields.educationLevel} onChange={set("educationLevel")}
-              options={levelOptions} placeholder="Choisir..." error={e.educationLevel}
+              options={levelOptions} placeholder="Choisir…" error={e.educationLevel}
               className="sm:col-span-2" />
             <TextField id="currentField" label="Filière ou spécialité actuelle" maxLength={150}
               value={fields.currentField} onChange={set("currentField")} error={e.currentField} />
@@ -554,7 +554,7 @@ export function CaseForm(
           </Link>
           <Button type="submit" disabled={loading || duplicates !== null}>
             {loading
-              ? "Enregistrement..."
+              ? "Enregistrement…"
               : isEdit
                 ? "Enregistrer les modifications"
                 : "Créer le dossier"}

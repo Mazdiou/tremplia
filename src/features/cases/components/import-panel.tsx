@@ -76,7 +76,7 @@ export function ImportPanel({
           setSourceId(v);
           setMatches(null);
         }}
-        placeholder="Choisir une campagne..."
+        placeholder="Choisir une campagne…"
         options={sources.map((s) => ({
           value: s.id,
           label: `${s.name} (${s.caseCount} dossier${s.caseCount > 1 ? "s" : ""})`,
@@ -102,7 +102,7 @@ export function ImportPanel({
               onClick={search}
               disabled={loading || !lastName.trim() || !firstName.trim() || !birthDate}
             >
-              {loading ? "Recherche..." : "Rechercher"}
+              {loading ? "Recherche…" : "Rechercher"}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>
               Fermer

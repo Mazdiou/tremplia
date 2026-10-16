@@ -28,14 +28,14 @@ export const campaignInfoSchema = z.object({
   value: requiredText(500, "Saisissez une valeur"),
 });
 
-export const platformNameSchema = requiredText(80, "Saisissez une plateforme");
+const platformNameSchema = requiredText(80, "Saisissez une plateforme");
 
 export const suggestedPlatformsSchema = z
   .array(platformNameSchema)
   .max(MAX_SUGGESTED_PLATFORMS, `${MAX_SUGGESTED_PLATFORMS} plateformes au maximum`)
   .refine(isUniqueIgnoringCase, "Cette plateforme est déjà dans la liste");
 
-export const groupNameSchema = requiredText(80, "Saisissez un nom de groupe");
+const groupNameSchema = requiredText(80, "Saisissez un nom de groupe");
 
 export const groupNamesSchema = z
   .array(groupNameSchema)

@@ -1,6 +1,6 @@
 // Appel d'une route de l'API depuis le navigateur. Ne lève jamais : une
 // coupure réseau devient un message d'erreur, comme une réponse en erreur,
-// pour qu'aucun bouton ne reste bloqué sur « Enregistrement... ».
+// pour qu'aucun bouton ne reste bloqué sur « Enregistrement… ».
 
 type Json = Record<string, unknown>;
 

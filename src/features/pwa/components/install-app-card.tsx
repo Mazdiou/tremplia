@@ -67,7 +67,7 @@ export function InstallAppCard({ appName }: { appName: string }) {
     try {
       localStorage.setItem(DISMISSED_KEY, "1");
     } catch {
-      // ignoré
+      // Stockage indisponible : la carte reviendra à la prochaine visite
     }
   }
 

@@ -32,7 +32,7 @@ import {
 // Schémas partagés par les formulaires et les routes. La base impose les
 // mêmes limites (migration cases).
 
-export const diplomaSchema = z.object({
+const diplomaSchema = z.object({
   type: z.enum(DIPLOMA_TYPES, "Choisissez un type de diplôme"),
   title: optionalText(150),
   year: z.preprocess(
@@ -46,7 +46,7 @@ export const diplomaSchema = z.object({
   ),
 });
 
-export const languageTestSchema = z
+const languageTestSchema = z
   .object({
     test: z.enum(LANGUAGE_TESTS, "Choisissez un test"),
     otherName: optionalText(100),
@@ -64,7 +64,7 @@ export const languageTestSchema = z
   });
 
 // Champs du dossier communs à la création et à la modification
-export const caseFieldsShape = {
+const caseFieldsShape = {
   firstName: requiredText(100, "Saisissez le prénom"),
   lastName: requiredText(100, "Saisissez le nom"),
   birthDate: isoDateSchema.refine(

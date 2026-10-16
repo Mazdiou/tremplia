@@ -18,7 +18,7 @@ const methodOptions = optionsOf(PLATFORM_PAYMENT_METHODS, PAYMENT_METHOD_LABELS)
 
 // Fenêtre « Paiement reçu » : durée, montant, moyen et note ; la nouvelle
 // date de fin s'affiche avant d'enregistrer
-export function PaymentDialog({
+function PaymentDialog({
   agency,
   open,
   onClose,
@@ -134,7 +134,7 @@ export function PaymentDialog({
             Annuler
           </Button>
           <Button type="submit" disabled={saving}>
-            {saving ? "Patientez..." : "Enregistrer"}
+            {saving ? "Patientez…" : "Enregistrer"}
           </Button>
         </div>
       </form>

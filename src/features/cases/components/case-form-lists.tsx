@@ -91,7 +91,7 @@ export function DiplomasEditor({
             value={d.type}
             onChange={(type) => onChange(update(value, i, { type }))}
             options={optionsOf(DIPLOMA_TYPES, DIPLOMA_TYPE_LABELS)}
-            placeholder="Choisir..."
+            placeholder="Choisir…"
             error={errors[`diplomas.${i}.type`]}
           />
           <TextField
@@ -161,7 +161,7 @@ export function LanguageTestsEditor({
               value={t.test}
               onChange={(test) => onChange(update(value, i, { test }))}
               options={optionsOf(LANGUAGE_TESTS, LANGUAGE_TEST_LABELS)}
-              placeholder="Choisir..."
+              placeholder="Choisir…"
               error={errors[`languageTests.${i}.test`]}
             />
             {t.test === "other" && (

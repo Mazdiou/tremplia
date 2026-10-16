@@ -90,7 +90,7 @@ export default function ChangePasswordPage() {
         />
         <Button type="submit" size="lg" disabled={loading} className="w-full">
           {loading && <LoaderCircle className="animate-spin" />}
-          {loading ? "Enregistrement..." : "Enregistrer"}
+          {loading ? "Enregistrement…" : "Enregistrer"}
         </Button>
       </form>
 

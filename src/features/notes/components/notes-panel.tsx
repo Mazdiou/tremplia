@@ -19,7 +19,6 @@ export type NoteItem = {
 
 type Message = { text: string; error: boolean };
 
-
 const TEXTAREA =
   "w-full min-h-24 resize-y rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60";
 

@@ -253,7 +253,6 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
       >
         <DecorLayers glowClassName="-top-48 size-[56rem] blur-[140px]" />
 
-
         <section className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-10 pb-20 sm:px-8 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-32">
           <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
             <p className="inline-flex items-center gap-2 rounded-full border border-decor-foreground/15 bg-decor-foreground/5 px-3 py-1 text-xs font-medium text-decor-muted">

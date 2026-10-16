@@ -60,7 +60,7 @@ export default function StudentLoginPage() {
           {loading ? (
             <>
               <LoaderCircle className="animate-spin" />
-              Connexion...
+              Connexion…
             </>
           ) : (
             <>

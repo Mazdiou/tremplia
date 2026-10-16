@@ -4,12 +4,12 @@ import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// Les deux icônes sont dans le HTML ; le CSS (classe .dark posée avant
-// l'hydratation par le script du layout) choisit laquelle s'affiche.
 // Fondu en cours : les appuis suivants sont ignorés (sur téléphone, un double
 // appui remettait aussitôt l'ancien thème)
 let busy = false;
 
+// Les deux icônes sont dans le HTML ; le CSS (classe .dark posée avant
+// l'hydratation par le script du layout) choisit laquelle s'affiche.
 export function ThemeToggle({ className }: { className?: string }) {
   function toggle() {
     if (busy) return;
@@ -45,7 +45,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     try {
       localStorage.setItem("sf:theme", dark ? "dark" : "light");
     } catch {
-      // ignoré
+      // Stockage indisponible : le choix vaut pour cette visite seulement
     }
   }
 

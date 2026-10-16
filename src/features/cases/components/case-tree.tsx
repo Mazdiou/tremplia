@@ -114,7 +114,8 @@ export function CaseTree({
   const [renamingGroup, setRenamingGroup] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Ctrl+B (ou Cmd+B) : replier / ouvrir le panneau, comme dans VS Code
+  // Raccourcis (Cmd sur Mac) : Ctrl+K pour chercher, Ctrl+B pour replier /
+  // ouvrir le panneau, comme dans VS Code
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -680,7 +681,7 @@ export function CaseTree({
                             Chargement impossible. Réessayer
                           </button>
                         ) : (
-                          "Chargement..."
+                          "Chargement…"
                         )}
                       </div>
                     )}

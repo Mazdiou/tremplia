@@ -4,7 +4,7 @@ import { isUniqueIgnoringCase, requiredText, uuidSchema } from "@/lib/validation
 // Limites partagées avec la base (migration case_stages)
 export const MAX_STAGES = 15;
 
-export const stageNameSchema = requiredText(60, "Saisissez un nom d'étape");
+const stageNameSchema = requiredText(60, "Saisissez un nom d'étape");
 
 // Étapes de départ d'une nouvelle campagne (ou d'un modèle), dans l'ordre
 export const stageNamesSchema = z

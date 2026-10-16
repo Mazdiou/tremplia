@@ -291,7 +291,7 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <LoaderCircle className="animate-spin" />
-                  Création...
+                  Création…
                 </>
               ) : (
                 "Créer mon compte"

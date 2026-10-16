@@ -20,7 +20,8 @@ export async function createClient() {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // Appelé depuis un composant serveur : on peut ignorer,
+            // Appelé depuis un composant serveur, qui ne peut pas écrire de
+            // cookie : le proxy renouvelle la session à la requête suivante
           }
         },
       },

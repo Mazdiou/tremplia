@@ -91,7 +91,7 @@ export function TemplateGallery({
                     </>
                   ) : (
                     <>
-                      <Download /> {pending === t.key ? "Import..." : "Importer ce modèle"}
+                      <Download /> {pending === t.key ? "Import…" : "Importer ce modèle"}
                     </>
                   )}
                 </Button>

@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 // nomme les colonnes), et l'erreur juste en dessous.
 
 // Même apparence que <Input> : hauteur, bordure, fond, focus
-export const selectClass =
+const selectClass =
   "h-10 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive dark:bg-input/30";
 
 const textareaClass =
