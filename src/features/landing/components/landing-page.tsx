@@ -16,13 +16,16 @@ import {
   Wallet,
 } from "lucide-react";
 import { AppPreview } from "@/components/auth/auth-shell";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { BRAND } from "@/config/brand";
 import { cn } from "@/lib/utils";
+import { LandingHeader } from "./landing-header";
 
 // Page d'accueil publique. Aucune affirmation inventée : pas de témoignage,
 // de chiffre client ni de prix (les tarifs ne sont pas encore fixés).
+
+// Accroche : l'en-tête reste transparent tant qu'elle passe dessous
+const HERO_ID = "accroche";
 
 export type LandingContact = { phone: string; whatsappUrl: string | null } | null;
 
@@ -241,40 +244,9 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
   const year = new Date().getFullYear();
   return (
     <div className="min-h-dvh bg-background">
-      {/* En-tête toujours visible : la page est longue, l'essai et la
-          connexion restent à portée de main */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[oklch(0.17_0.04_265)]/75 text-white backdrop-blur-xl backdrop-saturate-150">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3 sm:px-8">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="grid size-9 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15">
-              <GraduationCap className="size-5" strokeWidth={1.8} />
-            </span>
-            <span className="text-lg font-semibold tracking-tight">{BRAND.name}</span>
-          </Link>
-          {/* Liens par le routeur (Link) : avec un simple <a href="#…">, le retour
-              arrière depuis une autre page changerait l'adresse sans la page */}
-          <nav aria-label="Sections" className="hidden items-center gap-1 text-sm text-white/70 md:flex">
-            <Link href="#fonctionnalites" className="rounded-lg px-3 py-2.5 transition-colors hover:bg-white/5 hover:text-white">Fonctionnalités</Link>
-            <Link href="#candidats" className="rounded-lg px-3 py-2.5 transition-colors hover:bg-white/5 hover:text-white">Espace candidat</Link>
-            <Link href="#tarifs" className="rounded-lg px-3 py-2.5 transition-colors hover:bg-white/5 hover:text-white">Tarifs</Link>
-            <Link href="#faq" className="rounded-lg px-3 py-2.5 transition-colors hover:bg-white/5 hover:text-white">FAQ</Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            <ThemeToggle className="size-9 rounded-xl text-white/70 hover:bg-white/10 hover:text-white" />
-            <Link
-              href="/login"
-              className="hidden rounded-lg px-3 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:block"
-            >
-              Se connecter
-            </Link>
-            <Link href="/register" className={buttonVariants()}>
-              Essai gratuit
-            </Link>
-          </div>
-        </div>
-      </header>
+      <LandingHeader heroId={HERO_ID} />
       {/* En-tête et accroche, sur le même fond que la page de connexion */}
-      <div className="relative overflow-hidden bg-[oklch(0.18_0.035_265)] text-white">
+      <div id={HERO_ID} className="relative overflow-hidden bg-[oklch(0.18_0.035_265)] pt-16 text-white">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-48 left-1/2 size-[56rem] -translate-x-1/2 rounded-full bg-[oklch(0.55_0.22_262)] opacity-25 blur-[140px]"
