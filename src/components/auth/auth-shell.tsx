@@ -62,11 +62,24 @@ export function AppPreview() {
             <p className="truncate text-xs text-white/55">Campus France 2026/2027 · L3</p>
           </div>
         </div>
-        <div className="mt-4 space-y-1.5 text-[13px]">
+        {/* Étape du dossier */}
+        <div className="mt-4 flex items-center gap-2.5 text-[13px]">
+          <span className="flex w-16 shrink-0 gap-0.5">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <span
+                key={i}
+                className={i < 3 ? "h-1 flex-1 rounded-full bg-[oklch(0.7_0.16_258)]" : "h-1 flex-1 rounded-full bg-white/15"}
+              />
+            ))}
+          </span>
+          <span className="truncate text-white/55">
+            3/5 · <span className="font-medium text-white/85">Entretien</span>
+          </span>
+        </div>
+        <div className="mt-3 space-y-1.5 text-[13px]">
           {[
             { name: "Candidature", count: 3 },
             { name: "Visa", count: 1 },
-            { name: "Informations personnelles", count: 2 },
           ].map((f) => (
             <div
               key={f.name}

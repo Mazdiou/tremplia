@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   // Titre complet : sans le modèle « … · nom » du layout racine
   title: { absolute: `${BRAND.name} · ${BRAND.tagline}` },
   description:
-    "Candidats, documents, lettres de motivation, formations, paiements et échéances : le suivi des dossiers étudiants pour toute l'agence. Essai gratuit de 7 jours.",
+    "Candidats, étapes, documents, lettres de motivation, formations, paiements et échéances : le suivi des dossiers étudiants pour toute l'agence. Essai gratuit de 7 jours.",
 };
 
 // Page d'accueil publique. Une personne connectée n'y arrive pas : le proxy

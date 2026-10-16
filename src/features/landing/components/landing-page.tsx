@@ -5,11 +5,11 @@ import {
   Check,
   ChevronDown,
   FileText,
-  FolderOpen,
   GraduationCap,
   KeyRound,
   LockKeyhole,
   MessageCircle,
+  Milestone,
   NotebookPen,
   Phone,
   ShieldCheck,
@@ -28,14 +28,14 @@ export type LandingContact = { phone: string; whatsappUrl: string | null } | nul
 
 const FEATURES = [
   {
-    icon: FolderOpen,
-    title: "Dossiers par campagne",
-    text: "Chaque candidat dans sa campagne et ses groupes, avec ses échéances et un compte à rebours.",
+    icon: Milestone,
+    title: "Campagnes et étapes",
+    text: "Chaque candidat dans sa campagne, à son étape : vous voyez d'un coup d'œil où en est chaque dossier.",
   },
   {
     icon: FileText,
     title: "Documents rangés",
-    text: "Les pièces de chaque dossier classées dans des dossiers, verrouillables par le patron.",
+    text: "Les pièces classées par dossier, verrouillables par le patron, téléchargeables en un seul ZIP.",
   },
   {
     icon: GraduationCap,
@@ -80,7 +80,7 @@ const FAQ = [
   },
   {
     q: "Peut-on l'utiliser sur téléphone ?",
-    a: "Oui : l'application s'utilise dans le navigateur, sur ordinateur comme sur téléphone, sans rien installer.",
+    a: "Oui : elle s'utilise dans le navigateur, sur ordinateur comme sur téléphone, et s'installe sur l'écran d'accueil du téléphone comme une application.",
   },
   {
     q: "Mes candidats doivent-ils créer un compte ?",
@@ -108,7 +108,7 @@ function Section({
   className?: string;
 }) {
   return (
-    <section id={id} className={cn("scroll-mt-20 px-5 py-20 sm:px-8 md:py-28", className)}>
+    <section id={id} className={cn("scroll-mt-16 px-5 py-16 sm:px-8 md:py-28", className)}>
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           {eyebrow && (
@@ -117,7 +117,7 @@ function Section({
           <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">{title}</h2>
           {intro && <p className="mt-4 text-lg text-pretty text-muted-foreground">{intro}</p>}
         </div>
-        <div className="mt-14">{children}</div>
+        <div className="mt-10 md:mt-14">{children}</div>
       </div>
     </section>
   );
@@ -210,7 +210,7 @@ function StudentMock() {
 function ContactButtons({ contact, onDark = false }: { contact: LandingContact; onDark?: boolean }) {
   if (!contact) return null;
   return (
-    <div className="flex flex-wrap justify-center gap-3">
+    <div className="grid gap-3 sm:flex sm:flex-wrap sm:justify-center">
       {contact.whatsappUrl && (
         <a
           href={contact.whatsappUrl}
@@ -241,6 +241,38 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
   const year = new Date().getFullYear();
   return (
     <div className="min-h-dvh bg-background">
+      {/* En-tête toujours visible : la page est longue, l'essai et la
+          connexion restent à portée de main */}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[oklch(0.17_0.04_265)]/75 text-white backdrop-blur-xl backdrop-saturate-150">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3 sm:px-8">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="grid size-9 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15">
+              <GraduationCap className="size-5" strokeWidth={1.8} />
+            </span>
+            <span className="text-lg font-semibold tracking-tight">{BRAND.name}</span>
+          </Link>
+          {/* Liens par le routeur (Link) : avec un simple <a href="#…">, le retour
+              arrière depuis une autre page changerait l'adresse sans la page */}
+          <nav aria-label="Sections" className="hidden items-center gap-1 text-sm text-white/70 md:flex">
+            <Link href="#fonctionnalites" className="rounded-lg px-3 py-2.5 transition-colors hover:bg-white/5 hover:text-white">Fonctionnalités</Link>
+            <Link href="#candidats" className="rounded-lg px-3 py-2.5 transition-colors hover:bg-white/5 hover:text-white">Espace candidat</Link>
+            <Link href="#tarifs" className="rounded-lg px-3 py-2.5 transition-colors hover:bg-white/5 hover:text-white">Tarifs</Link>
+            <Link href="#faq" className="rounded-lg px-3 py-2.5 transition-colors hover:bg-white/5 hover:text-white">FAQ</Link>
+          </nav>
+          <div className="flex items-center gap-2">
+            <ThemeToggle className="size-9 rounded-xl text-white/70 hover:bg-white/10 hover:text-white" />
+            <Link
+              href="/login"
+              className="hidden rounded-lg px-3 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:block"
+            >
+              Se connecter
+            </Link>
+            <Link href="/register" className={buttonVariants()}>
+              Essai gratuit
+            </Link>
+          </div>
+        </div>
+      </header>
       {/* En-tête et accroche, sur le même fond que la page de connexion */}
       <div className="relative overflow-hidden bg-[oklch(0.18_0.035_265)] text-white">
         <div
@@ -257,36 +289,8 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
           }}
         />
 
-        <header className="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="grid size-9 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15">
-              <GraduationCap className="size-5" strokeWidth={1.8} />
-            </span>
-            <span className="text-lg font-semibold tracking-tight">{BRAND.name}</span>
-          </Link>
-          {/* Liens par le routeur (Link) : avec un simple <a href="#…">, le retour
-              arrière depuis une autre page changerait l'adresse sans la page */}
-          <nav aria-label="Sections" className="hidden items-center gap-8 text-sm text-white/70 md:flex">
-            <Link href="#fonctionnalites" className="transition-colors hover:text-white">Fonctionnalités</Link>
-            <Link href="#candidats" className="transition-colors hover:text-white">Espace candidat</Link>
-            <Link href="#tarifs" className="transition-colors hover:text-white">Tarifs</Link>
-            <Link href="#faq" className="transition-colors hover:text-white">FAQ</Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            <ThemeToggle className="size-9 rounded-xl text-white/70 hover:bg-white/10 hover:text-white" />
-            <Link
-              href="/login"
-              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white sm:block"
-            >
-              Se connecter
-            </Link>
-            <Link href="/register" className={buttonVariants()}>
-              Essai gratuit
-            </Link>
-          </div>
-        </header>
 
-        <section className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-12 pb-24 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-32">
+        <section className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-10 pb-20 sm:px-8 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-32">
           <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/75">
               <span className="size-1.5 rounded-full bg-emerald-400" />
@@ -299,25 +303,28 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
               Candidats, pièces, lettres, formations, paiements et échéances : toute
               l&apos;équipe travaille sur les mêmes dossiers, et chaque candidat suit le sien.
             </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Link href="/register" className={buttonVariants({ size: "lg" })}>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "h-12 sm:h-11")}>
                 Essayer gratuitement 7 jours <ArrowRight />
               </Link>
               <Link
                 href="/login"
                 className={cn(
                   buttonVariants({ size: "lg", variant: "outline" }),
-                  "border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+                  "h-12 border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white sm:h-11",
                 )}
               >
                 Se connecter
               </Link>
             </div>
-            <p className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/50">
-              <span>Sans carte bancaire</span>
-              <span>Prêt en 2 minutes</span>
-              <span>Sur ordinateur et téléphone</span>
-            </p>
+            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/60">
+              {["Sans carte bancaire", "Prêt en 2 minutes", "Sur ordinateur et téléphone"].map((t) => (
+                <li key={t} className="flex items-center gap-1.5">
+                  <Check className="size-3.5 text-emerald-400" strokeWidth={2.5} aria-hidden />
+                  {t}
+                </li>
+              ))}
+            </ul>
           </div>
           {/* Trop étroit sur téléphone : masqué, comme sur la page de connexion */}
           <div className="mx-auto hidden w-full max-w-md sm:block lg:max-w-none">
@@ -344,24 +351,26 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
           title="Tout ce qu'il faut pour suivre vos candidats"
           intro="Pensé pour les agences qui accompagnent des étudiants vers les études à l'étranger, Campus France compris."
         >
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, text }) => (
               <div
                 key={title}
-                className="group rounded-2xl border bg-card p-6 transition-shadow hover:shadow-lg hover:shadow-black/5"
+                className="group flex gap-4 rounded-2xl border bg-card p-5 transition-shadow hover:shadow-lg hover:shadow-black/5 sm:block sm:p-6"
               >
-                <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                   <Icon className="size-5" strokeWidth={1.8} />
                 </span>
-                <h3 className="mt-5 font-semibold">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{text}</p>
+                <div>
+                  <h3 className="font-semibold sm:mt-5">{title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground sm:mt-2">{text}</p>
+                </div>
               </div>
             ))}
           </div>
         </Section>
 
         {/* Équipe */}
-        <section className="border-y bg-muted/40 px-5 py-20 sm:px-8 md:py-28">
+        <section className="border-y bg-muted/40 px-5 py-16 sm:px-8 md:py-28">
           <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
             <div>
               <p className="text-sm font-semibold tracking-wide text-primary uppercase">Pour toute l&apos;équipe</p>
@@ -371,8 +380,8 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
               <CheckList
                 items={[
                   "Le patron ajoute ses employés, attribue les dossiers et garde la main sur l'équipe.",
-                  "Chaque employé retrouve ses dossiers, ses messages non lus et ses échéances.",
-                  "L'historique garde la trace de chaque action : qui a fait quoi, et quand.",
+                  "Le tableau de bord rassemble ce qui attend l'agence : messages, demandes des candidats, échéances.",
+                  "L'historique garde la trace de chaque action, et chaque campagne s'exporte en Excel.",
                 ]}
               />
             </div>
@@ -381,7 +390,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
         </section>
 
         {/* Espace candidat */}
-        <section id="candidats" className="scroll-mt-20 px-5 py-20 sm:px-8 md:py-28">
+        <section id="candidats" className="scroll-mt-16 px-5 py-16 sm:px-8 md:py-28">
           <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
             <div className="lg:order-2">
               <p className="text-sm font-semibold tracking-wide text-primary uppercase">Espace candidat</p>
@@ -404,14 +413,16 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
 
         {/* Démarrer */}
         <Section eyebrow="Démarrer" title="Opérationnel en trois étapes" className="border-t bg-muted/40">
-          <ol className="grid gap-5 md:grid-cols-3">
+          <ol className="grid gap-3 md:grid-cols-3 md:gap-5">
             {STEPS.map((s, i) => (
-              <li key={s.title} className="rounded-2xl border bg-card p-6">
-                <span className="grid size-9 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+              <li key={s.title} className="flex gap-4 rounded-2xl border bg-card p-5 md:block md:p-6">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                   {i + 1}
                 </span>
-                <h3 className="mt-5 font-semibold">{s.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{s.text}</p>
+                <div>
+                  <h3 className="font-semibold md:mt-5">{s.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground md:mt-2">{s.text}</p>
+                </div>
               </li>
             ))}
           </ol>
@@ -487,14 +498,14 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
 
         {/* FAQ */}
         <Section id="faq" eyebrow="FAQ" title="Questions fréquentes">
-          <div className="mx-auto max-w-3xl divide-y rounded-2xl border bg-card">
+          <div className="mx-auto max-w-3xl divide-y overflow-hidden rounded-2xl border bg-card">
             {FAQ.map(({ q, a }) => (
-              <details key={q} className="group px-6 py-5 [&_summary::-webkit-details-marker]:hidden">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
+              <details key={q} className="group [&_summary::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 font-medium hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none sm:px-6">
                   {q}
                   <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
                 </summary>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{a}</p>
+                <p className="-mt-2 px-5 pb-5 text-sm leading-relaxed text-muted-foreground sm:px-6">{a}</p>
               </details>
             ))}
           </div>
@@ -514,8 +525,8 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
               <p className="mx-auto mt-4 max-w-xl text-white/65">
                 Créez votre agence et essayez {BRAND.name} gratuitement pendant 7 jours.
               </p>
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <Link href="/register" className={buttonVariants({ size: "lg" })}>
+              <div className="mt-8 grid gap-3 sm:flex sm:justify-center">
+                <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "h-12 sm:h-11")}>
                   Créer mon agence <ArrowRight />
                 </Link>
               </div>
@@ -538,11 +549,11 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
             </span>
             © {year} {BRAND.name}
           </span>
-          <nav aria-label="Pied de page" className="flex flex-wrap gap-x-6 gap-y-2">
-            <Link href="/login" className="hover:text-foreground">Se connecter</Link>
-            <Link href="/register" className="hover:text-foreground">Créer une agence</Link>
-            <Link href="/student/login" className="hover:text-foreground">Espace candidat</Link>
-            <Link href="#faq" className="hover:text-foreground">FAQ</Link>
+          <nav aria-label="Pied de page" className="flex flex-wrap gap-x-6">
+            <Link href="/login" className="py-2 hover:text-foreground">Se connecter</Link>
+            <Link href="/register" className="py-2 hover:text-foreground">Créer une agence</Link>
+            <Link href="/student/login" className="py-2 hover:text-foreground">Espace candidat</Link>
+            <Link href="#faq" className="py-2 hover:text-foreground">FAQ</Link>
           </nav>
         </div>
       </footer>
