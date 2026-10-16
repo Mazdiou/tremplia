@@ -147,6 +147,13 @@ html.dark {
   color-scheme: dark;
 }
 
+/* Changement de thème : fondu léger de toute la page (theme-toggle.tsx) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* ===== Socle d'interface (lot C) ===== */
 :root {
   --background: oklch(0.984 0.003 248);

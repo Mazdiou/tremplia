@@ -12,13 +12,24 @@ export function ThemeToggle({ className }: { className?: string }) {
 
     // Sans animation pendant le changement : les éléments animés au survol
     // (cartes, boutons) changeraient de couleur en retard sur le reste.
-    const freeze = document.createElement("style");
-    freeze.textContent = "*,*::before,*::after{transition:none!important}";
-    document.head.appendChild(freeze);
-    root.classList.toggle("dark", dark);
-    // Force le calcul des nouveaux styles avant de rendre les animations
-    void getComputedStyle(document.body).color;
-    setTimeout(() => freeze.remove(), 1);
+    const apply = () => {
+      const freeze = document.createElement("style");
+      freeze.textContent = "*,*::before,*::after{transition:none!important}";
+      document.head.appendChild(freeze);
+      root.classList.toggle("dark", dark);
+      // Force le calcul des nouveaux styles avant de rendre les animations
+      void getComputedStyle(document.body).color;
+      setTimeout(() => freeze.remove(), 1);
+    };
+
+    // Fondu léger de toute la page (globals.css), si le navigateur le permet
+    // et si l'utilisateur n'a pas demandé moins d'animations
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (document.startViewTransition && !reduced) {
+      document.startViewTransition(apply);
+    } else {
+      apply();
+    }
 
     try {
       localStorage.setItem("sf:theme", dark ? "dark" : "light");
