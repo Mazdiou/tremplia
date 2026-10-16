@@ -103,6 +103,14 @@ export function dbError(
   return new ApiError(known[0], messages[error.code!] ?? known[1]);
 }
 
+// Limite d'essais atteinte (code 54000 des fonctions de limitation :
+// connexion candidat, inscription, messages du candidat) : réponse 429, le
+// code HTTP prévu pour « trop de requêtes ». Les plafonds de quantité (30
+// groupes, 10 comptes…) gardent le 409 de dbError.
+export function rateLimited(error: { code?: string }, message: string): ApiError | null {
+  return error.code === "54000" ? new ApiError(429, message) : null;
+}
+
 // Enveloppe une route : une ApiError devient sa réponse, toute autre
 // exception une réponse 500. Seul le nom de l'erreur est écrit dans les
 // logs, jamais son message, qui pourrait contenir une donnée personnelle.

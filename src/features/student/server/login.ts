@@ -1,5 +1,5 @@
 import "server-only";
-import { ApiError, dbError } from "@/lib/api-errors";
+import { ApiError, dbError, rateLimited } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeCode } from "@/features/student/code";
@@ -21,9 +21,10 @@ export async function studentLogin(input: string, ip: string) {
     p_ip_hash: ipHash(ip),
   });
   if (error) {
-    throw dbError("student login", error, {
-      "54000": "Trop de tentatives. Réessayez dans 15 minutes.",
-    });
+    throw (
+      rateLimited(error, "Trop de tentatives. Réessayez dans 15 minutes.") ??
+      dbError("student login", error)
+    );
   }
   const row = (data as { case_id: string; agency_id: string; generation: number }[] | null)?.[0];
   if (!row) throw new ApiError(401, WRONG);

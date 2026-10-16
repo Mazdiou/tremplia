@@ -1,4 +1,4 @@
-import { ApiError, dbError, ok, parseBody, safely } from "@/lib/api-errors";
+import { ApiError, dbError, ok, parseBody, rateLimited, safely } from "@/lib/api-errors";
 import { clientIp } from "@/lib/client-ip";
 import { ipHash } from "@/features/student/server/keys";
 import { logActivity } from "@/lib/audit/log-activity";
@@ -16,9 +16,10 @@ export function POST(request: Request) {
       p_ip_hash: ipHash(clientIp(request)),
     });
     if (limitError) {
-      throw dbError("register limit", limitError, {
-        "54000": "Trop d'inscriptions pour le moment. Réessayez dans une heure.",
-      });
+      throw (
+        rateLimited(limitError, "Trop d'inscriptions pour le moment. Réessayez dans une heure.") ??
+        dbError("register limit", limitError)
+      );
     }
 
     // 1. Création du compte Auth
