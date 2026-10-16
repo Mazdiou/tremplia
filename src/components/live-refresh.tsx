@@ -1,0 +1,96 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+// Garde la page à jour sans rechargement : messages non lus, « À traiter »,
+// pastilles de l'arbre. Seuls les composants serveur sont relus ; ce qui est
+// en cours de saisie reste en place.
+//
+// - Agence (agencyId fourni) : abonnement en temps réel aux messages et aux
+//   réponses des candidats (filtrés par le RLS). Si la connexion tombe, une
+//   vérification toutes les 30 s prend le relais.
+// - Candidat (sans compte Supabase) : vérification toutes les minutes.
+// - Dans les deux cas : relecture au retour sur l'onglet.
+
+const FALLBACK_MS = 30_000;
+const STUDENT_MS = 60_000;
+// Plusieurs événements rapprochés (envoi + lecture) : une seule relecture
+const DEBOUNCE_MS = 400;
+// Retour sur l'onglet juste après une relecture : inutile d'en refaire une
+const MIN_GAP_MS = 5_000;
+
+export function LiveRefresh({ agencyId }: { agencyId?: string }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    let last = Date.now();
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    let live = false;
+
+    const refresh = () => {
+      clearTimeout(pending);
+      pending = setTimeout(() => {
+        last = Date.now();
+        router.refresh();
+      }, DEBOUNCE_MS);
+    };
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && Date.now() - last > MIN_GAP_MS) refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
+    const timer = setInterval(
+      () => {
+        if (document.visibilityState !== "visible" || live) return;
+        if (Date.now() - last > MIN_GAP_MS) refresh();
+      },
+      agencyId ? FALLBACK_MS : STUDENT_MS,
+    );
+
+    let cleanup = () => {};
+    if (agencyId) {
+      const supabase = createClient();
+      const filter = `agency_id=eq.${agencyId}`;
+      const channel = supabase
+        .channel(`agency-live:${agencyId}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "case_messages", filter },
+          (payload) => {
+            // Les messages de l'agence elle-même se rafraîchissent à l'envoi
+            if ((payload.new as { sender?: string }).sender === "student") refresh();
+          },
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "case_student_reviews", filter },
+          refresh,
+        );
+      // Le jeton de la session doit être transmis avant l'abonnement, sinon
+      // le RLS ne laisse rien passer
+      void supabase.realtime.setAuth().then(() =>
+        channel.subscribe((status) => {
+          const wasLive = live;
+          live = status === "SUBSCRIBED";
+          // Reconnexion : rattraper ce qui est arrivé pendant la coupure
+          if (live && !wasLive && Date.now() - last > MIN_GAP_MS) refresh();
+        }),
+      );
+      cleanup = () => void supabase.removeChannel(channel);
+    }
+
+    return () => {
+      clearTimeout(pending);
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+      cleanup();
+    };
+  }, [agencyId, router]);
+
+  return null;
+}

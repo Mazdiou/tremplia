@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AppRail } from "@/components/shell/app-rail";
+import { LiveRefresh } from "@/components/live-refresh";
 import { getShellUser } from "@/components/shell/app-shell";
 import {
   fetchCampaignCases,
@@ -55,6 +56,7 @@ export default async function CasesLayout({
 
   return (
     <div className="flex h-dvh flex-col-reverse overflow-hidden md:flex-row">
+      <LiveRefresh agencyId={member.agencyId} />
       <AppRail isOwner={member.isOwner} initials={initials} isPlatformAdmin={admin} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <SubscriptionBanner agencyId={member.agencyId} />

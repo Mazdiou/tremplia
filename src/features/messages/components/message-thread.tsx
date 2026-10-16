@@ -11,7 +11,8 @@ import { MAX_MESSAGE_LENGTH, type MessageItem } from "@/features/messages/schema
 export type ThreadMessage = MessageItem & { timeLabel: string };
 
 // Nouveaux messages de l'autre côté : vérifiés régulièrement tant que la
-// page est visible (pas de connexion en temps réel)
+// page est visible. Le candidat n'a pas de temps réel ; côté agence,
+// LiveRefresh fait déjà le travail et ceci reste un filet de sécurité.
 const REFRESH_MS = 15_000;
 
 export function MessageThread({

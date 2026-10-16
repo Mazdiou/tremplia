@@ -15,6 +15,7 @@ import { StudentLogout, StudentTabs } from "@/features/student/components/studen
 import { STUDENT_READ_ONLY } from "@/features/subscription/subscription";
 import { isReadOnly } from "@/features/subscription/server/subscription";
 import { InstallAppCard } from "@/features/pwa/components/install-app-card";
+import { LiveRefresh } from "@/components/live-refresh";
 
 export const metadata: Metadata = {
   title: "Mon dossier",
@@ -38,6 +39,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
+      <LiveRefresh />
       <header className="z-10 border-b bg-background/95 backdrop-blur sm:sticky sm:top-0">
         <div className="mx-auto max-w-4xl px-4 md:px-8">
           <div className="flex h-14 items-center justify-between gap-3">
