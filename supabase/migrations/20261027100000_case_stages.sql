@@ -301,10 +301,9 @@ from public.campaigns c
 cross join lateral unnest(
   case when c.template_key like 'campus-france-%'
     then array['Constitution du dossier', 'Dossier soumis à Campus France',
-               'Entretien', 'Réponses des établissements', 'Demande de visa',
-               'Visa obtenu']
+               'Entretien', 'Réponses des établissements', 'Demande de visa']
     else array['Constitution du dossier', 'Candidatures envoyées',
-               'Réponses des établissements', 'Demande de visa', 'Visa obtenu']
+               'Réponses des établissements', 'Demande de visa']
   end
 ) with ordinality as s(name, ordinality)
 where c.status = 'active';

@@ -13,7 +13,6 @@ export const campusFrance20262027: CampaignTemplate = {
     "Entretien",
     "Réponses des établissements",
     "Demande de visa",
-    "Visa obtenu",
   ],
   dates: [
     { label: "Ouverture des candidatures", date: "2026-10-01" },

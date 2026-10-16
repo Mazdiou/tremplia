@@ -16,7 +16,6 @@ export const DEFAULT_STAGES = [
   "Candidatures envoyées",
   "Réponses des établissements",
   "Demande de visa",
-  "Visa obtenu",
 ] as const;
 
 // Étapes d'une campagne, dans l'ordre
