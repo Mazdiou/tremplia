@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { dateTimeFormat } from "@/lib/dates";
 import { getCase } from "@/features/cases/server/get-case";
 import { LetterEditor } from "@/features/motivation-letter/components/letter-editor";
+import { memberNames } from "@/features/team/server/members";
 
 export default async function MotivationLetterPage({
   params,
@@ -22,12 +23,8 @@ export default async function MotivationLetterPage({
 
   let lastEdit: string | null = null;
   if (letter) {
-    const { data: author } = await supabase
-      .from("profiles")
-      .select("first_name, last_name")
-      .eq("id", letter.updated_by as string)
-      .maybeSingle();
-    const who = author ? `${author.first_name} ${author.last_name}` : "un ancien membre";
+    const author = letter.updated_by as string;
+    const who = (await memberNames(supabase, [author])).get(author) ?? "un ancien membre";
     lastEdit = `par ${who}, le ${dateTimeFormat.format(new Date(letter.updated_at as string))}`;
   }
 

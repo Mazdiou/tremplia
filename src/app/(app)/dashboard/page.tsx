@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { BRAND } from "@/config/brand";
 import { InstallAppCard } from "@/features/pwa/components/install-app-card";
 import { StagePipeline } from "@/features/stages/components/stage-pipeline";
+import { plural, pluralWord } from "@/lib/plural";
 
 const monthName = new Intl.DateTimeFormat("fr-FR", { timeZone: APP_TIMEZONE, month: "long" });
 const longToday = new Intl.DateTimeFormat("fr-FR", {
@@ -167,7 +168,6 @@ export default async function DashboardPage({
     last_name: string;
     remaining_amount: number;
   }[];
-  const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? "s" : ""}`;
 
   // Liens vers l'arbre des dossiers, filtré (et limité à la campagne choisie)
   const casesLink = (filtre?: string) => {
@@ -255,8 +255,7 @@ export default async function DashboardPage({
               >
                 <span className="font-semibold group-hover:text-primary">{c.name}</span>
                 <span className="mt-0.5 text-sm text-muted-foreground tabular-nums">
-                  {c.activeCount} dossier{c.activeCount > 1 ? "s" : ""} actif
-                  {c.activeCount > 1 ? "s" : ""}
+                  {plural(c.activeCount, "dossier actif", "dossiers actifs")}
                 </span>
                 <span className="mt-3 flex items-center gap-2 border-t pt-3 text-sm">
                   <CalendarClock className="size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -303,7 +302,7 @@ export default async function DashboardPage({
               <PaymentFigure
                 label="Montant à fixer"
                 value={String(feeUnset)}
-                hint={`dossier${feeUnset > 1 ? "s" : ""} actif${feeUnset > 1 ? "s" : ""} sans montant convenu`}
+                hint={`${pluralWord(feeUnset, "dossier actif", "dossiers actifs")} sans montant convenu`}
                 href={feeUnset > 0 ? casesLink("montant-a-fixer") : undefined}
                 className="col-span-2 sm:col-span-1 lg:col-span-2 xl:col-span-1"
               />

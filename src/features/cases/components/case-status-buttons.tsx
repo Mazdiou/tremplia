@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { MoreHorizontal, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import type { CaseStatus } from "@/features/cases/labels";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { useDismiss } from "@/hooks/use-dismiss";
+import { MENU_ITEM_CLASS } from "@/components/page-ui";
 
 type Action = {
   to: CaseStatus;
@@ -54,22 +56,7 @@ export function CaseStatusButtons({
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Fermeture du menu au clic à l'extérieur ou avec Échap
-  useEffect(() => {
-    if (!menuOpen) return;
-    function onDown(e: MouseEvent) {
-      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setMenuOpen(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [menuOpen]);
+  useDismiss(menuRef, menuOpen, setMenuOpen);
 
   async function change(to: CaseStatus) {
     setError(null);
@@ -123,10 +110,7 @@ export function CaseStatusButtons({
                 key={a.to}
                 role="menuitem"
                 type="button"
-                className={cn(
-                  "block w-full rounded-md px-2.5 py-1.5 text-left text-sm hover:bg-muted focus-visible:bg-muted focus-visible:outline-none",
-                  a.to === "abandoned" && "text-destructive",
-                )}
+                className={cn(MENU_ITEM_CLASS, a.to === "abandoned" && "text-destructive")}
                 onClick={() => {
                   setMenuOpen(false);
                   if (a.confirm) setPending(a);

@@ -191,6 +191,11 @@ export const PILL_TONE_CLASSES: Record<PillTone, string> = {
   warn: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
 };
 
+// Élément d'un menu déroulant (« … » d'une campagne, actions d'un dossier,
+// messages WhatsApp)
+export const MENU_ITEM_CLASS =
+  "block w-full rounded-md px-2.5 py-1.5 text-left text-sm hover:bg-muted focus-visible:bg-muted focus-visible:outline-none";
+
 export function StatusPill({
   tone,
   children,
@@ -207,6 +212,32 @@ export function StatusPill({
     >
       {children}
     </span>
+  );
+}
+
+// Résultat de la dernière action d'un panneau (« Note ajoutée », erreur…)
+export type ActionMessage = { text: string; error: boolean } | null;
+
+// Ligne réservée sous les actions : rien ne bouge quand un message apparaît
+export function StatusMessage({
+  message,
+  className,
+}: {
+  message: ActionMessage;
+  className?: string;
+}) {
+  return (
+    <p
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "min-h-5 px-1 text-sm",
+        message?.error ? "text-destructive" : "text-muted-foreground",
+        className,
+      )}
+    >
+      {message?.text}
+    </p>
   );
 }
 

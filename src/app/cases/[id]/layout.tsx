@@ -32,6 +32,7 @@ import {
   CaseHeaderToggle,
   TrackPanel,
 } from "@/features/cases/components/case-header";
+import { telHref } from "@/lib/phone";
 
 const isUuid = (id: string) => z.string().uuid().safeParse(id).success;
 
@@ -157,7 +158,7 @@ export default async function CaseLayout({
                   <ul className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" aria-label="Contacts">
                     <li className="flex items-center gap-1">
                       <Phone className="size-3.5 text-muted-foreground" aria-hidden />
-                      <a href={`tel:${c.phone.replace(/[^0-9+]/g, "")}`} className="hover:underline">
+                      <a href={telHref(c.phone)} className="hover:underline">
                         {c.phone}
                       </a>
                       <WhatsAppMenu
@@ -170,10 +171,7 @@ export default async function CaseLayout({
                       <li className="flex items-center gap-1">
                         <UserRound className="size-3.5 text-muted-foreground" aria-hidden />
                         <span className="text-muted-foreground">{c.secondary_contact_name} ·</span>
-                        <a
-                          href={`tel:${c.secondary_contact_phone.replace(/[^0-9+]/g, "")}`}
-                          className="hover:underline"
-                        >
+                        <a href={telHref(c.secondary_contact_phone)} className="hover:underline">
                           {c.secondary_contact_phone}
                         </a>
                         <WhatsAppMenu

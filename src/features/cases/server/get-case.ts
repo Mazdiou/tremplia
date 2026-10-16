@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import type { CaseFieldsRecord } from "../case-record";
 import type { CaseStatus, ExternalAccountStatus } from "../labels";
+import { fullName } from "@/lib/names";
 
 export type CaseRow = CaseFieldsRecord & {
   id: string;
@@ -90,7 +91,7 @@ export const getCase = cache(async (id: string) => {
 
   return {
     c: c as CaseRow,
-    responsible: p ? `${p.first_name} ${p.last_name}` : null,
+    responsible: p ? fullName(p.first_name, p.last_name) : null,
     campaign: camp
       ? (campaign as {
           id: string;

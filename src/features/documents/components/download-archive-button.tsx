@@ -5,6 +5,8 @@ import { Download, Loader2 } from "lucide-react";
 import { zipSync } from "fflate";
 import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/api-client";
+import { plural } from "@/lib/plural";
+import { saveFile } from "@/lib/save-file";
 
 type Archive = { fileName: string; files: { path: string; url: string }[] };
 
@@ -46,16 +48,9 @@ export function DownloadArchiveButton({
     }
 
     const zip = zipSync(entries);
-    const url = URL.createObjectURL(new Blob([zip as Uint8Array<ArrayBuffer>], { type: "application/zip" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    saveFile(new Blob([zip as Uint8Array<ArrayBuffer>], { type: "application/zip" }), fileName);
     setProgress(null);
-    onMessage(`${files.length} document${files.length > 1 ? "s" : ""} téléchargé${files.length > 1 ? "s" : ""} (ZIP)`);
+    onMessage(`${plural(files.length, "document téléchargé", "documents téléchargés")} (ZIP)`);
   }
 
   return (

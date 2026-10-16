@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { readAll } from "@/features/cases/fetch-campaign-cases";
 import { PROGRAM_RESULTS, type ProgramResult } from "@/features/programs/schemas";
 import { groupActivity, type ActivityGroup, type ActivityRow } from "../activity";
+import { plural } from "@/lib/plural";
+import { displayName, fullName } from "@/lib/names";
 
 // Lectures du tableau de bord, via le RLS (dossiers de l'agence seulement).
 
@@ -18,8 +20,6 @@ export type Todo = {
   // Le candidat a tout validé et des formations restent à envoyer
   approved: TodoItem[];
 };
-
-const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 
 // « À traiter » : ce qui attend une action de l'agence, sur les dossiers
 // actifs des campagnes affichées. Deux temps seulement : les avis des
@@ -187,12 +187,12 @@ export async function loadActivity(
     let object: ActivityEntry["object"] = null;
     const c = g.case_id ? caseById.get(g.case_id) : undefined;
     if (c) {
-      object = { label: `${c.last_name.toLocaleUpperCase("fr")} ${c.first_name}`, href: `/cases/${c.id}` };
+      object = { label: displayName(c.first_name, c.last_name), href: `/cases/${c.id}` };
     } else if (g.target_type === "campaign" && g.target_id && campaignById.has(g.target_id)) {
       object = { label: campaignById.get(g.target_id)!, href: `/campaigns/${g.target_id}` };
     } else if (g.target_type === "profile" && g.target_id && g.target_id !== g.actor_id) {
       const p = profileById.get(g.target_id);
-      if (p) object = { label: `${p.first_name} ${p.last_name}`, href: "/team" };
+      if (p) object = { label: fullName(p.first_name, p.last_name), href: "/team" };
     }
     const actor = g.actor_id ? (profileById.get(g.actor_id) ?? null) : null;
     return { ...g, actor, object };

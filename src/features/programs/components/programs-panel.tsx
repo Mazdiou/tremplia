@@ -13,7 +13,12 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PILL_TONE_CLASSES, StatusPill } from "@/components/page-ui";
+import {
+  PILL_TONE_CLASSES,
+  StatusMessage,
+  StatusPill,
+  type ActionMessage,
+} from "@/components/page-ui";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { SelectField, TextField, optionsOf } from "@/components/form-fields";
 import {
@@ -206,7 +211,7 @@ export function ProgramsPanel({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<ProgramItem | null>(null);
-  const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
+  const [message, setMessage] = useState<ActionMessage>(null);
 
   const full = programs.length >= MAX_PROGRAMS;
 
@@ -301,16 +306,7 @@ export function ProgramsPanel({
           errors={fieldErrors} onSubmit={(d) => void save(d)} onCancel={() => open(null)} />
       )}
 
-      <p
-        role="status"
-        aria-live="polite"
-        className={cn(
-          "min-h-5 px-1 text-sm",
-          message?.error ? "text-destructive" : "text-muted-foreground",
-        )}
-      >
-        {message?.text}
-      </p>
+      <StatusMessage message={message} />
 
       {programs.length === 0 ? (
         editing !== "new" && (

@@ -7,16 +7,11 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { callApi } from "@/lib/api-client";
+import { callApiError } from "@/lib/api-client";
 import { MAX_CAMPAIGN_GROUPS } from "../schemas";
+import { plural } from "@/lib/plural";
 
 export type ManagedGroup = { id: string; name: string; activeCases: number };
-
-// Message d'erreur, ou null en cas de succès
-async function send(url: string, method: string, body?: unknown) {
-  const res = await callApi(url, { method, body });
-  return res.ok ? null : res.error;
-}
 
 // Groupes d'une campagne : tout membre actif les gère, sauf si la campagne
 // est archivée (ils sont alors figés).
@@ -67,7 +62,7 @@ export function GroupsManager({
                   className="flex flex-1 items-center gap-2"
                   onSubmit={async (e) => {
                     e.preventDefault();
-                    if (await run(() => send(`${base}/${g.id}`, "PATCH", { name: editName }))) {
+                    if (await run(() => callApiError(`${base}/${g.id}`, { method: "PATCH", body: { name: editName } }))) {
                       setEditing(null);
                     }
                   }}
@@ -94,7 +89,7 @@ export function GroupsManager({
                 <>
                   <span className="flex-1 font-medium">{g.name}</span>
                   <span className="text-xs text-muted-foreground tabular-nums">
-                    {g.activeCases} dossier{g.activeCases > 1 ? "s" : ""} actif{g.activeCases > 1 ? "s" : ""}
+                    {plural(g.activeCases, "dossier actif", "dossiers actifs")}
                   </span>
                   {!readOnly && (
                     <>
@@ -131,7 +126,7 @@ export function GroupsManager({
           className="flex max-w-sm items-center gap-2"
           onSubmit={async (e) => {
             e.preventDefault();
-            if (await run(() => send(base, "POST", { name: newName }))) setNewName("");
+            if (await run(() => callApiError(base, { body: { name: newName } }))) setNewName("");
           }}
         >
           <Label htmlFor="group-new" className="sr-only">
@@ -165,7 +160,7 @@ export function GroupsManager({
         loading={busy}
         onCancel={() => setToDelete(null)}
         onConfirm={async () => {
-          if (toDelete && (await run(() => send(`${base}/${toDelete.id}`, "DELETE")))) {
+          if (toDelete && (await run(() => callApiError(`${base}/${toDelete.id}`, { method: "DELETE" })))) {
             setToDelete(null);
           }
         }}

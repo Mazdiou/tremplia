@@ -16,6 +16,7 @@ import { STUDENT_READ_ONLY } from "@/features/subscription/subscription";
 import { isReadOnly } from "@/features/subscription/server/subscription";
 import { InstallAppCard } from "@/features/pwa/components/install-app-card";
 import { LiveRefresh } from "@/components/live-refresh";
+import { telHref } from "@/lib/phone";
 
 export const metadata: Metadata = {
   title: "Mon dossier",
@@ -60,7 +61,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
               Dossier suivi par {agency.name} ·{" "}
-              <a href={`tel:${agency.phone.replace(/[^0-9+]/g, "")}`} className="whitespace-nowrap hover:underline">
+              <a href={telHref(agency.phone)} className="whitespace-nowrap hover:underline">
                 {agency.phone}
               </a>
             </p>

@@ -4,6 +4,7 @@ import { displayName } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import type { Todo, TodoItem } from "../server/dashboard";
 import { Initials, relativeDay } from "./dashboard-ui";
+import { plural } from "@/lib/plural";
 
 // « À traiter » : ce qui attend l'agence, avec un accès direct au bon onglet
 // du dossier. Rien n'est à cocher : une ligne disparaît d'elle-même quand la
@@ -102,7 +103,7 @@ export function TodoPanel({ todo }: { todo: Todo }) {
               </ul>
               {items.length > SHOWN && (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  et {items.length - SHOWN} autre{items.length - SHOWN > 1 ? "s" : ""}
+                  et {plural(items.length - SHOWN, "autre")}
                 </p>
               )}
             </div>

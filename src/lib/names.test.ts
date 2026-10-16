@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { displayName, initialsOf, normalizeName } from "./names";
+import { displayName, fullName, initialsOf, normalizeName } from "./names";
 
 describe("noms", () => {
   it("compare sans casse, accents ni espaces multiples", () => {
@@ -11,7 +11,8 @@ describe("noms", () => {
     expect(initialsOf("", "")).toBe("?");
   });
 
-  it("affiche « NOM Prénom »", () => {
+  it("affiche « NOM Prénom » d'un candidat, « Prénom Nom » d'un membre", () => {
     expect(displayName("Sara", "Benali")).toBe("BENALI Sara");
+    expect(fullName("Nadia", "Haddad")).toBe("Nadia Haddad");
   });
 });

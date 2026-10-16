@@ -10,6 +10,7 @@ import {
 } from "@/features/cases/server/authorize-case";
 import type { StudentSession } from "@/features/student/server/session";
 import type { MessageItem } from "@/features/messages/schemas";
+import { memberNames } from "@/features/team/server/members";
 
 // Conversation d'un dossier entre le candidat et l'agence. Lectures avec la
 // clé secrète, toujours filtrées sur l'agence (et le dossier) de la session.
@@ -36,18 +37,11 @@ export async function listMessages(agencyId: string, caseId: string) {
     author_id: string | null;
   }[];
 
-  const authorIds = [...new Set(rows.flatMap((r) => (r.author_id ? [r.author_id] : [])))];
-  const names = new Map<string, string>();
-  if (authorIds.length > 0) {
-    const { data: profiles } = await admin
-      .from("profiles")
-      .select("id, first_name, last_name")
-      .eq("agency_id", agencyId)
-      .in("id", authorIds);
-    for (const p of (profiles ?? []) as { id: string; first_name: string; last_name: string }[]) {
-      names.set(p.id, `${p.first_name} ${p.last_name}`);
-    }
-  }
+  const names = await memberNames(
+    admin,
+    [...new Set(rows.flatMap((r) => (r.author_id ? [r.author_id] : [])))],
+    agencyId,
+  );
 
   return rows.map(
     (r): MessageItem => ({

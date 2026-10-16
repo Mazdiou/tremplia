@@ -4,11 +4,12 @@ import { DeleteEmployeeButton } from "@/features/team/components/delete-employee
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireOwner } from "@/lib/auth/require-member";
-import { initialsOf } from "@/lib/names";
+import { fullName, initialsOf } from "@/lib/names";
 import { AddEmployeeForm } from "@/features/team/components/add-employee-form";
 import { ToggleActiveButton } from "@/features/team/components/toggle-active-button";
 import { SubscriptionPanel } from "@/features/subscription/components/subscription-panel";
 import { getSubscription, listPlatformPayments } from "@/features/subscription/server/subscription";
+import { plural } from "@/lib/plural";
 
 export default async function TeamPage() {
   const caller = await requireOwner();
@@ -42,7 +43,7 @@ export default async function TeamPage() {
     <PageContainer>
       <PageHeader
         title="Équipe"
-        subtitle={`${list.length} membre${list.length > 1 ? "s" : ""} · seul le patron gère l'équipe`}
+        subtitle={`${plural(list.length, "membre")} · seul le patron gère l'équipe`}
       />
 
       <div className="space-y-5">
@@ -66,7 +67,7 @@ export default async function TeamPage() {
                 </span>
                 <div className="min-w-0 flex-1 basis-48">
                   <p className="truncate text-sm font-medium">
-                    {m.first_name} {m.last_name}
+                    {fullName(m.first_name, m.last_name)}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
                     {emails.get(m.id) ?? ""}
@@ -86,7 +87,7 @@ export default async function TeamPage() {
                       {m.role === "employee" && !m.is_active && (
                         <DeleteEmployeeButton
                           id={m.id}
-                          name={`${m.first_name} ${m.last_name}`}
+                          name={fullName(m.first_name, m.last_name)}
                         />
                       )}
                       <ToggleActiveButton id={m.id} isActive={m.is_active} />

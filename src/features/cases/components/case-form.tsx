@@ -34,6 +34,7 @@ import {
 } from "@/features/payments/schemas";
 import { amountInputValue, formatDA, parseAmount } from "@/lib/money";
 import { ImportPanel, type SourceCampaign } from "./import-panel";
+import { fullName } from "@/lib/names";
 
 export type FormCampaign = {
   id: string;
@@ -470,7 +471,7 @@ export function CaseForm(
               placeholder={isEdit && !props.initial.assignedTo ? "Aucun (non attribué)" : undefined}
               options={props.members.map((m) => ({
                 value: m.id,
-                label: `${m.first_name} ${m.last_name}${m.id === props.currentUserId ? " (moi)" : ""}${m.is_active === false ? " (inactif)" : ""}`,
+                label: `${fullName(m.first_name, m.last_name)}${m.id === props.currentUserId ? " (moi)" : ""}${m.is_active === false ? " (désactivé)" : ""}`,
               }))}
               error={e.assignedTo}
             />

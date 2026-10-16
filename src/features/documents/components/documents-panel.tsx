@@ -26,6 +26,8 @@ import { useDragAutoScroll } from "@/features/documents/drag-autoscroll";
 import { callApi } from "@/lib/api-client";
 import { DownloadArchiveButton } from "./download-archive-button";
 import { cn } from "@/lib/utils";
+import { plural } from "@/lib/plural";
+import { StatusMessage, type ActionMessage } from "@/components/page-ui";
 
 export type DocItem = {
   id: string;
@@ -48,8 +50,6 @@ function hasType(e: React.DragEvent, type: string) {
   return Array.from(e.dataTransfer.types).includes(type);
 }
 
-type Message = { text: string; error: boolean };
-
 export function DocumentsPanel({
   caseId,
   docs,
@@ -71,7 +71,7 @@ export function DocumentsPanel({
   // Dossier qui recevra les fichiers choisis avec le sélecteur de fichiers
   const uploadTarget = useRef<string | null>(null);
 
-  const [message, setMessage] = useState<Message | null>(null);
+  const [message, setMessage] = useState<ActionMessage>(null);
   const [uploading, setUploading] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -613,7 +613,7 @@ export function DocumentsPanel({
               <>
                 <span className="mr-1 text-xs">
                   {list.length > 0
-                    ? `Supprimer ce dossier ? Ses ${list.length} document${list.length > 1 ? "s" : ""} iront dans « Sans dossier ».`
+                    ? `Supprimer ce dossier ? Ses ${plural(list.length, "document")} iront dans « Sans dossier ».`
                     : "Supprimer ce dossier ?"}
                 </span>
                 <Button
@@ -751,16 +751,7 @@ export function DocumentsPanel({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p
-          role="status"
-          aria-live="polite"
-          className={cn(
-            "min-h-5 flex-1 px-1 text-sm",
-            message?.error ? "text-destructive" : "text-muted-foreground",
-          )}
-        >
-          {message?.text}
-        </p>
+        <StatusMessage message={message} className="flex-1" />
         {docs.length > 0 && <DownloadArchiveButton caseId={caseId} onMessage={say} />}
         {creatingFolder ? (
           <input

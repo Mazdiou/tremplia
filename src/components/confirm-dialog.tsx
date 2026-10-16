@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 
-// Boîte de confirmation : <dialog> natif (Échap, focus piégé, fond grisé).
+// Boîte de confirmation (<dialog> natif, voir useModalDialog).
 // `children` : un champ à remplir avant de confirmer (un motif, par exemple).
 export function ConfirmDialog({
   open,
@@ -30,14 +30,7 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
+  const ref = useModalDialog(open);
 
   return (
     <dialog

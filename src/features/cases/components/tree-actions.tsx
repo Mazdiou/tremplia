@@ -1,19 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, MoreHorizontal, Pencil, Trash2, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { MENU_ITEM_CLASS } from "@/components/page-ui";
 import { Button } from "@/components/ui/button";
-import { callApi } from "@/lib/api-client";
+import { callApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-
-// Message d'erreur, ou null en cas de succès
-async function send(url: string, method: string, body?: unknown) {
-  const res = await callApi(url, { method, body });
-  return res.ok ? null : res.error;
-}
+import { useDismiss } from "@/hooks/use-dismiss";
 
 // Saisie d'un nom de groupe sur une ligne de l'arbre (Entrée : valider,
 // Échap : annuler). Renvoie un message d'erreur, ou null en cas de succès.
@@ -79,25 +75,7 @@ export function CampaignMenu({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Fermeture au clic à l'extérieur ou avec Échap
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  const item =
-    "block w-full rounded-md px-2.5 py-1.5 text-left text-sm hover:bg-muted focus-visible:bg-muted focus-visible:outline-none";
+  useDismiss(ref, open, setOpen);
 
   return (
     <div ref={ref} className="relative">
@@ -117,7 +95,7 @@ export function CampaignMenu({
           className="absolute top-7 right-0 z-30 w-48 rounded-xl border bg-popover p-1 shadow-lg"
         >
           {active && (
-            <Link role="menuitem" href={`/cases/new?campaign=${campaignId}`} className={item}>
+            <Link role="menuitem" href={`/cases/new?campaign=${campaignId}`} className={MENU_ITEM_CLASS}>
               Nouveau dossier
             </Link>
           )}
@@ -125,7 +103,7 @@ export function CampaignMenu({
             <button
               role="menuitem"
               type="button"
-              className={item}
+              className={MENU_ITEM_CLASS}
               onClick={() => {
                 setOpen(false);
                 onAddGroup();
@@ -134,7 +112,7 @@ export function CampaignMenu({
               Ajouter un groupe
             </button>
           )}
-          <Link role="menuitem" href={`/campaigns/${campaignId}`} className={item}>
+          <Link role="menuitem" href={`/campaigns/${campaignId}`} className={MENU_ITEM_CLASS}>
             Ouvrir la campagne
           </Link>
         </div>
@@ -191,7 +169,9 @@ export function GroupActions({
         onCancel={() => setConfirming(false)}
         onConfirm={async () => {
           setBusy(true);
-          const failure = await send(`/api/campaigns/${campaignId}/groups/${groupId}`, "DELETE");
+          const failure = await callApiError(`/api/campaigns/${campaignId}/groups/${groupId}`, {
+            method: "DELETE",
+          });
           setBusy(false);
           if (failure) {
             setError(failure);
@@ -207,7 +187,10 @@ export function GroupActions({
 
 export const groupApi = {
   create: (campaignId: string, name: string) =>
-    send(`/api/campaigns/${campaignId}/groups`, "POST", { name }),
+    callApiError(`/api/campaigns/${campaignId}/groups`, { body: { name } }),
   rename: (campaignId: string, groupId: string, name: string) =>
-    send(`/api/campaigns/${campaignId}/groups/${groupId}`, "PATCH", { name }),
+    callApiError(`/api/campaigns/${campaignId}/groups/${groupId}`, {
+      method: "PATCH",
+      body: { name },
+    }),
 };

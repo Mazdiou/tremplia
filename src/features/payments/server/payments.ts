@@ -7,6 +7,7 @@ import {
   type AuthorizedCase,
 } from "@/features/cases/server/authorize-case";
 import type { RecordPaymentInput } from "@/features/payments/schemas";
+import { fullName } from "@/lib/names";
 
 // Paiements du candidat à l'agence. Tout membre actif enregistre un paiement
 // et fixe un montant convenu encore vide ; seul le patron annule un paiement
@@ -33,8 +34,8 @@ export type PaymentItem = {
   cancelled: { by: string; at: string; reason: string } | null;
 };
 
-const fullName = (p: { first_name: string; last_name: string } | null) =>
-  p ? `${p.first_name} ${p.last_name}` : "Un ancien membre";
+const memberName = (p: { first_name: string; last_name: string } | null) =>
+  p ? fullName(p.first_name, p.last_name) : "Un ancien membre";
 
 // Lecture via le RLS : seuls les paiements de l'agence reviennent. Les plus
 // récents d'abord.
@@ -71,10 +72,10 @@ export async function listPayments(caseId: string): Promise<PaymentItem[]> {
     paidOn: r.paid_on,
     method: r.method,
     note: r.note,
-    createdBy: fullName(r.author),
+    createdBy: memberName(r.author),
     createdAt: r.created_at,
     cancelled: r.cancelled_at
-      ? { by: fullName(r.canceller), at: r.cancelled_at, reason: r.cancel_reason ?? "" }
+      ? { by: memberName(r.canceller), at: r.cancelled_at, reason: r.cancel_reason ?? "" }
       : null,
   }));
 }

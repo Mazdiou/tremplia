@@ -1,6 +1,7 @@
 import { Panel } from "@/components/page-ui";
 import { PROGRAM_RESULT_LABELS, type ProgramResult } from "@/features/programs/schemas";
 import type { Results } from "../server/dashboard";
+import { plural, pluralWord } from "@/lib/plural";
 
 // Réponses des établissements : une barre répartie et la légende chiffrée.
 // L'ordre suit le parcours, de la meilleure nouvelle à l'attente.
@@ -25,7 +26,7 @@ export function ResultsPanel({ results }: { results: Results }) {
           <p>
             <span className="text-3xl font-semibold tracking-tight tabular-nums">{admitted}</span>{" "}
             <span className="text-sm text-muted-foreground">
-              candidat{admitted > 1 ? "s" : ""} admis dans au moins une formation
+              {pluralWord(admitted, "candidat admis", "candidats admis")} dans au moins une formation
             </span>
           </p>
           <div
@@ -55,7 +56,7 @@ export function ResultsPanel({ results }: { results: Results }) {
             ))}
           </dl>
           <p className="text-xs text-muted-foreground">
-            {total} formation{total > 1 ? "s" : ""} au total, dossiers abandonnés exclus.
+            {plural(total, "formation")} au total, dossiers abandonnés exclus.
           </p>
         </div>
       )}

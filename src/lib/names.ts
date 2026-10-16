@@ -14,7 +14,12 @@ export function initialsOf(firstName: string, lastName: string) {
   return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase() || "?";
 }
 
-// « NOM Prénom », partout dans l'interface
+// « NOM Prénom » d'un candidat, partout dans l'interface
 export function displayName(firstName: string, lastName: string) {
   return `${lastName.toLocaleUpperCase("fr")} ${firstName}`;
+}
+
+// « Prénom Nom » d'un membre de l'agence
+export function fullName(firstName: string, lastName: string) {
+  return `${firstName} ${lastName}`;
 }

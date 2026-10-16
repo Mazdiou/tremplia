@@ -6,7 +6,7 @@ import { Loader2, Pencil, StickyNote, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MAX_NOTE_LENGTH } from "@/features/notes/schemas";
 import { callApi } from "@/lib/api-client";
-import { cn } from "@/lib/utils";
+import { StatusMessage, type ActionMessage } from "@/components/page-ui";
 
 export type NoteItem = {
   id: string;
@@ -16,8 +16,6 @@ export type NoteItem = {
   editedLabel: string | null;
   canManage: boolean;
 };
-
-type Message = { text: string; error: boolean };
 
 const TEXTAREA =
   "w-full min-h-24 resize-y rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60";
@@ -41,7 +39,7 @@ export function NotesPanel({
   const [saving, setSaving] = useState(false);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [message, setMessage] = useState<Message | null>(null);
+  const [message, setMessage] = useState<ActionMessage>(null);
 
   const say = (text: string, error = false) => setMessage({ text, error });
 
@@ -134,16 +132,7 @@ export function NotesPanel({
         </div>
       </div>
 
-      <p
-        role="status"
-        aria-live="polite"
-        className={cn(
-          "min-h-5 px-1 text-sm",
-          message?.error ? "text-destructive" : "text-muted-foreground",
-        )}
-      >
-        {message?.text}
-      </p>
+      <StatusMessage message={message} />
 
       {notes.length === 0 ? (
         <div className="rounded-xl border px-6 py-10 text-center">

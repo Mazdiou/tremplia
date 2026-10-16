@@ -14,7 +14,7 @@ export type ApiResult<T = Json> =
       data: Json | null;
     };
 
-const NETWORK_ERROR = "Connexion impossible. Vérifiez votre réseau et réessayez.";
+export const NETWORK_ERROR = "Connexion impossible. Vérifiez votre réseau et réessayez.";
 
 export async function callApi<T = Json>(
   url: string,
@@ -47,4 +47,14 @@ export async function callApi<T = Json>(
     fieldErrors,
     data,
   };
+}
+
+// Pour une action sans réponse utile : le message d'erreur, ou null si tout
+// s'est bien passé
+export async function callApiError(
+  url: string,
+  options?: { method?: string; body?: unknown },
+): Promise<string | null> {
+  const res = await callApi(url, options);
+  return res.ok ? null : res.error;
 }

@@ -17,6 +17,7 @@ import {
   formatEndDate,
 } from "@/features/subscription/subscription";
 import { dayFormat } from "@/lib/dates";
+import { plural } from "@/lib/plural";
 
 export const metadata: Metadata = { title: "Agence · Administration" };
 
@@ -65,7 +66,7 @@ export default async function AdminAgencyPage({ params }: { params: Promise<{ id
               {agency.state !== "expired" && !exempt && (
                 <span className="font-normal text-muted-foreground">
                   {" "}
-                  · {n} jour{n > 1 ? "s" : ""}
+                  · {plural(n, "jour")}
                 </span>
               )}
             </dd>
@@ -77,8 +78,8 @@ export default async function AdminAgencyPage({ params }: { params: Promise<{ id
           <div>
             <dt className="text-muted-foreground">Activité</dt>
             <dd className="font-medium">
-              {agency.cases} dossier{agency.cases > 1 ? "s" : ""} · {agency.members} membre
-              {agency.members > 1 ? "s" : ""} actif{agency.members > 1 ? "s" : ""}
+              {plural(agency.cases, "dossier")} ·{" "}
+              {plural(agency.members, "membre actif", "membres actifs")}
             </dd>
           </div>
         </dl>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, ClipboardCheck, Loader2, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { MAX_MESSAGE_LENGTH } from "@/features/messages/schemas";
 import type { ReviewStatus } from "@/features/student/schemas";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 
 // Demande de modification : un message à l'agence, obligatoire
 function RequestDialog({
@@ -23,17 +24,10 @@ function RequestDialog({
   onClose: () => void;
 }) {
   const router = useRouter();
-  const ref = useRef<HTMLDialogElement>(null);
+  const ref = useModalDialog(open);
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
 
   async function send() {
     if (message.trim() === "") return setError("Expliquez ce que vous souhaitez modifier.");

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCase } from "@/features/cases/server/get-case";
 import { activityActor, activityLabel } from "@/features/history/labels";
 import { dateTimeFormat } from "@/lib/dates";
+import { memberNames } from "@/features/team/server/members";
 
 // Le champ `details` du journal n'est jamais lu ni affiché.
 type LogRow = { id: string; actor_id: string | null; action: string; created_at: string };
@@ -35,21 +36,9 @@ export default async function HistoryPage({
     .limit(200);
   const rows = (data ?? []) as LogRow[];
 
-  const actorIds = [...new Set(rows.map((r) => r.actor_id).filter(Boolean))];
-  const names = new Map<string, string>();
-  if (actorIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, first_name, last_name")
-      .in("id", actorIds as string[]);
-    for (const p of (profiles ?? []) as {
-      id: string;
-      first_name: string;
-      last_name: string;
-    }[]) {
-      names.set(p.id, `${p.first_name} ${p.last_name}`);
-    }
-  }
+  const names = await memberNames(supabase, [
+    ...new Set(rows.flatMap((r) => (r.actor_id ? [r.actor_id] : []))),
+  ]);
 
   if (rows.length === 0) {
     return (

@@ -19,6 +19,7 @@ import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { countCases } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
 import { cn } from "@/lib/utils";
+import { pluralWord } from "@/lib/plural";
 
 type CardData = CampaignSummary & {
   activeCases: number;
@@ -46,7 +47,7 @@ function CampaignCard({ c }: { c: CardData }) {
           <dt className="sr-only">Dossiers actifs</dt>
           <dd>
             <span className="font-medium text-foreground tabular-nums">{c.activeCases}</span>{" "}
-            dossier{c.activeCases > 1 ? "s" : ""} actif{c.activeCases > 1 ? "s" : ""}
+            {pluralWord(c.activeCases, "dossier actif", "dossiers actifs")}
           </dd>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
@@ -54,7 +55,7 @@ function CampaignCard({ c }: { c: CardData }) {
           <dt className="sr-only">Groupes</dt>
           <dd>
             <span className="font-medium text-foreground tabular-nums">{c.groupCount}</span>{" "}
-            groupe{c.groupCount > 1 ? "s" : ""}
+            {pluralWord(c.groupCount, "groupe")}
           </dd>
         </div>
       </dl>

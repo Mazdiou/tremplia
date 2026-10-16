@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AmountField, SelectField, TextField, optionsOf } from "@/components/form-fields";
@@ -13,6 +13,7 @@ import {
   newEndDate,
   type SubscriptionMonths,
 } from "../schemas";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 
 const methodOptions = optionsOf(PLATFORM_PAYMENT_METHODS, PAYMENT_METHOD_LABELS);
 
@@ -28,7 +29,7 @@ function PaymentDialog({
   onClose: () => void;
 }) {
   const router = useRouter();
-  const ref = useRef<HTMLDialogElement>(null);
+  const ref = useModalDialog(open);
   const [months, setMonths] = useState<SubscriptionMonths>(12);
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("cash");
@@ -36,13 +37,6 @@ function PaymentDialog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
 
   async function save() {
     setSaving(true);

@@ -2,6 +2,7 @@ import { CircleAlert, Info, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { subscriptionNotice } from "../subscription";
 import { getSubscription, supportPhone } from "../server/subscription";
+import { telHref } from "@/lib/phone";
 
 const TONES = {
   info: "border-primary/20 bg-primary/10 text-foreground",
@@ -29,7 +30,7 @@ export async function SubscriptionBanner({ agencyId }: { agencyId: string }) {
         {phone ? (
           <>
             {", contactez-nous : "}
-            <a href={`tel:${phone.replace(/[^0-9+]/g, "")}`} className="font-medium whitespace-nowrap underline">
+            <a href={telHref(phone)} className="font-medium whitespace-nowrap underline">
               {phone}
             </a>
             .

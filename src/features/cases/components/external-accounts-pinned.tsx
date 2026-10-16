@@ -15,6 +15,7 @@ import {
 import { callApi } from "@/lib/api-client";
 import { TRACK_INDENT, TrackRow } from "./case-header";
 import { cn } from "@/lib/utils";
+import { plural } from "@/lib/plural";
 
 export type PinnedAccount = {
   id: string;
@@ -77,7 +78,7 @@ export function ExternalAccountsPinned({
           <span className="text-muted-foreground">{adding ? "Nouveau compte" : "Aucun"}</span>
         ) : (
           <span className="text-muted-foreground tabular-nums">
-            {accounts.length} compte{accounts.length > 1 ? "s" : ""}
+            {plural(accounts.length, "compte")}
           </span>
         )}
       </TrackRow>

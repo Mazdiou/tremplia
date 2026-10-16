@@ -9,6 +9,8 @@ import {
   formatEndDate,
 } from "../subscription";
 import { getSubscription, listPlatformPayments, supportPhone } from "../server/subscription";
+import { plural } from "@/lib/plural";
+import { telHref } from "@/lib/phone";
 
 // Encart « Abonnement » de la page Équipe (patron) : état, fin, paiements
 export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
@@ -27,7 +29,7 @@ export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
         phone ? (
           <>
             Pour le renouveler, contactez-nous :{" "}
-            <a href={`tel:${phone.replace(/[^0-9+]/g, "")}`} className="underline">
+            <a href={telHref(phone)} className="underline">
               {phone}
             </a>
           </>
@@ -50,7 +52,7 @@ export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
               <span className="font-medium">{formatEndDate(sub.endsAt)}</span>
               <span className="text-muted-foreground">
                 {" "}
-                · {n} jour{n > 1 ? "s" : ""} restant{n > 1 ? "s" : ""}
+                · {plural(n, "jour restant", "jours restants")}
               </span>
             </>
           )}

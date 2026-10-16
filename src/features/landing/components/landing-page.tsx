@@ -21,6 +21,7 @@ import { BRAND } from "@/config/brand";
 import { cn } from "@/lib/utils";
 import { DecorLayers } from "@/components/decor";
 import { LandingHeader } from "./landing-header";
+import { telHref } from "@/lib/phone";
 
 // Page d'accueil publique. Aucune affirmation inventée : pas de témoignage,
 // de chiffre client ni de prix (les tarifs ne sont pas encore fixés).
@@ -229,7 +230,7 @@ function ContactButtons({ contact, onDecor = false }: { contact: LandingContact;
         </a>
       )}
       <a
-        href={`tel:${contact.phone.replace(/[^0-9+]/g, "")}`}
+        href={telHref(contact.phone)}
         className={cn(
           buttonVariants({ size: "lg", variant: "outline" }),
           onDecor && "border-decor-foreground/15 bg-card/80 text-decor-foreground hover:bg-card hover:text-decor-foreground dark:bg-decor-foreground/5 dark:hover:bg-decor-foreground/10",

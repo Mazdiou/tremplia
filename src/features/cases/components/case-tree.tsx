@@ -21,7 +21,7 @@ import {
   educationRank,
   labelOf,
 } from "@/features/cases/labels";
-import { displayName } from "@/lib/names";
+import { displayName, fullName } from "@/lib/names";
 import { formatDA } from "@/lib/money";
 import { UnreadBadge } from "@/features/messages/components/unread-badge";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,7 @@ import { isCasesIndex } from "./cases-content";
 import { TreeSearchResults } from "./tree-search-results";
 import { CampaignMenu, GroupActions, InlineNameInput, groupApi } from "./tree-actions";
 import { BRAND } from "@/config/brand";
+import { plural } from "@/lib/plural";
 
 export type TreeCampaign = { id: string; name: string; status: string };
 
@@ -571,7 +572,7 @@ export function CaseTree({
               <option value="">Tous responsables</option>
               {responsibles.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.first_name} {m.last_name}
+                  {fullName(m.first_name, m.last_name)}
                   {m.is_active ? "" : " (désactivé)"}
                 </option>
               ))}
@@ -582,8 +583,7 @@ export function CaseTree({
         {filtersActive && !searching && (
           <div className="flex items-center justify-between border-y bg-muted/50 px-3 py-1.5 text-xs">
             <span aria-live="polite">
-              {resultCount} dossier{resultCount > 1 ? "s" : ""} actif
-              {resultCount > 1 ? "s" : ""} · filtres actifs
+              {plural(resultCount, "dossier actif", "dossiers actifs")} · filtres actifs
             </span>
             <button
               type="button"

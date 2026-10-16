@@ -6,6 +6,7 @@ import {
 } from "@/features/programs/components/programs-panel";
 import { programResult } from "@/features/programs/schemas";
 import { getStudentPrograms } from "@/features/student/server/student-case";
+import { plural } from "@/lib/plural";
 
 export default async function StudentProgramsPage() {
   const programs = await getStudentPrograms();
@@ -23,7 +24,7 @@ export default async function StudentProgramsPage() {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        {programs.length} formation{programs.length > 1 ? "s" : ""}, de votre
+        {plural(programs.length, "formation")}, de votre
         préférée à la moins souhaitée.
       </p>
       <ol className="divide-y rounded-xl border bg-card">

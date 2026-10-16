@@ -13,6 +13,7 @@ import {
 } from "@/features/subscription/subscription";
 import { normalizeName as normalize } from "@/lib/names";
 import { PaymentButton } from "./payment-dialog";
+import { plural } from "@/lib/plural";
 
 export type AgencyRow = {
   id: string;
@@ -82,7 +83,7 @@ export function AgenciesTable({ agencies }: { agencies: AgencyRow[] }) {
                 </Link>
                 <p className="truncate text-sm text-muted-foreground">
                   {a.city}
-                  {a.ownerName && ` · ${a.ownerName}`} · {a.cases} dossier{a.cases > 1 ? "s" : ""}
+                  {a.ownerName && ` · ${a.ownerName}`} · {plural(a.cases, "dossier")}
                 </p>
               </div>
               <StatusPill tone={STATE_TONES[a.state]}>{STATE_LABELS[a.state]}</StatusPill>

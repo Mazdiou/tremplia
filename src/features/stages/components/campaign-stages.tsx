@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { callApi } from "@/lib/api-client";
 import { MAX_STAGES } from "../schemas";
 import { removalTargets } from "../stages";
+import { plural } from "@/lib/plural";
 
 export type StageWithCounts = {
   id: string;
@@ -22,8 +23,6 @@ export type StageWithCounts = {
 };
 
 type DraftStage = { key: string; id: string | null; name: string };
-
-const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? "s" : ""}`;
 
 // Étapes d'une campagne : avancement des dossiers actifs pour toute
 // l'équipe, et modification de la liste par le patron (campagne active).

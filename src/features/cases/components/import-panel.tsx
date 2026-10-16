@@ -11,6 +11,7 @@ import {
 import { callApi } from "@/lib/api-client";
 import { displayName } from "@/lib/names";
 import { SelectField, TextField } from "@/components/form-fields";
+import { plural } from "@/lib/plural";
 
 export type SourceCampaign = { id: string; name: string; caseCount: number };
 
@@ -79,7 +80,7 @@ export function ImportPanel({
         placeholder="Choisir une campagne…"
         options={sources.map((s) => ({
           value: s.id,
-          label: `${s.name} (${s.caseCount} dossier${s.caseCount > 1 ? "s" : ""})`,
+          label: `${s.name} (${plural(s.caseCount, "dossier")})`,
         }))}
       />
       {source && (

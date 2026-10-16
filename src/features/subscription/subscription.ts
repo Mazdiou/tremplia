@@ -1,4 +1,5 @@
 import { APP_TIMEZONE } from "@/lib/dates";
+import { plural } from "@/lib/plural";
 
 // Abonnement d'une agence (voir la migration subscriptions) : essai, actif
 // ou expiré. Expiré = lecture seule, imposée par la base. L'agence de
@@ -34,7 +35,6 @@ export function subscriptionNotice(sub: Subscription, now = new Date()): Subscri
   if (sub.state === "exempt") return null;
   const date = formatEndDate(sub.endsAt);
   const n = daysLeft(sub.endsAt, now);
-  const days = `${n} jour${n > 1 ? "s" : ""}`;
   if (sub.state === "expired") {
     return {
       tone: "bad",
@@ -44,13 +44,13 @@ export function subscriptionNotice(sub: Subscription, now = new Date()): Subscri
   if (sub.state === "trial") {
     return {
       tone: "info",
-      text: `Essai gratuit : ${days} restant${n > 1 ? "s" : ""} (jusqu'au ${date}). Pour continuer après`,
+      text: `Essai gratuit : ${plural(n, "jour restant", "jours restants")} (jusqu'au ${date}). Pour continuer après`,
     };
   }
   if (n <= RENEWAL_NOTICE_DAYS) {
     return {
       tone: "warn",
-      text: `Votre abonnement se termine le ${date} (dans ${days}). Pensez à le renouveler`,
+      text: `Votre abonnement se termine le ${date} (dans ${plural(n, "jour")}). Pensez à le renouveler`,
     };
   }
   return null;

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/api-client";
+import { plural } from "@/lib/plural";
 
 type Action = "archive" | "unarchive" | "delete";
 
@@ -72,7 +73,7 @@ export function CampaignDangerZone({
       </div>
       {caseCount > 0 && (
         <p className="text-xs text-muted-foreground">
-          Cette campagne contient {caseCount} dossier{caseCount > 1 ? "s" : ""} :
+          Cette campagne contient {plural(caseCount, "dossier")} :
           elle ne peut pas être supprimée, seulement archivée.
         </p>
       )}

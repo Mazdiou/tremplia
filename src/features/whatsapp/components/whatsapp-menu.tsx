@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useState } from "react";
 import { ChevronDown, MessageCircle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { formatDA } from "@/lib/money";
@@ -13,19 +13,17 @@ import {
   whatsAppUrl,
   type WhatsAppContext,
 } from "../whatsapp";
+import { useDismiss } from "@/hooks/use-dismiss";
+import { useBrowserValue } from "@/hooks/use-browser-value";
+import { MENU_ITEM_CLASS } from "@/components/page-ui";
 
 export type WhatsAppMenuContext = Omit<WhatsAppContext, "studentLink">;
 
 // Lien de connexion de l'espace candidat, sur l'adresse du site ouvert.
 // Inconnue côté serveur : le lien complet n'existe qu'une fois la page
 // chargée dans le navigateur (avant, le bouton ouvre la conversation seule).
-const noSubscribe = () => () => {};
 function useStudentLink(): string | null {
-  return useSyncExternalStore(
-    noSubscribe,
-    () => `${window.location.origin}/student/login`,
-    () => null,
-  );
+  return useBrowserValue(() => `${window.location.origin}/student/login`);
 }
 
 // Bouton « WhatsApp ▾ » : ouvre la conversation avec un message déjà écrit,
@@ -45,22 +43,7 @@ export function WhatsAppMenu({
   const number = toWhatsAppNumber(phone);
   const studentLink = useStudentLink();
 
-  // Fermeture au clic à l'extérieur ou avec Échap
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  useDismiss(ref, open, setOpen);
 
   if (!number) {
     const reason = "Numéro non reconnu : corrigez-le dans « Modifier »";
@@ -70,9 +53,6 @@ export function WhatsAppMenu({
       </Button>
     );
   }
-
-  const item =
-    "block w-full rounded-md px-2.5 py-1.5 text-left text-sm hover:bg-muted focus-visible:bg-muted focus-visible:outline-none";
 
   return (
     <div ref={ref} className="relative">
@@ -101,7 +81,7 @@ export function WhatsAppMenu({
               href={whatsAppUrl(number, whatsAppMessage(t, { ...context, studentLink: studentLink ?? "" }))}
               target="_blank"
               rel="noopener noreferrer"
-              className={item}
+              className={MENU_ITEM_CLASS}
               onClick={() => setOpen(false)}
             >
               {TEMPLATE_LABELS[t]}

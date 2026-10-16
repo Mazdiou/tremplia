@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const NETWORK_ERROR = "Connexion impossible. Vérifiez votre réseau et réessayez.";
+import { NETWORK_ERROR } from "@/lib/api-client";
+import { saveFile } from "@/lib/save-file";
 
 // Nom proposé par le serveur (filename*, sinon filename)
 function fileNameOf(res: Response) {
@@ -35,14 +35,7 @@ export function ExportCampaignButton({ campaignId }: { campaignId: string }) {
         setError(typeof data?.error === "string" ? data.error : `Erreur ${res.status}`);
         return;
       }
-      const url = URL.createObjectURL(await res.blob());
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileNameOf(res);
-      document.body.append(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      saveFile(await res.blob(), fileNameOf(res));
     } catch {
       setError(NETWORK_ERROR);
     } finally {

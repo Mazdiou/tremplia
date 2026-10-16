@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { MAX_LETTER_LENGTH } from "../schemas";
+import type { ActionMessage } from "@/components/page-ui";
 
 const LEAVE_WARNING = "La lettre a des modifications non enregistrées. Quitter quand même ?";
 
@@ -28,7 +29,7 @@ export function LetterEditor({
   const [content, setContent] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
+  const [message, setMessage] = useState<ActionMessage>(null);
   const dirty = content !== saved;
 
   async function save() {

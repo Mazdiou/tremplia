@@ -1,23 +1,15 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-
-// L'adresse n'est connue que dans le navigateur : la page « introuvable » est
-// préparée à l'avance, sans elle. Le serveur et le premier rendu affichent
-// donc l'accueil ; le bon bouton apparaît juste après (sans erreur
-// d'hydratation).
-const noSubscribe = () => () => {};
+import { useBrowserValue } from "@/hooks/use-browser-value";
 
 // Bouton de la page « introuvable » : un candidat retourne à son espace,
-// les autres à l'accueil (tableau de bord, ou connexion si besoin)
+// les autres à l'accueil (tableau de bord, ou connexion si besoin).
+// L'adresse n'est connue que dans le navigateur (la page est préparée à
+// l'avance) : le premier rendu affiche l'accueil, le bon bouton suit.
 export function NotFoundHomeLink() {
-  const path = useSyncExternalStore(
-    noSubscribe,
-    () => window.location.pathname,
-    () => null,
-  );
+  const path = useBrowserValue(() => window.location.pathname);
   const student = /^\/student(\/|$)/.test(path ?? "");
   return (
     <Link href={student ? "/student" : "/"} className={buttonVariants({ className: "mt-6" })}>

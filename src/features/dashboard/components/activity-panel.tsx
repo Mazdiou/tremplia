@@ -3,6 +3,7 @@ import { Panel } from "@/components/page-ui";
 import { activityActor, activityLabel } from "@/features/history/labels";
 import type { ActivityEntry } from "../server/dashboard";
 import { Initials, relativeWhen } from "./dashboard-ui";
+import { fullName } from "@/lib/names";
 
 // Activité récente de l'agence (patron) : qui a fait quoi, sur quel dossier
 // ou quelle campagne ; les répétitions sont regroupées (« · 6 fois »).
@@ -22,7 +23,7 @@ export function ActivityPanel({ entries }: { entries: ActivityEntry[] }) {
               <Initials first={a.actor?.first_name ?? "?"} last={a.actor?.last_name ?? ""} />
               <span className="min-w-0 flex-1 truncate">
                 <span className="font-medium">
-                  {activityActor(a.action, a.actor && `${a.actor.first_name} ${a.actor.last_name}`, "agency")}
+                  {activityActor(a.action, a.actor && fullName(a.actor.first_name, a.actor.last_name), "agency")}
                 </span>{" "}
                 <span className="text-muted-foreground">{activityLabel(a.action, "agency")}</span>
                 {a.object && (

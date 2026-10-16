@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { plural } from "@/lib/plural";
 
 // Pastille du nombre de messages non lus (9+ au-delà)
 export function UnreadBadge({ count, className }: { count: number; className?: string }) {
@@ -11,7 +12,7 @@ export function UnreadBadge({ count, className }: { count: number; className?: s
     >
       <span aria-hidden>{count > 9 ? "9+" : count}</span>
       <span className="sr-only">
-        {count} message{count > 1 ? "s" : ""} non lu{count > 1 ? "s" : ""}
+        {plural(count, "message non lu", "messages non lus")}
       </span>
     </span>
   );

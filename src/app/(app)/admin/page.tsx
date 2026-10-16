@@ -3,6 +3,7 @@ import { PageContainer, PageHeader, StatCard } from "@/components/page-ui";
 import { AgenciesTable } from "@/features/admin/components/agencies-table";
 import { listAgencies, requirePlatformAdminPage } from "@/features/admin/server/admin";
 import { RENEWAL_NOTICE_DAYS, daysLeft } from "@/features/subscription/subscription";
+import { plural } from "@/lib/plural";
 
 export const metadata: Metadata = { title: "Administration" };
 
@@ -22,7 +23,7 @@ export default async function AdminPage() {
     <PageContainer width="wide">
       <PageHeader
         title="Administration"
-        subtitle={`${agencies.length} agence${agencies.length > 1 ? "s" : ""} · réservé à l'administrateur de la plateforme`}
+        subtitle={`${plural(agencies.length, "agence")} · réservé à l'administrateur de la plateforme`}
       />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="En essai" value={count("trial")} />

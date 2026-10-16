@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { Ban, Banknote, Loader2, Pencil, Plus, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import { StatusPill, type PillTone } from "@/components/page-ui";
+import {
+  StatusMessage,
+  StatusPill,
+  type ActionMessage,
+  type PillTone,
+} from "@/components/page-ui";
 import {
   AmountField,
   SelectField,
@@ -34,8 +39,6 @@ export type PaymentRow = {
   createdBy: string;
   cancelled: { by: string; at: string; reason: string } | null;
 };
-
-type Message = { text: string; error: boolean } | null;
 
 const methodOptions = optionsOf(PAYMENT_METHODS, PAYMENT_METHOD_LABELS);
 
@@ -340,7 +343,7 @@ export function PaymentsPanel({
   const pill = PAYMENT_STATE_PILL[summary.state];
 
   const [mode, setMode] = useState<"idle" | "pay" | "agreed">("idle");
-  const [message, setMessage] = useState<Message>(null);
+  const [message, setMessage] = useState<ActionMessage>(null);
   const [toCancel, setToCancel] = useState<PaymentRow | null>(null);
   const [reason, setReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
@@ -478,16 +481,7 @@ export function PaymentsPanel({
         />
       )}
 
-      <p
-        role="status"
-        aria-live="polite"
-        className={cn(
-          "min-h-5 px-1 text-sm",
-          message?.error ? "text-destructive" : "text-muted-foreground",
-        )}
-      >
-        {message?.text}
-      </p>
+      <StatusMessage message={message} />
 
       {payments.length === 0 ? (
         agreed !== null &&

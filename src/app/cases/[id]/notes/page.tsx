@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCase } from "@/features/cases/server/get-case";
 import { dateTimeFormat } from "@/lib/dates";
 import { NotesPanel, type NoteItem } from "@/features/notes/components/notes-panel";
+import { memberNames } from "@/features/team/server/members";
 
 const PAGE_SIZE = 200;
 
@@ -45,20 +46,7 @@ export default async function NotesPage({
       rows.flatMap((r) => (r.edited_by ? [r.author_id, r.edited_by] : [r.author_id])),
     ),
   ];
-  const names = new Map<string, string>();
-  if (personIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, first_name, last_name")
-      .in("id", personIds);
-    for (const p of (profiles ?? []) as {
-      id: string;
-      first_name: string;
-      last_name: string;
-    }[]) {
-      names.set(p.id, `${p.first_name} ${p.last_name}`);
-    }
-  }
+  const names = await memberNames(supabase, personIds);
   const nameOf = (userId: string) => names.get(userId) ?? "un ancien membre";
 
   const notes: NoteItem[] = rows.map((r) => {
