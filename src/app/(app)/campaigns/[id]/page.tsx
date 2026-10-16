@@ -48,6 +48,7 @@ export default async function CampaignPage({
     stats,
     stagesRes,
     stageStatsRes,
+    readOnly,
   ] = await Promise.all([
     supabase
       .from("campaigns")
@@ -66,6 +67,8 @@ export default async function CampaignPage({
     listCaseStats([id]),
     supabase.from("campaign_stages").select("id, name").eq("campaign_id", id).order("position"),
     supabase.from("case_stage_stats").select("stage_id, status, cases").eq("campaign_id", id),
+    // Abonnement expiré : consultation seulement
+    member ? isReadOnly(member.agencyId) : false,
   ]);
   if (!campaign) notFound();
 
@@ -106,8 +109,6 @@ export default async function CampaignPage({
     todayInAppTimezone(),
   );
   const next = items.find((d) => d.days >= 0) ?? null;
-  // Abonnement expiré : consultation seulement
-  const readOnly = member ? await isReadOnly(member.agencyId) : false;
   const canEdit = member?.isOwner === true && !archived && !readOnly;
   const platforms = (campaign.suggested_platforms ?? []) as string[];
   const defaultFee = (campaign.default_fee as number | null) ?? null;

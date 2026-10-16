@@ -16,10 +16,11 @@ type Row = {
   id: string;
   name: string;
   size_bytes: number;
-  uploaded_by: string;
   folder_id: string | null;
   locked_at: string | null;
   created_at: string;
+  // Auteur, par le lien du document (vide : compte supprimé)
+  uploader: { first_name: string } | null;
 };
 
 export default async function DocumentsPage({
@@ -38,55 +39,43 @@ export default async function DocumentsPage({
   // Abonnement expiré : rien à créer (la base le refuserait)
   const readOnly = caller ? await isReadOnly(caller.agencyId) : false;
 
-  // Les 4 dossiers de départ sont créés une seule fois par dossier candidat
-  // (la fonction SQL est sans effet si c'est déjà fait). Un échec ne bloque
-  // pas la page : les documents restent visibles dans « Sans dossier ».
-  // Les documents (lecture via le RLS : seuls ceux de l'agence reviennent)
-  // sont lus en même temps ; les dossiers, seulement une fois créés.
-  const [initRes, { data }] = await Promise.all([
-    caller && !readOnly
-      ? createAdminClient().rpc("ensure_default_document_folders", {
-          p_case_id: id,
-          p_agency_id: caller.agencyId,
-          p_actor_id: caller.userId,
-        })
-      : Promise.resolve({ error: null }),
+  // Les dossiers de départ sont créés une seule fois par dossier candidat
+  // (cases.folders_initialized_at) : la fonction SQL n'est appelée que la
+  // première fois. Un échec ne bloque pas la page : les documents restent
+  // visibles dans « Sans dossier ».
+  if (caller && !readOnly && !found.c.folders_initialized_at) {
+    const { error } = await createAdminClient().rpc("ensure_default_document_folders", {
+      p_case_id: id,
+      p_agency_id: caller.agencyId,
+      p_actor_id: caller.userId,
+    });
+    if (error) console.error("[documents folders init]", error.code);
+  }
+
+  // Documents (avec le prénom de leur auteur, par leur lien) et dossiers de
+  // rangement, lus ensemble via le RLS : seuls ceux de l'agence reviennent
+  const [{ data }, { data: folderRows }] = await Promise.all([
     supabase
       .from("documents")
       .select(
-        "id, name, size_bytes, uploaded_by, folder_id, locked_at, created_at",
+        "id, name, size_bytes, folder_id, locked_at, created_at, uploader:profiles!documents_uploaded_by_fk(first_name)",
       )
       .eq("case_id", id)
       .order("created_at", { ascending: false }),
-  ]);
-  if (initRes.error) {
-    console.error("[documents folders init]", initRes.error.code);
-  }
-  const rows = (data ?? []) as Row[];
-  const authorIds = [...new Set(rows.map((r) => r.uploaded_by))];
-
-  const [{ data: folderRows }, { data: profiles }] = await Promise.all([
     supabase
       .from("document_folders")
       .select("id, name")
       .eq("case_id", id)
       .order("created_at", { ascending: true }),
-    authorIds.length > 0
-      ? supabase.from("profiles").select("id, first_name").in("id", authorIds)
-      : Promise.resolve({ data: [] }),
   ]);
+  const rows = (data ?? []) as unknown as Row[];
   const folders = (folderRows ?? []) as FolderItem[];
-
-  const names = new Map<string, string>();
-  for (const p of (profiles ?? []) as { id: string; first_name: string }[]) {
-    names.set(p.id, p.first_name);
-  }
 
   const docs: DocItem[] = rows.map((r) => ({
     id: r.id,
     name: r.name,
     sizeLabel: formatSize(r.size_bytes),
-    uploadedBy: names.get(r.uploaded_by) ?? "un ancien membre",
+    uploadedBy: r.uploader?.first_name ?? "un ancien membre",
     dateLabel: shortDateFormat.format(new Date(r.created_at)),
     locked: r.locked_at !== null,
     folderId: r.folder_id,

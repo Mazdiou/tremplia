@@ -19,12 +19,11 @@ export default async function CasesLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { member, initials } = await getShellUser();
-
   // Lecture via le RLS : seules les campagnes, groupes, dossiers et membres
-  // de l'agence reviennent.
+  // de l'agence reviennent. Ces lectures partent tout de suite, sans attendre
+  // l'utilisateur ; celles qui ont besoin de son agence suivent.
   const supabase = await createClient();
-  const [campaigns, groups, stages, membersRes, unread, readOnly, admin] = await Promise.all([
+  const shared = Promise.all([
     listCampaigns(),
     listAgencyGroups(),
     listAgencyStages(),
@@ -32,6 +31,10 @@ export default async function CasesLayout({
       .from("profiles")
       .select("id, first_name, last_name, is_active")
       .order("first_name"),
+  ]);
+  const { member, initials } = await getShellUser();
+  const [[campaigns, groups, stages, membersRes], unread, readOnly, admin] = await Promise.all([
+    shared,
     agencyUnreadCounts(member.agencyId),
     isReadOnly(member.agencyId),
     isPlatformAdmin(member.userId),

@@ -34,6 +34,16 @@ npm run build
 npx supabase test db  # tests de la base (pgTAP), sur la base locale démarrée
 ```
 
+## Région de l'hébergement
+
+Les fonctions Vercel tournent dans la région fixée par `vercel.json`
+(`arn1`, Stockholm) : la même que la base Supabase (`eu-north-1`,
+Stockholm). Chaque page fait plusieurs allers-retours vers la base ; d'un
+continent à l'autre, chacun coûte ~100 ms, dans la même région ~2 ms. Si la
+base change de région, changer `regions` en conséquence (correspondances :
+`eu-central-1` → `fra1`, `eu-west-3` → `cdg1`, `eu-west-2` → `lhr1`,
+`us-east-1` → `iad1`).
+
 ## Variables d'environnement
 
 Voir `.env.example`. Aucune vraie valeur ne doit être commitée.

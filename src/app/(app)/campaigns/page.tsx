@@ -79,14 +79,15 @@ function CampaignCard({ c }: { c: CardData }) {
 
 export default async function CampaignsPage() {
   const [member, campaigns] = await Promise.all([requireMember(), listCampaigns()]);
-  // Abonnement expiré : rien à créer ni à importer
-  const canCreate = member?.isOwner === true && !(await isReadOnly(member.agencyId));
-  // Dossiers actifs par campagne : une lecture pour toutes (vue case_stats)
-  const [dates, groups, stats] = await Promise.all([
+  // Dossiers actifs par campagne : une lecture pour toutes (vue case_stats).
+  // Abonnement expiré : rien à créer ni à importer.
+  const [dates, groups, stats, readOnly] = await Promise.all([
     listCampaignDates(campaigns),
     listGroups(campaigns.map((c) => c.id)),
     listCaseStats(),
+    member?.isOwner ? isReadOnly(member.agencyId) : true,
   ]);
+  const canCreate = member?.isOwner === true && !readOnly;
   const today = todayInAppTimezone();
 
   const cards: CardData[] = campaigns.map((c) => ({

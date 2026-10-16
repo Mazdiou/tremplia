@@ -8,7 +8,7 @@ import { initialsOf } from "@/lib/names";
 import { AddEmployeeForm } from "@/features/team/components/add-employee-form";
 import { ToggleActiveButton } from "@/features/team/components/toggle-active-button";
 import { SubscriptionPanel } from "@/features/subscription/components/subscription-panel";
-import { getSubscription } from "@/features/subscription/server/subscription";
+import { getSubscription, listPlatformPayments } from "@/features/subscription/server/subscription";
 
 export default async function TeamPage() {
   const caller = await requireOwner();
@@ -16,10 +16,13 @@ export default async function TeamPage() {
 
   // Lecture via le RLS : uniquement les profils de l'agence du patron
   const supabase = await createClient();
-  const { data: members } = await supabase
-    .from("profiles")
-    .select("id, first_name, last_name, role, is_active")
-    .order("created_at");
+  // Paiements de l'abonnement : demandés dès maintenant pour l'encart
+  // Abonnement (même lecture, mise en cache)
+  void listPlatformPayments();
+  const [{ data: members }, subscription] = await Promise.all([
+    supabase.from("profiles").select("id, first_name, last_name, role, is_active").order("created_at"),
+    getSubscription(caller.agencyId),
+  ]);
 
   // E-mails : lus côté serveur avec la clé admin, pour ces profils seulement
   const admin = createAdminClient();
@@ -33,7 +36,7 @@ export default async function TeamPage() {
 
   const list = members ?? [];
   // Abonnement expiré : l'équipe se consulte, mais ne se modifie plus
-  const readOnly = (await getSubscription(caller.agencyId)).state === "expired";
+  const readOnly = subscription.state === "expired";
 
   return (
     <PageContainer>

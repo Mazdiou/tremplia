@@ -60,8 +60,9 @@ export default async function DashboardPage({
   ]);
   const today = todayInAppTimezone();
   const todayLabel = longToday.format(new Date());
-  // Abonnement expiré : pas de bouton de création (déjà en cache : coquille)
-  const readOnly = await isReadOnly(u.member.agencyId);
+  // Abonnement expiré : pas de bouton de création. Lu en même temps que le
+  // reste (déjà demandé par la coquille : même lecture, mise en cache).
+  const readOnlyPromise = isReadOnly(u.member.agencyId);
 
   const allActive = campaignList.filter((c) => c.status === "active");
   const selected = allActive.find((c) => c.id === wanted) ?? null;
@@ -69,6 +70,7 @@ export default async function DashboardPage({
   const ids = campaigns.map((c) => c.id);
 
   if (ids.length === 0) {
+    const readOnly = await readOnlyPromise;
     return (
       <PageContainer width="narrow">
         <PageHeader title={`Bonjour ${u.member.firstName}`} subtitle={todayLabel} />
@@ -100,15 +102,15 @@ export default async function DashboardPage({
   // d'une seule lecture de la vue case_stats (via le RLS).
   // Paiements et journal : réservés au patron
   const monthStart = `${today.slice(0, 7)}-01`;
-  // Messages non lus : servent aussi à « À traiter », lancé dès leur arrivée
-  // sans attendre les autres lectures
+  // Messages non lus : servent aussi à « À traiter »
   const unreadPromise = agencyUnreadCounts(u.member.agencyId);
   // Une seule campagne affichée : l'avancement de ses dossiers par étape
   const single = campaigns.length === 1 ? campaigns[0] : null;
-  const [stats, todo, recentRes, dates, monthRes, owingRes, results, activity, stagesRes, stageStatsRes] =
+  const [readOnly, stats, todo, recentRes, dates, monthRes, owingRes, results, activity, stagesRes, stageStatsRes] =
     await Promise.all([
+      readOnlyPromise,
       listCaseStats(ids),
-      unreadPromise.then((unread) => loadTodo(supabase, ids, unread)),
+      loadTodo(supabase, ids, unreadPromise),
       supabase
         .from("cases")
         .select("id, first_name, last_name, education_level, created_at")

@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { ApiError } from "@/lib/api-errors";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import type { Subscription, SubscriptionState } from "../subscription";
 
 // Abonnement d'une agence, lu par le serveur (clé secrète). Mis en cache
@@ -18,6 +19,30 @@ export const getSubscription = cache(async (agencyId: string): Promise<Subscript
     return { state: "active", endsAt: new Date(Date.now() + 365 * 86_400_000).toISOString() };
   }
   return { state: row.state, endsAt: row.ends_at };
+});
+
+export type PlatformPayment = {
+  id: string;
+  months: number;
+  amount: number;
+  method: string;
+  note: string | null;
+  recorded_at: string;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
+};
+
+// Paiements de l'abonnement de l'agence (via le RLS : le patron seulement).
+// Mis en cache : la page Équipe les demande tôt, l'encart les affiche.
+export const listPlatformPayments = cache(async (): Promise<PlatformPayment[]> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("platform_payments")
+    .select("id, months, amount, method, note, recorded_at, cancelled_at, cancel_reason")
+    .order("recorded_at", { ascending: false })
+    .limit(24);
+  if (error) console.error("[subscription payments]", error.code);
+  return (data ?? []) as PlatformPayment[];
 });
 
 export async function isReadOnly(agencyId: string): Promise<boolean> {

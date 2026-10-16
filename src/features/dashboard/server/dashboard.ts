@@ -22,14 +22,16 @@ export type Todo = {
 const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : one}`;
 
 // « À traiter » : ce qui attend une action de l'agence, sur les dossiers
-// actifs des campagnes affichées
+// actifs des campagnes affichées. Deux temps seulement : les avis des
+// candidats et les messages non lus ensemble, puis les noms des candidats
+// (messages) et les formations à envoyer (avis validés) ensemble.
 export async function loadTodo(
   supabase: SupabaseClient,
   campaignIds: string[],
-  unread: Record<string, number>,
+  unreadPromise: Promise<Record<string, number>>,
 ): Promise<Todo> {
-  const unreadIds = Object.keys(unread);
-  const [reviewsRes, unreadRes] = await Promise.all([
+  const [unread, reviewsRes] = await Promise.all([
+    unreadPromise,
     supabase
       .from("case_student_reviews")
       .select("case_id, status, responded_at, cases!inner(id, first_name, last_name, status, campaign_id)")
@@ -38,14 +40,6 @@ export async function loadTodo(
       .in("cases.campaign_id", campaignIds)
       .order("responded_at", { ascending: false })
       .limit(200),
-    unreadIds.length > 0
-      ? supabase
-          .from("cases")
-          .select("id, first_name, last_name")
-          .in("id", unreadIds.slice(0, 100))
-          .eq("status", "active")
-          .in("campaign_id", campaignIds)
-      : Promise.resolve({ data: [] as Named[], error: null }),
   ]);
   if (reviewsRes.error) console.error("[dashboard todo]", reviewsRes.error.code);
 
@@ -61,16 +55,27 @@ export async function loadTodo(
 
   // Validés : seulement s'il reste des formations sans candidature envoyée
   const approvedReviews = reviews.filter((r) => r.status === "approved");
+  const unreadIds = Object.keys(unread);
+  const [programsRes, unreadRes] = await Promise.all([
+    approvedReviews.length > 0
+      ? supabase
+          .from("case_programs")
+          .select("case_id")
+          .in("case_id", approvedReviews.map((r) => r.case_id))
+          .eq("result", "none")
+      : Promise.resolve({ data: [] as { case_id: string }[] }),
+    unreadIds.length > 0
+      ? supabase
+          .from("cases")
+          .select("id, first_name, last_name")
+          .in("id", unreadIds.slice(0, 100))
+          .eq("status", "active")
+          .in("campaign_id", campaignIds)
+      : Promise.resolve({ data: [] as Named[] }),
+  ]);
   const toSend = new Map<string, number>();
-  if (approvedReviews.length > 0) {
-    const { data } = await supabase
-      .from("case_programs")
-      .select("case_id")
-      .in("case_id", approvedReviews.map((r) => r.case_id))
-      .eq("result", "none");
-    for (const p of (data ?? []) as { case_id: string }[]) {
-      toSend.set(p.case_id, (toSend.get(p.case_id) ?? 0) + 1);
-    }
+  for (const p of (programsRes.data ?? []) as { case_id: string }[]) {
+    toSend.set(p.case_id, (toSend.get(p.case_id) ?? 0) + 1);
   }
   const approved = approvedReviews
     .filter((r) => toSend.has(r.case_id))

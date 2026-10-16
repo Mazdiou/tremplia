@@ -1,5 +1,4 @@
 import { Panel, StatusPill } from "@/components/page-ui";
-import { createClient } from "@/lib/supabase/server";
 import { formatDA } from "@/lib/money";
 import { dayFormat } from "@/lib/dates";
 import {
@@ -9,34 +8,15 @@ import {
   daysLeft,
   formatEndDate,
 } from "../subscription";
-import { getSubscription, supportPhone } from "../server/subscription";
-
-type Payment = {
-  id: string;
-  months: number;
-  amount: number;
-  method: string;
-  note: string | null;
-  recorded_at: string;
-  cancelled_at: string | null;
-  cancel_reason: string | null;
-};
+import { getSubscription, listPlatformPayments, supportPhone } from "../server/subscription";
 
 // Encart « Abonnement » de la page Équipe (patron) : état, fin, paiements
 export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
   const sub = await getSubscription(agencyId);
   // Agence de l'administrateur : pas d'abonnement, rien à afficher
   if (sub.state === "exempt") return null;
-  const supabase = await createClient();
-  const [{ data }] = await Promise.all([
-    // Lecture via le RLS : le patron voit les paiements de son agence
-    supabase
-      .from("platform_payments")
-      .select("id, months, amount, method, note, recorded_at, cancelled_at, cancel_reason")
-      .order("recorded_at", { ascending: false })
-      .limit(24),
-  ]);
-  const payments = (data ?? []) as Payment[];
+  // Lecture via le RLS : le patron voit les paiements de son agence
+  const payments = await listPlatformPayments();
   const n = daysLeft(sub.endsAt);
   const phone = supportPhone();
 
