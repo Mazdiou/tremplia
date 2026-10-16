@@ -207,7 +207,7 @@ html.dark {
   --decor: oklch(0.975 0.012 262);
   --decor-foreground: oklch(0.208 0.042 266);
   --decor-muted: oklch(0.46 0.04 262);
-  --decor-subtle: oklch(0.58 0.03 260);
+  --decor-subtle: oklch(0.52 0.03 260);
   /* Chiffres et repères de l'aperçu (échéance, étape) */
   --decor-accent: oklch(0.546 0.245 263);
   --decor-glow: oklch(0.8 0.12 258);
@@ -221,7 +221,7 @@ html.dark {
   --decor: oklch(0.18 0.035 265);
   --decor-foreground: oklch(1 0 0);
   --decor-muted: oklch(1 0 0 / 0.65);
-  --decor-subtle: oklch(1 0 0 / 0.45);
+  --decor-subtle: oklch(1 0 0 / 0.52);
   --decor-accent: oklch(0.8 0.12 255);
   --decor-glow: oklch(0.55 0.22 262);
   --decor-glow-opacity: 0.25;
