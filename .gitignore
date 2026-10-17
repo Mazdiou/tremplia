@@ -61,3 +61,7 @@ desktop.ini
 # Journaux et clés
 *.log
 *.key
+
+# Sauvegardes et clés age : jamais dans le dépôt
+*.age
+cle-privee*

@@ -22,11 +22,12 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 9. [Règles de sécurité et de données](#règles-de-sécurité-et-de-données)
 10. [Base de données](#base-de-données)
 11. [Déploiement](#déploiement)
-12. [Abonnements et administration](#abonnements-et-administration)
-13. [Application installable (PWA)](#application-installable-pwa)
-14. [Nom et couleurs](#nom-et-couleurs)
-15. [Ajouter un modèle de campagne](#ajouter-un-modèle-de-campagne)
-16. [Glossaire](#glossaire)
+12. [Sauvegardes](#sauvegardes)
+13. [Abonnements et administration](#abonnements-et-administration)
+14. [Application installable (PWA)](#application-installable-pwa)
+15. [Nom et couleurs](#nom-et-couleurs)
+16. [Ajouter un modèle de campagne](#ajouter-un-modèle-de-campagne)
+17. [Glossaire](#glossaire)
 
 ---
 
@@ -286,6 +287,7 @@ supabase/
   config.toml           configuration du Supabase local
 test/                   doublure de "server-only" pour Vitest
 e2e/                    tests de bout en bout (Playwright)
+scripts/backup/         sauvegarde chiffrée et restauration
 ```
 
 Domaines de `features/` : `admin`, `agency`, `auth`, `campaigns`, `cases`,
@@ -419,6 +421,72 @@ le code qui en dépend.
 - **Supabase en ligne.** Les inscriptions directes à Supabase Auth sont
   désactivées : les comptes sont créés par le serveur (`/api/auth/register`,
   ajout d'un employé).
+
+---
+
+## Sauvegardes
+
+Supabase ne sauvegarde rien en plan gratuit, et en Pro ses sauvegardes
+n'incluent pas les fichiers du stockage. Une sauvegarde indépendante tourne
+donc chaque nuit (`.github/workflows/sauvegarde.yml`, 3 h à Alger) :
+
+1. `scripts/backup/backup.sh` copie la base (schéma, données, comptes,
+   historique des migrations) et tous les fichiers du stockage ;
+2. l'ensemble est chiffré avec [age](https://age-encryption.org) pour une clé
+   publique : seule la clé privée correspondante, gardée **hors ligne**, peut
+   l'ouvrir ;
+3. l'archive part sur Cloudflare R2 : `quotidien/AAAA-MM-JJ.tar.gz.age`, et le
+   1er du mois aussi `mensuel/AAAA-MM.tar.gz.age` ;
+4. le 1er du mois (ou à la demande), la tâche restaure l'archive dans un
+   Supabase local vide et vérifie chaque table, ligne pour ligne.
+
+GitHub envoie un e-mail si la tâche échoue. Pour la lancer à la main :
+onglet Actions → Sauvegarde → Run workflow.
+
+### Mise en place (une fois)
+
+1. **Clés age.** `age-keygen -o cle-privee-sauvegarde.txt` (age : `winget
+   install FiloSottile.age` sur Windows). Ranger ce fichier en lieu sûr
+   (gestionnaire de mots de passe + clé USB), **jamais dans le dépôt**. La
+   ligne `# public key: age1…` donne la clé publique.
+2. **Cloudflare R2.** Créer un bucket privé, puis deux règles de cycle de vie
+   (Settings → Object lifecycle rules) : préfixe `quotidien/` supprimé après
+   30 jours, `mensuel/` après 365 jours. Créer un jeton API R2 « Object Read &
+   Write » limité à ce bucket.
+3. **Secrets GitHub** (Settings → Secrets and variables → Actions) :
+
+   | Secret | Valeur |
+   |---|---|
+   | `SUPABASE_DB_URL` | Supabase → Connect → **Session pooler** (URI avec le mot de passe de la base, caractères spéciaux encodés : `@` → `%40`…) |
+   | `SUPABASE_URL` | Adresse du projet (`https://….supabase.co`) |
+   | `SUPABASE_SECRET_KEY` | Clé secrète du projet |
+   | `BACKUP_AGE_RECIPIENT` | Clé publique age (`age1…`) |
+   | `R2_ACCOUNT_ID` | Identifiant du compte Cloudflare |
+   | `R2_BUCKET` | Nom du bucket |
+   | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Jeton API R2 |
+
+4. Lancer la tâche à la main avec « Vérifier aussi la restauration » coché.
+
+À garder aussi hors ligne : `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY`. Sans elle,
+une base restaurée a des mots de passe externes et des codes candidats
+illisibles.
+
+### Restaurer
+
+Dans un projet Supabase **neuf** (aucune migration appliquée) :
+
+```bash
+# Archive téléchargée depuis R2 ; psql, age et Node nécessaires
+# (sans psql : PSQL="docker run --rm -i postgres:17 psql")
+SUPABASE_DB_URL="…" SUPABASE_URL="https://….supabase.co" SUPABASE_SECRET_KEY="…" \
+  scripts/backup/restore.sh 2026-10-17.tar.gz.age cle-privee-sauvegarde.txt
+```
+
+Le script charge la base en une seule transaction (rien n'est écrit en cas
+d'erreur), vérifie que chaque table a autant de lignes que dans la
+sauvegarde, puis renvoie les fichiers. Il reste à faire pointer Vercel sur le
+nouveau projet (variables d'environnement) et à y désactiver les inscriptions
+directes, comme sur l'ancien.
 
 ---
 

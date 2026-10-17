@@ -1,0 +1,113 @@
+name: Sauvegarde
+
+# Chaque nuit : base et fichiers de la production, dans une archive chiffrée
+# envoyée sur Cloudflare R2. Le 1er du mois, la sauvegarde est aussi rangée
+# dans mensuel/ et une restauration complète est vérifiée sur un Supabase
+# local. Procédure et secrets : README, section « Sauvegardes ».
+
+on:
+  schedule:
+    # 2 h UTC = 3 h à Alger
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      verifier:
+        description: "Vérifier aussi la restauration"
+        type: boolean
+        default: false
+
+# Jamais deux sauvegardes en même temps
+concurrency:
+  group: sauvegarde
+  cancel-in-progress: false
+
+jobs:
+  sauvegarder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      # R2 ne gère pas toutes les sommes de contrôle ajoutées par aws-cli
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+    steps:
+      # Aucun secret : sauvegarde pas encore mise en place, rien à faire. Un
+      # secret manquant parmi d'autres fait au contraire échouer la tâche.
+      - name: Sauvegarde configurée ?
+        id: config
+        run: |
+          if [ -z "$SUPABASE_DB_URL$SUPABASE_URL$SUPABASE_SECRET_KEY$AWS_ACCESS_KEY_ID$R2_BUCKET" ]; then
+            echo "::warning::Sauvegarde non configurée : voir la section Sauvegardes du README"
+          else
+            echo "active=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.config.outputs.active == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.config.outputs.active == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        if: steps.config.outputs.active == 'true'
+      - name: Outil de chiffrement
+        if: steps.config.outputs.active == 'true'
+        run: sudo apt-get update -q && sudo apt-get install -y -q age
+
+      - name: Vérification ce mois-ci ?
+        id: plan
+        if: steps.config.outputs.active == 'true'
+        run: |
+          if [ "$(date -u +%d)" = "01" ] || [ "${{ inputs.verifier }}" = "true" ]; then
+            echo "verifier=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "jour=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+          echo "mois=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+
+      # Pour la vérification, l'archive est aussi chiffrée pour une clé
+      # jetable, créée ici et perdue à la fin de la tâche
+      - name: Clé jetable de vérification
+        if: steps.plan.outputs.verifier == 'true'
+        run: |
+          age-keygen -o "$RUNNER_TEMP/cle-verification.txt" 2> /dev/null
+          echo "VERIFY_RECIPIENT=$(age-keygen -y "$RUNNER_TEMP/cle-verification.txt")" >> "$GITHUB_ENV"
+
+      - name: Sauvegarde chiffrée
+        if: steps.config.outputs.active == 'true'
+        env:
+          BACKUP_AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          BACKUP_AGE_RECIPIENT="$BACKUP_AGE_RECIPIENT ${VERIFY_RECIPIENT:-}" \
+            scripts/backup/backup.sh "$RUNNER_TEMP/sauvegarde.tar.gz.age"
+
+      - name: Envoi sur R2
+        if: steps.config.outputs.active == 'true'
+        run: |
+          archive="$RUNNER_TEMP/sauvegarde.tar.gz.age"
+          aws s3 cp "$archive" "s3://$R2_BUCKET/quotidien/${{ steps.plan.outputs.jour }}.tar.gz.age" \
+            --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          if [ "$(date -u +%d)" = "01" ]; then
+            aws s3 cp "$archive" "s3://$R2_BUCKET/mensuel/${{ steps.plan.outputs.mois }}.tar.gz.age" \
+              --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          fi
+          echo "Envoyé : quotidien/${{ steps.plan.outputs.jour }}.tar.gz.age"
+
+      # Restauration complète sur un Supabase local vide (sans migrations),
+      # comme sur un projet neuf, puis contrôle table par table
+      - name: Vérification de la restauration
+        if: steps.plan.outputs.verifier == 'true'
+        run: |
+          rm -rf supabase/migrations
+          npx supabase start
+          eval "$(npx supabase status -o env 2> /dev/null | grep -E '^(API_URL|SECRET_KEY)=')"
+          SUPABASE_DB_URL="postgresql://postgres:postgres@127.0.0.1:5432/postgres" \
+          SUPABASE_URL="$API_URL" SUPABASE_SECRET_KEY="$SECRET_KEY" \
+          PSQL="docker exec -i supabase_db_studyflow psql -U postgres -h 127.0.0.1" \
+            scripts/backup/restore.sh "$RUNNER_TEMP/sauvegarde.tar.gz.age" "$RUNNER_TEMP/cle-verification.txt"
