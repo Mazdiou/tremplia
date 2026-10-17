@@ -78,7 +78,7 @@ d'un paiement saisi par erreur.
 | Validation | zod 4, schémas partagés entre formulaires et routes |
 | Données | Supabase : PostgreSQL, Auth, Storage, Realtime, RLS |
 | Fichiers | fflate (archives ZIP et classeurs Excel construits à la main) |
-| Tests | Vitest (unitaires), pgTAP (base) |
+| Tests | Vitest (unitaires), pgTAP (base), Playwright (bout en bout) |
 | Hébergement | Vercel (région `arn1`) + Supabase (`eu-north-1`) |
 
 ---
@@ -107,6 +107,7 @@ compte créé est celui du patron.
 | `npm run lint` | ESLint |
 | `npm test` / `npm run test:watch` | Tests Vitest |
 | `npx supabase test db` | Tests pgTAP sur la base locale démarrée |
+| `npm run test:e2e` | Tests de bout en bout (Playwright), après `npm run build` |
 
 ---
 
@@ -146,14 +147,34 @@ npx eslint src
 npm test
 npm run build
 npx supabase test db
+npm run test:e2e
 ```
 
-La CI a deux tâches :
+La CI a trois tâches :
 
 - **verifier** : types, lint, tests Vitest et build, avec des variables
   factices (le build n'a besoin d'aucun secret) ;
 - **base** : démarre un Supabase local et lance les tests pgTAP (migrations,
-  droits, RLS, règles patron / employé).
+  droits, RLS, règles patron / employé) ;
+- **bout-en-bout** : démarre un Supabase local, construit l'application et
+  la parcourt dans Chromium avec Playwright. En cas d'échec, le rapport et
+  les traces sont joints à l'exécution (« rapport-playwright »).
+
+### Tests de bout en bout (`e2e/`)
+
+`e2e/parcours.spec.ts` rejoue le parcours principal, chaque étape partant
+de la précédente : redirection d'un visiteur vers la connexion, inscription
+d'une agence et connexion du patron, import du modèle Campus France, création
+d'un dossier avec un premier paiement, envoi d'un PDF, ouverture de l'espace
+candidat, connexion du candidat et message reçu par l'agence, refus d'un
+mauvais code.
+
+En local : Supabase local démarré, `.env.local` pointé dessus, puis
+`npm run build` et `npm run test:e2e`. L'application tourne sur le port 3100
+(le 3000 reste à `npm run dev`). Chaque lancement crée sa propre agence
+(e-mail unique) sans rien effacer, et se présente avec une adresse IP
+différente pour ne pas buter sur la limite de 3 inscriptions par heure.
+Première fois : `npx playwright install chromium`.
 
 ---
 
@@ -264,6 +285,7 @@ supabase/
   tests/                un fichier pgTAP par domaine
   config.toml           configuration du Supabase local
 test/                   doublure de "server-only" pour Vitest
+e2e/                    tests de bout en bout (Playwright)
 ```
 
 Domaines de `features/` : `admin`, `agency`, `auth`, `campaigns`, `cases`,

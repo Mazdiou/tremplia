@@ -45,3 +45,7 @@ next-env.d.ts
 # Requêtes enregistrées par Supabase Studio en local (peuvent contenir des
 # données personnelles)
 supabase/snippets/
+
+# Tests de bout en bout (Playwright) : rapports et traces
+/test-results/
+/playwright-report/

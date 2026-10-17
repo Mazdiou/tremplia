@@ -46,3 +46,42 @@ jobs:
         run: npx supabase start
       - name: Tests pgTAP
         run: npx supabase test db
+
+  # Parcours complets dans un navigateur (Playwright) : l'application
+  # construite, branchée sur un Supabase local démarré dans la CI.
+  bout-en-bout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Démarrer Supabase
+        run: npx supabase start
+      - name: Variables du Supabase local
+        run: |
+          eval "$(npx supabase status -o env 2>/dev/null | grep -E '^[A-Z_0-9]+=')"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY"
+            echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
+            echo "EXTERNAL_ACCOUNTS_ENCRYPTION_KEY=$(openssl rand -base64 32)"
+          } > .env.local
+      - name: Build
+        run: npm run build
+      - name: Navigateur
+        run: npx playwright install --with-deps chromium
+      - name: Tests de bout en bout
+        run: npm run test:e2e
+      - name: Rapport en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-playwright
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
