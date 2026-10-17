@@ -90,6 +90,8 @@ type DisplayOption = (typeof DISPLAY_OPTIONS)[number]["key"];
 
 const selectClass =
   "h-8 min-w-0 flex-1 rounded-lg border bg-card px-2 text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+// Panneau étroit : un filtre par ligne plutôt que deux libellés coupés
+const narrowFull = "@max-[16rem]:basis-full";
 
 export function CaseTree({
   campaigns,
@@ -398,7 +400,7 @@ export function CaseTree({
       <aside
         style={{ "--tree-w": `${width}px` } as React.CSSProperties}
         className={cn(
-          "relative flex h-full w-full shrink-0 flex-col bg-sidebar md:w-(--tree-w)",
+          "@container relative flex h-full w-full shrink-0 flex-col bg-sidebar md:w-(--tree-w)",
           !isCasesIndex(pathname) && "max-md:hidden",
           collapsed && "md:hidden",
         )}
@@ -411,7 +413,7 @@ export function CaseTree({
           >
             {BRAND.name}
           </Link>
-          <kbd className="ml-auto mr-1 text-[11px] text-muted-foreground max-md:hidden">
+          <kbd className="ml-auto mr-1 whitespace-nowrap text-[11px] text-muted-foreground max-md:hidden @max-[16rem]:hidden">
             Ctrl B
           </kbd>
           {!readOnly && (
@@ -532,7 +534,7 @@ export function CaseTree({
                 aria-pressed={prefs.mine === opt.mine}
                 onClick={() => setPrefs({ mine: opt.mine, responsible: "" })}
                 className={cn(
-                  "h-8 flex-1 rounded-[9px] text-sm transition-colors",
+                  "h-8 min-w-0 flex-1 truncate rounded-[9px] px-2 text-sm transition-colors",
                   prefs.mine === opt.mine
                     ? "bg-card font-medium text-foreground ring-1 ring-border"
                     : "text-muted-foreground hover:text-foreground",
@@ -547,7 +549,7 @@ export function CaseTree({
             value={prefs.level}
             onChange={(e) => setPrefs({ level: e.target.value })}
             aria-label="Filtrer par niveau d'études"
-            className={selectClass}
+            className={cn(selectClass, narrowFull)}
           >
             <option value="">Tous niveaux</option>
             {EDUCATION_LEVELS.map((l) => (
@@ -562,7 +564,7 @@ export function CaseTree({
               setPrefs({ payment: e.target.value as typeof prefs.payment })
             }
             aria-label="Filtrer par paiement"
-            className={selectClass}
+            className={cn(selectClass, narrowFull)}
           >
             <option value="">Tous paiements</option>
             <option value="due">Reste à payer</option>
@@ -751,14 +753,18 @@ export function CaseTree({
                           return (
                             <div key={key}>
                               <div className="group flex items-center pr-2 hover:bg-muted/60">
-                                {selecting && visible.length > 0 && (
-                                  <BranchCheckbox
-                                    label={`Cocher tous les dossiers de ${branch.label}`}
-                                    checked={checkedCount === visible.length}
-                                    indeterminate={checkedCount > 0 && checkedCount < visible.length}
-                                    onChange={(on) => toggleChecked(visibleIds, on)}
-                                  />
-                                )}
+                                {selecting &&
+                                  (visible.length > 0 ? (
+                                    <BranchCheckbox
+                                      label={`Cocher tous les dossiers de ${branch.label}`}
+                                      checked={checkedCount === visible.length}
+                                      indeterminate={checkedCount > 0 && checkedCount < visible.length}
+                                      onChange={(on) => toggleChecked(visibleIds, on)}
+                                    />
+                                  ) : (
+                                    // Groupe vide : même retrait, les chevrons restent alignés
+                                    <span aria-hidden className="ml-3 size-4 shrink-0" />
+                                  ))}
                                 <button
                                   type="button"
                                   aria-expanded={branchOpen}
@@ -769,7 +775,7 @@ export function CaseTree({
                                   }
                                   className={cn(
                                     "flex min-w-0 flex-1 items-center gap-1 py-1.5 pr-2 pl-4 text-left text-sm font-medium",
-                                    selecting && visible.length > 0 && "pl-1",
+                                    selecting && "pl-1",
                                     groupId === null && "text-muted-foreground",
                                   )}
                                 >
@@ -840,7 +846,7 @@ export function CaseTree({
                                   // Mode sélection : la ligne coche le dossier au lieu de l'ouvrir
                                   if (selecting) {
                                     return (
-                                      <label key={c.id} className={cn(rowClass, "cursor-pointer pl-3")}>
+                                      <label key={c.id} className={cn(rowClass, "cursor-pointer pl-5")}>
                                         <input
                                           type="checkbox"
                                           checked={checked.has(c.id)}

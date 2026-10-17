@@ -11,7 +11,6 @@ import type { CampaignStage } from "@/features/stages/stages";
 import { callApi } from "@/lib/api-client";
 import { fullName } from "@/lib/names";
 import { plural } from "@/lib/plural";
-import { cn } from "@/lib/utils";
 import type { TreeMember } from "./case-tree";
 
 type Pending =
@@ -19,7 +18,7 @@ type Pending =
   | { type: "assignee"; id: string; name: string };
 
 const selectClass =
-  "h-9 min-w-0 flex-1 rounded-lg border bg-card px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50";
+  "h-9 w-full min-w-0 rounded-lg border border-input bg-card px-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30";
 
 // Barre des actions groupées, en bas de l'arbre en mode sélection : même
 // étape (dossiers d'une seule campagne) ou même responsable (patron
@@ -97,20 +96,28 @@ export function BulkActionsBar({
 
   return (
     <div className="space-y-2 border-t bg-sidebar p-4">
-      <div className="flex items-center justify-between gap-2 text-sm">
-        <span className="font-medium" aria-live="polite">
-          {plural(count, "sélectionné")}
-        </span>
-        <span className="flex gap-1">
-          {count > 0 && (
-            <Button variant="ghost" size="sm" onClick={onClear}>
+      {/* Compteur et « Tout décocher » empilés : tient sur une ligne même
+          quand le panneau est à sa largeur minimale */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium" aria-live="polite">
+            {count === 0 ? "Aucun dossier coché" : plural(count, "sélectionné")}
+          </p>
+          {count > 0 ? (
+            <button
+              type="button"
+              onClick={onClear}
+              className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            >
               Tout décocher
-            </Button>
+            </button>
+          ) : (
+            <p className="text-xs text-muted-foreground">Cochez-les dans la liste</p>
           )}
-          <Button variant="outline" size="sm" onClick={onExit}>
-            Terminer
-          </Button>
-        </span>
+        </div>
+        <Button variant="outline" size="sm" onClick={onExit} className="shrink-0">
+          Terminer
+        </Button>
       </div>
 
       {tooMany && (
@@ -127,7 +134,7 @@ export function BulkActionsBar({
           if (stage) setPending({ type: "stage", id: stage.id, name: stage.name });
         }}
         aria-label="Changer l'étape des dossiers sélectionnés"
-        className={cn(selectClass, "w-full")}
+        className={selectClass}
       >
         <option value="">Changer l&apos;étape…</option>
         {campaignStages.map((s) => (
@@ -149,7 +156,7 @@ export function BulkActionsBar({
             }
           }}
           aria-label="Confier les dossiers sélectionnés à"
-          className={cn(selectClass, "w-full")}
+          className={selectClass}
         >
           <option value="">Confier à…</option>
           {members
