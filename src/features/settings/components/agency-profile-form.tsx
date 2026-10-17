@@ -14,19 +14,20 @@ export function AgencyProfileForm({
   readOnly: boolean;
 }) {
   const [draft, setDraft] = useState(initial);
-  const { save, touch, saving, saved, error, errors } = useSettingsSave("/api/settings/agency");
+  const { save, dirty, saving, saved, error, errors } = useSettingsSave(
+    "/api/settings/agency",
+    draft,
+    initial,
+  );
 
-  const patch = (p: Partial<typeof draft>) => {
-    touch();
-    setDraft((d) => ({ ...d, ...p }));
-  };
+  const patch = (p: Partial<typeof draft>) => setDraft((d) => ({ ...d, ...p }));
 
   return (
     <form
       noValidate
       onSubmit={(e) => {
         e.preventDefault();
-        void save(draft);
+        void save();
       }}
       className="space-y-5"
     >
@@ -65,7 +66,7 @@ export function AgencyProfileForm({
           />
         </div>
       </fieldset>
-      {!readOnly && <SaveFooter saving={saving} saved={saved} error={error} />}
+      {!readOnly && <SaveFooter saving={saving} saved={saved} dirty={dirty} error={error} />}
     </form>
   );
 }

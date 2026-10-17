@@ -13,7 +13,13 @@ import { plural } from "@/lib/plural";
 import { telHref } from "@/lib/phone";
 
 // Encart « Abonnement » de la page Réglages (patron) : état, fin, paiements
-export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
+export async function SubscriptionPanel({
+  agencyId,
+  title = "Abonnement",
+}: {
+  agencyId: string;
+  title?: string;
+}) {
   const sub = await getSubscription(agencyId);
   // Agence de l'administrateur : pas d'abonnement, rien à afficher
   if (sub.state === "exempt") return null;
@@ -24,7 +30,7 @@ export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
 
   return (
     <Panel
-      title="Abonnement"
+      title={title}
       description={
         phone ? (
           <>

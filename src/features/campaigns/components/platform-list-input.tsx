@@ -9,22 +9,31 @@ import { Label } from "@/components/ui/label";
 import { MAX_SUGGESTED_PLATFORMS } from "../schemas";
 
 // Plateformes proposées pour les comptes des candidats : une pastille par
-// plateforme, ajoutée avec Entrée ou le bouton (doublons ignorés, majuscules
-// comprises). Réglages d'une campagne et valeurs par défaut de l'agence.
+// plateforme, ajoutée avec Entrée, le bouton ou en quittant le champ : une
+// saisie oubliée avant « Enregistrer » n'est pas perdue (doublons ignorés,
+// majuscules comprises). Réglages d'une campagne et valeurs par défaut de l'agence.
 export function PlatformListInput({
   id,
   label = "Plateformes suggérées",
   value,
   onChange,
+  onPendingChange,
   error,
 }: {
   id: string;
   label?: string;
   value: string[];
   onChange: (platforms: string[]) => void;
+  // Une saisie attend d'être ajoutée (le formulaire a donc un changement)
+  onPendingChange?: (pending: boolean) => void;
   error?: string;
 }) {
   const [input, setInput] = useState("");
+
+  function changeInput(text: string) {
+    setInput(text);
+    onPendingChange?.(text.trim() !== "");
+  }
 
   function add() {
     const name = input.trim();
@@ -33,7 +42,7 @@ export function PlatformListInput({
       (p) => p.toLocaleLowerCase("fr") === name.toLocaleLowerCase("fr"),
     );
     if (!exists) onChange([...value, name]);
-    setInput("");
+    changeInput("");
   }
 
   return (
@@ -66,7 +75,8 @@ export function PlatformListInput({
             placeholder="Ex. : Pastel, Parcoursup"
             value={input}
             maxLength={80}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => changeInput(e.target.value)}
+            onBlur={add}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();

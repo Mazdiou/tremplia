@@ -23,19 +23,23 @@ export function CampaignDefaultsForm({
   readOnly: boolean;
 }) {
   const [draft, setDraft] = useState(initial);
-  const { save, touch, saving, saved, error, errors } = useSettingsSave("/api/settings/defaults");
+  // Plateforme tapée mais pas encore ajoutée : elle le sera en quittant le
+  // champ, le bouton doit donc déjà répondre au clic
+  const [pendingPlatform, setPendingPlatform] = useState(false);
+  const { save, dirty, saving, saved, error, errors } = useSettingsSave(
+    "/api/settings/defaults",
+    draft,
+    initial,
+  );
 
-  const patch = (p: Partial<Draft>) => {
-    touch();
-    setDraft((d) => ({ ...d, ...p }));
-  };
+  const patch = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
 
   return (
     <form
       noValidate
       onSubmit={(e) => {
         e.preventDefault();
-        void save(draft);
+        void save();
       }}
       className="space-y-5"
     >
@@ -54,6 +58,7 @@ export function CampaignDefaultsForm({
           id="defaults-platform-new"
           value={draft.platforms}
           onChange={(platforms) => patch({ platforms })}
+          onPendingChange={setPendingPlatform}
           error={errors.platforms}
         />
 
@@ -73,7 +78,7 @@ export function CampaignDefaultsForm({
           />
         </div>
       </fieldset>
-      {!readOnly && <SaveFooter saving={saving} saved={saved} error={error} />}
+      {!readOnly && <SaveFooter saving={saving} saved={saved} dirty={dirty || pendingPlatform} error={error} />}
     </form>
   );
 }

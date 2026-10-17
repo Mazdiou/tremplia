@@ -7,20 +7,24 @@ import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/api-client";
 
 // Enregistrement d'un formulaire de la page Réglages : chaque section a le
-// sien, avec son bouton et ses messages.
-export function useSettingsSave(url: string, method = "PATCH") {
+// sien, avec son bouton et ses messages. Le bouton ne s'active qu'une fois
+// la saisie différente de la dernière version enregistrée.
+export function useSettingsSave<T>(url: string, draft: T, initial: T) {
   const router = useRouter();
+  const [baseline, setBaseline] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const dirty = JSON.stringify(draft) !== JSON.stringify(baseline);
 
-  async function save(body: unknown): Promise<boolean> {
+  async function save(): Promise<boolean> {
     setError(null);
     setErrors({});
     setSaved(false);
     setSaving(true);
-    const res = await callApi(url, { method, body });
+    const sent = draft;
+    const res = await callApi(url, { method: "PATCH", body: sent });
     setSaving(false);
     if (!res.ok) {
       setErrors(res.fieldErrors);
@@ -28,26 +32,27 @@ export function useSettingsSave(url: string, method = "PATCH") {
       if (Object.keys(res.fieldErrors).length === 0) setError(res.error);
       return false;
     }
+    setBaseline(sent);
     setSaved(true);
     router.refresh();
     return true;
   }
 
-  // Une saisie après l'enregistrement efface « Modifications enregistrées »
-  const touch = () => setSaved(false);
-
-  return { save, touch, saving, saved, error, errors };
+  // « Modifications enregistrées » s'efface dès la saisie suivante
+  return { save, dirty, saving, saved: saved && !dirty, error, errors };
 }
 
 export function SaveFooter({
   saving,
   saved,
+  dirty,
   error,
   label = "Enregistrer",
   savedLabel = "Modifications enregistrées",
 }: {
   saving: boolean;
   saved: boolean;
+  dirty: boolean;
   error: string | null;
   label?: string;
   savedLabel?: string;
@@ -64,7 +69,7 @@ export function SaveFooter({
           <CheckCircle2 className="size-4" aria-hidden /> {savedLabel}
         </p>
       )}
-      <Button type="submit" disabled={saving}>
+      <Button type="submit" disabled={saving || !dirty}>
         {saving ? "Enregistrement…" : label}
       </Button>
     </div>

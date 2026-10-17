@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Lock } from "lucide-react";
 import { FormSection, PageContainer, PageHeader } from "@/components/page-ui";
+import { ScrollToHash } from "@/components/scroll-to-hash";
 import { AccountNameForm } from "@/features/settings/components/account-name-form";
 import { AgencyProfileForm } from "@/features/settings/components/agency-profile-form";
 import { CampaignDefaultsForm } from "@/features/settings/components/campaign-defaults-form";
@@ -40,6 +41,7 @@ export default async function SettingsPage() {
 
   return (
     <PageContainer>
+      <ScrollToHash />
       <PageHeader
         title="Réglages"
         subtitle={isOwner ? "Votre compte et celui de l'agence" : "Votre compte"}
@@ -115,10 +117,9 @@ export default async function SettingsPage() {
           <FormSection
             id="abonnement"
             title="Abonnement"
-            description="État de l'abonnement de l'agence et paiements enregistrés."
             bare
           >
-            <SubscriptionPanel agencyId={member.agencyId} />
+            <SubscriptionPanel agencyId={member.agencyId} title="État et paiements" />
           </FormSection>
         )}
 
