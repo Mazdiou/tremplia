@@ -99,7 +99,7 @@ export default async function CaseLayout({
       {c.remaining_amount !== null && (
         <Link
           href={`/cases/${c.id}/payments`}
-          className="shrink-0 rounded-full focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-sm:hidden"
+          className="flex shrink-0 rounded-full focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-sm:hidden"
         >
           <StatusPill tone={c.remaining_amount > 0 ? "warn" : "ok"}>
             {c.remaining_amount > 0 ? `Reste ${formatDA(c.remaining_amount)}` : "Soldé"}
