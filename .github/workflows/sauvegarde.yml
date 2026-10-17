@@ -101,6 +101,10 @@ jobs:
               --endpoint-url "$BACKUP_S3_ENDPOINT" --only-show-errors
           fi
           echo "Envoyé : quotidien/${{ steps.plan.outputs.jour }}.tar.gz.age"
+          # Ce que le bucket contient réellement (date, taille, nom)
+          echo "Contenu du bucket :"
+          aws s3 ls "s3://$BACKUP_BUCKET/" --recursive --human-readable \
+            --endpoint-url "$BACKUP_S3_ENDPOINT"
 
       # Restauration complète sur un Supabase local vide (sans migrations),
       # comme sur un projet neuf, puis contrôle table par table
