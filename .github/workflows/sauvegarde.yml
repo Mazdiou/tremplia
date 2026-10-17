@@ -90,6 +90,19 @@ jobs:
       - name: Envoi de l'archive
         if: steps.config.outputs.active == 'true'
         run: |
+          # Un espace ou un retour à la ligne collé avec un secret le rend invalide
+          clean() { printf '%s' "$1" | tr -d '[:space:]'; }
+          export AWS_ACCESS_KEY_ID="$(clean "$AWS_ACCESS_KEY_ID")"
+          export AWS_SECRET_ACCESS_KEY="$(clean "$AWS_SECRET_ACCESS_KEY")"
+          BACKUP_S3_ENDPOINT="$(clean "$BACKUP_S3_ENDPOINT")"
+          BACKUP_BUCKET="$(clean "$BACKUP_BUCKET")"
+          # Contrôle de forme, sans rien révéler : une clé d'application B2
+          # a un keyID de 25 caractères et une applicationKey de 31
+          echo "keyID : ${#AWS_ACCESS_KEY_ID} caractères, applicationKey : ${#AWS_SECRET_ACCESS_KEY} caractères"
+          case "$BACKUP_S3_ENDPOINT" in
+            https://*) ;;
+            *) echo "::error::BACKUP_S3_ENDPOINT doit commencer par https://"; exit 1 ;;
+          esac
           # B2 signe avec la région de son adresse (s3.<région>.backblazeb2.com)
           region="$(echo "$BACKUP_S3_ENDPOINT" | sed -nE 's#^https://s3\.([^.]+)\.backblazeb2\.com.*#\1#p')"
           export AWS_DEFAULT_REGION="${region:-auto}"
