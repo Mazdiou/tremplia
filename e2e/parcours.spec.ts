@@ -137,7 +137,9 @@ test("un mauvais code d'accès est refusé", async ({ browser }) => {
   await student.goto("/student/login");
   await student.getByLabel("Code d'accès").fill("ZZZZ-ZZZZ");
   await student.getByRole("button", { name: "Accéder à mon dossier" }).click();
-  await expect(student.getByRole("alert")).toBeVisible();
+  // Le message du formulaire, pas l'annonceur de navigation de Next (lui
+  // aussi role="alert")
+  await expect(student.getByRole("alert").filter({ hasText: "Code incorrect" })).toBeVisible();
   await expect(student).toHaveURL(/\/student\/login$/);
   await student.close();
 });
