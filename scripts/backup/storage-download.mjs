@@ -9,11 +9,23 @@ import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
 const [target] = process.argv.slice(2);
-const { SUPABASE_URL, SUPABASE_SECRET_KEY } = process.env;
+// Un espace ou un retour à la ligne collé avec un secret le rend invalide
+const SUPABASE_URL = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY?.trim();
 if (!target || !SUPABASE_URL || !SUPABASE_SECRET_KEY) {
   console.error("Usage : SUPABASE_URL=… SUPABASE_SECRET_KEY=… node storage-download.mjs <dossier>");
   process.exit(2);
 }
+
+// Diagnostic sans rien révéler : projet visé et sorte de clé
+const keyKind = SUPABASE_SECRET_KEY.startsWith("sb_secret_")
+  ? "clé secrète (sb_secret_…)"
+  : SUPABASE_SECRET_KEY.startsWith("sb_publishable_")
+    ? "clé PUBLIQUE (sb_publishable_…) : il faut la clé secrète"
+    : SUPABASE_SECRET_KEY.startsWith("eyJ")
+      ? "ancienne clé JWT (service_role ou anon)"
+      : "format inconnu";
+console.log(`Stockage de ${new URL(SUPABASE_URL).host}, avec une ${keyKind}`);
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
   auth: { persistSession: false },
@@ -39,7 +51,12 @@ async function listFiles(bucket, prefix = "") {
 }
 
 const { data: buckets, error } = await supabase.storage.listBuckets();
-if (error) throw new Error(`liste des buckets : ${error.message}`);
+if (error) {
+  throw new Error(
+    `liste des buckets : ${error.message}. Vérifier que SUPABASE_SECRET_KEY est la clé secrète ` +
+      "du même projet que SUPABASE_URL (Project Settings → API Keys), collée sans espace.",
+  );
+}
 
 // Quelques téléchargements à la fois : plus rapide, sans saturer l'API
 const PARALLEL = 8;

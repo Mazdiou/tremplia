@@ -9,7 +9,8 @@ import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
 const [source] = process.argv.slice(2);
-const { SUPABASE_URL, SUPABASE_SECRET_KEY } = process.env;
+const SUPABASE_URL = process.env.SUPABASE_URL?.trim().replace(/\/+$/, "");
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY?.trim();
 if (!source || !SUPABASE_URL || !SUPABASE_SECRET_KEY) {
   console.error("Usage : SUPABASE_URL=… SUPABASE_SECRET_KEY=… node storage-upload.mjs <dossier>");
   process.exit(2);
