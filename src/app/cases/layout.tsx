@@ -62,6 +62,7 @@ export default async function CasesLayout({
           members={(membersRes.data ?? []) as TreeMember[]}
           currentUserId={member.userId}
           unread={unread}
+          isOwner={member.isOwner}
           readOnly={readOnly}
         />
         <CasesContent>{children}</CasesContent>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import {
+  CheckSquare,
   ChevronDown,
   ChevronRight,
   PanelLeftClose,
@@ -46,6 +47,7 @@ import {
   type CampaignStage,
 } from "@/features/stages/stages";
 import { isCasesIndex } from "./cases-content";
+import { BulkActionsBar } from "./bulk-actions-bar";
 import { TreeSearchResults } from "./tree-search-results";
 import { CampaignMenu, GroupActions, InlineNameInput, groupApi } from "./tree-actions";
 import { BRAND } from "@/config/brand";
@@ -97,6 +99,7 @@ export function CaseTree({
   members,
   currentUserId,
   unread,
+  isOwner,
   readOnly = false,
 }: {
   campaigns: TreeCampaign[];
@@ -109,6 +112,8 @@ export function CaseTree({
   currentUserId: string;
   // Messages du candidat non lus, par dossier
   unread: Record<string, number>;
+  // Le patron peut aussi changer le responsable de plusieurs dossiers
+  isOwner: boolean;
   // Abonnement expiré : rien à créer (la base refuserait de toute façon)
   readOnly?: boolean;
 }) {
@@ -124,7 +129,26 @@ export function CaseTree({
   // Saisie en cours d'un nouveau groupe (id de campagne) ou d'un renommage
   const [addingGroupFor, setAddingGroupFor] = useState<string | null>(null);
   const [renamingGroup, setRenamingGroup] = useState<string | null>(null);
+  // Mode sélection (actions groupées) et dossiers cochés
+  const [selecting, setSelecting] = useState(false);
+  const [checked, setChecked] = useState<Set<string>>(() => new Set());
   const searchRef = useRef<HTMLInputElement>(null);
+
+  function exitSelection() {
+    setSelecting(false);
+    setChecked(new Set());
+  }
+
+  function toggleChecked(ids: string[], on: boolean) {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) {
+        if (on) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  }
 
   // Raccourcis (Cmd sur Mac) : Ctrl+K pour chercher, Ctrl+B pour replier /
   // ouvrir le panneau, comme dans VS Code
@@ -293,6 +317,11 @@ export function CaseTree({
     (c) => c.status === "active" && c.assigned_to === currentUserId,
   ).length;
   const resultCount = found.filter((c) => c.status === "active").length;
+  // Le dossier ouvert reste visible même s'il est clos. Une action groupée
+  // ne porte que sur les dossiers cochés encore affichés (filtres, clos).
+  const shownCase = (c: TreeCase) =>
+    prefs.showClosed || c.status === "active" || c.id === selectedId;
+  const selectedCases = found.filter((c) => checked.has(c.id) && shownCase(c));
   // Les compteurs ne portent que sur les dossiers chargés : on ne les montre
   // que lorsque toutes les campagnes actives le sont (sinon « 0 » trompeur).
   const allLoaded = activeCampaigns.every((c) => isLoaded(c.id));
@@ -385,6 +414,19 @@ export function CaseTree({
           <kbd className="ml-auto mr-1 text-[11px] text-muted-foreground max-md:hidden">
             Ctrl B
           </kbd>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => (selecting ? exitSelection() : setSelecting(true))}
+              aria-pressed={selecting}
+              aria-label="Sélectionner des dossiers"
+              title="Sélectionner des dossiers (étape, responsable)"
+              className={cn(selecting && "bg-accent text-accent-foreground")}
+            >
+              <CheckSquare />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon-sm"
@@ -684,15 +726,11 @@ export function CaseTree({
                             prefs.open[key] ??
                             (branch.cases.some((c) => c.id === selectedId) ||
                               (filtersActive && count > 0));
-                          // Le dossier sélectionné reste visible même s'il est clos
                           const visible = branch.cases
-                            .filter(
-                              (c) =>
-                                prefs.showClosed ||
-                                c.status === "active" ||
-                                c.id === selectedId,
-                            )
+                            .filter(shownCase)
                             .sort(prefs.sortBy === "level" ? byLevel : byName);
+                          const visibleIds = visible.map((c) => c.id);
+                          const checkedCount = visibleIds.filter((id) => checked.has(id)).length;
 
                           if (groupId && renamingGroup === groupId) {
                             return (
@@ -713,6 +751,14 @@ export function CaseTree({
                           return (
                             <div key={key}>
                               <div className="group flex items-center pr-2 hover:bg-muted/60">
+                                {selecting && visible.length > 0 && (
+                                  <BranchCheckbox
+                                    label={`Cocher tous les dossiers de ${branch.label}`}
+                                    checked={checkedCount === visible.length}
+                                    indeterminate={checkedCount > 0 && checkedCount < visible.length}
+                                    onChange={(on) => toggleChecked(visibleIds, on)}
+                                  />
+                                )}
                                 <button
                                   type="button"
                                   aria-expanded={branchOpen}
@@ -723,6 +769,7 @@ export function CaseTree({
                                   }
                                   className={cn(
                                     "flex min-w-0 flex-1 items-center gap-1 py-1.5 pr-2 pl-4 text-left text-sm font-medium",
+                                    selecting && visible.length > 0 && "pl-1",
                                     groupId === null && "text-muted-foreground",
                                   )}
                                 >
@@ -736,7 +783,7 @@ export function CaseTree({
                                     {count}
                                   </span>
                                 </button>
-                                {groupId && campActive && !readOnly && (
+                                {groupId && campActive && !readOnly && !selecting && (
                                   <GroupActions
                                     campaignId={camp.id}
                                     groupId={groupId}
@@ -751,19 +798,12 @@ export function CaseTree({
                                 visible.map((c) => {
                                   const isSelected = c.id === selectedId;
                                   const suffix = STATUS_SUFFIXES[c.status];
-                                  return (
-                                    <Link
-                                      key={c.id}
-                                      href={`/cases/${c.id}`}
-                                      aria-current={isSelected ? "page" : undefined}
-                                      className={cn(
-                                        "mx-3 flex items-center gap-2 rounded-lg py-1.5 pr-2 pl-8 text-sm hover:bg-muted/60",
-                                        isSelected &&
-                                          "bg-accent font-medium text-accent-foreground",
-                                        c.status !== "active" &&
-                                          "text-muted-foreground",
-                                      )}
-                                    >
+                                  const rowClass = cn(
+                                    "mx-3 flex items-center gap-2 rounded-lg py-1.5 pr-2 pl-8 text-sm hover:bg-muted/60",
+                                    c.status !== "active" && "text-muted-foreground",
+                                  );
+                                  const content = (
+                                    <>
                                       <span className="truncate">
                                         {displayName(c.first_name, c.last_name)}
                                       </span>
@@ -795,6 +835,33 @@ export function CaseTree({
                                           </span>
                                         )}
                                       </span>
+                                    </>
+                                  );
+                                  // Mode sélection : la ligne coche le dossier au lieu de l'ouvrir
+                                  if (selecting) {
+                                    return (
+                                      <label key={c.id} className={cn(rowClass, "cursor-pointer pl-3")}>
+                                        <input
+                                          type="checkbox"
+                                          checked={checked.has(c.id)}
+                                          onChange={(e) => toggleChecked([c.id], e.target.checked)}
+                                          className="size-4 shrink-0 accent-primary"
+                                        />
+                                        {content}
+                                      </label>
+                                    );
+                                  }
+                                  return (
+                                    <Link
+                                      key={c.id}
+                                      href={`/cases/${c.id}`}
+                                      aria-current={isSelected ? "page" : undefined}
+                                      className={cn(
+                                        rowClass,
+                                        isSelected && "bg-accent font-medium text-accent-foreground",
+                                      )}
+                                    >
+                                      {content}
                                     </Link>
                                   );
                                 })}
@@ -809,8 +876,17 @@ export function CaseTree({
           )}
         </nav>
 
-        {/* Pied */}
-        {!readOnly && (
+        {/* Pied : actions groupées en mode sélection, sinon nouveau dossier */}
+        {selecting && !readOnly ? (
+          <BulkActionsBar
+            selected={selectedCases}
+            stages={stages}
+            members={members}
+            isOwner={isOwner}
+            onClear={() => setChecked(new Set())}
+            onExit={exitSelection}
+          />
+        ) : !readOnly && (
         <div className="p-4">
           <Link
             href={
@@ -845,5 +921,32 @@ export function CaseTree({
         )}
       />
     </>
+  );
+}
+
+// Case « tout cocher » d'un groupe : cochée, vide, ou à moitié quand une
+// partie seulement de ses dossiers est cochée
+function BranchCheckbox({
+  label,
+  checked,
+  indeterminate,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  indeterminate: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  return (
+    <input
+      type="checkbox"
+      aria-label={label}
+      checked={checked}
+      ref={(el) => {
+        if (el) el.indeterminate = indeterminate;
+      }}
+      onChange={(e) => onChange(e.target.checked)}
+      className="ml-3 size-4 shrink-0 accent-primary"
+    />
   );
 }

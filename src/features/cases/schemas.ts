@@ -258,3 +258,20 @@ export const caseSearchSchema = z.object({
     .min(2, "Saisissez au moins 2 caractères")
     .max(100, "Recherche trop longue"),
 });
+
+// Actions groupées : même étape ou même responsable pour plusieurs dossiers.
+// Limite partagée avec la base (migration bulk_case_actions).
+export const BULK_MAX_CASES = 200;
+
+export const bulkCasesSchema = z.object({
+  caseIds: z
+    .array(uuidSchema)
+    .min(1, "Sélectionnez au moins un dossier")
+    .max(BULK_MAX_CASES, `${BULK_MAX_CASES} dossiers au plus à la fois`),
+  action: z.discriminatedUnion("type", [
+    z.object({ type: z.literal("stage"), stageId: uuidSchema }),
+    z.object({ type: z.literal("assignee"), assignedTo: uuidSchema }),
+  ]),
+});
+
+export type BulkCasesInput = z.infer<typeof bulkCasesSchema>;

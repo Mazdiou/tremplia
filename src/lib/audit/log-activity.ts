@@ -20,19 +20,27 @@ export type ActivityEntry = {
 // Un échec du journal n'annule pas une action déjà réussie (il se voit dans
 // les logs du serveur). Une action sensible (afficher un mot de passe)
 // vérifie le résultat AVANT d'agir.
-export async function logActivity(
+export function logActivity(admin: SupabaseClient, e: ActivityEntry): Promise<boolean> {
+  return logActivities(admin, [e]);
+}
+
+// Plusieurs lignes en une seule écriture (actions groupées)
+export async function logActivities(
   admin: SupabaseClient,
-  e: ActivityEntry,
+  entries: ActivityEntry[],
 ): Promise<boolean> {
-  const { error } = await admin.from("activity_log").insert({
-    agency_id: e.agencyId,
-    actor_id: e.actorId,
-    action: e.action,
-    target_type: e.targetType ?? null,
-    target_id: e.targetId ?? null,
-    case_id: e.caseId ?? null,
-    details: e.details ?? {},
-  });
+  if (entries.length === 0) return true;
+  const { error } = await admin.from("activity_log").insert(
+    entries.map((e) => ({
+      agency_id: e.agencyId,
+      actor_id: e.actorId,
+      action: e.action,
+      target_type: e.targetType ?? null,
+      target_id: e.targetId ?? null,
+      case_id: e.caseId ?? null,
+      details: e.details ?? {},
+    })),
+  );
   if (error) {
     console.error("[activity_log]", error.code);
     return false;

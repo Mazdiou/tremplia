@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  BULK_MAX_CASES,
+  bulkCasesSchema,
   caseSearchSchema,
   createCaseSchema,
   externalAccountUpdateSchema,
@@ -133,5 +135,33 @@ describe("caseSearchSchema", () => {
   it("demande au moins 2 caractères", () => {
     expect(caseSearchSchema.safeParse({ query: " a " }).success).toBe(false);
     expect(caseSearchSchema.safeParse({ query: "be" }).success).toBe(true);
+  });
+});
+
+describe("bulkCasesSchema", () => {
+  const stage = { type: "stage", stageId: CAMPAIGN };
+
+  it("accepte une étape ou un responsable pour des dossiers", () => {
+    expect(bulkCasesSchema.safeParse({ caseIds: [CAMPAIGN], action: stage }).success).toBe(true);
+    expect(
+      bulkCasesSchema.safeParse({
+        caseIds: [CAMPAIGN],
+        action: { type: "assignee", assignedTo: CAMPAIGN },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("refuse une sélection vide ou trop grande", () => {
+    expect(bulkCasesSchema.safeParse({ caseIds: [], action: stage }).success).toBe(false);
+    const many = Array.from({ length: BULK_MAX_CASES + 1 }, () => CAMPAIGN);
+    expect(bulkCasesSchema.safeParse({ caseIds: many, action: stage }).success).toBe(false);
+  });
+
+  it("refuse une action inconnue ou un identifiant invalide", () => {
+    expect(
+      bulkCasesSchema.safeParse({ caseIds: [CAMPAIGN], action: { type: "status", status: "closed" } })
+        .success,
+    ).toBe(false);
+    expect(bulkCasesSchema.safeParse({ caseIds: ["x"], action: stage }).success).toBe(false);
   });
 });
