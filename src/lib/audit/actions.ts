@@ -2,6 +2,9 @@
 // celles-ci, et l'historique a un libellé pour chacune.
 export const ACTIVITY_ACTIONS = [
   "agency.created",
+  "agency.updated",
+  "agency.defaults_updated",
+  "account.password_changed",
   "employee.created",
   "employee.deactivated",
   "employee.reactivated",

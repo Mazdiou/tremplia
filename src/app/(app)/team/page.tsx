@@ -7,8 +7,7 @@ import { requireOwner } from "@/lib/auth/require-member";
 import { fullName, initialsOf } from "@/lib/names";
 import { AddEmployeeForm } from "@/features/team/components/add-employee-form";
 import { ToggleActiveButton } from "@/features/team/components/toggle-active-button";
-import { SubscriptionPanel } from "@/features/subscription/components/subscription-panel";
-import { getSubscription, listPlatformPayments } from "@/features/subscription/server/subscription";
+import { getSubscription } from "@/features/subscription/server/subscription";
 import { plural } from "@/lib/plural";
 import type { Metadata } from "next";
 
@@ -20,9 +19,6 @@ export default async function TeamPage() {
 
   // Lecture via le RLS : uniquement les profils de l'agence du patron
   const supabase = await createClient();
-  // Paiements de l'abonnement : demandés dès maintenant pour l'encart
-  // Abonnement (même lecture, mise en cache)
-  void listPlatformPayments();
   const [{ data: members }, subscription] = await Promise.all([
     supabase.from("profiles").select("id, first_name, last_name, role, is_active").order("created_at"),
     getSubscription(caller.agencyId),
@@ -50,8 +46,6 @@ export default async function TeamPage() {
       />
 
       <div className="space-y-5">
-        <SubscriptionPanel agencyId={caller.agencyId} />
-
         <Panel
           title="Membres"
           description="Un employé qui a créé des dossiers, documents ou notes se désactive : il ne peut plus être supprimé."

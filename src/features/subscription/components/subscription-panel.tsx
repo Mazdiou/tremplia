@@ -12,7 +12,7 @@ import { getSubscription, listPlatformPayments, supportPhone } from "../server/s
 import { plural } from "@/lib/plural";
 import { telHref } from "@/lib/phone";
 
-// Encart « Abonnement » de la page Équipe (patron) : état, fin, paiements
+// Encart « Abonnement » de la page Réglages (patron) : état, fin, paiements
 export async function SubscriptionPanel({ agencyId }: { agencyId: string }) {
   const sub = await getSubscription(agencyId);
   // Agence de l'administrateur : pas d'abonnement, rien à afficher

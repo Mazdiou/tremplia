@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Plus, Trash2, X } from "lucide-react";
+import { CheckCircle2, Plus, Trash2 } from "lucide-react";
 import { FormActions, FormSection } from "@/components/page-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,14 +15,9 @@ import {
   TextField,
 } from "@/components/form-fields";
 import { callApi } from "@/lib/api-client";
-import {
-  MAX_CAMPAIGN_DATES,
-  MAX_CAMPAIGN_GROUPS,
-  MAX_CAMPAIGN_INFOS,
-  MAX_SUGGESTED_PLATFORMS,
-} from "../schemas";
-import { MAX_STAGES } from "@/features/stages/schemas";
-import { DEFAULT_STAGES } from "@/features/stages/stages";
+import { StageListEditor } from "@/features/stages/components/stage-list-editor";
+import { MAX_CAMPAIGN_DATES, MAX_CAMPAIGN_GROUPS, MAX_CAMPAIGN_INFOS } from "../schemas";
+import { PlatformListInput } from "./platform-list-input";
 
 type CampaignSettingsDraft = {
   name: string;
@@ -41,17 +36,19 @@ const INFO_GRID = "sm:grid-cols-[1fr_2fr_2.5rem]";
 export function CampaignSettingsForm({
   campaignId,
   initial,
+  initialStages = [],
 }: {
   // Absent : création d'une nouvelle campagne
   campaignId?: string;
   initial: CampaignSettingsDraft;
+  // Création : étapes proposées (valeurs par défaut de l'agence)
+  initialStages?: string[];
 }) {
   const router = useRouter();
   const isEdit = Boolean(campaignId);
   const [draft, setDraft] = useState(initial);
   const [groups, setGroups] = useState<string[]>([]);
-  const [stages, setStages] = useState<string[]>([...DEFAULT_STAGES]);
-  const [platformInput, setPlatformInput] = useState("");
+  const [stages, setStages] = useState(initialStages);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,16 +58,6 @@ export function CampaignSettingsForm({
     setSaved(false);
     setDraft((d) => ({ ...d, ...p }));
   };
-
-  function addPlatform() {
-    const value = platformInput.trim();
-    if (!value) return;
-    const exists = draft.suggestedPlatforms.some(
-      (p) => p.toLocaleLowerCase("fr") === value.toLocaleLowerCase("fr"),
-    );
-    if (!exists) patch({ suggestedPlatforms: [...draft.suggestedPlatforms, value] });
-    setPlatformInput("");
-  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -123,54 +110,12 @@ export function CampaignSettingsForm({
           className="max-w-xs"
         />
 
-        <div className="space-y-2">
-          <Label htmlFor="platform-new">Plateformes suggérées</Label>
-          {draft.suggestedPlatforms.length > 0 && (
-            <ul className="flex flex-wrap gap-1.5">
-              {draft.suggestedPlatforms.map((p) => (
-                <li
-                  key={p}
-                  className="flex items-center gap-1 rounded-full border bg-muted/50 py-0.5 pr-1 pl-3 text-sm"
-                >
-                  {p}
-                  <button
-                    type="button"
-                    aria-label={`Retirer ${p}`}
-                    className="grid size-5 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-                    onClick={() =>
-                      patch({
-                        suggestedPlatforms: draft.suggestedPlatforms.filter((x) => x !== p),
-                      })
-                    }
-                  >
-                    <X className="size-3" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {draft.suggestedPlatforms.length < MAX_SUGGESTED_PLATFORMS && (
-            <div className="flex max-w-sm gap-2">
-              <Input
-                id="platform-new"
-                placeholder="Ex. : Pastel, Parcoursup"
-                value={platformInput}
-                maxLength={80}
-                onChange={(e) => setPlatformInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addPlatform();
-                  }
-                }}
-              />
-              <Button type="button" variant="outline" onClick={addPlatform}>
-                Ajouter
-              </Button>
-            </div>
-          )}
-          <FieldError message={errors.suggestedPlatforms} />
-        </div>
+        <PlatformListInput
+          id="platform-new"
+          value={draft.suggestedPlatforms}
+          onChange={(suggestedPlatforms) => patch({ suggestedPlatforms })}
+          error={errors.suggestedPlatforms}
+        />
       </FormSection>
 
       <FormSection
@@ -334,49 +279,7 @@ export function CampaignSettingsForm({
           title="Étapes des dossiers"
           description="Le parcours d'un dossier, dans l'ordre : chaque nouveau dossier commence à la première. Modifiables ensuite."
         >
-          {stages.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Sans étape, les dossiers n&apos;affichent pas leur avancement.
-            </p>
-          )}
-          <ol className="space-y-2">
-            {stages.map((s, i) => (
-              <li key={i} className="flex max-w-md items-start gap-2">
-                <span
-                  aria-hidden
-                  className="mt-2 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-medium text-muted-foreground tabular-nums"
-                >
-                  {i + 1}
-                </span>
-                <Label htmlFor={`stage-${i}`} className="sr-only">
-                  Étape {i + 1}
-                </Label>
-                <Input
-                  id={`stage-${i}`}
-                  value={s}
-                  maxLength={60}
-                  placeholder="Nom de l'étape"
-                  onChange={(e) => setStages(stages.map((x, j) => (j === i ? e.target.value : x)))}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Retirer l'étape ${i + 1}`}
-                  className="text-muted-foreground hover:text-destructive"
-                  onClick={() => setStages(stages.filter((_, j) => j !== i))}
-                >
-                  <Trash2 />
-                </Button>
-              </li>
-            ))}
-          </ol>
-          {stages.length < MAX_STAGES && (
-            <Button type="button" variant="outline" size="sm" onClick={() => setStages([...stages, ""])}>
-              <Plus /> Ajouter une étape
-            </Button>
-          )}
-          <FieldError message={errors.stages ?? Object.entries(errors).find(([k]) => k.startsWith("stages."))?.[1]} />
+          <StageListEditor idPrefix="stage" value={stages} onChange={setStages} errors={errors} />
         </FormSection>
       )}
 

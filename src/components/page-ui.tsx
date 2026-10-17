@@ -94,24 +94,34 @@ export function Panel({
 
 // Section de formulaire : titre et explication à gauche, champs à droite
 // (empilés sur téléphone).
+// `id` : ancre du lien vers la section ; `bare` : le contenu a déjà sa carte.
 export function FormSection({
+  id,
   title,
   description,
+  bare,
   children,
 }: {
+  id?: string;
   title: string;
   description?: React.ReactNode;
+  bare?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <section className="grid gap-4 border-b pb-8 last:border-b-0 md:grid-cols-[14rem_1fr] md:gap-8">
+    <section
+      id={id}
+      className="grid scroll-mt-6 gap-4 border-b pb-8 last:border-b-0 md:grid-cols-[14rem_1fr] md:gap-8"
+    >
       <div>
         <h2 className="text-base font-semibold">{title}</h2>
         {description && (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         )}
       </div>
-      <div className="min-w-0 space-y-5 rounded-2xl border bg-card p-5">{children}</div>
+      <div className={cn("min-w-0", !bare && "space-y-5 rounded-2xl border bg-card p-5")}>
+        {children}
+      </div>
     </section>
   );
 }

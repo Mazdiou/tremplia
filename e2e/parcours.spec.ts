@@ -143,3 +143,47 @@ test("un mauvais code d'accès est refusé", async ({ browser }) => {
   await expect(student).toHaveURL(/\/student\/login$/);
   await student.close();
 });
+
+test("réglages : profil de l'agence et valeurs des nouvelles campagnes", async () => {
+  await page.goto("/settings");
+  const agency = page.locator("#agence");
+  await agency.getByLabel("Nom de l'agence").fill(`Agence Réglée ${run}`);
+  await agency.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(agency.getByRole("status")).toContainText("Modifications enregistrées");
+
+  const defaults = page.locator("#campagnes");
+  await defaults.getByLabel("Tarif par défaut").fill("120000");
+  await defaults.getByLabel("Plateformes suggérées").fill("Pastel");
+  await defaults.getByRole("button", { name: "Ajouter", exact: true }).click();
+  await defaults.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(defaults.getByRole("status")).toContainText("Modifications enregistrées");
+
+  // Une nouvelle campagne part de ces valeurs
+  await page.goto("/campaigns/new");
+  await expect(page.getByLabel("Tarif par défaut")).toHaveValue("120 000");
+  await expect(page.getByRole("button", { name: "Retirer Pastel" })).toBeVisible();
+});
+
+test("réglages : changement du mot de passe", async () => {
+  const newPassword = "E2e-nouveau-mdp-2";
+  await page.goto("/settings");
+  const form = page.locator("#mot-de-passe");
+
+  await form.getByLabel("Mot de passe actuel", { exact: true }).fill("pas-le-bon-mdp");
+  await form.getByLabel("Nouveau mot de passe", { exact: true }).fill(newPassword);
+  await form.getByLabel("Confirmer le nouveau mot de passe", { exact: true }).fill(newPassword);
+  await form.getByRole("button", { name: "Changer le mot de passe" }).click();
+  await expect(form.getByText("Mot de passe actuel incorrect")).toBeVisible();
+
+  await form.getByLabel("Mot de passe actuel", { exact: true }).fill(owner.password);
+  await form.getByRole("button", { name: "Changer le mot de passe" }).click();
+  await expect(form.getByRole("status")).toContainText("Mot de passe changé");
+
+  // Déconnexion depuis les réglages, puis reconnexion avec le nouveau
+  await page.locator("#connexion").getByRole("button", { name: "Se déconnecter", exact: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await page.getByLabel("Adresse e-mail").fill(owner.email);
+  await page.getByLabel("Mot de passe", { exact: true }).fill(newPassword);
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+});

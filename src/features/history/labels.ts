@@ -6,6 +6,9 @@ import { ACTIVITY_ACTIONS, type ActivityAction } from "@/lib/audit/actions";
 
 const AGENCY_LABELS: Record<ActivityAction, string> = {
   "agency.created": "a créé l'agence",
+  "agency.updated": "a modifié le profil de l'agence",
+  "agency.defaults_updated": "a modifié les valeurs par défaut des campagnes",
+  "account.password_changed": "a changé son mot de passe",
   "employee.created": "a ajouté un employé",
   "employee.deactivated": "a désactivé un employé",
   "employee.reactivated": "a réactivé un employé",

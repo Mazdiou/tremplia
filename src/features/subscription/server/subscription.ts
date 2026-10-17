@@ -33,7 +33,7 @@ type PlatformPayment = {
 };
 
 // Paiements de l'abonnement de l'agence (via le RLS : le patron seulement).
-// Mis en cache : la page Équipe les demande tôt, l'encart les affiche.
+// Mis en cache : la page Réglages les demande tôt, l'encart les affiche.
 export const listPlatformPayments = cache(async (): Promise<PlatformPayment[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase

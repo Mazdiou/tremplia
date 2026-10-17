@@ -8,8 +8,9 @@ export type CampaignStage = {
   position: number;
 };
 
-// Proposées à la création d'une campagne, modifiables ensuite. Le modèle
-// Campus France a les siennes (src/config/campaign-templates). La migration
+// Proposées à la création d'une campagne, modifiables ensuite, tant que
+// l'agence n'a pas choisi les siennes (page Réglages). Le modèle Campus
+// France a les siennes (src/config/campaign-templates). La migration
 // case_stages en a donné une copie aux campagnes déjà créées.
 export const DEFAULT_STAGES = [
   "Constitution du dossier",
