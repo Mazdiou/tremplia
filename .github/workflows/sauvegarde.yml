@@ -1,7 +1,7 @@
 name: Sauvegarde
 
 # Chaque nuit : base et fichiers de la production, dans une archive chiffrée
-# envoyée sur Cloudflare R2. Le 1er du mois, la sauvegarde est aussi rangée
+# envoyée sur un stockage compatible S3 (Backblaze B2). Le 1er du mois, la sauvegarde est aussi rangée
 # dans mensuel/ et une restauration complète est vérifiée sur un Supabase
 # local. Procédure et secrets : README, section « Sauvegardes ».
 
@@ -29,21 +29,21 @@ jobs:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-      AWS_DEFAULT_REGION: auto
-      # R2 ne gère pas toutes les sommes de contrôle ajoutées par aws-cli
+      AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_KEY }}
+      # Les stockages compatibles S3 (B2, R2…) ne gèrent pas toutes les
+      # sommes de contrôle ajoutées par défaut par aws-cli
       AWS_REQUEST_CHECKSUM_CALCULATION: when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
-      R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+      BACKUP_BUCKET: ${{ secrets.BACKUP_BUCKET }}
     steps:
       # Aucun secret : sauvegarde pas encore mise en place, rien à faire. Un
       # secret manquant parmi d'autres fait au contraire échouer la tâche.
       - name: Sauvegarde configurée ?
         id: config
         run: |
-          if [ -z "$SUPABASE_DB_URL$SUPABASE_URL$SUPABASE_SECRET_KEY$AWS_ACCESS_KEY_ID$R2_BUCKET" ]; then
+          if [ -z "$SUPABASE_DB_URL$SUPABASE_URL$SUPABASE_SECRET_KEY$AWS_ACCESS_KEY_ID$BACKUP_BUCKET" ]; then
             echo "::warning::Sauvegarde non configurée : voir la section Sauvegardes du README"
           else
             echo "active=true" >> "$GITHUB_OUTPUT"
@@ -87,15 +87,18 @@ jobs:
           BACKUP_AGE_RECIPIENT="$BACKUP_AGE_RECIPIENT ${VERIFY_RECIPIENT:-}" \
             scripts/backup/backup.sh "$RUNNER_TEMP/sauvegarde.tar.gz.age"
 
-      - name: Envoi sur R2
+      - name: Envoi de l'archive
         if: steps.config.outputs.active == 'true'
         run: |
+          # B2 signe avec la région de son adresse (s3.<région>.backblazeb2.com)
+          region="$(echo "$BACKUP_S3_ENDPOINT" | sed -nE 's#^https://s3\.([^.]+)\.backblazeb2\.com.*#\1#p')"
+          export AWS_DEFAULT_REGION="${region:-auto}"
           archive="$RUNNER_TEMP/sauvegarde.tar.gz.age"
-          aws s3 cp "$archive" "s3://$R2_BUCKET/quotidien/${{ steps.plan.outputs.jour }}.tar.gz.age" \
-            --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          aws s3 cp "$archive" "s3://$BACKUP_BUCKET/quotidien/${{ steps.plan.outputs.jour }}.tar.gz.age" \
+            --endpoint-url "$BACKUP_S3_ENDPOINT" --only-show-errors
           if [ "$(date -u +%d)" = "01" ]; then
-            aws s3 cp "$archive" "s3://$R2_BUCKET/mensuel/${{ steps.plan.outputs.mois }}.tar.gz.age" \
-              --endpoint-url "$R2_ENDPOINT" --only-show-errors
+            aws s3 cp "$archive" "s3://$BACKUP_BUCKET/mensuel/${{ steps.plan.outputs.mois }}.tar.gz.age" \
+              --endpoint-url "$BACKUP_S3_ENDPOINT" --only-show-errors
           fi
           echo "Envoyé : quotidien/${{ steps.plan.outputs.jour }}.tar.gz.age"
 

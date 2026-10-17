@@ -435,7 +435,8 @@ donc chaque nuit (`.github/workflows/sauvegarde.yml`, 3 h à Alger) :
 2. l'ensemble est chiffré avec [age](https://age-encryption.org) pour une clé
    publique : seule la clé privée correspondante, gardée **hors ligne**, peut
    l'ouvrir ;
-3. l'archive part sur Cloudflare R2 : `quotidien/AAAA-MM-JJ.tar.gz.age`, et le
+3. l'archive part sur Backblaze B2 (10 Go gratuits, sans carte bancaire ;
+   tout stockage compatible S3 convient) : `quotidien/AAAA-MM-JJ.tar.gz.age`, et le
    1er du mois aussi `mensuel/AAAA-MM.tar.gz.age` ;
 4. le 1er du mois (ou à la demande), la tâche restaure l'archive dans un
    Supabase local vide et vérifie chaque table, ligne pour ligne.
@@ -449,10 +450,12 @@ onglet Actions → Sauvegarde → Run workflow.
    install FiloSottile.age` sur Windows). Ranger ce fichier en lieu sûr
    (gestionnaire de mots de passe + clé USB), **jamais dans le dépôt**. La
    ligne `# public key: age1…` donne la clé publique.
-2. **Cloudflare R2.** Créer un bucket privé, puis deux règles de cycle de vie
-   (Settings → Object lifecycle rules) : préfixe `quotidien/` supprimé après
-   30 jours, `mensuel/` après 365 jours. Créer un jeton API R2 « Object Read &
-   Write » limité à ce bucket.
+2. **Backblaze B2.** Créer un bucket **privé** (chiffrement par défaut
+   activé), noter son adresse S3 (« Endpoint », `s3.<région>.backblazeb2.com`).
+   Dans Lifecycle Settings, règles personnalisées : préfixe `quotidien/`
+   masqué après 30 jours, `mensuel/` après 365 jours, puis supprimés 1 jour
+   après. Dans Application Keys, créer une clé limitée à ce bucket
+   (lecture et écriture).
 3. **Secrets GitHub** (Settings → Secrets and variables → Actions) :
 
    | Secret | Valeur |
@@ -461,9 +464,9 @@ onglet Actions → Sauvegarde → Run workflow.
    | `SUPABASE_URL` | Adresse du projet (`https://….supabase.co`) |
    | `SUPABASE_SECRET_KEY` | Clé secrète du projet |
    | `BACKUP_AGE_RECIPIENT` | Clé publique age (`age1…`) |
-   | `R2_ACCOUNT_ID` | Identifiant du compte Cloudflare |
-   | `R2_BUCKET` | Nom du bucket |
-   | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Jeton API R2 |
+   | `BACKUP_S3_ENDPOINT` | Adresse S3 du bucket, avec `https://` |
+   | `BACKUP_BUCKET` | Nom du bucket |
+   | `BACKUP_S3_KEY_ID` / `BACKUP_S3_SECRET_KEY` | Clé d'application B2 (keyID / applicationKey) |
 
 4. Lancer la tâche à la main avec « Vérifier aussi la restauration » coché.
 
@@ -476,7 +479,7 @@ illisibles.
 Dans un projet Supabase **neuf** (aucune migration appliquée) :
 
 ```bash
-# Archive téléchargée depuis R2 ; psql, age et Node nécessaires
+# Archive téléchargée depuis le bucket ; psql, age et Node nécessaires
 # (sans psql : PSQL="docker run --rm -i postgres:17 psql")
 SUPABASE_DB_URL="…" SUPABASE_URL="https://….supabase.co" SUPABASE_SECRET_KEY="…" \
   scripts/backup/restore.sh 2026-10-17.tar.gz.age cle-privee-sauvegarde.txt
