@@ -5,6 +5,7 @@ import { SubscriptionBanner } from "@/features/subscription/components/subscript
 import { isPlatformAdmin } from "@/features/admin/server/admin";
 import { LiveRefresh } from "@/components/live-refresh";
 import { AppRail } from "./app-rail";
+import { SearchPalette } from "./search-palette";
 
 export async function getShellUser() {
   const member = await requireMember();
@@ -32,6 +33,7 @@ export function ShellFrame({
   return (
     <div className="flex h-dvh flex-col-reverse overflow-hidden md:flex-row">
       <LiveRefresh agencyId={member.agencyId} />
+      <SearchPalette isOwner={member.isOwner} isPlatformAdmin={isPlatformAdmin} />
       <AppRail isOwner={member.isOwner} initials={initials} isPlatformAdmin={isPlatformAdmin} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <SubscriptionBanner agencyId={member.agencyId} />

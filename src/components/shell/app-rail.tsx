@@ -2,20 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarRange, FolderOpen, LayoutGrid, LogOut, ShieldCheck, Users } from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { navItems } from "./nav-items";
+import { openSearchPalette } from "./search-palette";
 
-const ITEMS = [
-  { href: "/dashboard", label: "Tableau de bord", icon: LayoutGrid, ownerOnly: false },
-  { href: "/cases", label: "Dossiers", icon: FolderOpen, ownerOnly: false },
-  { href: "/campaigns", label: "Campagnes", icon: CalendarRange, ownerOnly: false },
-  { href: "/team", label: "Équipe", icon: Users, ownerOnly: true },
-];
-
-// Administration de la plateforme : visible de l'administrateur seulement
-const ADMIN_ITEM = { href: "/admin", label: "Administration", icon: ShieldCheck, ownerOnly: false };
+// Taille commune des boutons. Sur téléphone, ils se partagent la largeur de
+// la barre (44 px de haut, assez larges pour le pouce).
+const RAIL_BUTTON =
+  "grid size-10 place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-muted max-md:h-11 max-md:w-auto max-md:max-w-16 max-md:flex-1";
 
 // Barre d'icônes : colonne à gauche sur ordinateur, barre en bas sur mobile.
 export function AppRail({
@@ -41,7 +38,7 @@ export function AppRail({
       aria-label="Navigation principale"
       className="z-20 flex shrink-0 items-center justify-around border-t bg-background px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:w-14 md:flex-col md:justify-start md:gap-2 md:border-t-0 md:border-r md:px-0 md:py-4"
     >
-      {[...ITEMS, ...(isPlatformAdmin ? [ADMIN_ITEM] : [])].filter((i) => isOwner || !i.ownerOnly).map(
+      {navItems(isOwner, isPlatformAdmin).map(
         ({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
@@ -51,10 +48,7 @@ export function AppRail({
               aria-label={label}
               title={label}
               aria-current={active ? "page" : undefined}
-              className={cn(
-                "grid size-10 place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-muted max-md:h-11 max-md:w-16",
-                active && "bg-accent text-accent-foreground hover:bg-accent",
-              )}
+              className={cn(RAIL_BUTTON, active && "bg-accent text-accent-foreground hover:bg-accent")}
             >
               <Icon className="size-5" strokeWidth={1.6} />
             </Link>
@@ -62,8 +56,18 @@ export function AppRail({
         },
       )}
 
+      <button
+        type="button"
+        onClick={openSearchPalette}
+        aria-label="Rechercher"
+        title="Rechercher (Ctrl+K)"
+        className={cn(RAIL_BUTTON, "touch-manipulation")}
+      >
+        <Search className="size-5" strokeWidth={1.6} />
+      </button>
+
       <div className="hidden flex-1 md:block" />
-      <ThemeToggle className="size-10 rounded-xl text-muted-foreground max-md:h-11 max-md:w-16" />
+      <ThemeToggle className="size-10 rounded-xl text-muted-foreground max-md:h-11 max-md:w-auto max-md:max-w-16 max-md:flex-1" />
       <button
         type="button"
         onClick={logout}
@@ -80,7 +84,7 @@ export function AppRail({
         onClick={logout}
         aria-label="Se déconnecter"
         title="Se déconnecter"
-        className="grid h-11 w-16 place-items-center rounded-xl text-muted-foreground hover:bg-muted md:hidden"
+        className="grid h-11 max-w-16 flex-1 place-items-center rounded-xl text-muted-foreground hover:bg-muted md:hidden"
       >
         <LogOut className="size-5" strokeWidth={1.6} />
       </button>

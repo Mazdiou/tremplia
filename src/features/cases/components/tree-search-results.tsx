@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { EDUCATION_LEVEL_LABELS, STATUS_SUFFIXES, labelOf } from "@/features/cases/labels";
-import { CASE_SEARCH_LIMIT } from "@/features/cases/schemas";
+import { searchStatusLabel, useCaseSearch } from "@/features/cases/use-case-search";
 import { displayName } from "@/lib/names";
 import { cn } from "@/lib/utils";
-import { plural } from "@/lib/plural";
-import type { CaseSearchResult } from "@/features/cases/server/lookups";
 
-const DEBOUNCE_MS = 300;
-
-// Recherche globale dans toute l'agence, toutes campagnes confondues (y
-// compris archivées). La saisie part en POST : jamais de nom dans une adresse.
+// Résultats de la recherche globale, à la place de l'arbre (voir useCaseSearch)
 export function TreeSearchResults({
   query,
   selectedId,
@@ -22,42 +16,9 @@ export function TreeSearchResults({
   selectedId?: string;
   showLevel: boolean;
 }) {
-  const trimmed = query.trim();
-  const [results, setResults] = useState<CaseSearchResult[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [searchedFor, setSearchedFor] = useState("");
+  const search = useCaseSearch(query);
 
-  useEffect(() => {
-    if (trimmed.length < 2) return;
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch("/api/cases/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: trimmed }),
-          signal: controller.signal,
-        });
-        const data = await res.json().catch(() => null);
-        if (!res.ok || !Array.isArray(data?.results)) {
-          setError(data?.error ?? "Recherche impossible");
-          setResults(null);
-        } else {
-          setError(null);
-          setResults(data.results as CaseSearchResult[]);
-        }
-        setSearchedFor(trimmed);
-      } catch {
-        // Recherche remplacée par une plus récente : rien à faire
-      }
-    }, DEBOUNCE_MS);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [trimmed]);
-
-  if (trimmed.length < 2) {
+  if (search.tooShort) {
     return (
       <p className="px-4 py-3 text-sm text-muted-foreground">
         Saisissez au moins 2 caractères.
@@ -65,21 +26,13 @@ export function TreeSearchResults({
     );
   }
 
-  const pending = searchedFor !== trimmed;
-
   return (
-    <div className="py-1" aria-busy={pending}>
+    <div className="py-1" aria-busy={search.pending}>
       <p className="px-4 py-1.5 text-xs text-muted-foreground" role="status">
-        {pending
-          ? "Recherche…"
-          : error
-            ? error
-            : results && results.length === 0
-              ? "Aucun dossier ne correspond."
-              : `${plural(results?.length ?? 0, "résultat")}${results?.length === CASE_SEARCH_LIMIT ? ` (les ${CASE_SEARCH_LIMIT} premiers)` : ""}`}
+        {searchStatusLabel(search)}
       </p>
-      <ul className={cn(pending && "opacity-60")}>
-        {(results ?? []).map((r) => {
+      <ul className={cn(search.pending && "opacity-60")}>
+        {search.results.map((r) => {
           const suffix = STATUS_SUFFIXES[r.status];
           const isSelected = r.id === selectedId;
           return (
