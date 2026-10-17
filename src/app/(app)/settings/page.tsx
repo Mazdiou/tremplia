@@ -126,7 +126,7 @@ export default async function SettingsPage() {
         <FormSection
           id="connexion"
           title="Connexion"
-          description="Un téléphone perdu ou un ordinateur partagé ? Fermez toutes vos sessions."
+          description="Fermez votre session sur cet appareil."
         >
           <SessionActions />
         </FormSection>

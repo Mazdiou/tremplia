@@ -55,6 +55,27 @@ export async function prepareUpload(auth: AuthorizedCase, caseId: string) {
   return { documentId, path: data.path, token: data.token };
 }
 
+type DocumentsStorage = ReturnType<AuthorizedCase["admin"]["storage"]["from"]>;
+
+// Début d'un fichier reçu et sa taille, sans le télécharger en entier : lien
+// signé lu avec un en-tête Range (5 premiers octets ; la taille totale est
+// dans Content-Range). null si le fichier n'existe pas.
+async function readFileHead(storage: DocumentsStorage, path: string) {
+  const { data, error } = await storage.createSignedUrl(path, 60);
+  if (error || !data) return null;
+  const res = await fetch(data.signedUrl, {
+    headers: { Range: "bytes=0-4" },
+    cache: "no-store",
+  });
+  // Fichier vide : aucun octet à renvoyer
+  if (res.status === 416) return { head: new Uint8Array(), size: 0 };
+  if (!res.ok) return null;
+  const body = new Uint8Array(await res.arrayBuffer());
+  const total = res.headers.get("content-range")?.match(/\/(\d+)$/)?.[1];
+  // Sans Content-Range (Range ignoré), la réponse est le fichier entier
+  return { head: body.slice(0, 5), size: total ? Number(total) : body.length };
+}
+
 // Étape 2 de l'envoi : le fichier réellement reçu est vérifié (présent,
 // taille, signature PDF) avant de créer la ligne.
 export async function addDocument(
@@ -65,18 +86,17 @@ export async function addDocument(
   const path = documentPath(auth.agencyId, caseId, input.documentId);
   const storage = auth.admin.storage.from(DOCUMENTS_BUCKET);
 
-  const { data: blob, error: downloadError } = await storage.download(path);
-  if (downloadError || !blob) {
+  const file = await readFileHead(storage, path);
+  if (!file) {
     throw new ApiError(400, "Le fichier n'a pas été reçu. Réessayez l'envoi.");
   }
 
-  const head = new Uint8Array(await blob.slice(0, 5).arrayBuffer());
-  const isPdf = new TextDecoder().decode(head) === "%PDF-";
-  if (blob.size < 1 || blob.size > MAX_DOCUMENT_BYTES || !isPdf) {
+  const isPdf = new TextDecoder().decode(file.head) === "%PDF-";
+  if (file.size < 1 || file.size > MAX_DOCUMENT_BYTES || !isPdf) {
     await storage.remove([path]);
     throw new ApiError(
       400,
-      blob.size > MAX_DOCUMENT_BYTES ? "Le fichier dépasse 10 Mo" : "Ce fichier n'est pas un PDF valide",
+      file.size > MAX_DOCUMENT_BYTES ? "Le fichier dépasse 10 Mo" : "Ce fichier n'est pas un PDF valide",
     );
   }
 
@@ -88,7 +108,7 @@ export async function addDocument(
     name: input.name,
     original_file_name: input.originalFileName,
     storage_path: path,
-    size_bytes: blob.size,
+    size_bytes: file.size,
     uploaded_by: auth.member.userId,
     folder_id: folderId,
   });
@@ -107,7 +127,7 @@ export async function addDocument(
     action: "document.added",
     targetType: "document",
     targetId: input.documentId,
-    details: { size_bytes: blob.size, folder_id: folderId },
+    details: { size_bytes: file.size, folder_id: folderId },
   });
 }
 
