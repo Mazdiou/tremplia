@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   sauvegarder:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
@@ -48,9 +48,9 @@ jobs:
           else
             echo "active=true" >> "$GITHUB_OUTPUT"
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         if: steps.config.outputs.active == 'true'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         if: steps.config.outputs.active == 'true'
         with:
           node-version: 22

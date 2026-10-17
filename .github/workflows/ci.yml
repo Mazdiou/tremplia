@@ -6,7 +6,7 @@ on:
 
 jobs:
   verifier:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Valeurs factices : le build n'a besoin d'aucun vrai secret
     env:
@@ -15,8 +15,8 @@ jobs:
       SUPABASE_SECRET_KEY: ci-factice
       EXTERNAL_ACCOUNTS_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -33,11 +33,11 @@ jobs:
   # Tests de la base (pgTAP) sur un Supabase local démarré dans la CI :
   # migrations, droits, RLS et règles patron / employé.
   base:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -50,11 +50,11 @@ jobs:
   # Parcours complets dans un navigateur (Playwright) : l'application
   # construite, branchée sur un Supabase local démarré dans la CI.
   bout-en-bout:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -78,7 +78,7 @@ jobs:
         run: npm run test:e2e
       - name: Rapport en cas d'échec
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: rapport-playwright
           path: |
