@@ -49,3 +49,15 @@ supabase/snippets/
 # Tests de bout en bout (Playwright) : rapports et traces
 /test-results/
 /playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Windows et éditeurs
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+
+# Journaux et clés
+*.log
+*.key
