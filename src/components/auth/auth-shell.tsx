@@ -5,7 +5,6 @@ import {
   Check,
   FileText,
   Folder,
-  GraduationCap,
   LockKeyhole,
   ShieldCheck,
 } from "lucide-react";
@@ -13,20 +12,7 @@ import { DecorLayers } from "@/components/decor";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 import { BRAND } from "@/config/brand";
-
-export function LogoMark({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm",
-        className,
-      )}
-    >
-      <GraduationCap className="size-5" strokeWidth={1.8} />
-    </span>
-  );
-}
+import { LogoMark } from "@/components/logo-mark";
 
 // Carte « verre » du panneau de présentation
 function Glass({ className, children }: { className?: string; children: ReactNode }) {
@@ -143,10 +129,8 @@ export function AuthShell({
 
         {/* Logo : retour à la page d'accueil */}
         <Link href="/" className="relative flex w-fit items-center gap-3 rounded-xl focus-visible:ring-3 focus-visible:ring-decor-foreground/30 focus-visible:outline-none">
-          <span className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <GraduationCap className="size-5" strokeWidth={1.8} />
-          </span>
-          <span className="text-xl font-semibold tracking-tight">{BRAND.name}</span>
+          <LogoMark className="size-10 shadow-none" />
+          <span className="font-brand text-xl font-bold tracking-tight">{BRAND.name}</span>
         </Link>
 
         <div className="relative my-auto py-8 [@media(max-height:800px)]:py-4">
@@ -186,7 +170,7 @@ export function AuthShell({
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:invisible">
             <LogoMark />
-            <span className="text-lg font-semibold tracking-tight">{BRAND.name}</span>
+            <span className="font-brand text-lg font-bold tracking-tight">{BRAND.name}</span>
           </Link>
           <ThemeToggle className="size-9 rounded-xl text-muted-foreground" />
         </div>

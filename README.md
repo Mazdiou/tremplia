@@ -1,11 +1,9 @@
-# StudyFlow
+# Tremplia
 
 CRM pour les agences qui accompagnent des candidats dans leurs démarches
 d'études à l'étranger (Campus France et autres). Chaque agence travaille dans
 un espace isolé : ses campagnes, ses dossiers candidats, son équipe. Les
 candidats suivent leur dossier dans un espace à part, avec un simple code.
-
-« StudyFlow » est un nom provisoire (voir [Nom et couleurs](#nom-et-couleurs)).
 
 ---
 
@@ -534,9 +532,16 @@ dans `src/config/brand.ts` : les changer là suffit (titres des pages, logos,
 accueil, manifestes, icônes). Les couleurs de l'interface (thèmes clair et
 sombre) sont les variables de `src/app/globals.css`.
 
-Les identifiants techniques `studyflow:…` de
-`src/features/student/server/keys.ts` ne doivent **pas** changer : ils
-invalideraient les codes et sessions des candidats.
+L'application s'appelait StudyFlow à ses débuts. Restent volontairement sous
+cet ancien nom :
+
+- les identifiants techniques `studyflow:…` de
+  `src/features/student/server/keys.ts` : les changer invaliderait les codes
+  et sessions des candidats ;
+- `project_id` dans `supabase/config.toml` (et le conteneur
+  `supabase_db_studyflow` de `.github/workflows/sauvegarde.yml`) : le changer
+  recréerait une base locale vide ;
+- les commentaires des migrations déjà appliquées.
 
 ---
 

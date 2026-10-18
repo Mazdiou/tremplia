@@ -11,7 +11,7 @@ import { displayName, normalizeName } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
 
-const OPEN_EVENT = "studyflow:open-search";
+const OPEN_EVENT = "tremplia:open-search";
 
 // Ouvre la recherche depuis un bouton (barre d'icônes)
 export function openSearchPalette() {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LogoMark } from "@/components/auth/auth-shell";
+import { LogoMark } from "@/components/logo-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { displayName } from "@/lib/names";
 import { dateTimeFormat } from "@/lib/dates";

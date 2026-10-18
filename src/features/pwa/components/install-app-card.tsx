@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Share, SquarePlus, X } from "lucide-react";
-import { LogoMark } from "@/components/auth/auth-shell";
+import { LogoMark } from "@/components/logo-mark";
 import { Button } from "@/components/ui/button";
 
 // Invitation à installer l'application sur le téléphone (écran d'accueil,

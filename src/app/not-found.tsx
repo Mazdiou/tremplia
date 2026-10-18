@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LogoMark } from "@/components/auth/auth-shell";
+import { LogoMark } from "@/components/logo-mark";
 import { NotFoundHomeLink } from "@/components/not-found-home-link";
 
 export const metadata: Metadata = { title: "Page introuvable" };

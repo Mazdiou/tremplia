@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Geist_Mono } from "next/font/google";
+import { Manrope, Geist_Mono, Unbounded } from "next/font/google";
 import "./globals.css";
 import { BRAND } from "@/config/brand";
 import { PwaSetup } from "@/features/pwa/components/pwa-setup";
@@ -7,6 +7,14 @@ import { PwaSetup } from "@/features/pwa/components/pwa-setup";
 const sans = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Police du nom de l'application seulement (logo), pas du texte
+const brand = Unbounded({
+  variable: "--font-unbounded",
+  subsets: ["latin"],
+  weight: "700",
   display: "swap",
 });
 
@@ -50,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="fr"
       suppressHydrationWarning
-      className={`${sans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${sans.variable} ${brand.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

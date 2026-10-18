@@ -8,6 +8,8 @@ function derive(usage: string) {
   return Buffer.from(hkdfSync("sha256", serverEnv().externalAccountsKey, "", usage, 32));
 }
 
+// Préfixe « studyflow: » : ancien nom de l'application, gardé exprès (le
+// changer invaliderait les codes et sessions des candidats).
 function hmac(usage: string, value: string) {
   return createHmac("sha256", derive(usage)).update(value).digest("hex");
 }

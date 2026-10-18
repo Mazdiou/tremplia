@@ -44,7 +44,7 @@ export type FolderItem = { id: string; name: string };
 // Clé des sections : l'identifiant du dossier, ou NO_FOLDER (« Sans dossier »)
 const NO_FOLDER = "none";
 // Type propre au glisser-déposer d'un document de cette page
-const DOC_DRAG_TYPE = "application/x-studyflow-doc";
+const DOC_DRAG_TYPE = "application/x-tremplia-doc";
 
 const lockedMessage = (verb: string) =>
   `Ce document est verrouillé par le patron : il ne peut plus être ${verb}.`;

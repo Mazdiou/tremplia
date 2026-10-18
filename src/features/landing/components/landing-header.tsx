@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { GraduationCap } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { BRAND } from "@/config/brand";
+import { LogoMark } from "@/components/logo-mark";
 import { cn } from "@/lib/utils";
 
 const SECTIONS = [
@@ -59,10 +59,8 @@ export function LandingHeader({ heroId }: { heroId: string }) {
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3 sm:px-8">
         <Link href="/" className="flex items-center gap-2.5">
-          <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <GraduationCap className="size-5" strokeWidth={1.8} />
-          </span>
-          <span className="text-lg font-semibold tracking-tight">{BRAND.name}</span>
+          <LogoMark className="shadow-none" />
+          <span className="font-brand text-lg font-bold tracking-tight">{BRAND.name}</span>
         </Link>
         {/* Liens par le routeur (Link) : avec un simple <a href="#…">, le retour
             arrière depuis une autre page changerait l'adresse sans la page */}

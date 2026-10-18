@@ -1,11 +1,10 @@
 // Nom de l'application, partout où il s'affiche (titres des pages, logos,
-// accueil, tableau de bord). « StudyFlow » est provisoire : le changer ici
-// seulement le jour où le nom définitif est choisi.
-// Restent volontairement inchangés : les identifiants techniques
-// « studyflow:… » de src/features/student/server/keys.ts (les changer
-// invaliderait les codes et sessions des candidats).
+// accueil, tableau de bord).
+// Restent volontairement à l'ancien nom (StudyFlow) : les identifiants
+// techniques « studyflow:… » de src/features/student/server/keys.ts (les
+// changer invaliderait les codes et sessions des candidats).
 export const BRAND = {
-  name: "StudyFlow",
+  name: "Tremplia",
   tagline: "Le CRM des agences d'études à l'étranger",
   // Couleurs de l'application installée (icônes, écran de démarrage, barre
   // d'état du téléphone) : les mêmes que --primary et --background de

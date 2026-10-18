@@ -1,4 +1,5 @@
 import { BRAND } from "@/config/brand";
+import { cairnSvg } from "@/components/logo-mark";
 
 // Page « Pas de connexion », gardée par le service worker (public/sw.js) et
 // affichée quand le réseau manque. Une page HTML autonome : styles en ligne,
@@ -40,7 +41,7 @@ const html = `<!doctype html>
 <body>
 <main>
   <div class="logo" aria-hidden="true">
-    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>
+    ${cairnSvg(32)}
   </div>
   <h1>Pas de connexion</h1>
   <p>${BRAND.name} a besoin d'internet pour afficher vos dossiers. Vérifiez votre réseau, puis réessayez.</p>

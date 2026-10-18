@@ -409,7 +409,7 @@ export function CaseTree({
         <div className="flex items-center gap-1 px-4 pt-4 pb-3">
           <Link
             href="/cases"
-            className="truncate text-base font-semibold tracking-tight"
+            className="truncate font-brand text-base font-bold tracking-tight"
           >
             {BRAND.name}
           </Link>

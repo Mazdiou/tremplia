@@ -18,6 +18,7 @@ import {
 import { AppPreview } from "@/components/auth/auth-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { BRAND } from "@/config/brand";
+import { LogoMark } from "@/components/logo-mark";
 import { cn } from "@/lib/utils";
 import { DecorLayers } from "@/components/decor";
 import { LandingHeader } from "./landing-header";
@@ -505,9 +506,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
       <footer className="border-t px-5 py-8 sm:px-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-2">
-            <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <GraduationCap className="size-4" strokeWidth={1.8} />
-            </span>
+            <LogoMark className="size-7 rounded-lg shadow-none" />
             © {year} {BRAND.name}
           </span>
           <nav aria-label="Pied de page" className="flex flex-wrap gap-x-6">
