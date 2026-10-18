@@ -8,26 +8,27 @@ function derive(usage: string) {
   return Buffer.from(hkdfSync("sha256", serverEnv().externalAccountsKey, "", usage, 32));
 }
 
-// Préfixe « studyflow: » : ancien nom de l'application, gardé exprès (le
-// changer invaliderait les codes et sessions des candidats).
+// Changer un libellé change les empreintes : les codes enregistrés ne
+// correspondent plus (à recalculer depuis code_encrypted) et les sessions
+// ouvertes cessent de fonctionner.
 function hmac(usage: string, value: string) {
   return createHmac("sha256", derive(usage)).update(value).digest("hex");
 }
 
 // Empreinte d'un code, seule forme gardée pour la connexion
 export function codeLookup(code: string) {
-  return hmac("studyflow:student-code", code);
+  return hmac("tremplia:student-code", code);
 }
 
 // Empreinte d'une adresse IP, pour limiter les essais sans la garder
 // (connexion des candidats et inscription des agences)
 export function ipHash(ip: string) {
-  return hmac("studyflow:student-ip", ip);
+  return hmac("tremplia:student-ip", ip);
 }
 
 // Signature du cookie de session du candidat
 export function signSession(payload: string) {
-  return createHmac("sha256", derive("studyflow:student-session"))
+  return createHmac("sha256", derive("tremplia:student-session"))
     .update(payload)
     .digest("base64url");
 }

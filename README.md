@@ -532,10 +532,10 @@ dans `src/config/brand.ts` : les changer là suffit (titres des pages, logos,
 accueil, manifestes, icônes). Les couleurs de l'interface (thèmes clair et
 sombre) sont les variables de `src/app/globals.css`.
 
-L'application s'appelait StudyFlow à ses débuts. Restent volontairement sous
-cet ancien nom les identifiants techniques `studyflow:…` de
-`src/features/student/server/keys.ts` : les changer invaliderait les codes et
-sessions des candidats.
+Les libellés `tremplia:…` de `src/features/student/server/keys.ts` entrent
+dans le calcul des empreintes des codes candidats et des sessions : les
+changer oblige à recalculer les empreintes enregistrées (depuis la copie
+chiffrée des codes) et déconnecte les candidats.
 
 `project_id` dans `supabase/config.toml` nomme les conteneurs Docker du
 Supabase local (`supabase_db_tremplia`, repris par
