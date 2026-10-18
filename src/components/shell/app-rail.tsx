@@ -56,18 +56,20 @@ export function AppRail({
         },
       )}
 
+      {/* Recherche et thème : sur ordinateur seulement. Sur téléphone, le
+          thème se change dans les Réglages. */}
       <button
         type="button"
         onClick={openSearchPalette}
         aria-label="Rechercher"
         title="Rechercher (Ctrl+K)"
-        className={cn(RAIL_BUTTON, "touch-manipulation")}
+        className={cn(RAIL_BUTTON, "max-md:hidden")}
       >
         <Search className="size-5" strokeWidth={1.6} />
       </button>
 
       <div className="hidden flex-1 md:block" />
-      <ThemeToggle className="size-10 rounded-xl text-muted-foreground max-md:h-11 max-md:w-auto max-md:max-w-16 max-md:flex-1" />
+      <ThemeToggle className="size-10 rounded-xl text-muted-foreground max-md:hidden" />
       <button
         type="button"
         onClick={logout}

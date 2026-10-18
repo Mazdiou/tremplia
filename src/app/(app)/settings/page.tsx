@@ -7,6 +7,7 @@ import { AgencyProfileForm } from "@/features/settings/components/agency-profile
 import { CampaignDefaultsForm } from "@/features/settings/components/campaign-defaults-form";
 import { PasswordForm } from "@/features/settings/components/password-form";
 import { SessionActions } from "@/features/settings/components/session-actions";
+import { ThemeChoice } from "@/features/settings/components/theme-choice";
 import { getAgencySettings } from "@/features/settings/server/settings";
 import { DEFAULT_STAGES } from "@/features/stages/stages";
 import { SubscriptionPanel } from "@/features/subscription/components/subscription-panel";
@@ -71,6 +72,14 @@ export default async function SettingsPage() {
             initial={{ firstName: member.firstName, lastName: member.lastName }}
             readOnly={readOnly}
           />
+        </FormSection>
+
+        <FormSection
+          id="apparence"
+          title="Apparence"
+          description="Retenu sur cet appareil."
+        >
+          <ThemeChoice />
         </FormSection>
 
         {email && (
