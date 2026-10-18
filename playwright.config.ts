@@ -31,7 +31,10 @@ export default defineConfig({
   webServer: {
     command: `npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}/login`,
-    reuseExistingServer: !process.env.CI,
+    // Jamais réutilisé : un serveur resté ouvert sert l'ancien build, dont
+    // les fichiers ont été remplacés, et la page ne réagit plus. Port 3100
+    // déjà pris → Playwright s'arrête avec un message clair.
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });
