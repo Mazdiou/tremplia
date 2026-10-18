@@ -533,15 +533,13 @@ accueil, manifestes, icônes). Les couleurs de l'interface (thèmes clair et
 sombre) sont les variables de `src/app/globals.css`.
 
 L'application s'appelait StudyFlow à ses débuts. Restent volontairement sous
-cet ancien nom :
+cet ancien nom les identifiants techniques `studyflow:…` de
+`src/features/student/server/keys.ts` : les changer invaliderait les codes et
+sessions des candidats.
 
-- les identifiants techniques `studyflow:…` de
-  `src/features/student/server/keys.ts` : les changer invaliderait les codes
-  et sessions des candidats ;
-- `project_id` dans `supabase/config.toml` (et le conteneur
-  `supabase_db_studyflow` de `.github/workflows/sauvegarde.yml`) : le changer
-  recréerait une base locale vide ;
-- les commentaires des migrations déjà appliquées.
+`project_id` dans `supabase/config.toml` nomme les conteneurs Docker du
+Supabase local (`supabase_db_tremplia`, repris par
+`.github/workflows/sauvegarde.yml`) : le changer recrée une base locale vide.
 
 ---
 

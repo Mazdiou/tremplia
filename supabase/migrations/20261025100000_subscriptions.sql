@@ -1,5 +1,5 @@
 -- Migration : subscriptions
--- Abonnement des agences (StudyFlow vendu en SaaS, payé en espèces ou par
+-- Abonnement des agences (Tremplia vendu en SaaS, payé en espèces ou par
 -- CCP / BaridiMob, validé à la main par l'administrateur de la plateforme).
 --
 -- - Chaque agence a une date de fin d'abonnement. Une nouvelle agence a

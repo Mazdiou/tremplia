@@ -129,5 +129,5 @@ jobs:
           eval "$(npx supabase status -o env 2> /dev/null | grep -E '^(API_URL|SECRET_KEY)=')"
           SUPABASE_DB_URL="postgresql://postgres:postgres@127.0.0.1:5432/postgres" \
           SUPABASE_URL="$API_URL" SUPABASE_SECRET_KEY="$SECRET_KEY" \
-          PSQL="docker exec -i supabase_db_studyflow psql -U postgres -h 127.0.0.1" \
+          PSQL="docker exec -i supabase_db_tremplia psql -U postgres -h 127.0.0.1" \
             scripts/backup/restore.sh "$RUNNER_TEMP/sauvegarde.tar.gz.age" "$RUNNER_TEMP/cle-verification.txt"
