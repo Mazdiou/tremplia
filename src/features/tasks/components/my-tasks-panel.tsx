@@ -6,10 +6,12 @@ import { plural } from "@/lib/plural";
 import { dueLabel, dueState } from "@/features/tasks/due";
 import type { AgencyTaskRow } from "@/features/tasks/server/read";
 
-const SHOWN = 5;
+// Pair : deux colonnes égales sur grand écran
+const SHOWN = 6;
 
-// Tableau de bord : mes tâches les plus urgentes, avec un lien vers la page
-// Tâches. Pour le patron, les tâches en retard de toute l'équipe.
+// Tableau de bord, sous « À traiter » : mes tâches les plus urgentes (deux
+// colonnes sur grand écran), avec un lien vers la page Tâches. Pour le
+// patron, les tâches en retard de toute l'équipe.
 export function MyTasksPanel({
   rows,
   counts,
@@ -34,6 +36,18 @@ export function MyTasksPanel({
   return (
     <Panel
       title="Mes tâches"
+      description={
+        summary.length > 0 ? (
+          <span className="text-sm">
+            {summary.map((s, i) => (
+              <span key={s.text}>
+                {i > 0 && " · "}
+                <span className={s.className}>{s.text}</span>
+              </span>
+            ))}
+          </span>
+        ) : undefined
+      }
       actions={
         <Link href="/tasks" className="text-xs text-muted-foreground hover:text-foreground">
           Tout voir
@@ -47,17 +61,7 @@ export function MyTasksPanel({
         </div>
       ) : (
         <>
-          {summary.length > 0 && (
-            <p className="px-5 pt-3 text-sm">
-              {summary.map((s, i) => (
-                <span key={s.text}>
-                  {i > 0 && <span className="text-muted-foreground"> · </span>}
-                  <span className={s.className}>{s.text}</span>
-                </span>
-              ))}
-            </p>
-          )}
-          <ul className="px-3 py-2">
+          <ul className="grid gap-x-6 px-3 py-2 lg:grid-cols-2">
             {rows.slice(0, SHOWN).map((r) => {
               const state = dueState(r.due_date, today);
               return (

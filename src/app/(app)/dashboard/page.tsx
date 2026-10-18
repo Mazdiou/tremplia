@@ -49,7 +49,7 @@ const longToday = new Intl.DateTimeFormat("fr-FR", {
 });
 
 // Tableau de bord, de haut en bas : ce qui attend l'agence (« À traiter »),
-// les chiffres clés (cliquables vers la liste filtrée), les campagnes, les
+// mes tâches, les chiffres clés (cliquables vers la liste filtrée), les campagnes, les
 // paiements (patron), les échéances et les réponses des établissements,
 // puis l'activité de l'agence (patron).
 export default async function DashboardPage({
@@ -236,15 +236,13 @@ export default async function DashboardPage({
       />
       <InstallAppCard appName={BRAND.name} />
 
-      <div className="grid items-start gap-4 lg:grid-cols-[3fr_2fr]">
-        <TodoPanel todo={todo} />
-        <MyTasksPanel
-          rows={myTasks.rows}
-          counts={myCounts}
-          teamOverdue={myTasks.teamOverdue}
-          today={today}
-        />
-      </div>
+      <TodoPanel todo={todo} />
+      <MyTasksPanel
+        rows={myTasks.rows}
+        counts={myCounts}
+        teamOverdue={myTasks.teamOverdue}
+        today={today}
+      />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Dossiers actifs" value={active} href={casesLink()} />
