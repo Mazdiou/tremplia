@@ -1,16 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus } from "lucide-react";
 import {
   FormSection,
   KeyRow,
+  NewCaseLink,
   PageContainer,
   PageHeader,
   Panel,
   StatCard,
   StatusPill,
 } from "@/components/page-ui";
-import { buttonVariants } from "@/components/ui/button";
 import { CAMPAIGN_STATUS_LABELS, type CampaignStatus } from "@/features/campaigns/labels";
 import { CampaignDangerZone } from "@/features/campaigns/components/campaign-danger-zone";
 import { CampaignSettingsForm } from "@/features/campaigns/components/campaign-settings-form";
@@ -130,9 +129,7 @@ export default async function CampaignPage({
             {/* Export : aussi en archive et en lecture seule (simple lecture) */}
             {member?.isOwner && <ExportCampaignButton campaignId={id} />}
             {!archived && (
-              <Link href={`/cases/new?campaign=${id}`} className={buttonVariants()}>
-                <Plus /> Nouveau dossier
-              </Link>
+              <NewCaseLink campaignId={id} />
             )}
           </>
         }

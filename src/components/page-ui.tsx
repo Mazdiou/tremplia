@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { NEW_CASE_LINK_PROPS, NEW_CASE_TITLE } from "@/features/cases/new-case-link";
 
 // Briques d'interface partagées : conteneur et en-tête de page, cartes,
 // sections de formulaire, lignes clé/valeur, pastilles.
@@ -262,6 +263,8 @@ export function NewCaseLink({
     <Link
       href={campaignId ? `/cases/new?campaign=${campaignId}` : "/cases/new"}
       className={buttonVariants({ className })}
+      title={NEW_CASE_TITLE}
+      {...NEW_CASE_LINK_PROPS}
     >
       <Plus /> Nouveau dossier
     </Link>

@@ -28,6 +28,7 @@ import { formatDA } from "@/lib/money";
 import { UnreadBadge } from "@/features/messages/components/unread-badge";
 import { cn } from "@/lib/utils";
 import { TREE_WIDTH, useUiPrefs } from "@/lib/ui-prefs";
+import { NEW_CASE_LINK_PROPS, NEW_CASE_TITLE } from "../new-case-link";
 import { createClient } from "@/lib/supabase/client";
 import {
   fetchCampaignCases,
@@ -388,7 +389,7 @@ export function CaseTree({
             <Link
               href="/cases/new"
               aria-label="Nouveau dossier"
-              title="Nouveau dossier"
+              title={NEW_CASE_TITLE}
               className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
             >
               <Plus />
@@ -901,6 +902,8 @@ export function CaseTree({
                 : "/cases/new"
             }
             className={cn(buttonVariants(), "w-full")}
+            title={NEW_CASE_TITLE}
+            {...NEW_CASE_LINK_PROPS}
           >
             <Plus /> Nouveau dossier
           </Link>
