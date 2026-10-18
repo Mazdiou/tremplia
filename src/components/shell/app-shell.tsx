@@ -5,6 +5,7 @@ import { SubscriptionBanner } from "@/features/subscription/components/subscript
 import { isPlatformAdmin } from "@/features/admin/server/admin";
 import { LiveRefresh } from "@/components/live-refresh";
 import { NewCaseShortcut } from "@/features/cases/components/new-case-shortcut";
+import { myTaskCounts } from "@/features/tasks/server/read";
 import { AppRail } from "./app-rail";
 import { SearchPalette } from "./search-palette";
 
@@ -20,7 +21,7 @@ export async function getShellUser() {
 // Coquille commune : barre d'icônes, bandeau d'abonnement, puis le contenu.
 // Le tableau de bord, les campagnes et l'équipe y posent leur page
 // (AppShell) ; la section dossiers y ajoute son arbre.
-export function ShellFrame({
+export async function ShellFrame({
   member,
   initials,
   isPlatformAdmin,
@@ -31,12 +32,19 @@ export function ShellFrame({
   isPlatformAdmin: boolean;
   children: React.ReactNode;
 }) {
+  // Pastille de « Tâches » : mes tâches en retard et du jour
+  const tasks = await myTaskCounts(member.userId);
   return (
     <div className="flex h-dvh flex-col-reverse overflow-hidden md:flex-row">
       <LiveRefresh agencyId={member.agencyId} />
       <SearchPalette isOwner={member.isOwner} isPlatformAdmin={isPlatformAdmin} />
       <NewCaseShortcut />
-      <AppRail isOwner={member.isOwner} initials={initials} isPlatformAdmin={isPlatformAdmin} />
+      <AppRail
+        isOwner={member.isOwner}
+        initials={initials}
+        isPlatformAdmin={isPlatformAdmin}
+        taskBadge={{ count: tasks.overdue + tasks.today, overdue: tasks.overdue > 0 }}
+      />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <SubscriptionBanner agencyId={member.agencyId} />
         {children}

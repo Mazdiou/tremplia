@@ -27,6 +27,8 @@ type UiPrefs = {
   payment: PaymentFilter;
   // Filtre d'étape : nom d'étape en minuscules (voir stageKey)
   stage: string;
+  // Seulement les dossiers qui ont une tâche en retard
+  overdue: boolean;
   // En-tête de la fiche d'un dossier réduit à une ligne
   caseHeaderCollapsed: boolean;
 };
@@ -46,6 +48,7 @@ export const DEFAULT_PREFS: UiPrefs = {
   mine: false,
   payment: "",
   stage: "",
+  overdue: false,
   caseHeaderCollapsed: false,
 };
 
@@ -82,6 +85,7 @@ export function sanitize(raw: unknown): UiPrefs {
       ? (r.payment as PaymentFilter)
       : "",
     stage: typeof r.stage === "string" ? r.stage : "",
+    overdue: r.overdue === true,
     caseHeaderCollapsed: r.caseHeaderCollapsed === true,
   };
 }

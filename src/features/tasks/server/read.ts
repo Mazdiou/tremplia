@@ -2,6 +2,8 @@ import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { fullName } from "@/lib/names";
+import { todayInAppTimezone } from "@/lib/dates";
+import { readAll } from "@/lib/supabase/read-all";
 import type { TaskMember } from "@/features/tasks/types";
 
 // Lectures via le RLS : seules les tâches et les membres de l'agence de la
@@ -69,3 +71,112 @@ export async function listCaseTasks(caseId: string) {
     doneTotal: done.count ?? 0,
   };
 }
+
+// --- Vue d'ensemble (page Tâches, menu, tableau de bord, arbre) -------------
+
+// Mes tâches à faire en retard et du jour (pastille du menu)
+export const myTaskCounts = cache(async (userId: string) => {
+  const supabase = await createClient();
+  const today = todayInAppTimezone();
+  const { data, error } = await supabase
+    .from("case_tasks")
+    .select("due_date")
+    .eq("assigned_to", userId)
+    .is("done_at", null)
+    .lte("due_date", today)
+    .limit(1000);
+  if (error) console.error("[tasks my counts]", error.code);
+  const dates = ((data ?? []) as { due_date: string }[]).map((r) => r.due_date);
+  return {
+    overdue: dates.filter((d) => d < today).length,
+    today: dates.filter((d) => d === today).length,
+  };
+});
+
+// Tâches en retard par dossier, toute l'agence (horloge et filtre de l'arbre)
+export async function overdueTasksByCase(): Promise<Record<string, number>> {
+  const supabase = await createClient();
+  const today = todayInAppTimezone();
+  try {
+    const rows = await readAll<{ case_id: string }>((from, to) =>
+      supabase
+        .from("case_tasks")
+        .select("case_id")
+        .is("done_at", null)
+        .lt("due_date", today)
+        .order("id")
+        .range(from, to),
+    );
+    const counts: Record<string, number> = {};
+    for (const r of rows) counts[r.case_id] = (counts[r.case_id] ?? 0) + 1;
+    return counts;
+  } catch {
+    console.error("[tasks overdue by case]");
+    return {};
+  }
+}
+
+export type AgencyTaskRow = TaskRow & {
+  case_id: string;
+  case: {
+    first_name: string;
+    last_name: string;
+    status: string;
+    campaign_id: string;
+  } | null;
+};
+
+const AGENCY_COLUMNS = `id, case_id, title, details, due_date, assigned_to, created_by, done_at,
+  done_by, created_at, case:cases!case_tasks_case_fk(first_name, last_name, status, campaign_id)`;
+
+// Tâches de l'agence : toutes celles à faire, et celles faites ces
+// `doneDays` derniers jours. `assignee` : un membre, ou toute l'équipe (null).
+export async function listAgencyTasks(assignee: string | null, doneDays: number) {
+  const supabase = await createClient();
+  const doneSince = new Date(Date.now() - doneDays * 86_400_000).toISOString();
+  const base = () => {
+    const q = supabase.from("case_tasks").select(AGENCY_COLUMNS);
+    return assignee ? q.eq("assigned_to", assignee) : q;
+  };
+  const [open, done] = await Promise.all([
+    readAll<AgencyTaskRow>((from, to) =>
+      base().is("done_at", null).order("id").range(from, to),
+    ),
+    base().gte("done_at", doneSince).order("done_at", { ascending: false }).limit(200),
+  ]);
+  if (done.error) console.error("[tasks agency done]", done.error.code);
+  return { open, done: (done.data ?? []) as unknown as AgencyTaskRow[] };
+}
+
+// Tableau de bord : mes prochaines tâches à faire (les plus urgentes d'abord)
+// et, pour le patron, le nombre de tâches en retard de toute l'équipe
+export async function loadMyTasks(userId: string, withTeam: boolean) {
+  const supabase = await createClient();
+  const today = todayInAppTimezone();
+  const [mine, team] = await Promise.all([
+    supabase
+      .from("case_tasks")
+      .select(AGENCY_COLUMNS)
+      .eq("assigned_to", userId)
+      .is("done_at", null)
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .order("created_at")
+      .limit(MAX_DASHBOARD_TASKS),
+    withTeam
+      ? supabase
+          .from("case_tasks")
+          .select("id", { count: "exact", head: true })
+          .is("done_at", null)
+          .lt("due_date", today)
+      : null,
+  ]);
+  if (mine.error) console.error("[tasks dashboard]", mine.error.code);
+  if (team?.error) console.error("[tasks dashboard team]", team.error.code);
+  return {
+    rows: (mine.data ?? []) as unknown as AgencyTaskRow[],
+    teamOverdue: team?.count ?? null,
+  };
+}
+
+// Assez pour compter les tâches de la semaine sans tout lire
+const MAX_DASHBOARD_TASKS = 200;

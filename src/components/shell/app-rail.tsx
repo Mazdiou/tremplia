@@ -19,10 +19,13 @@ export function AppRail({
   isOwner,
   initials,
   isPlatformAdmin = false,
+  taskBadge,
 }: {
   isOwner: boolean;
   initials: string;
   isPlatformAdmin?: boolean;
+  // Mes tâches en retard ou du jour (rouge s'il y a du retard)
+  taskBadge: { count: number; overdue: boolean };
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -41,16 +44,38 @@ export function AppRail({
       {navItems(isOwner, isPlatformAdmin).map(
         ({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
+          const badge = href === "/tasks" && taskBadge.count > 0 ? taskBadge : null;
           return (
             <Link
               key={href}
               href={href}
-              aria-label={label}
+              aria-label={
+                badge
+                  ? `${label} (${badge.count} ${badge.overdue ? "en retard ou du jour" : "pour aujourd'hui"})`
+                  : label
+              }
               title={label}
               aria-current={active ? "page" : undefined}
-              className={cn(RAIL_BUTTON, active && "bg-accent text-accent-foreground hover:bg-accent")}
+              className={cn(
+                RAIL_BUTTON,
+                "relative",
+                active && "bg-accent text-accent-foreground hover:bg-accent",
+              )}
             >
               <Icon className="size-5" strokeWidth={1.6} />
+              {badge && (
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute top-0.5 right-0.5 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] leading-none font-semibold tabular-nums max-md:right-[calc(50%-1.25rem)]",
+                    badge.overdue
+                      ? "bg-destructive text-white"
+                      : "bg-amber-500 text-white dark:bg-amber-400 dark:text-amber-950",
+                  )}
+                >
+                  {badge.count > 99 ? "99+" : badge.count}
+                </span>
+              )}
             </Link>
           );
         },

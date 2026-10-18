@@ -4,6 +4,9 @@ export type TaskMember = { id: string; name: string; isActive: boolean };
 
 export type TaskItem = {
   id: string;
+  caseId: string;
+  // Page Tâches seulement : le candidat, sa campagne, son dossier clos…
+  caseLabel?: { name: string; detail: string };
   title: string;
   details: string | null;
   dueDate: string | null;

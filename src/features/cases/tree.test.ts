@@ -97,9 +97,11 @@ describe("linkFilter", () => {
       mine: true,
       payment: "",
       stage: "",
+      overdue: false,
     });
     expect(linkFilter("reste-a-payer")?.payment).toBe("due");
     expect(linkFilter("montant-a-fixer")?.payment).toBe("unset");
+    expect(linkFilter("taches-en-retard")?.overdue).toBe(true);
   });
   it("traduit le lien d'une étape en filtre d'étape", () => {
     expect(linkFilter(null, "entretien")).toMatchObject({ stage: "entretien", payment: "" });

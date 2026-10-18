@@ -11,6 +11,7 @@ import { CaseTree, type TreeMember } from "@/features/cases/components/case-tree
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
 import { isReadOnly } from "@/features/subscription/server/subscription";
 import { isPlatformAdmin } from "@/features/admin/server/admin";
+import { overdueTasksByCase } from "@/features/tasks/server/read";
 
 export default async function CasesLayout({
   children,
@@ -31,9 +32,10 @@ export default async function CasesLayout({
       .order("first_name"),
   ]);
   const { member, initials } = await getShellUser();
-  const [[campaigns, groups, stages, membersRes], unread, readOnly, admin] = await Promise.all([
+  const [[campaigns, groups, stages, membersRes], unread, overdue, readOnly, admin] = await Promise.all([
     shared,
     agencyUnreadCounts(member.agencyId),
+    overdueTasksByCase(),
     isReadOnly(member.agencyId),
     isPlatformAdmin(member.userId),
   ]);
@@ -62,6 +64,7 @@ export default async function CasesLayout({
           members={(membersRes.data ?? []) as TreeMember[]}
           currentUserId={member.userId}
           unread={unread}
+          overdue={overdue}
           isOwner={member.isOwner}
           readOnly={readOnly}
         />

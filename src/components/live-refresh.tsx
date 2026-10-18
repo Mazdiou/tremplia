@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 // Garde la page à jour sans rechargement : messages non lus, « À traiter »,
-// pastilles de l'arbre. Seuls les composants serveur sont relus ; ce qui est
+// pastilles de l'arbre, tâches confiées par un collègue. Seuls les composants serveur sont relus ; ce qui est
 // en cours de saisie reste en place.
 //
 // - Agence (agencyId fourni) : abonnement en temps réel aux messages et aux
-//   réponses des candidats (filtrés par le RLS). Si la connexion tombe, une
+//   réponses des candidats, et aux tâches de l'agence (filtrés par le RLS).
+//   Une tâche supprimée n'arrive pas (Supabase ne filtre pas les
+//   suppressions) : elle disparaît à la relecture suivante. Si la connexion tombe, une
 //   vérification toutes les 30 s prend le relais.
 // - Candidat (sans compte Supabase) : vérification toutes les minutes.
 // - Dans les deux cas : relecture au retour sur l'onglet.
@@ -68,6 +70,11 @@ export function LiveRefresh({ agencyId }: { agencyId?: string }) {
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "case_student_reviews", filter },
+          refresh,
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "case_tasks", filter },
           refresh,
         );
       // Le jeton de la session doit être transmis avant l'abonnement, sinon

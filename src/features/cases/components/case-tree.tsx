@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import {
+  AlarmClock,
   CheckSquare,
   ChevronDown,
   ChevronRight,
@@ -102,6 +103,7 @@ export function CaseTree({
   members,
   currentUserId,
   unread,
+  overdue,
   isOwner,
   readOnly = false,
 }: {
@@ -115,6 +117,8 @@ export function CaseTree({
   currentUserId: string;
   // Messages du candidat non lus, par dossier
   unread: Record<string, number>;
+  // Tâches en retard, par dossier
+  overdue: Record<string, number>;
   // Le patron peut aussi changer le responsable de plusieurs dossiers
   isOwner: boolean;
   // Abonnement expiré : rien à créer (la base refuserait de toute façon)
@@ -260,7 +264,7 @@ export function CaseTree({
   // --- Recherche globale (serveur) et filtres (sur les dossiers chargés) ---
   const searching = query.trim() !== "";
   const filtersActive = Boolean(
-    prefs.level || prefs.responsible || prefs.mine || prefs.payment || prefs.stage,
+    prefs.level || prefs.responsible || prefs.mine || prefs.payment || prefs.stage || prefs.overdue,
   );
 
   const activeCampaigns = campaigns.filter((c) => c.status === "active");
@@ -311,6 +315,7 @@ export function CaseTree({
     }
     if (prefs.responsible && c.assigned_to !== prefs.responsible) return false;
     if (prefs.mine && c.assigned_to !== currentUserId) return false;
+    if (prefs.overdue && !overdue[c.id]) return false;
     return matchesPayment(c, prefs.payment);
   }
 
@@ -590,6 +595,22 @@ export function CaseTree({
               )}
             </select>
           )}
+          {(prefs.overdue || Object.keys(overdue).length > 0) && (
+            <button
+              type="button"
+              aria-pressed={prefs.overdue}
+              onClick={() => setPrefs({ overdue: !prefs.overdue })}
+              className={cn(
+                "flex h-8 basis-full items-center gap-1.5 rounded-lg border px-2.5 text-sm transition-colors",
+                prefs.overdue
+                  ? "border-destructive/40 bg-destructive/10 font-medium text-destructive"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <AlarmClock className="size-4" aria-hidden />
+              Tâches en retard
+            </button>
+          )}
           {!prefs.mine && (
             <select
               value={prefs.responsible}
@@ -820,6 +841,13 @@ export function CaseTree({
                                         </span>
                                       )}
                                       <span className="ml-auto flex shrink-0 items-center gap-1.5">
+                                        {(overdue[c.id] ?? 0) > 0 && (
+                                          <AlarmClock
+                                            className="size-3.5 text-destructive"
+                                            role="img"
+                                            aria-label={plural(overdue[c.id], "tâche en retard", "tâches en retard")}
+                                          />
+                                        )}
                                         {(unread[c.id] ?? 0) > 0 && (
                                           <UnreadBadge count={unread[c.id]} />
                                         )}

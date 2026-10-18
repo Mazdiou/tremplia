@@ -33,6 +33,8 @@ import { cn } from "@/lib/utils";
 import { BRAND } from "@/config/brand";
 import { InstallAppCard } from "@/features/pwa/components/install-app-card";
 import { StagePipeline } from "@/features/stages/components/stage-pipeline";
+import { MyTasksPanel } from "@/features/tasks/components/my-tasks-panel";
+import { loadMyTasks, myTaskCounts } from "@/features/tasks/server/read";
 import { plural, pluralWord } from "@/lib/plural";
 import type { Metadata } from "next";
 
@@ -110,6 +112,11 @@ export default async function DashboardPage({
   const unreadPromise = agencyUnreadCounts(u.member.agencyId);
   // Une seule campagne affichée : l'avancement de ses dossiers par étape
   const single = campaigns.length === 1 ? campaigns[0] : null;
+  // Mes tâches : toutes campagnes confondues (déjà comptées par la coquille)
+  const tasksPromise = Promise.all([
+    loadMyTasks(u.member.userId, u.member.isOwner),
+    myTaskCounts(u.member.userId),
+  ]);
   const [readOnly, stats, todo, recentRes, dates, monthRes, owingRes, results, activity, stagesRes, stageStatsRes] =
     await Promise.all([
       readOnlyPromise,
@@ -154,6 +161,7 @@ export default async function DashboardPage({
         : Promise.resolve({ data: null }),
     ]);
   const recent = recentRes.data;
+  const [myTasks, myCounts] = await tasksPromise;
 
   const active = countCases(stats, { status: "active" });
   const mine = countCases(stats, { status: "active", assignedTo: u.member.userId });
@@ -227,7 +235,15 @@ export default async function DashboardPage({
       />
       <InstallAppCard appName={BRAND.name} />
 
-      <TodoPanel todo={todo} />
+      <div className="grid items-start gap-4 lg:grid-cols-[3fr_2fr]">
+        <TodoPanel todo={todo} />
+        <MyTasksPanel
+          rows={myTasks.rows}
+          counts={myCounts}
+          teamOverdue={myTasks.teamOverdue}
+          today={today}
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Dossiers actifs" value={active} href={casesLink()} />

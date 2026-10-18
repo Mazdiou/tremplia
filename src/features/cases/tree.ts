@@ -80,11 +80,12 @@ export const NO_FILTERS = {
   mine: false,
   payment: "" as PaymentFilter,
   stage: "",
+  overdue: false,
 };
 
 // Filtre de l'arbre demandé par un lien (cartes du tableau de bord, étapes
-// d'une campagne) : /cases?filtre=mes-dossiers, reste-a-payer ou
-// montant-a-fixer, ou /cases?etape=<clé d'étape>. Remplace les filtres en
+// d'une campagne) : /cases?filtre=mes-dossiers, reste-a-payer,
+// montant-a-fixer ou taches-en-retard, ou /cases?etape=<clé d'étape>. Remplace les filtres en
 // cours ; null pour une valeur inconnue.
 export function linkFilter(
   value: string | null,
@@ -94,5 +95,6 @@ export function linkFilter(
   if (value === "mes-dossiers") return { ...NO_FILTERS, mine: true };
   if (value === "reste-a-payer") return { ...NO_FILTERS, payment: "due" };
   if (value === "montant-a-fixer") return { ...NO_FILTERS, payment: "unset" };
+  if (value === "taches-en-retard") return { ...NO_FILTERS, overdue: true };
   return null;
 }
