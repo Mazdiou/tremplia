@@ -23,7 +23,7 @@ import { CaseStageControl } from "@/features/stages/components/case-stage-contro
 import { getStudentAccess } from "@/features/student/server/access";
 import { readReview } from "@/features/student/server/review";
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
-import { dateTimeFormat } from "@/lib/dates";
+import { dateTimeFormat, todayInAppTimezone } from "@/lib/dates";
 import { formatDA } from "@/lib/money";
 import { StudentAccessBar } from "@/features/student/components/student-access-bar";
 import {
@@ -33,6 +33,7 @@ import {
 } from "@/features/cases/components/case-header";
 import { telHref } from "@/lib/phone";
 import { isUuid } from "@/lib/validation";
+import { countOpenCaseTasks, listTaskMembers } from "@/features/tasks/server/read";
 
 const STATUS_TONE = { active: "ok", closed: "off", abandoned: "bad" } as const;
 
@@ -49,7 +50,7 @@ export default async function CaseLayout({
   // Tout est lu en même temps. Les lectures avec la clé secrète sont filtrées
   // sur l'agence de la session : un dossier d'une autre agence n'y renvoie
   // rien, et getCase (via le RLS) le déclare introuvable.
-  const [data, usedPlatforms, studentAccess, review, unread, agency, readOnly] = await Promise.all([
+  const [data, usedPlatforms, studentAccess, review, unread, agency, readOnly, openTasks, members] = await Promise.all([
     getCase(id),
     listUsedPlatforms(),
     isUuid(id) ? getStudentAccess(member.agencyId, id) : null,
@@ -57,6 +58,8 @@ export default async function CaseLayout({
     agencyUnreadCounts(member.agencyId),
     getAgency(member.agencyId),
     isReadOnly(member.agencyId),
+    isUuid(id) ? countOpenCaseTasks(id) : 0,
+    listTaskMembers(),
   ]);
   if (!data) notFound();
   const { c, responsible, campaign, groups, stages, externalAccounts } = data;
@@ -192,7 +195,17 @@ export default async function CaseLayout({
                     >
                       <Pencil /> Modifier
                     </Link>
-                    <CaseStatusButtons id={c.id} status={c.status} />
+                    <CaseStatusButtons
+                      id={c.id}
+                      status={c.status}
+                      openTasks={openTasks}
+                      taskContext={{
+                        caseId: c.id,
+                        members,
+                        currentUserId: member.userId,
+                        today: todayInAppTimezone(),
+                      }}
+                    />
                   </>
                 )}
                 <span className="max-sm:ml-auto">
@@ -235,7 +248,12 @@ export default async function CaseLayout({
             </TrackPanel>
           </CaseHeaderDetails>
 
-          <CaseTabs id={c.id} isOwner={member.isOwner} unreadMessages={unread[c.id] ?? 0} />
+          <CaseTabs
+            id={c.id}
+            isOwner={member.isOwner}
+            unreadMessages={unread[c.id] ?? 0}
+            openTasks={openTasks}
+          />
         </div>
       </header>
 

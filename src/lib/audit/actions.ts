@@ -54,6 +54,13 @@ export const ACTIVITY_ACTIONS = [
   "payment.agreed_amount_set",
   "payment.recorded",
   "payment.cancelled",
+  "task.created",
+  "task.updated",
+  "task.assigned",
+  "task.completed",
+  "task.reopened",
+  "task.deleted",
+  "task.all_completed",
   // Actions du candidat lui-même (actor_id vide)
   "student.logged_in",
   "student.approved",
@@ -76,4 +83,5 @@ export type ActivityTarget =
   | "motivation_letter"
   | "case_program"
   | "case_message"
-  | "case_payment";
+  | "case_payment"
+  | "case_task";

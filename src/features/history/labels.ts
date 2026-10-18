@@ -58,6 +58,13 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "payment.agreed_amount_set": "a fixé le montant convenu d'un dossier",
   "payment.recorded": "a enregistré un paiement",
   "payment.cancelled": "a annulé un paiement",
+  "task.created": "a ajouté une tâche",
+  "task.updated": "a modifié une tâche",
+  "task.assigned": "a confié une tâche à un autre membre",
+  "task.completed": "a terminé une tâche",
+  "task.reopened": "a rouvert une tâche",
+  "task.deleted": "a supprimé une tâche",
+  "task.all_completed": "a marqué faites les tâches d'un dossier",
   "student.logged_in": "s'est connecté à son espace",
   "student.approved": "a validé sa lettre et ses formations",
   "student.changes_requested": "a demandé une modification",
@@ -79,6 +86,7 @@ const CASE_LABELS: Record<ActivityAction, string> = {
   "message.sent": "a écrit au candidat",
   "payment.agreed_amount_set": "a fixé le montant convenu",
   "document.archive_downloaded": "a téléchargé tous les documents (ZIP)",
+  "task.all_completed": "a marqué faites les tâches du dossier",
 };
 
 const UNKNOWN = "a effectué une action";

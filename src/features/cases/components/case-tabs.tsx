@@ -12,6 +12,7 @@ const TABS = [
   { suffix: "/programs", label: "Formations", ownerOnly: false },
   { suffix: "/motivation-letter", label: "Lettre de motivation", ownerOnly: false },
   { suffix: "/notes", label: "Notes", ownerOnly: false },
+  { suffix: "/tasks", label: "Tâches", ownerOnly: false },
   { suffix: "/messages", label: "Messages", ownerOnly: false },
   { suffix: "/payments", label: "Paiements", ownerOnly: false },
   { suffix: "/history", label: "Historique", ownerOnly: true },
@@ -21,11 +22,14 @@ export function CaseTabs({
   id,
   isOwner,
   unreadMessages,
+  openTasks,
 }: {
   id: string;
   isOwner: boolean;
   // Messages du candidat non lus par l'agence
   unreadMessages: number;
+  // Tâches à faire du dossier
+  openTasks: number;
 }) {
   const pathname = usePathname();
   const base = `/cases/${id}`;
@@ -82,6 +86,11 @@ export function CaseTabs({
             {t.label}
             {t.suffix === "/messages" && unreadMessages > 0 && !active && (
               <UnreadBadge count={unreadMessages} />
+            )}
+            {t.suffix === "/tasks" && openTasks > 0 && (
+              <span className="rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground tabular-nums">
+                {openTasks}
+              </span>
             )}
           </Link>
         );

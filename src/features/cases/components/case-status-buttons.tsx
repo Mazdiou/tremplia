@@ -10,6 +10,10 @@ import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { useDismiss } from "@/hooks/use-dismiss";
 import { MENU_ITEM_CLASS } from "@/components/page-ui";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
+import { pluralWord } from "@/lib/plural";
+import { TaskForm } from "@/features/tasks/components/task-form";
+import type { TaskFormContext } from "@/features/tasks/types";
 
 type Action = {
   to: CaseStatus;
@@ -45,9 +49,14 @@ const ACTIONS: Record<CaseStatus, Action[]> = {
 export function CaseStatusButtons({
   id,
   status,
+  openTasks,
+  taskContext,
 }: {
   id: string;
   status: CaseStatus;
+  // Tâches à faire : proposées à la clôture pour être marquées faites
+  openTasks: number;
+  taskContext: TaskFormContext;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -55,6 +64,9 @@ export function CaseStatusButtons({
   const [error, setError] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [completeTasks, setCompleteTasks] = useState(true);
+  const [addingTask, setAddingTask] = useState(false);
+  const taskDialogRef = useModalDialog(addingTask);
 
   useDismiss(menuRef, menuOpen, setMenuOpen);
 
@@ -63,7 +75,7 @@ export function CaseStatusButtons({
     setLoading(true);
     const res = await callApi(`/api/cases/${id}/status`, {
       method: "PATCH",
-      body: { status: to },
+      body: { status: to, completeTasks: to !== "active" && openTasks > 0 && completeTasks },
     });
     setLoading(false);
     setPending(null);
@@ -105,6 +117,18 @@ export function CaseStatusButtons({
             role="menu"
             className="absolute top-11 right-0 z-30 w-48 rounded-xl border bg-popover p-1 shadow-lg"
           >
+            <button
+              role="menuitem"
+              type="button"
+              className={MENU_ITEM_CLASS}
+              onClick={() => {
+                setMenuOpen(false);
+                setAddingTask(true);
+              }}
+            >
+              Ajouter une tâche
+            </button>
+            <div role="separator" className="my-1 border-t" />
             {actions.map((a) => (
               <button
                 key={a.to}
@@ -113,6 +137,7 @@ export function CaseStatusButtons({
                 className={cn(MENU_ITEM_CLASS, a.to === "abandoned" && "text-destructive")}
                 onClick={() => {
                   setMenuOpen(false);
+                  setCompleteTasks(true);
                   if (a.confirm) setPending(a);
                   else void change(a.to);
                 }}
@@ -137,7 +162,48 @@ export function CaseStatusButtons({
         loading={loading}
         onCancel={() => setPending(null)}
         onConfirm={() => pending && void change(pending.to)}
-      />
+      >
+        {openTasks > 0 && (
+          <label className="flex items-start gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={completeTasks}
+              onChange={(e) => setCompleteTasks(e.target.checked)}
+              className="mt-0.5 size-4 accent-primary"
+            />
+            <span>
+              Marquer faites {openTasks > 1 ? `les ${openTasks} tâches` : "la tâche"} à faire
+              <span className="block text-xs text-muted-foreground">
+                Sinon, {pluralWord(openTasks, "elle reste", "elles restent")} dans la liste des tâches.
+              </span>
+            </span>
+          </label>
+        )}
+      </ConfirmDialog>
+
+      {/* Raccourci : une tâche sans quitter l'onglet ouvert */}
+      <dialog
+        ref={taskDialogRef}
+        onClose={() => setAddingTask(false)}
+        onClick={(e) => e.target === taskDialogRef.current && setAddingTask(false)}
+        aria-labelledby="quick-task-title"
+        className="m-auto max-h-[calc(100dvh-2rem)] w-[min(32rem,calc(100%-2rem))] overflow-y-auto rounded-2xl border bg-card p-5 text-card-foreground backdrop:bg-black/45"
+      >
+        <h2 id="quick-task-title" className="mb-4 text-base font-semibold">
+          Nouvelle tâche
+        </h2>
+        {addingTask && (
+          <TaskForm
+            context={taskContext}
+            autoFocus
+            onSaved={() => {
+              setAddingTask(false);
+              router.refresh();
+            }}
+            onCancel={() => setAddingTask(false)}
+          />
+        )}
+      </dialog>
     </>
   );
 }

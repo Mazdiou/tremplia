@@ -234,7 +234,11 @@ export const updateCaseSchema = z
 
 export type UpdateCaseInput = z.infer<typeof updateCaseSchema>;
 
-export const caseStatusSchema = z.object({ status: z.enum(CASE_STATUSES) });
+// completeTasks : à la clôture, marquer faites les tâches à faire du dossier
+export const caseStatusSchema = z.object({
+  status: z.enum(CASE_STATUSES),
+  completeTasks: z.boolean().optional(),
+});
 
 export const caseGroupsSchema = z.object({
   groupIds: z.array(uuidSchema).max(30),
