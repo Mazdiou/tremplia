@@ -59,6 +59,11 @@ export default async function TasksPage({
     return c.status === "active";
   };
 
+  const campaignLabel = (id: string) => {
+    const c = campaignById.get(id);
+    return c && (c.status === "active" ? c.name : `${c.name} (archivée)`);
+  };
+
   const toItem = taskItemMapper(member, members);
   const toItems = (rows: NonNullable<typeof tasks>["open"]) =>
     rows
@@ -71,7 +76,7 @@ export default async function TasksPage({
           ...item,
           caseLabel: {
             name: displayName(c.first_name, c.last_name),
-            detail: [campaignById.get(c.campaign_id)?.name, suffix && `dossier ${suffix}`]
+            detail: [campaignLabel(c.campaign_id), suffix && `dossier ${suffix}`]
               .filter(Boolean)
               .join(" · "),
           },

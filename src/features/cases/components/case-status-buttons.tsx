@@ -172,7 +172,9 @@ export function CaseStatusButtons({
               className="mt-0.5 size-4 accent-primary"
             />
             <span>
-              Marquer faites {openTasks > 1 ? `les ${openTasks} tâches` : "la tâche"} à faire
+              {openTasks > 1
+                ? `Marquer faites les ${openTasks} tâches à faire`
+                : "Marquer faite la tâche à faire"}
               <span className="block text-xs text-muted-foreground">
                 Sinon, {pluralWord(openTasks, "elle reste", "elles restent")} dans la liste des tâches.
               </span>

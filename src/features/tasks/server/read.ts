@@ -74,13 +74,18 @@ export async function listCaseTasks(caseId: string) {
 
 // --- Vue d'ensemble (page Tâches, menu, tableau de bord, arbre) -------------
 
+// Dossiers des campagnes actives seulement : comme la page Tâches par
+// défaut, la pastille et le tableau de bord ignorent les campagnes archivées
+const ACTIVE_CAMPAIGN = "case:cases!case_tasks_case_fk!inner(campaign:campaigns!cases_campaign_fk!inner(status))";
+
 // Mes tâches à faire en retard et du jour (pastille du menu)
 export const myTaskCounts = cache(async (userId: string) => {
   const supabase = await createClient();
   const today = todayInAppTimezone();
   const { data, error } = await supabase
     .from("case_tasks")
-    .select("due_date")
+    .select(`due_date, ${ACTIVE_CAMPAIGN}`)
+    .eq("case.campaign.status", "active")
     .eq("assigned_to", userId)
     .is("done_at", null)
     .lte("due_date", today)
@@ -156,7 +161,8 @@ export async function loadMyTasks(userId: string, withTeam: boolean) {
   const [mine, team] = await Promise.all([
     supabase
       .from("case_tasks")
-      .select(AGENCY_COLUMNS)
+      .select(`${AGENCY_COLUMNS}, active:cases!case_tasks_case_fk!inner(campaign:campaigns!cases_campaign_fk!inner(status))`)
+      .eq("active.campaign.status", "active")
       .eq("assigned_to", userId)
       .is("done_at", null)
       .order("due_date", { ascending: true, nullsFirst: false })
@@ -165,7 +171,8 @@ export async function loadMyTasks(userId: string, withTeam: boolean) {
     withTeam
       ? supabase
           .from("case_tasks")
-          .select("id", { count: "exact", head: true })
+          .select(`id, ${ACTIVE_CAMPAIGN}`, { count: "exact", head: true })
+          .eq("case.campaign.status", "active")
           .is("done_at", null)
           .lt("due_date", today)
       : null,

@@ -112,7 +112,8 @@ export default async function DashboardPage({
   const unreadPromise = agencyUnreadCounts(u.member.agencyId);
   // Une seule campagne affichée : l'avancement de ses dossiers par étape
   const single = campaigns.length === 1 ? campaigns[0] : null;
-  // Mes tâches : toutes campagnes confondues (déjà comptées par la coquille)
+  // Mes tâches : toutes les campagnes actives, quel que soit le choix du
+  // sélecteur (les compteurs sont déjà lus par la coquille)
   const tasksPromise = Promise.all([
     loadMyTasks(u.member.userId, u.member.isOwner),
     myTaskCounts(u.member.userId),

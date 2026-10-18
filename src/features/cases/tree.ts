@@ -85,8 +85,8 @@ export const NO_FILTERS = {
 
 // Filtre de l'arbre demandé par un lien (cartes du tableau de bord, étapes
 // d'une campagne) : /cases?filtre=mes-dossiers, reste-a-payer,
-// montant-a-fixer ou taches-en-retard, ou /cases?etape=<clé d'étape>. Remplace les filtres en
-// cours ; null pour une valeur inconnue.
+// montant-a-fixer ou taches-en-retard, ou /cases?etape=<clé d'étape>.
+// Remplace les filtres en cours ; null pour une valeur inconnue.
 export function linkFilter(
   value: string | null,
   stageKey: string | null = null,

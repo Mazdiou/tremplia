@@ -6,9 +6,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { BulkCasesInput } from "../schemas";
 
 // Actions groupées sur des dossiers de l'agence de l'appelant (étape,
-// responsable, même tâche pour chacun). Les fonctions
-// SQL revérifient l'acteur, son rôle et chaque dossier, et refusent tout si
-// un seul ne convient pas. Renvoie le nombre de dossiers vraiment changés.
+// responsable, même tâche pour chacun). Les fonctions SQL revérifient
+// l'acteur, son rôle et chaque dossier, et refusent tout si un seul ne
+// convient pas. Renvoie le nombre de dossiers vraiment changés.
 export async function applyBulkAction(member: Member, input: BulkCasesInput): Promise<number> {
   const admin = createAdminClient();
   const base = {

@@ -36,18 +36,20 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 | Domaine | Ce qu'on y fait |
 |---|---|
 | **Campagnes** | Une campagne par procédure et par année (ex. Campus France 2026-2027), créée de zéro ou importée d'un modèle. Elle porte ses groupes (DAP, Hors-DAP, École…), ses étapes (parcours propre à la campagne), ses dates clés, ses informations utiles et ses plateformes suggérées. Archivable, réactivable. |
-| **Dossiers** | Un dossier par candidat : identité, contact, niveau, diplômes, tests de langue, groupes, étape, statut (actif, clos, abandonné). Rangés dans un arbre par campagne et par groupe, avec recherche (Ctrl+K). Shift+N (hors saisie) ouvre un nouveau dossier dans la campagne en cours. Un nouveau dossier peut être prérempli à partir d'un candidat déjà suivi dans une autre campagne. |
+| **Dossiers** | Un dossier par candidat : identité, contact, niveau, diplômes, tests de langue, groupes, étape, statut (actif, clos, abandonné). Rangés dans un arbre par campagne et par groupe, avec recherche (Ctrl+K). Shift+N (hors saisie) ouvre un nouveau dossier dans la campagne en cours. Un nouveau dossier peut être prérempli à partir d'un candidat déjà suivi dans une autre campagne. Mode sélection de l'arbre : même étape, même responsable (patron) ou même tâche pour plusieurs dossiers d'un coup. |
 | **Documents** | PDF (10 Mo au plus) classés en dossiers, déplaçables par glisser-déposer, verrouillables par le patron, téléchargeables en une archive ZIP. |
 | **Comptes externes** | Identifiants du candidat sur les plateformes (Études en France, etc.). Mots de passe chiffrés, chaque affichage est journalisé. |
 | **Lettre de motivation** | Rédigée dans le dossier, soumise à l'avis du candidat. |
 | **Formations** | Formations visées, ordonnées, avec la réponse de l'établissement (sans réponse, envoyée, acceptée, liste d'attente, refusée). Soumises à l'avis du candidat. |
 | **Notes** | Notes internes de l'équipe sur le dossier. |
+| **Tâches** | Ce qu'il reste à faire pour un candidat : intitulé, échéance facultative, membre chargé de la tâche. Onglet dans le dossier (ajout aussi depuis le menu ⋯ de l'en-tête), page « Tâches » (les miennes, celles de l'équipe ou d'un membre, rangées par échéance), pastille dans le menu, bloc du tableau de bord, horloge et filtre dans l'arbre. Créer : tout membre ; modifier ou cocher : l'auteur, le responsable ou le patron ; supprimer : l'auteur ou le patron. À la clôture du dossier, ses tâches peuvent être marquées faites. Jamais visibles du candidat. |
 | **Paiements** | Montant convenu et paiements du candidat à l'agence, en dinars (espèces, CCP / BaridiMob, carte CIB / Edahabia). Un paiement s'annule, il ne se supprime pas. |
 | **Messages** | Une conversation par dossier avec le candidat, en temps réel, avec pastilles de non-lus (dossier, arbre, tableau de bord). |
 | **WhatsApp** | Ouvre une conversation WhatsApp avec le candidat (ou son parent), avec des messages préparés : lien de l'espace candidat, nouveau message, reste à payer, passage à l'agence. |
 | **Historique** | Journal de tout ce qui a été fait sur le dossier, et par qui. |
-| **Tableau de bord** | « À traiter », échéances, réponses des formations, activité récente, par campagne. |
+| **Tableau de bord** | « À traiter », mes tâches, échéances, réponses des formations, activité récente, par campagne. |
 | **Export Excel** | Classeur complet d'une campagne (patron). |
+| **Réglages** | Mon compte, mot de passe, apparence (thème clair ou sombre, retenu sur l'appareil ; c'est là qu'il se change sur téléphone) ; pour le patron, l'agence, les valeurs des nouvelles campagnes et l'abonnement. |
 | **Équipe** | Le patron ajoute ses employés (mot de passe temporaire à remplacer à la première connexion), les désactive ou les supprime. |
 
 **Patron / employé.** Les employés travaillent sur les dossiers. Sont réservés
@@ -235,8 +237,10 @@ réseau.
 ### Temps réel
 
 `src/components/live-refresh.tsx` s'abonne (Supabase Realtime, filtré par le
-RLS) aux nouveaux messages des candidats et à leurs avis, et rafraîchit la
-page. Une interrogation régulière prend le relais si la connexion tombe.
+RLS) aux nouveaux messages des candidats, à leurs avis et aux tâches de
+l'agence, et rafraîchit la page. Une interrogation régulière prend le relais
+si la connexion tombe. Une tâche supprimée n'est pas diffusée (Supabase ne
+filtre pas les suppressions) : elle disparaît à la relecture suivante.
 
 ---
 
@@ -247,10 +251,10 @@ src/
   proxy.ts              session et redirections (ex-middleware)
   app/
     (app)/              pages de l'agence avec la coquille : dashboard,
-                        campaigns, team, admin
+                        tasks, campaigns, team, settings, admin
     cases/              arbre des dossiers et pages d'un dossier (un onglet
                         par page : infos, documents, lettre, formations,
-                        notes, paiements, messages, historique)
+                        notes, tâches, paiements, messages, historique)
     student/            espace candidat (login, puis (space)/…)
     api/                routes API, minces (une action par fichier)
     login, register, change-password, offline, manifest, icônes…
@@ -290,8 +294,8 @@ scripts/backup/         sauvegarde chiffrée et restauration
 
 Domaines de `features/` : `admin`, `agency`, `auth`, `campaigns`, `cases`,
 `dashboard`, `documents`, `export`, `history`, `landing`, `messages`,
-`motivation-letter`, `notes`, `payments`, `programs`, `pwa`, `stages`,
-`student`, `subscription`, `team`, `whatsapp`.
+`motivation-letter`, `notes`, `payments`, `programs`, `pwa`, `settings`,
+`stages`, `student`, `subscription`, `tasks`, `team`, `whatsapp`.
 
 ---
 
@@ -395,6 +399,9 @@ Les migrations (`supabase/migrations/`) sont découpées par domaine :
 | `rate_limits` | limites d'essais |
 | `subscriptions`, `admin_agency_exempt` | abonnements, administrateurs |
 | `case_stages` | étapes des campagnes |
+| `bulk_case_actions` | actions groupées (étape, responsable) |
+| `agency_settings` | réglages de l'agence et valeurs des nouvelles campagnes |
+| `case_tasks` | tâches des dossiers, actions groupées et temps réel des tâches |
 
 Chaque domaine a son fichier de tests pgTAP dans `supabase/tests/`.
 
