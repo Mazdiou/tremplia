@@ -230,7 +230,8 @@ export default async function DashboardPage({
             {allActive.length > 1 && (
               <CampaignSelect campaigns={allActive} value={selected?.id ?? ""} />
             )}
-            {!readOnly && <NewCaseLink campaignId={selected?.id} className="max-md:hidden" />}
+            {/* Téléphone aussi : l'action la plus fréquente, sous le bonjour */}
+            {!readOnly && <NewCaseLink campaignId={selected?.id} />}
           </>
         }
       />
@@ -401,7 +402,6 @@ export default async function DashboardPage({
 
       {u.member.isOwner && <ActivityPanel entries={activity} />}
 
-      {!readOnly && <NewCaseLink campaignId={selected?.id} className="w-full md:hidden" />}
     </PageContainer>
   );
 }

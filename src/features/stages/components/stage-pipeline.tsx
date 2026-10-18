@@ -12,6 +12,7 @@ export function StagePipeline({
   stages: { id: string; name: string; activeCases: number }[];
 }) {
   if (stages.length === 0) return null;
+  const max = Math.max(1, ...stages.map((s) => s.activeCases));
   return (
     <Panel
       title="Avancement des dossiers"
@@ -25,9 +26,39 @@ export function StagePipeline({
         </Link>
       }
     >
+      {/* Téléphone : une ligne par étape (nom, barre, nombre), bien moins
+          haut qu'une grille de cases */}
+      <ol className="divide-y sm:hidden">
+        {stages.map((s, i) => (
+          <li key={s.id}>
+            <Link
+              href={`/cases?campagne=${campaignId}&etape=${s.id}`}
+              className="flex min-h-11 items-center gap-3 px-5 py-2 text-sm active:bg-muted/60"
+            >
+              <span
+                aria-hidden
+                className="grid size-5 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-medium text-muted-foreground tabular-nums"
+              >
+                {i + 1}
+              </span>
+              <span className="min-w-0 flex-1">{s.name}</span>
+              <span aria-hidden className="h-1.5 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
+                <span
+                  className="block h-full rounded-full bg-primary"
+                  style={{ width: `${(s.activeCases / max) * 100}%` }}
+                />
+              </span>
+              <span className="w-6 shrink-0 text-right font-semibold tabular-nums">
+                <span className="sr-only">Dossiers actifs : </span>
+                {s.activeCases}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ol>
       {/* Bordures à droite et en bas de chaque case ; celles du bord sont
           masquées par le panneau (marges négatives) */}
-      <ol className="-mr-px -mb-px grid grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]">
+      <ol className="-mr-px -mb-px grid grid-cols-2 max-sm:hidden sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]">
         {stages.map((s, i) => (
           <li key={s.id} className="border-r border-b">
             <Link
