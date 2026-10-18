@@ -917,6 +917,7 @@ export function CaseTree({
             selected={selectedCases}
             stages={stages}
             members={members}
+            currentUserId={currentUserId}
             isOwner={isOwner}
             onClear={() => setChecked(new Set())}
             onExit={exitSelection}

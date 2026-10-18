@@ -151,6 +151,19 @@ describe("bulkCasesSchema", () => {
     ).toBe(true);
   });
 
+  it("accepte une même tâche pour des dossiers, intitulé obligatoire", () => {
+    const task = { title: "Relancer pour le visa", dueDate: "", assignedTo: CAMPAIGN };
+    expect(
+      bulkCasesSchema.safeParse({ caseIds: [CAMPAIGN], action: { type: "task", task } }).success,
+    ).toBe(true);
+    expect(
+      bulkCasesSchema.safeParse({
+        caseIds: [CAMPAIGN],
+        action: { type: "task", task: { ...task, title: " " } },
+      }).success,
+    ).toBe(false);
+  });
+
   it("refuse une sélection vide ou trop grande", () => {
     expect(bulkCasesSchema.safeParse({ caseIds: [], action: stage }).success).toBe(false);
     const many = Array.from({ length: BULK_MAX_CASES + 1 }, () => CAMPAIGN);

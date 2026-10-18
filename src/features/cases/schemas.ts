@@ -4,6 +4,7 @@ import {
   initialPaymentSchema,
   optionalAmountSchema,
 } from "@/features/payments/schemas";
+import { taskSchema } from "@/features/tasks/schemas";
 import { todayInAppTimezone } from "@/lib/dates";
 import {
   emptyToUndefined,
@@ -275,6 +276,7 @@ export const bulkCasesSchema = z.object({
   action: z.discriminatedUnion("type", [
     z.object({ type: z.literal("stage"), stageId: uuidSchema }),
     z.object({ type: z.literal("assignee"), assignedTo: uuidSchema }),
+    z.object({ type: z.literal("task"), task: taskSchema }),
   ]),
 });
 

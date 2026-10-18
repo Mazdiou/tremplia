@@ -5,7 +5,8 @@ import type { Member } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { BulkCasesInput } from "../schemas";
 
-// Actions groupées sur des dossiers de l'agence de l'appelant. Les fonctions
+// Actions groupées sur des dossiers de l'agence de l'appelant (étape,
+// responsable, même tâche pour chacun). Les fonctions
 // SQL revérifient l'acteur, son rôle et chaque dossier, et refusent tout si
 // un seul ne convient pas. Renvoie le nombre de dossiers vraiment changés.
 export async function applyBulkAction(member: Member, input: BulkCasesInput): Promise<number> {
@@ -38,6 +39,33 @@ export async function applyBulkAction(member: Member, input: BulkCasesInput): Pr
       targetType: "case",
       targetId: r.changed_id,
       details: { from: r.previous_stage_id, to: stageId, bulk: true },
+    }));
+  } else if (input.action.type === "task") {
+    const task = input.action.task;
+    const { data, error } = await admin.rpc("create_cases_task", {
+      ...base,
+      p_title: task.title,
+      p_details: task.details ?? null,
+      p_due_date: task.dueDate ?? null,
+      p_assigned_to: task.assignedTo,
+    });
+    if (error) {
+      throw dbError("cases bulk task", error, {
+        P0002: "Un des dossiers est introuvable",
+        "22023": "Ce membre ne peut pas recevoir de tâche (compte désactivé ?)",
+        "23514": "Tâche invalide",
+        "54000": "Un des dossiers a déjà 100 tâches à faire",
+      });
+    }
+    const rows = (data ?? []) as { case_id: string; task_id: string }[];
+    entries = rows.map((r) => ({
+      agencyId: member.agencyId,
+      actorId: member.userId,
+      caseId: r.case_id,
+      action: "task.created",
+      targetType: "case_task",
+      targetId: r.task_id,
+      details: { assigned_to: task.assignedTo, bulk: true },
     }));
   } else {
     const assignedTo = input.action.assignedTo;

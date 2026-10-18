@@ -6,27 +6,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldError, SelectField, TextAreaField } from "@/components/form-fields";
-import { callApi } from "@/lib/api-client";
+import { callApi, type ApiResult } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { quickDueDates } from "@/features/tasks/due";
-import { MAX_TASK_DETAILS, MAX_TASK_TITLE, taskSchema } from "@/features/tasks/schemas";
+import { MAX_TASK_DETAILS, MAX_TASK_TITLE, taskSchema, type TaskInput } from "@/features/tasks/schemas";
 import type { TaskFormContext, TaskItem } from "@/features/tasks/types";
 
 const CHIP =
   "h-8 touch-manipulation rounded-full border px-3 text-xs font-medium transition-colors hover:bg-muted aria-pressed:border-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground";
 
 // Nouvelle tâche (sans `task`) ou modification. `onSaved` reçoit le message
-// à afficher.
+// à afficher. `save` remplace l'envoi habituel (actions groupées : la même
+// tâche pour plusieurs dossiers).
 export function TaskForm({
   context,
   task,
   autoFocus,
+  save,
+  submitLabel,
   onSaved,
   onCancel,
 }: {
   context: TaskFormContext;
   task?: TaskItem;
   autoFocus?: boolean;
+  save?: (input: TaskInput) => Promise<ApiResult<unknown>>;
+  submitLabel?: string;
   onSaved: (message: string) => void;
   onCancel: () => void;
 }) {
@@ -59,10 +64,12 @@ export function TaskForm({
     setErrors({});
     setFormError(null);
     setSaving(true);
-    const res = await callApi(
-      task ? `/api/cases/${caseId}/tasks/${task.id}` : `/api/cases/${caseId}/tasks`,
-      { method: task ? "PATCH" : "POST", body: parsed.data },
-    );
+    const res = save
+      ? await save(parsed.data)
+      : await callApi(
+          task ? `/api/cases/${caseId}/tasks/${task.id}` : `/api/cases/${caseId}/tasks`,
+          { method: task ? "PATCH" : "POST", body: parsed.data },
+        );
     setSaving(false);
     if (!res.ok) {
       setFormError(res.error);
@@ -175,7 +182,7 @@ export function TaskForm({
         </Button>
         <Button type="submit" disabled={saving}>
           {saving && <Loader2 className="animate-spin" aria-hidden />}
-          {task ? "Enregistrer" : "Ajouter la tâche"}
+          {submitLabel ?? (task ? "Enregistrer" : "Ajouter la tâche")}
         </Button>
       </div>
     </form>

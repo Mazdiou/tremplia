@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ListTodo } from "lucide-react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { StatusMessage, type ActionMessage } from "@/components/page-ui";
 import { Button } from "@/components/ui/button";
 import { BULK_MAX_CASES } from "@/features/cases/schemas";
 import type { TreeCase } from "@/features/cases/fetch-campaign-cases";
 import type { CampaignStage } from "@/features/stages/stages";
+import { TaskForm } from "@/features/tasks/components/task-form";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 import { callApi } from "@/lib/api-client";
+import { todayInAppTimezone } from "@/lib/dates";
 import { fullName } from "@/lib/names";
 import { plural } from "@/lib/plural";
 import type { TreeMember } from "./case-tree";
@@ -21,12 +25,13 @@ const selectClass =
   "h-9 w-full min-w-0 rounded-lg border border-input bg-card px-2 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30";
 
 // Barre des actions groupées, en bas de l'arbre en mode sélection : même
-// étape (dossiers d'une seule campagne) ou même responsable (patron
-// seulement) pour tous les dossiers cochés, après confirmation.
+// étape (dossiers d'une seule campagne), même responsable (patron
+// seulement) ou même tâche pour tous les dossiers cochés.
 export function BulkActionsBar({
   selected,
   stages,
   members,
+  currentUserId,
   isOwner,
   onClear,
   onExit,
@@ -35,6 +40,7 @@ export function BulkActionsBar({
   // Étapes de toutes les campagnes de l'agence
   stages: CampaignStage[];
   members: TreeMember[];
+  currentUserId: string;
   isOwner: boolean;
   onClear: () => void;
   onExit: () => void;
@@ -43,6 +49,10 @@ export function BulkActionsBar({
   const [pending, setPending] = useState<Pending | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<ActionMessage>(null);
+  // Fenêtre « Ajouter une tâche » : jour de l'application fixé à l'ouverture
+  const [taskToday, setTaskToday] = useState<string | null>(null);
+  const taskDialogRef = useModalDialog(taskToday !== null);
+  const created = useRef(0);
 
   const count = selected.length;
   const campaignIds = new Set(selected.map((c) => c.campaign_id));
@@ -145,6 +155,19 @@ export function BulkActionsBar({
       </select>
       {stageHint && <p className="text-xs text-muted-foreground">{stageHint}</p>}
 
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={count === 0 || tooMany}
+        onClick={() => {
+          setMessage(null);
+          setTaskToday(todayInAppTimezone());
+        }}
+        className="w-full justify-start"
+      >
+        <ListTodo /> Ajouter une tâche…
+      </Button>
+
       {isOwner && (
         <select
           value=""
@@ -184,6 +207,54 @@ export function BulkActionsBar({
         onConfirm={() => void apply()}
         onCancel={() => setPending(null)}
       />
+
+      <dialog
+        ref={taskDialogRef}
+        onClose={() => setTaskToday(null)}
+        onClick={(e) => e.target === taskDialogRef.current && setTaskToday(null)}
+        aria-labelledby="bulk-task-title"
+        className="m-auto max-h-[calc(100dvh-2rem)] w-[min(32rem,calc(100%-2rem))] overflow-y-auto rounded-2xl border bg-card p-5 text-card-foreground backdrop:bg-black/45"
+      >
+        <h2 id="bulk-task-title" className="text-base font-semibold">
+          Même tâche pour {plural(count, "dossier")}
+        </h2>
+        <p className="mt-1 mb-4 text-sm text-muted-foreground">
+          Une tâche distincte est ajoutée à chaque dossier coché.
+        </p>
+        {taskToday && (
+          <TaskForm
+            context={{
+              caseId: "",
+              members: members.map((m) => ({
+                id: m.id,
+                name: fullName(m.first_name, m.last_name),
+                isActive: m.is_active,
+              })),
+              currentUserId,
+              today: taskToday,
+            }}
+            autoFocus
+            submitLabel={`Ajouter à ${plural(count, "dossier")}`}
+            save={async (task) => {
+              const res = await callApi<{ changed: number }>("/api/cases/bulk", {
+                body: { caseIds: selected.map((c) => c.id), action: { type: "task", task } },
+              });
+              if (res.ok) created.current = res.data.changed;
+              return res;
+            }}
+            onSaved={() => {
+              setTaskToday(null);
+              setMessage({
+                text: `Tâche ajoutée à ${plural(created.current, "dossier")}.`,
+                error: false,
+              });
+              onClear();
+              router.refresh();
+            }}
+            onCancel={() => setTaskToday(null)}
+          />
+        )}
+      </dialog>
     </div>
   );
 }
