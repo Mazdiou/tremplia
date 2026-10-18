@@ -114,8 +114,10 @@ export default async function CaseLayout({
 
   return (
     <div>
-      {/* En-tête fixe, partagé par tous les onglets */}
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
+      {/* En-tête partagé par tous les onglets. Fixe sur ordinateur ; sur
+          téléphone il défile avec la page : déplié, il prendrait presque
+          tout l'écran et le contenu glisserait dessous */}
+      <header className="z-10 border-b bg-background/95 backdrop-blur md:sticky md:top-0">
         <div className="mx-auto max-w-5xl px-4 pt-5 md:px-8">
           <Link
             href="/cases"
@@ -159,7 +161,7 @@ export default async function CaseLayout({
                   <ul className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" aria-label="Contacts">
                     <li className="flex items-center gap-1">
                       <Phone className="size-3.5 text-muted-foreground" aria-hidden />
-                      <a href={telHref(c.phone)} className="hover:underline">
+                      <a href={telHref(c.phone)} className="touch-target hover:underline">
                         {c.phone}
                       </a>
                       <WhatsAppMenu

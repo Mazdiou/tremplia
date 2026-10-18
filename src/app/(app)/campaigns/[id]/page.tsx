@@ -152,7 +152,7 @@ export default async function CampaignPage({
               <p className="mt-1 truncate font-semibold">{next.label}</p>
               <p className="text-sm text-muted-foreground">
                 {formatLongDate(next.date)} ·{" "}
-                <span className="font-medium text-primary">{countdownLabel(next.days)}</span>
+                <span className="font-medium text-link">{countdownLabel(next.days)}</span>
               </p>
             </>
           ) : (

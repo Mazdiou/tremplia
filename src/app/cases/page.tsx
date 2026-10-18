@@ -65,7 +65,7 @@ export default async function CasesHomePage() {
               <h2 className="text-lg font-semibold">{campaign.name}</h2>
               <Link
                 href={`/campaigns/${campaign.id}`}
-                className="text-sm text-muted-foreground hover:text-foreground"
+                className="touch-target text-sm text-muted-foreground hover:text-foreground"
               >
                 Voir la campagne
               </Link>

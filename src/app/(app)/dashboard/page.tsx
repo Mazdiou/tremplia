@@ -271,7 +271,7 @@ export default async function DashboardPage({
                 href={`/dashboard?campaign=${c.id}`}
                 className="group flex h-full flex-col rounded-2xl border bg-card px-5 py-4 transition-colors hover:border-primary/40 hover:bg-highlight/40"
               >
-                <span className="font-semibold group-hover:text-primary">{c.name}</span>
+                <span className="font-semibold group-hover:text-link">{c.name}</span>
                 <span className="mt-0.5 text-sm text-muted-foreground tabular-nums">
                   {plural(c.activeCount, "dossier actif", "dossiers actifs")}
                 </span>

@@ -168,7 +168,7 @@ export function StudentAccessBar({
                 )}
                 <Link
                   href={`/cases/${caseId}/messages`}
-                  className="mt-1 inline-block text-sm font-medium text-primary hover:underline"
+                  className="mt-1 inline-block text-sm font-medium text-link hover:underline"
                 >
                   Répondre au candidat →
                 </Link>

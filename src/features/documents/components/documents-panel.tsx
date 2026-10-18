@@ -570,7 +570,7 @@ export function DocumentsPanel({
             onClick={() => toggleCollapsed(key)}
             aria-expanded={!isCollapsed}
             aria-label={isCollapsed ? `Déplier ${title}` : `Replier ${title}`}
-            className="shrink-0 rounded text-muted-foreground hover:text-foreground"
+            className="touch-target shrink-0 rounded text-muted-foreground hover:text-foreground"
           >
             {isCollapsed ? (
               <ChevronRight className="size-4" aria-hidden />

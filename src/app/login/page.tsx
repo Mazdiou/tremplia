@@ -91,7 +91,7 @@ export default function LoginPage() {
         Pas encore de compte ?{" "}
         <Link
           href="/register"
-          className="font-medium text-primary hover:underline"
+          className="font-medium text-link hover:underline"
         >
           Inscrire mon agence
         </Link>

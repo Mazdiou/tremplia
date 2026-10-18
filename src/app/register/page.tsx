@@ -170,7 +170,7 @@ export default function RegisterPage() {
     <AuthShell compact>
       <Link
         href="/login"
-        className="mb-6 inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="touch-target mb-6 inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
         Retour à la connexion
@@ -309,7 +309,7 @@ export default function RegisterPage() {
         Vous avez déjà un compte ?{" "}
         <Link
           href="/login"
-          className="font-medium text-primary hover:underline"
+          className="font-medium text-link hover:underline"
         >
           Se connecter
         </Link>

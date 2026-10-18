@@ -49,7 +49,7 @@ export function MyTasksPanel({
         ) : undefined
       }
       actions={
-        <Link href="/tasks" className="text-xs text-muted-foreground hover:text-foreground">
+        <Link href="/tasks" className="touch-target text-xs text-muted-foreground hover:text-foreground">
           Tout voir
         </Link>
       }

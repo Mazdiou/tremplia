@@ -18,7 +18,7 @@ export function DeadlinesPanel({
     <Panel
       title="Prochaines échéances"
       actions={
-        <Link href={`/campaigns/${campaignId}`} className="text-xs text-muted-foreground hover:text-foreground">
+        <Link href={`/campaigns/${campaignId}`} className="touch-target text-xs text-muted-foreground hover:text-foreground">
           Toutes les dates
         </Link>
       }

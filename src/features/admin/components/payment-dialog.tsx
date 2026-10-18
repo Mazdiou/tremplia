@@ -85,7 +85,7 @@ function PaymentDialog({
                 key={m}
                 className={cn(
                   "flex-1 cursor-pointer rounded-lg border px-3 py-2 text-center text-sm has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
-                  months === m && "border-primary bg-primary/10 font-medium text-primary",
+                  months === m && "border-primary bg-primary/10 font-medium text-link",
                 )}
               >
                 <input

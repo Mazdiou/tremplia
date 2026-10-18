@@ -198,7 +198,7 @@ function TaskRow({
         disabled={!canToggle}
         onClick={() => onToggle(!isDoneTask)}
         className={cn(
-          "mt-0.5 grid size-5 shrink-0 touch-manipulation place-items-center rounded-full border-2 transition-colors disabled:cursor-default",
+          "touch-target mt-0.5 grid size-5 shrink-0 touch-manipulation place-items-center rounded-full border-2 transition-colors disabled:cursor-default",
           done
             ? "border-primary bg-primary text-primary-foreground"
             : "border-muted-foreground/40 hover:border-primary",
@@ -216,7 +216,7 @@ function TaskRow({
           <p className="mt-0.5 text-xs">
             <Link
               href={`/cases/${task.caseId}/tasks`}
-              className="font-medium text-primary underline-offset-2 hover:underline"
+              className="font-medium text-link underline-offset-2 hover:underline"
             >
               {task.caseLabel.name}
             </Link>

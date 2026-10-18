@@ -197,7 +197,8 @@ export type PillTone = "ok" | "off" | "bad" | "info" | "warn";
 export const PILL_TONE_CLASSES: Record<PillTone, string> = {
   ok: "bg-success-bg text-success",
   off: "bg-muted text-muted-foreground",
-  bad: "bg-destructive/10 text-destructive",
+  // Rouge plus foncé en clair : 4,5:1 au moins sur le fond teinté
+  bad: "bg-destructive/10 text-red-700 dark:text-destructive",
   info: "bg-accent text-accent-foreground",
   warn: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
 };

@@ -53,7 +53,7 @@ export function TasksOverview({
                   aria-expanded={expanded}
                   onClick={() => setOpen((o) => ({ ...o, [s.key]: !expanded }))}
                   className={cn(
-                    "flex items-center gap-1 rounded-md py-1 text-xs font-semibold tracking-wide uppercase",
+                    "flex min-h-9 items-center gap-1 rounded-md text-xs font-semibold tracking-wide uppercase",
                     s.tone ? TONES[s.tone] : "text-muted-foreground",
                   )}
                 >

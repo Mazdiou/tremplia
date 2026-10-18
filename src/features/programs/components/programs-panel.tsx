@@ -65,7 +65,7 @@ export function ProgramRow({
 }) {
   return (
     <li className="flex items-start gap-3 px-4 py-3">
-      <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary tabular-nums">
+      <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-link tabular-nums">
         {rank}
       </span>
       <div className="min-w-0 flex-1">

@@ -96,7 +96,7 @@ export function TasksPanel({
             type="button"
             aria-expanded={showDone}
             onClick={() => setShowDone((s) => !s)}
-            className="flex items-center gap-1 rounded-md px-1 py-1 text-sm text-muted-foreground hover:text-foreground"
+            className="flex min-h-9 items-center gap-1 rounded-md px-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ChevronRight className={cn("size-4 transition-transform", showDone && "rotate-90")} aria-hidden />
             Faites ({doneTotal})

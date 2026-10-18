@@ -16,6 +16,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-link: var(--link);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
@@ -47,6 +48,8 @@
   --popover-foreground: oklch(0.208 0.042 266);
   --primary: oklch(0.546 0.245 263);
   --primary-foreground: oklch(1 0 0);
+  /* Lien écrit dans le texte : contraste d'au moins 4,5:1 sur le fond */
+  --link: oklch(0.546 0.245 263);
   --muted: oklch(0.96 0.005 255);
   --muted-foreground: oklch(0.554 0.041 257);
   --accent: oklch(0.95 0.025 265);
@@ -70,6 +73,7 @@
   --popover-foreground: oklch(0.968 0.007 248);
   --primary: oklch(0.546 0.245 263);
   --primary-foreground: oklch(1 0 0);
+  --link: oklch(0.74 0.14 262);
   --muted: oklch(0.25 0.012 258);
   --muted-foreground: oklch(0.708 0.035 256);
   --accent: oklch(0.27 0.07 262);
@@ -177,6 +181,24 @@ body {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
+/* Petite commande (case à cocher ronde, lien d'un en-tête de panneau…) :
+   sur un écran tactile, la zone qui réagit au doigt fait au moins 40 px, sans
+   rien changer à l'apparence */
+@utility touch-target {
+  position: relative;
+  @media (pointer: coarse) {
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 40px);
+      height: max(100%, 40px);
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
 /* Écran tactile : un champ en dessous de 16 px fait zoomer Safari sur iPhone
    à chaque saisie */
 @media (pointer: coarse) {

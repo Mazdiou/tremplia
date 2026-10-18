@@ -19,7 +19,7 @@ export function StagePipeline({
       actions={
         <Link
           href={`/campaigns/${campaignId}`}
-          className="text-xs text-muted-foreground hover:text-foreground"
+          className="touch-target text-xs text-muted-foreground hover:text-foreground"
         >
           Voir la campagne
         </Link>
@@ -40,7 +40,7 @@ export function StagePipeline({
                   <ChevronRight className="size-3 max-sm:hidden" aria-hidden />
                 )}
               </span>
-              <span className="mt-0.5 text-2xl font-semibold tracking-tight tabular-nums group-hover:text-primary">
+              <span className="mt-0.5 text-2xl font-semibold tracking-tight tabular-nums group-hover:text-link">
                 {s.activeCases}
               </span>
               <span className="line-clamp-2 text-sm">{s.name}</span>

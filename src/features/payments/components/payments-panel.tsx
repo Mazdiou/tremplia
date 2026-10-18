@@ -194,7 +194,7 @@ function PaymentForm({
               Reste à payer : {formatDA(remaining)} ·{" "}
               <button
                 type="button"
-                className="font-medium text-primary underline-offset-2 hover:underline"
+                className="font-medium text-link underline-offset-2 hover:underline"
                 onClick={() => setAmount(amountInputValue(remaining))}
               >
                 Tout régler

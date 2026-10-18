@@ -71,9 +71,10 @@ export function TrackRow({
   summary?: boolean;
 }) {
   // Téléphone : libellé et actions en haut, contenu sur toute la largeur
-  // dessous. Ordinateur : tout sur une ligne.
+  // dessous. Le libellé garde sa largeur ; faute de place, ce sont les
+  // actions qui passent à la ligne. Ordinateur : tout sur une ligne.
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-4 py-2.5 sm:flex sm:flex-wrap">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5 px-4 py-2.5 sm:flex sm:flex-wrap">
       <span className="col-start-1 row-start-1 flex min-h-6 items-center gap-2 whitespace-nowrap text-muted-foreground sm:w-40 sm:shrink-0">
         <Icon className="size-4 shrink-0" aria-hidden />
         {label}

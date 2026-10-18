@@ -59,7 +59,7 @@ export function PlatformListInput({
               <button
                 type="button"
                 aria-label={`Retirer ${p}`}
-                className="grid size-5 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="touch-target grid size-5 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
                 onClick={() => onChange(value.filter((x) => x !== p))}
               >
                 <X className="size-3" />

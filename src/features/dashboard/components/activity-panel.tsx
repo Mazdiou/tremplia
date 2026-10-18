@@ -30,7 +30,7 @@ export function ActivityPanel({ entries }: { entries: ActivityEntry[] }) {
                   <>
                     <span className="text-muted-foreground"> · </span>
                     {a.object.href ? (
-                      <Link href={a.object.href} className="font-medium hover:text-primary hover:underline">
+                      <Link href={a.object.href} className="font-medium hover:text-link hover:underline">
                         {a.object.label}
                       </Link>
                     ) : (

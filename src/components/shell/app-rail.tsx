@@ -68,9 +68,8 @@ export function AppRail({
                   aria-hidden
                   className={cn(
                     "absolute top-0.5 right-0.5 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] leading-none font-semibold tabular-nums max-md:right-[calc(50%-1.25rem)]",
-                    badge.overdue
-                      ? "bg-destructive text-white"
-                      : "bg-amber-500 text-white dark:bg-amber-400 dark:text-amber-950",
+                    // Mêmes couleurs dans les deux thèmes : chiffre lisible (4,5:1)
+                    badge.overdue ? "bg-red-600 text-white" : "bg-amber-400 text-amber-950",
                   )}
                 >
                   {badge.count > 99 ? "99+" : badge.count}

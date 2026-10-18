@@ -41,7 +41,7 @@ function CampaignCard({ c }: { c: CardData }) {
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <h2 className="font-semibold group-hover:text-primary">{c.name}</h2>
+        <h2 className="font-semibold group-hover:text-link">{c.name}</h2>
         <StatusPill tone={archived ? "off" : "ok"}>{CAMPAIGN_STATUS_LABELS[c.status]}</StatusPill>
       </div>
       <dl className="mt-4 mb-4 grid grid-cols-2 gap-3 text-sm">

@@ -118,7 +118,7 @@ function Section({
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           {eyebrow && (
-            <p className="text-sm font-semibold tracking-wide text-primary uppercase">{eyebrow}</p>
+            <p className="text-sm font-semibold tracking-wide text-link uppercase">{eyebrow}</p>
           )}
           <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">{title}</h2>
           {intro && <p className="mt-4 text-lg text-pretty text-muted-foreground">{intro}</p>}
@@ -196,7 +196,7 @@ function StudentMock() {
       <ol className="mt-4 space-y-2">
         {programs.map((p, i) => (
           <li key={p.title} className="flex items-center gap-3 rounded-xl border px-3 py-2.5">
-            <span className="grid size-6 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+            <span className="grid size-6 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-link">
               {i + 1}
             </span>
             <span className="min-w-0 flex-1">
@@ -338,7 +338,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
         <section className="border-y bg-muted/40 px-5 py-16 sm:px-8 md:py-28">
           <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
             <div>
-              <p className="text-sm font-semibold tracking-wide text-primary uppercase">Pour toute l&apos;équipe</p>
+              <p className="text-sm font-semibold tracking-wide text-link uppercase">Pour toute l&apos;équipe</p>
               <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
                 Chacun ses dossiers, le patron voit tout.
               </h2>
@@ -358,7 +358,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
         <section id="candidats" className="scroll-mt-16 px-5 py-16 sm:px-8 md:py-28">
           <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
             <div className="lg:order-2">
-              <p className="text-sm font-semibold tracking-wide text-primary uppercase">Espace candidat</p>
+              <p className="text-sm font-semibold tracking-wide text-link uppercase">Espace candidat</p>
               <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
                 Vos candidats suivent leur dossier, sans vous appeler.
               </h2>
