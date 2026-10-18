@@ -30,6 +30,12 @@ type CampaignSettingsDraft = {
 
 const DATE_GRID = "sm:grid-cols-[1fr_11rem_2.5rem]";
 const INFO_GRID = "sm:grid-cols-[1fr_2fr_2.5rem]";
+// Téléphone : le libellé et la corbeille sur une ligne, l'autre champ dessous,
+// un trait entre deux lignes de la liste
+const PHONE_ROW =
+  "max-sm:grid-cols-[minmax(0,1fr)_2.5rem] max-sm:border-b max-sm:pb-4 max-sm:last:border-b-0 max-sm:last:pb-0";
+const PHONE_SECOND = "max-sm:col-start-1 max-sm:row-start-2";
+const PHONE_REMOVE = "max-sm:col-start-2 max-sm:row-start-1";
 
 // Création (avec les groupes de départ) ou modification des réglages d'une
 // campagne. Réservé au patron ; la base le revérifie.
@@ -128,7 +134,7 @@ export function CampaignSettingsForm({
           <div className="space-y-3">
             <ListHeader columns={["Libellé", "Date", ""]} className={DATE_GRID} />
             {draft.dates.map((d, i) => (
-              <div key={i} className={`grid items-start gap-3 ${DATE_GRID}`}>
+              <div key={i} className={`grid items-start gap-3 ${DATE_GRID} ${PHONE_ROW}`}>
                 <TextField
                   id={`date-${i}-label`}
                   label="Libellé"
@@ -148,16 +154,19 @@ export function CampaignSettingsForm({
                   hideLabel
                   type="date"
                   required
+                  className={PHONE_SECOND}
                   value={d.date}
                   onChange={(date) =>
                     patch({ dates: draft.dates.map((x, j) => (j === i ? { ...x, date } : x)) })
                   }
                   error={errors[`dates.${i}.date`]}
                 />
-                <RemoveButton
-                  label={`Retirer la date ${i + 1}`}
-                  onClick={() => patch({ dates: draft.dates.filter((_, j) => j !== i) })}
-                />
+                <div className={PHONE_REMOVE}>
+                  <RemoveButton
+                    label={`Retirer la date ${i + 1}`}
+                    onClick={() => patch({ dates: draft.dates.filter((_, j) => j !== i) })}
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -184,7 +193,7 @@ export function CampaignSettingsForm({
           <div className="space-y-3">
             <ListHeader columns={["Libellé", "Valeur", ""]} className={INFO_GRID} />
             {draft.infos.map((info, i) => (
-              <div key={i} className={`grid items-start gap-3 ${INFO_GRID}`}>
+              <div key={i} className={`grid items-start gap-3 ${INFO_GRID} ${PHONE_ROW}`}>
                 <TextField
                   id={`info-${i}-label`}
                   label="Libellé"
@@ -205,16 +214,19 @@ export function CampaignSettingsForm({
                   required
                   maxLength={500}
                   placeholder="Ex. : France"
+                  className={PHONE_SECOND}
                   value={info.value}
                   onChange={(value) =>
                     patch({ infos: draft.infos.map((x, j) => (j === i ? { ...x, value } : x)) })
                   }
                   error={errors[`infos.${i}.value`]}
                 />
-                <RemoveButton
-                  label={`Retirer l'information ${i + 1}`}
-                  onClick={() => patch({ infos: draft.infos.filter((_, j) => j !== i) })}
-                />
+                <div className={PHONE_REMOVE}>
+                  <RemoveButton
+                    label={`Retirer l'information ${i + 1}`}
+                    onClick={() => patch({ infos: draft.infos.filter((_, j) => j !== i) })}
+                  />
+                </div>
               </div>
             ))}
           </div>

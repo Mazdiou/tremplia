@@ -29,8 +29,9 @@ type UiPrefs = {
   stage: string;
   // Seulement les dossiers qui ont une tâche en retard
   overdue: boolean;
-  // En-tête de la fiche d'un dossier réduit à une ligne
-  caseHeaderCollapsed: boolean;
+  // En-tête de la fiche d'un dossier : réduit à une ligne ou complet ;
+  // « auto » (pas encore choisi) = réduit sur téléphone, complet ailleurs
+  caseHeader: "auto" | "collapsed" | "expanded";
 };
 
 export const DEFAULT_PREFS: UiPrefs = {
@@ -49,7 +50,7 @@ export const DEFAULT_PREFS: UiPrefs = {
   payment: "",
   stage: "",
   overdue: false,
-  caseHeaderCollapsed: false,
+  caseHeader: "auto",
 };
 
 // Largeur du panneau des dossiers, en pixels
@@ -86,7 +87,8 @@ export function sanitize(raw: unknown): UiPrefs {
       : "",
     stage: typeof r.stage === "string" ? r.stage : "",
     overdue: r.overdue === true,
-    caseHeaderCollapsed: r.caseHeaderCollapsed === true,
+    caseHeader:
+      r.caseHeader === "collapsed" || r.caseHeader === "expanded" ? r.caseHeader : "auto",
   };
 }
 

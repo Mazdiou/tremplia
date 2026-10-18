@@ -204,7 +204,7 @@ export default async function CampaignPage({
               ) : (
                 <dl>
                   {infos.map((i) => (
-                    <KeyRow key={i.label} label={i.label}>
+                    <KeyRow key={i.label} label={i.label} stacked>
                       {i.value}
                     </KeyRow>
                   ))}

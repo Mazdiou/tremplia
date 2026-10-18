@@ -389,7 +389,7 @@ export function DocumentsPanel({
           setOverKey(null);
         }}
         className={cn(
-          "flex items-center gap-3 px-3 py-2.5 text-sm",
+          "flex items-center gap-3 px-3 py-2.5 text-sm max-sm:flex-wrap",
           dragDocId === d.id && "opacity-50",
         )}
       >
@@ -436,7 +436,8 @@ export function DocumentsPanel({
           </div>
         )}
 
-        <div className="flex shrink-0 items-center gap-1">
+        {/* Téléphone : boutons sous le nom, qui garde toute la largeur */}
+        <div className="flex shrink-0 items-center gap-1 max-sm:-mt-1 max-sm:w-full max-sm:justify-end">
           {movingId === d.id ? (
             <select
               autoFocus

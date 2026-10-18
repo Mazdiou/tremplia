@@ -227,10 +227,20 @@ function TaskRow({
           <p className="mt-0.5 whitespace-pre-wrap break-words text-muted-foreground">{task.details}</p>
         )}
         {meta && <p className="mt-1 text-xs text-muted-foreground">{meta}</p>}
+        {/* Téléphone : l'échéance sous le titre, qui garde toute la largeur */}
+        {!isDoneTask && !done && task.dueDate && (
+          <div className="mt-1.5 sm:hidden">
+            <DueBadge dueDate={task.dueDate} today={today} />
+          </div>
+        )}
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
-        {!isDoneTask && !done && <DueBadge dueDate={task.dueDate} today={today} />}
+        {!isDoneTask && !done && (
+          <span className="max-sm:hidden">
+            <DueBadge dueDate={task.dueDate} today={today} />
+          </span>
+        )}
         {showMenu && (
           <div className="relative" ref={menuRef}>
             <Button

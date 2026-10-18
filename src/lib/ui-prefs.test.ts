@@ -42,10 +42,10 @@ describe("sanitize (mémoire de l'interface)", () => {
   });
 
   it("n'accepte que des valeurs connues", () => {
-    const prefs = sanitize({ sortBy: "date", collapsed: "oui", mine: 1, caseHeaderCollapsed: "oui" });
+    const prefs = sanitize({ sortBy: "date", collapsed: "oui", mine: 1, caseHeader: "oui" });
     expect(prefs.sortBy).toBe("name");
     expect(prefs.collapsed).toBe(false);
     expect(prefs.mine).toBe(false);
-    expect(prefs.caseHeaderCollapsed).toBe(false);
+    expect(prefs.caseHeader).toBe("auto");
   });
 });

@@ -86,7 +86,7 @@ export function Panel({
             <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
           )}
         </div>
-        {actions}
+        {actions && <div className="shrink-0 whitespace-nowrap">{actions}</div>}
       </div>
       {children}
     </section>
@@ -136,18 +136,29 @@ export function FormActions({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Libellé à gauche, valeur à droite (elle passe à la ligne si elle est
+// longue), aussi sur téléphone. `stacked` : valeur longue (un texte libre),
+// placée sous le libellé sur téléphone.
 export function KeyRow({
   label,
+  stacked,
   children,
 }: {
   label: string;
+  stacked?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    // Téléphone : libellé au-dessus de la valeur, qui garde toute la largeur
-    <div className="flex flex-col gap-0.5 border-b px-5 py-3 text-sm last:border-b-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-      <dt className="shrink-0 text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 break-words font-medium sm:text-right">{children}</dd>
+    <div
+      className={cn(
+        "flex items-baseline justify-between gap-4 border-b px-5 py-3 text-sm last:border-b-0",
+        stacked && "max-sm:flex-col max-sm:gap-0.5",
+      )}
+    >
+      <dt className={cn("shrink-0 text-muted-foreground", !stacked && "max-w-[45%]")}>{label}</dt>
+      <dd className={cn("min-w-0 font-medium break-words", stacked ? "sm:text-right" : "text-right")}>
+        {children}
+      </dd>
     </div>
   );
 }

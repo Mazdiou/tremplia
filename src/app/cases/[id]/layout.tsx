@@ -129,7 +129,7 @@ export default async function CaseLayout({
             compact={
               <div className="flex items-center justify-between gap-3">
                 {title}
-                <CaseHeaderToggle />
+                <CaseHeaderToggle collapsed />
               </div>
             }
           >
@@ -211,7 +211,7 @@ export default async function CaseLayout({
                   </>
                 )}
                 <span className="max-sm:ml-auto">
-                  <CaseHeaderToggle />
+                  <CaseHeaderToggle collapsed={false} />
                 </span>
               </div>
             </div>

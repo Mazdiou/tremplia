@@ -7,17 +7,19 @@ import { cn } from "@/lib/utils";
 
 // En-tête de la fiche d'un dossier, réductible à une ligne pour laisser de
 // la place au contenu (beaucoup de documents, longue lettre…). Le choix est
-// mémorisé et vaut pour tous les dossiers.
+// mémorisé et vaut pour tous les dossiers. Tant qu'il n'est pas fait,
+// l'en-tête est réduit sur téléphone (déplié, il remplirait l'écran) et
+// complet sur ordinateur.
 
-export function CaseHeaderToggle() {
-  const [prefs, setPrefs] = useUiPrefs();
-  const collapsed = prefs.caseHeaderCollapsed;
+// `collapsed` : l'en-tête où se trouve le bouton est la version réduite
+export function CaseHeaderToggle({ collapsed }: { collapsed: boolean }) {
+  const [, setPrefs] = useUiPrefs();
   const label = collapsed ? "Afficher l'en-tête du dossier" : "Réduire l'en-tête du dossier";
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setPrefs({ caseHeaderCollapsed: !collapsed })}
+      onClick={() => setPrefs({ caseHeader: collapsed ? "expanded" : "collapsed" })}
       aria-expanded={!collapsed}
       aria-label={label}
       title={label}
@@ -37,7 +39,15 @@ export function CaseHeaderDetails({
   children: React.ReactNode;
 }) {
   const [prefs] = useUiPrefs();
-  return prefs.caseHeaderCollapsed ? compact : children;
+  if (prefs.caseHeader === "collapsed") return compact;
+  if (prefs.caseHeader === "expanded") return children;
+  // Pas de choix : la largeur décide, en CSS (rien ne saute à l'affichage)
+  return (
+    <>
+      <div className="md:hidden">{compact}</div>
+      <div className="max-md:hidden">{children}</div>
+    </>
+  );
 }
 
 // Panneau de suivi sous l'identité : une ligne par sujet (étape, comptes

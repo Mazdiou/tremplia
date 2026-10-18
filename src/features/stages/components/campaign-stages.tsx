@@ -235,8 +235,11 @@ export function CampaignStages({
                 >
                   {i + 1}
                 </span>
-                <span className="w-36 shrink-0 truncate font-medium sm:w-60">{s.name}</span>
-                <span aria-hidden className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
+                {/* Téléphone : nom en entier (sur deux lignes au besoin), barre courte */}
+                <span className="min-w-0 flex-1 font-medium break-words sm:w-60 sm:flex-none sm:truncate">
+                  {s.name}
+                </span>
+                <span aria-hidden className="h-1.5 w-14 shrink-0 overflow-hidden rounded-full bg-muted sm:w-auto sm:min-w-0 sm:flex-1">
                   <span
                     className="block h-full rounded-full bg-primary"
                     style={{ width: `${(s.activeCases / maxActive) * 100}%` }}

@@ -49,7 +49,7 @@ export function MyTasksPanel({
         ) : undefined
       }
       actions={
-        <Link href="/tasks" className="touch-target text-xs text-muted-foreground hover:text-foreground">
+        <Link href="/tasks" className="touch-target text-xs whitespace-nowrap text-muted-foreground hover:text-foreground">
           Tout voir
         </Link>
       }
@@ -65,7 +65,9 @@ export function MyTasksPanel({
             {rows.slice(0, SHOWN).map((r) => {
               const state = dueState(r.due_date, today);
               return (
-                <li key={r.id}>
+                // min-w-0 : dans la grille, un long intitulé se tronque au lieu
+                // d'élargir la ligne
+                <li key={r.id} className="min-w-0">
                   <Link
                     href={`/cases/${r.case_id}/tasks`}
                     className="flex min-h-11 items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-muted/60"

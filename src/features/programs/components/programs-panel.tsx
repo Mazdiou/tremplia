@@ -64,7 +64,7 @@ export function ProgramRow({
   result?: React.ReactNode;
 }) {
   return (
-    <li className="flex items-start gap-3 px-4 py-3">
+    <li className="flex items-start gap-3 px-4 py-3 max-sm:flex-wrap">
       <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-link tabular-nums">
         {rank}
       </span>
@@ -84,7 +84,8 @@ export function ProgramRow({
         </p>
         {result && <div className="mt-1.5">{result}</div>}
       </div>
-      {actions}
+      {/* Téléphone : boutons sous la formation, l'intitulé garde la largeur */}
+      {actions && <div className="max-sm:-mt-1 max-sm:flex max-sm:w-full max-sm:justify-end">{actions}</div>}
     </li>
   );
 }
