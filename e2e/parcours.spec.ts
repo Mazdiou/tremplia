@@ -59,8 +59,12 @@ test("inscription d'une agence puis connexion du patron", async () => {
 test("mot de bienvenue puis guide de démarrage", async () => {
   const welcome = page.getByRole("dialog", { name: /Bienvenue/ });
   await expect(welcome).toBeVisible();
+  // « Vu » est enregistré en arrière-plan : on attend la réponse avant de
+  // recharger, sinon la page rechargée peut arriver avant l'enregistrement
+  const saved = page.waitForResponse((r) => r.url().endsWith("/api/onboarding/welcome"));
   await welcome.getByRole("button", { name: "C'est parti" }).click();
   await expect(welcome).toBeHidden();
+  expect((await saved).ok()).toBe(true);
   await expect(page.getByRole("progressbar", { name: "Avancement" })).toHaveAttribute(
     "aria-valuenow",
     "0",
