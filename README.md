@@ -252,6 +252,12 @@ réseau.
   en-têtes, corps ou paramètres de requête ; e-mails et numéros de
   téléphone masqués dans les messages (`scrubEvent`, testé). Pas
   d'enregistrement de session ni de mesure des performances.
+- **Tunnel.** Le navigateur envoie ses rapports à `/api/rapport` (même
+  site), que le serveur transmet à Sentry : les bloqueurs de publicité
+  arrêtent les requêtes vers `sentry.io`. Seulement pour le projet de
+  `NEXT_PUBLIC_SENTRY_DSN` (adresse construite côté serveur, jamais lue dans
+  la requête), 256 Ko au plus, rien dans les logs (`src/lib/sentry-tunnel.ts`,
+  testé). Sans DSN, la route refuse tout.
 - Pas encore de « source maps » : les traces du navigateur pointent vers le
   code compilé. Elles demanderaient un jeton Sentry dans le build.
 

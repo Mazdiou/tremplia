@@ -95,8 +95,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Fichiers de l'application installable (manifeste, icônes, service
-  // worker, page hors connexion) : publics, sans session
+  // worker, page hors connexion) et tunnel du suivi des erreurs
+  // (api/rapport) : publics, sans session
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/auth/register|manifest.webmanifest|sw.js|icons/|icon|apple-icon|offline).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/auth/register|api/rapport|manifest.webmanifest|sw.js|icons/|icon|apple-icon|offline).*)",
   ],
 };
