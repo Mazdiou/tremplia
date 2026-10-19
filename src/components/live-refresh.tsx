@@ -10,9 +10,9 @@ import { createClient } from "@/lib/supabase/client";
 //
 // - Agence (agencyId fourni) : abonnement en temps réel aux messages et aux
 //   réponses des candidats, et aux tâches de l'agence (filtrés par le RLS).
-//   Une tâche supprimée n'arrive pas (Supabase ne filtre pas les
-//   suppressions) : elle disparaît à la relecture suivante. Si la connexion
-//   tombe, une vérification toutes les 30 s prend le relais.
+//   Les suppressions de tâches arrivent aussi : la table est en identité
+//   complète, le filtre agency_id s'applique à l'ancienne ligne. Si la
+//   connexion tombe, une vérification toutes les 30 s prend le relais.
 // - Candidat (sans compte Supabase) : vérification toutes les minutes.
 // - Dans les deux cas : relecture au retour sur l'onglet.
 

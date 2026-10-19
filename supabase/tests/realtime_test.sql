@@ -1,5 +1,5 @@
 begin;
-select plan(4);
+select plan(5);
 
 -- Seules les tables utiles à l'agence sont diffusées en temps réel ; le
 -- cloisonnement repose sur leur RLS (lecture réservée à l'agence).
@@ -21,6 +21,14 @@ select ok(
 select ok(
   (select relrowsecurity from pg_class where oid = 'public.case_tasks'::regclass),
   'case_tasks : RLS active'
+);
+
+-- Identité complète : la suppression d'une tâche passe le filtre agency_id
+-- de l'abonnement (le RLS limite toujours l'événement à l'id)
+select is(
+  (select relreplident::text from pg_class where oid = 'public.case_tasks'::regclass),
+  'f',
+  'case_tasks : identité complète pour diffuser les suppressions'
 );
 
 select * from finish();

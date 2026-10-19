@@ -402,7 +402,7 @@ Les migrations (`supabase/migrations/`) sont découpées par domaine :
 | `case_stages` | étapes des campagnes |
 | `bulk_case_actions` | actions groupées (étape, responsable) |
 | `agency_settings` | réglages de l'agence et valeurs des nouvelles campagnes |
-| `case_tasks` | tâches des dossiers, actions groupées et temps réel des tâches |
+| `case_tasks`, `case_close_tasks` | tâches des dossiers, actions groupées, clôture avec tâches, temps réel des tâches (suppressions comprises) |
 | `onboarding` | guide de démarrage : avancement, guide masqué, mot de bienvenue vu |
 
 Chaque domaine a son fichier de tests pgTAP dans `supabase/tests/`.

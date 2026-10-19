@@ -198,22 +198,50 @@ export async function updateCase(auth: AuthorizedCase, caseId: string, input: Up
   return fields;
 }
 
-export async function setCaseStatus(auth: AuthorizedCase, caseId: string, status: CaseStatus) {
+export async function setCaseStatus(
+  auth: AuthorizedCase,
+  caseId: string,
+  status: CaseStatus,
+  { completeTasks = false }: { completeTasks?: boolean } = {},
+) {
   const { admin, member } = auth;
-  const { data: previous, error } = await admin.rpc("set_case_status", {
+  const params = {
     p_case_id: caseId,
     p_agency_id: member.agencyId,
     p_actor_id: member.userId,
     p_status: status,
-  });
-  if (error) throw dbError("cases status", error, { P0002: "Dossier introuvable" });
+  };
+  // En fermant le dossier, ses tâches à faire peuvent être cochées dans la
+  // même transaction : jamais un dossier clos avec des tâches restées à faire
+  let previous: string;
+  let completed = 0;
+  if (completeTasks && status !== "active") {
+    const { data, error } = await admin
+      .rpc("close_case_with_tasks", params)
+      .single<{ previous_status: string; completed_count: number }>();
+    if (error) throw dbError("cases status", error, { P0002: "Dossier introuvable" });
+    previous = data.previous_status;
+    completed = data.completed_count;
+  } else {
+    const { data, error } = await admin.rpc("set_case_status", params);
+    if (error) throw dbError("cases status", error, { P0002: "Dossier introuvable" });
+    previous = data as string;
+  }
 
   if (previous !== status) {
     await logCaseActivity(auth, caseId, {
       action: "case.status_changed",
       targetType: "case",
       targetId: caseId,
-      details: { from: previous as string, to: status },
+      details: { from: previous, to: status },
+    });
+  }
+  if (completed > 0) {
+    await logCaseActivity(auth, caseId, {
+      action: "task.all_completed",
+      targetType: "case",
+      targetId: caseId,
+      details: { count: completed },
     });
   }
 }

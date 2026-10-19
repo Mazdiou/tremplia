@@ -1,5 +1,5 @@
 begin;
-select plan(60);
+select plan(66);
 
 -- Patron A, employés A1, A2 et A3 (A3 est désactivé), patron B
 insert into auth.users (id, email) values
@@ -298,6 +298,51 @@ select throws_ok(
   $$select * from public.complete_case_tasks('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
       (select agency_a from ctx), '22222222-2222-2222-2222-222222222222')$$,
   'P0002', null, 'clore les tâches d''un dossier d''une autre agence est refusé');
+
+-- Clôture et tâches en une seule opération : dossier C (tâches à faire)
+create temp table open_c as
+select id from public.case_tasks
+where case_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc' and done_at is null;
+grant select on open_c to public;
+
+create temp table closed_c as
+select * from public.close_case_with_tasks('cccccccc-cccc-cccc-cccc-cccccccccccc',
+  (select agency_a from ctx), '22222222-2222-2222-2222-222222222222', 'closed');
+grant select on closed_c to public;
+
+select is(
+  (select previous_status from closed_c), 'active',
+  'clôture avec tâches : renvoie l''ancien statut');
+
+select ok(
+  (select count(*) from open_c) > 0
+    and (select completed_count from closed_c)::bigint = (select count(*) from open_c),
+  'clôture avec tâches : renvoie le nombre de tâches cochées');
+
+select ok(
+  (select status = 'closed' from public.cases where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc')
+    and pg_temp.open_count('cccccccc-cccc-cccc-cccc-cccccccccccc') = 0,
+  'clôture avec tâches : dossier clos et plus aucune tâche à faire');
+
+select throws_ok(
+  $$select * from public.close_case_with_tasks('cccccccc-cccc-cccc-cccc-cccccccccccc',
+      (select agency_a from ctx), '22222222-2222-2222-2222-222222222222', 'active')$$,
+  '22023', null, 'clôture avec tâches : rouvrir par cette voie est refusé');
+
+select throws_ok(
+  $$select * from public.close_case_with_tasks('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+      (select agency_a from ctx), '22222222-2222-2222-2222-222222222222', 'closed')$$,
+  'P0002', null, 'clôture avec tâches : dossier d''une autre agence refusé');
+
+select throws_ok(
+  $$select * from public.close_case_with_tasks('cccccccc-cccc-cccc-cccc-cccccccccccc',
+      (select agency_a from ctx), '55555555-5555-5555-5555-555555555555', 'abandoned')$$,
+  '42501', null, 'clôture avec tâches : membre désactivé refusé');
+
+-- Remis actif pour la suite, tâches rouvertes
+update public.cases set status = 'active' where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+update public.case_tasks set done_at = null, done_by = null
+where id in (select id from open_c);
 
 -- 7. Même tâche pour plusieurs dossiers -------------------------------------
 

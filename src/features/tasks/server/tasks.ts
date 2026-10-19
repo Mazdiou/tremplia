@@ -151,23 +151,3 @@ export async function deleteTask(auth: AuthorizedCase, caseId: string, taskId: s
     targetId: taskId,
   });
 }
-
-// À la clôture du dossier : toutes ses tâches à faire deviennent faites
-export async function completeCaseTasks(auth: AuthorizedCase, caseId: string) {
-  const { data, error } = await auth.admin.rpc("complete_case_tasks", {
-    p_case_id: caseId,
-    p_agency_id: auth.agencyId,
-    p_actor_id: auth.member.userId,
-  });
-  if (error) throw dbError("tasks complete all", error, { P0002: "Dossier introuvable" });
-
-  const count = Array.isArray(data) ? data.length : 0;
-  if (count > 0) {
-    await logCaseActivity(auth, caseId, {
-      action: "task.all_completed",
-      targetType: "case",
-      targetId: caseId,
-      details: { count },
-    });
-  }
-}
