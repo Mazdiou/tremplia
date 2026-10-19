@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ActivityAction, ActivityTarget } from "./actions";
+import { reportError } from "@/lib/report-error";
 
 // `details` : jamais de donnée personnelle ni de secret, seulement des
 // identifiants, des noms de champs, des statuts et des nombres.
@@ -42,7 +43,7 @@ export async function logActivities(
     })),
   );
   if (error) {
-    console.error("[activity_log]", error.code);
+    reportError("[activity_log]", error.code);
     return false;
   }
   return true;

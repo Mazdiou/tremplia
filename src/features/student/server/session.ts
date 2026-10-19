@@ -5,6 +5,7 @@ import { timingSafeEqual } from "node:crypto";
 import { ApiError } from "@/lib/api-errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { signSession } from "./keys";
+import { reportError } from "@/lib/report-error";
 
 // Session du candidat : un cookie signé par le serveur, séparé de la
 // session des employés (Supabase Auth). Revérifiée à chaque affichage :
@@ -60,7 +61,7 @@ export const getStudentSession = cache(async (): Promise<StudentSession | null> 
     p_agency_id: p.a,
   });
   if (error) {
-    console.error("[student session]", error.code);
+    reportError("[student session]", error.code);
     return null;
   }
   const row = (data as { generation: number }[] | null)?.[0];

@@ -12,6 +12,7 @@ import {
 import { CASE_SEARCH_LIMIT } from "../schemas";
 import { mergePlatforms } from "../platforms";
 import { parseSearchQuery } from "../search-query";
+import { reportError } from "@/lib/report-error";
 
 // Lectures via le RLS : seuls les dossiers de l'agence de l'appelant sont
 // visibles. Appelées en POST : jamais l'identité d'un candidat dans une adresse.
@@ -35,7 +36,7 @@ export async function listUsedPlatforms(): Promise<string[]> {
     .select("platform")
     .order("updated_at", { ascending: false })
     .limit(200);
-  if (error) console.error("[platforms list]", error.code);
+  if (error) reportError("[platforms list]", error.code);
   return mergePlatforms((data ?? []).map((r) => r.platform as string));
 }
 

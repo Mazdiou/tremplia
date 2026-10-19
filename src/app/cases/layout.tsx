@@ -12,6 +12,7 @@ import { agencyUnreadCounts } from "@/features/messages/server/messages";
 import { isReadOnly } from "@/features/subscription/server/subscription";
 import { isPlatformAdmin } from "@/features/admin/server/admin";
 import { overdueTasksByCase } from "@/features/tasks/server/read";
+import { reportError, reportException } from "@/lib/report-error";
 
 export default async function CasesLayout({
   children,
@@ -39,7 +40,7 @@ export default async function CasesLayout({
     isReadOnly(member.agencyId),
     isPlatformAdmin(member.userId),
   ]);
-  if (membersRes.error) console.error("[cases layout] membres", membersRes.error.code);
+  if (membersRes.error) reportError("[cases layout] membres", membersRes.error.code);
 
   // Une seule campagne active : elle est ouverte d'emblée, ses dossiers sont
   // chargés ici. Les autres le sont à l'ouverture, par le navigateur.
@@ -49,7 +50,7 @@ export default async function CasesLayout({
     try {
       initialData[active[0].id] = await fetchCampaignCases(supabase, active[0].id);
     } catch (e) {
-      console.error("[cases layout] dossiers", e instanceof Error ? e.name : "erreur");
+      reportException("[cases layout] dossiers", e);
     }
   }
 

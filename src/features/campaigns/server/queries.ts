@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { CampaignDate } from "../timeline";
 import type { CampaignStatus } from "../labels";
+import { reportError } from "@/lib/report-error";
 
 // Lectures via le RLS : seules les campagnes de l'agence reviennent.
 
@@ -26,7 +27,7 @@ export async function listCampaigns(): Promise<CampaignSummary[]> {
     .from("campaigns")
     .select("id, name, status, template_key")
     .order("name");
-  if (error) console.error("[campaigns list]", error.code);
+  if (error) reportError("[campaigns list]", error.code);
   return ((data ?? []) as CampaignSummary[]).sort(
     (a, b) => Number(a.status === "archived") - Number(b.status === "archived"),
   );
@@ -40,7 +41,7 @@ export async function listGroups(campaignIds: string[]): Promise<GroupSummary[]>
     .select("id, campaign_id, name, position")
     .in("campaign_id", campaignIds)
     .order("position");
-  if (error) console.error("[campaign groups list]", error.code);
+  if (error) reportError("[campaign groups list]", error.code);
   return (data ?? []) as GroupSummary[];
 }
 
@@ -52,7 +53,7 @@ export async function listAgencyGroups(): Promise<GroupSummary[]> {
     .from("campaign_groups")
     .select("id, campaign_id, name, position")
     .order("position");
-  if (error) console.error("[campaign groups list]", error.code);
+  if (error) reportError("[campaign groups list]", error.code);
   return (data ?? []) as GroupSummary[];
 }
 
@@ -68,7 +69,7 @@ export async function listCampaignDates(
       "campaign_id",
       campaigns.map((c) => c.id),
     );
-  if (error) console.error("[campaign dates list]", error.code);
+  if (error) reportError("[campaign dates list]", error.code);
   const names = new Map(campaigns.map((c) => [c.id, c.name]));
   return (data ?? []).map((d) => ({
     campaignId: d.campaign_id as string,

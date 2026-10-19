@@ -11,6 +11,7 @@ import {
   type DocItem,
   type FolderItem,
 } from "@/features/documents/components/documents-panel";
+import { reportError } from "@/lib/report-error";
 
 type Row = {
   id: string;
@@ -49,7 +50,7 @@ export default async function DocumentsPage({
       p_agency_id: caller.agencyId,
       p_actor_id: caller.userId,
     });
-    if (error) console.error("[documents folders init]", error.code);
+    if (error) reportError("[documents folders init]", error.code);
   }
 
   // Documents (avec le prénom de leur auteur, par leur lien) et dossiers de

@@ -5,6 +5,7 @@ import { fullName } from "@/lib/names";
 import { todayInAppTimezone } from "@/lib/dates";
 import { readAll } from "@/lib/supabase/read-all";
 import type { TaskMember } from "@/features/tasks/types";
+import { reportError } from "@/lib/report-error";
 
 // Lectures via le RLS : seules les tâches et les membres de l'agence de la
 // session reviennent.
@@ -17,7 +18,7 @@ export const listTaskMembers = cache(async (): Promise<TaskMember[]> => {
     .from("profiles")
     .select("id, first_name, last_name, is_active")
     .order("first_name");
-  if (error) console.error("[tasks members]", error.code);
+  if (error) reportError("[tasks members]", error.code);
   return ((data ?? []) as { id: string; first_name: string; last_name: string; is_active: boolean }[]).map(
     (p) => ({ id: p.id, name: fullName(p.first_name, p.last_name), isActive: p.is_active }),
   );
@@ -31,7 +32,7 @@ export const countOpenCaseTasks = cache(async (caseId: string): Promise<number> 
     .select("id", { count: "exact", head: true })
     .eq("case_id", caseId)
     .is("done_at", null);
-  if (error) console.error("[tasks count]", error.code);
+  if (error) reportError("[tasks count]", error.code);
   return count ?? 0;
 });
 
@@ -63,8 +64,8 @@ export async function listCaseTasks(caseId: string) {
       .order("done_at", { ascending: false })
       .limit(DONE_SHOWN),
   ]);
-  if (open.error) console.error("[tasks list open]", open.error.code);
-  if (done.error) console.error("[tasks list done]", done.error.code);
+  if (open.error) reportError("[tasks list open]", open.error.code);
+  if (done.error) reportError("[tasks list done]", done.error.code);
   return {
     open: (open.data ?? []) as TaskRow[],
     done: (done.data ?? []) as TaskRow[],
@@ -90,7 +91,7 @@ export const myTaskCounts = cache(async (userId: string) => {
     .is("done_at", null)
     .lte("due_date", today)
     .limit(1000);
-  if (error) console.error("[tasks my counts]", error.code);
+  if (error) reportError("[tasks my counts]", error.code);
   const dates = ((data ?? []) as { due_date: string }[]).map((r) => r.due_date);
   return {
     overdue: dates.filter((d) => d < today).length,
@@ -116,7 +117,7 @@ export async function overdueTasksByCase(): Promise<Record<string, number>> {
     for (const r of rows) counts[r.case_id] = (counts[r.case_id] ?? 0) + 1;
     return counts;
   } catch {
-    console.error("[tasks overdue by case]");
+    reportError("[tasks overdue by case]");
     return {};
   }
 }
@@ -149,7 +150,7 @@ export async function listAgencyTasks(assignee: string | null, doneDays: number)
     ),
     base().gte("done_at", doneSince).order("done_at", { ascending: false }).limit(200),
   ]);
-  if (done.error) console.error("[tasks agency done]", done.error.code);
+  if (done.error) reportError("[tasks agency done]", done.error.code);
   return { open, done: (done.data ?? []) as unknown as AgencyTaskRow[] };
 }
 
@@ -177,8 +178,8 @@ export async function loadMyTasks(userId: string, withTeam: boolean) {
           .lt("due_date", today)
       : null,
   ]);
-  if (mine.error) console.error("[tasks dashboard]", mine.error.code);
-  if (team?.error) console.error("[tasks dashboard team]", team.error.code);
+  if (mine.error) reportError("[tasks dashboard]", mine.error.code);
+  if (team?.error) reportError("[tasks dashboard team]", team.error.code);
   return {
     rows: (mine.data ?? []) as unknown as AgencyTaskRow[],
     teamOverdue: team?.count ?? null,

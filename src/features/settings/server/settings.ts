@@ -13,6 +13,7 @@ import type {
   OwnNameInput,
   PasswordChangeInput,
 } from "../schemas";
+import { reportError } from "@/lib/report-error";
 
 // Réglages de l'agence et du compte. Les fonctions SQL revérifient l'acteur,
 // son rôle et l'abonnement ; l'agence vient toujours de la session.
@@ -37,7 +38,7 @@ export const getAgencySettings = cache(
       .select("name, city, phone, default_fee, default_platforms, default_stages")
       .eq("id", agencyId)
       .maybeSingle();
-    if (error) console.error("[settings read]", error.code);
+    if (error) reportError("[settings read]", error.code);
     if (!data) return null;
     return {
       name: data.name as string,
@@ -136,7 +137,7 @@ export async function changeOwnPassword(member: Member, input: PasswordChangeInp
       const { error: failError } = await admin.rpc("password_check_failed", {
         p_user_id: member.userId,
       });
-      if (failError) console.error("[password failure]", failError.code);
+      if (failError) reportError("[password failure]", failError.code);
       throw new ApiError(400, WRONG_PASSWORD, {
         fields: [{ path: "currentPassword", message: WRONG_PASSWORD }],
       });
@@ -144,7 +145,7 @@ export async function changeOwnPassword(member: Member, input: PasswordChangeInp
     if (checkError.status === 429) {
       throw new ApiError(429, "Trop d'essais. Réessayez dans quelques minutes.");
     }
-    console.error("[password check]", checkError.code ?? checkError.status);
+    reportError("[password check]", checkError.code ?? checkError.status);
     throw new ApiError(500, "Changement impossible");
   }
   // La session ouverte pour la vérification ne sert plus
@@ -159,7 +160,7 @@ export async function changeOwnPassword(member: Member, input: PasswordChangeInp
         fields: [{ path: "password", message: "Mot de passe trop faible" }],
       });
     }
-    console.error("[password update]", updateError.code ?? updateError.status);
+    reportError("[password update]", updateError.code ?? updateError.status);
     throw new ApiError(500, "Changement impossible");
   }
 

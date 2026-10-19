@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { CaseStatRow } from "../case-stats";
 import { readAll } from "@/lib/supabase/read-all";
+import { reportError } from "@/lib/report-error";
 
 // Lignes de la vue case_stats (lecture via le RLS : seuls les dossiers de
 // l'agence sont comptés), pour toutes les campagnes ou celles indiquées.
@@ -24,7 +25,7 @@ export async function listCaseStats(campaignIds?: string[]): Promise<CaseStatRow
       return campaignIds ? query.in("campaign_id", campaignIds) : query;
     });
   } catch {
-    console.error("[case stats]", "lecture impossible");
+    reportError("[case stats]", "lecture impossible");
     return [];
   }
 }

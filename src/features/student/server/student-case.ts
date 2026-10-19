@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { CASE_FIELD_COLUMNS, type CaseFieldsRecord } from "@/features/cases/case-record";
 import type { ProgramItem } from "@/features/programs/schemas";
 import { getStudentSession, type StudentSession } from "./session";
+import { reportError } from "@/lib/report-error";
 
 // Lectures de l'espace candidat. Le candidat n'a pas de compte Supabase :
 // lecture avec la clé secrète, toujours filtrée sur le dossier et l'agence
@@ -30,7 +31,7 @@ export const getStudentCase = cache(async () => {
     admin.from("agencies").select("name, phone").eq("id", agencyId).maybeSingle(),
   ]);
   if (caseRes.error || agencyRes.error || !caseRes.data || !agencyRes.data) {
-    console.error("[student case]", caseRes.error?.code ?? agencyRes.error?.code ?? "absent");
+    reportError("[student case]", caseRes.error?.code ?? agencyRes.error?.code ?? "absent");
     redirect("/student/login");
   }
   return {
@@ -47,7 +48,7 @@ export async function getStudentLetter() {
     .eq("case_id", caseId)
     .eq("agency_id", agencyId)
     .maybeSingle();
-  if (error) console.error("[student letter]", error.code);
+  if (error) reportError("[student letter]", error.code);
   return data as { content: string; updated_at: string } | null;
 }
 
@@ -59,6 +60,6 @@ export async function getStudentPrograms() {
     .eq("case_id", caseId)
     .eq("agency_id", agencyId)
     .order("position");
-  if (error) console.error("[student programs]", error.code);
+  if (error) reportError("[student programs]", error.code);
   return (data ?? []) as ProgramItem[];
 }

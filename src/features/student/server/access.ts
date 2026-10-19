@@ -9,6 +9,7 @@ import {
 import { formatCode, generateCode } from "@/features/student/code";
 import type { StudentAccess } from "@/features/student/schemas";
 import { codeAad, codeLookup } from "./keys";
+import { reportError } from "@/lib/report-error";
 
 // Accès du candidat, côté agence : tout membre actif l'ouvre, le ferme ou
 // change le code (revérifié par les fonctions SQL). Le code n'est jamais
@@ -24,7 +25,7 @@ export async function getStudentAccess(agencyId: string, caseId: string): Promis
     .eq("agency_id", agencyId)
     .maybeSingle();
   if (error) {
-    console.error("[student access read]", error.code);
+    reportError("[student access read]", error.code);
     return null;
   }
   if (!data) return null;
@@ -32,7 +33,7 @@ export async function getStudentAccess(agencyId: string, caseId: string): Promis
     const code = decryptSecret(data.code_encrypted as string, codeAad(agencyId, caseId));
     return { enabled: data.enabled as boolean, code: formatCode(code) };
   } catch {
-    console.error("[student access read]", "déchiffrement");
+    reportError("[student access read]", "déchiffrement");
     return null;
   }
 }

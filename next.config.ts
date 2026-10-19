@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
   agentRules: false,
   // Pas d'en-tête « X-Powered-By: Next.js »
   poweredByHeader: false,
+  // Module du suivi des erreurs à charger tel quel par Node, hors du bundle
+  // serveur (sinon avertissement de Sentry à chaque démarrage)
+  serverExternalPackages: ["@sentry/server-runtime-injection"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

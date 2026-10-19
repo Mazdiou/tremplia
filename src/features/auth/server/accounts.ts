@@ -4,6 +4,7 @@ import { logActivity } from "@/lib/audit/log-activity";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ipHash } from "@/features/student/server/keys";
 import type { RegisterInput } from "../schemas";
+import { reportError } from "@/lib/report-error";
 
 // Inscription d'une agence : compte du patron, agence et profil. Essais
 // limités par adresse IP (gardée seulement en empreinte).
@@ -42,7 +43,7 @@ export async function registerAgency(input: RegisterInput, ip: string) {
   // 3. En cas d'échec, le compte Auth créé est supprimé
   if (rpcError || typeof agencyId !== "string") {
     await admin.auth.admin.deleteUser(created.user.id);
-    if (rpcError) console.error("[register]", rpcError.code);
+    if (rpcError) reportError("[register]", rpcError.code);
     throw new ApiError(500, "Erreur lors de la création de l'agence");
   }
 
@@ -66,7 +67,7 @@ export async function replaceTemporaryPassword(userId: string, password: string)
     .eq("id", userId)
     .maybeSingle();
   if (readError) {
-    console.error("[change-password]", readError.code);
+    reportError("[change-password]", readError.code);
     throw new ApiError(500, "Changement impossible");
   }
   if (!profile?.is_active || profile.must_change_password !== true) {
@@ -81,7 +82,7 @@ export async function replaceTemporaryPassword(userId: string, password: string)
     .update({ must_change_password: false })
     .eq("id", userId);
   if (flagError) {
-    console.error("[change-password]", flagError.code);
+    reportError("[change-password]", flagError.code);
     throw new ApiError(500, "Changement impossible");
   }
 }

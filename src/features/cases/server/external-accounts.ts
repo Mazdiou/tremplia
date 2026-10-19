@@ -4,6 +4,7 @@ import { ApiError, dbError } from "@/lib/api-errors";
 import { decryptSecret, encryptSecret } from "@/lib/crypto/secrets";
 import type { ExternalAccountInput } from "../schemas";
 import { logCaseActivity, type AuthorizedCase } from "./authorize-case";
+import { reportException } from "@/lib/report-error";
 
 // Le mot de passe est lié à son compte : copié dans la ligne d'un autre
 // compte, il ne se déchiffre pas.
@@ -110,7 +111,7 @@ export async function revealPassword(
     return decryptSecret(secret.password_encrypted as string, aad(member.agencyId, accountId));
   } catch (e) {
     // Jamais de valeur dans les logs, seulement la nature de l'erreur
-    console.error("[external accounts reveal] déchiffrement", e instanceof Error ? e.name : "erreur");
+    reportException("[external accounts reveal] déchiffrement", e);
     throw new ApiError(500, "Impossible de lire le mot de passe");
   }
 }

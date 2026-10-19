@@ -9,6 +9,7 @@ import type {
   StudentReviewInput,
 } from "@/features/student/schemas";
 import type { StudentSession } from "./session";
+import { reportError } from "@/lib/report-error";
 
 // Réponse du candidat (« Je valide » ou « Demander une modification »).
 // student_review revérifie la session (accès ouvert, même génération) au
@@ -68,7 +69,7 @@ export async function readReview(agencyId: string, caseId: string): Promise<Stud
       .maybeSingle(),
   ]);
   if (reviewRes.error || requestRes.error) {
-    console.error("[student review read]", reviewRes.error?.code ?? requestRes.error?.code);
+    reportError("[student review read]", reviewRes.error?.code ?? requestRes.error?.code);
   }
   if (!reviewRes.data) return null;
   const req = requestRes.data as { body: string; created_at: string } | null;
@@ -105,6 +106,6 @@ export async function contentFingerprint(agencyId: string, caseId: string) {
     p_case_id: caseId,
     p_agency_id: agencyId,
   });
-  if (error) console.error("[student fingerprint]", error.code);
+  if (error) reportError("[student fingerprint]", error.code);
   return typeof data === "string" ? data : "";
 }

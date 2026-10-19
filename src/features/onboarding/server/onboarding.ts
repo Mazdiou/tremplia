@@ -4,6 +4,7 @@ import type { Member } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { OnboardingProgress } from "../steps";
+import { reportError } from "@/lib/report-error";
 
 // Guide de démarrage (migration onboarding). Les lectures ne font jamais
 // échouer la page : en cas d'erreur, le guide et le mot de bienvenue ne
@@ -28,7 +29,7 @@ export async function loadOnboarding(owner: Member): Promise<OnboardingProgress 
       has_employee: boolean;
       latest_case_id: string | null;
     }>();
-  if (error) console.error("[onboarding read]", error.code);
+  if (error) reportError("[onboarding read]", error.code);
   if (!data || data.hidden) return null;
   return {
     hasCampaign: data.has_campaign,
@@ -49,7 +50,7 @@ export async function isOnboardingHidden(agencyId: string): Promise<boolean> {
     .select("onboarding_hidden_at")
     .eq("id", agencyId)
     .maybeSingle();
-  if (error) console.error("[onboarding hidden]", error.code);
+  if (error) reportError("[onboarding hidden]", error.code);
   return !data || data.onboarding_hidden_at !== null;
 }
 
@@ -61,7 +62,7 @@ export async function needsWelcome(member: Member): Promise<boolean> {
     .select("welcomed_at")
     .eq("id", member.userId)
     .maybeSingle();
-  if (error) console.error("[welcome read]", error.code);
+  if (error) reportError("[welcome read]", error.code);
   return !!data && data.welcomed_at === null;
 }
 

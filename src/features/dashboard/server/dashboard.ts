@@ -5,6 +5,7 @@ import { PROGRAM_RESULTS, type ProgramResult } from "@/features/programs/schemas
 import { groupActivity, type ActivityGroup, type ActivityRow } from "../activity";
 import { plural } from "@/lib/plural";
 import { displayName, fullName } from "@/lib/names";
+import { reportError } from "@/lib/report-error";
 
 // Lectures du tableau de bord, via le RLS (dossiers de l'agence seulement).
 
@@ -41,7 +42,7 @@ export async function loadTodo(
       .order("responded_at", { ascending: false })
       .limit(200),
   ]);
-  if (reviewsRes.error) console.error("[dashboard todo]", reviewsRes.error.code);
+  if (reviewsRes.error) reportError("[dashboard todo]", reviewsRes.error.code);
 
   const reviews = (reviewsRes.data ?? []) as unknown as {
     case_id: string;
@@ -128,11 +129,11 @@ export async function loadResults(supabase: SupabaseClient, campaignIds: string[
         .order("id")
         .range(from, to),
     ).catch(() => {
-      console.error("[dashboard results]", "admis");
+      reportError("[dashboard results]", "admis");
       return [];
     }),
   ]);
-  for (const r of countRes) if (r.error) console.error("[dashboard results]", r.error.code);
+  for (const r of countRes) if (r.error) reportError("[dashboard results]", r.error.code);
   const counts = Object.fromEntries(
     PROGRAM_RESULTS.map((r, i) => [r, countRes[i].count ?? 0]),
   ) as Record<ProgramResult, number>;

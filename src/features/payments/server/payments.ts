@@ -8,6 +8,7 @@ import {
 import type { RecordPaymentInput } from "@/features/payments/schemas";
 import { fullName } from "@/lib/names";
 import { isUuid } from "@/lib/validation";
+import { reportError } from "@/lib/report-error";
 
 // Paiements du candidat à l'agence. Tout membre actif enregistre un paiement
 // et fixe un montant convenu encore vide ; seul le patron annule un paiement
@@ -52,7 +53,7 @@ export async function listPayments(caseId: string): Promise<PaymentItem[]> {
     .eq("case_id", caseId)
     .order("paid_on", { ascending: false })
     .order("created_at", { ascending: false });
-  if (error) console.error("[payments list]", error.code);
+  if (error) reportError("[payments list]", error.code);
 
   type Row = {
     id: string;

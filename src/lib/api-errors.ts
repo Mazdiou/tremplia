@@ -2,6 +2,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isUuid } from "@/lib/validation";
+import { reportError, reportException } from "@/lib/report-error";
 
 // Réponses sans cache : elles peuvent contenir un lien signé ou un secret.
 const NO_STORE = { "Cache-Control": "no-store" };
@@ -96,7 +97,7 @@ export function dbError(
 ): ApiError {
   const known = error.code ? DB_ERRORS[error.code] : undefined;
   if (!known) {
-    console.error(`[${label}]`, error.code ?? "erreur");
+    reportError(`[${label}]`, error.code ?? "erreur");
     return new ApiError(500, "Erreur serveur");
   }
   return new ApiError(known[0], messages[error.code!] ?? known[1]);
@@ -111,8 +112,8 @@ export function rateLimited(error: { code?: string }, message: string): ApiError
 }
 
 // Enveloppe une route : une ApiError devient sa réponse, toute autre
-// exception une réponse 500. Seul le nom de l'erreur est écrit dans les
-// logs, jamais son message, qui pourrait contenir une donnée personnelle.
+// exception une réponse 500, signalée au suivi des erreurs (voir
+// reportException : les logs n'en gardent que le nom).
 export async function safely(
   label: string,
   run: () => Promise<Response>,
@@ -121,7 +122,7 @@ export async function safely(
     return await run();
   } catch (e) {
     if (e instanceof ApiError) return fail(e.message, e.status, e.extra);
-    console.error(`[${label}]`, e instanceof Error ? e.name : "erreur");
+    reportException(`[${label}]`, e);
     return fail("Erreur serveur", 500);
   }
 }

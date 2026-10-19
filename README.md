@@ -125,6 +125,7 @@ Modèle : `.env.example`. Aucune vraie valeur ne doit être commitée
 | `SUPABASE_SECRET_KEY` | Clé secrète, utilisée par le serveur uniquement |
 | `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY` | 32 octets en base64. Chiffre les mots de passe des comptes externes et les codes candidats, signe les sessions candidat. **À sauvegarder hors du dépôt** : la perdre rend ces données illisibles |
 | `SUPPORT_PHONE` | Facultatif. Numéro affiché aux agences pour renouveler leur abonnement ; sans lui, « contactez-nous » |
+| `NEXT_PUBLIC_SENTRY_DSN` | Facultatif. Adresse d'envoi du suivi des erreurs (Sentry). À définir **seulement en production**, avant le build (elle est intégrée au code du navigateur) ; sans elle, rien n'est envoyé. Pas secrète. Lue dans `src/lib/sentry.ts` |
 | `CLIENT_IP_HEADER` | Facultatif. En-tête qui porte l'IP du visiteur, pour les limites d'essais. Par défaut `x-forwarded-for` (dernière adresse) : correct sur Vercel et derrière nginx ; derrière Cloudflare, `cf-connecting-ip` |
 
 Générer la clé de chiffrement :
@@ -223,8 +224,8 @@ Navigateur
 - `ApiError(status, message)` : erreur prévue, au message français prêt à
   afficher.
 - `safely(label, run)` : enveloppe chaque route ; une `ApiError` devient sa
-  réponse JSON, toute autre exception une 500. Seul le nom de l'erreur est
-  écrit dans les logs.
+  réponse JSON, toute autre exception une 500, signalée au suivi des
+  erreurs. Seul le nom de l'erreur est écrit dans les logs.
 - `dbError(label, error, messages?)` : traduit un code d'erreur PostgreSQL
   (droits, doublon, campagne archivée, document verrouillé, abonnement
   expiré…) en `ApiError`.
@@ -234,6 +235,25 @@ Navigateur
 Côté navigateur, `src/lib/api-client.ts` (`callApi`, `callApiError`) appelle
 les routes et renvoie un message prêt à afficher, y compris en cas de coupure
 réseau.
+
+### Suivi des erreurs (Sentry)
+
+- Actif seulement si `NEXT_PUBLIC_SENTRY_DSN` est défini (la production).
+  Démarrage : `src/instrumentation.ts` (serveur, edge, avec
+  `onRequestError` pour toute erreur non rattrapée d'une page ou d'une
+  route) et `src/instrumentation-client.ts` (navigateur).
+- Côté serveur, les anomalies passent par `reportError(label, code)` et
+  `reportException(label, e)` (`src/lib/report-error.ts`) : écrites dans
+  les logs **et** signalées. Ne pas écrire `console.error` directement.
+- Une page en erreur affiche `app/error.tsx` (« Une erreur est survenue »,
+  bouton « Réessayer ») et la signale ; `app/global-error.tsx` couvre une
+  erreur de la mise en page racine.
+- **Aucune donnée personnelle** : ni utilisateur, ni adresse IP, ni cookies,
+  en-têtes, corps ou paramètres de requête ; e-mails et numéros de
+  téléphone masqués dans les messages (`scrubEvent`, testé). Pas
+  d'enregistrement de session ni de mesure des performances.
+- Pas encore de « source maps » : les traces du navigateur pointent vers le
+  code compilé. Elles demanderaient un jeton Sentry dans le build.
 
 ### Temps réel
 

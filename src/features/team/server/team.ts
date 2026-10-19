@@ -6,6 +6,7 @@ import type { Member } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireWritableAgency } from "@/features/subscription/server/subscription";
 import type { NewEmployeeInput } from "../schemas";
+import { reportError } from "@/lib/report-error";
 
 // Comptes des employés : patron seulement (l'appelant est vérifié par la
 // route, les règles revérifiées par les fonctions SQL). Le compte de
@@ -45,7 +46,7 @@ export async function addEmployee(owner: Member, input: NewEmployeeInput) {
   });
   if (error) {
     await admin.auth.admin.deleteUser(created.user.id);
-    console.error("[team create]", error.code);
+    reportError("[team create]", error.code);
     throw new ApiError(500, "Erreur lors de la création de l'employé");
   }
 

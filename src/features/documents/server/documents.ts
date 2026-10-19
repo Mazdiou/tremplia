@@ -13,6 +13,7 @@ import {
   MAX_DOCUMENT_BYTES,
   type addDocumentSchema,
 } from "../schemas";
+import { reportError } from "@/lib/report-error";
 
 // Documents PDF d'un dossier. L'appelant est déjà vérifié (authorizeCase) ;
 // chaque lecture et écriture filtre aussi sur l'agence de la session. Un
@@ -49,7 +50,7 @@ export async function prepareUpload(auth: AuthorizedCase, caseId: string) {
     .from(DOCUMENTS_BUCKET)
     .createSignedUploadUrl(documentPath(auth.agencyId, caseId, documentId));
   if (error || !data) {
-    console.error("[documents upload-url]", error?.name ?? "erreur");
+    reportError("[documents upload-url]", error?.name ?? "erreur");
     throw new ApiError(500, "Impossible de préparer l'envoi");
   }
   return { documentId, path: data.path, token: data.token };
@@ -138,7 +139,7 @@ export async function documentOpenUrl(auth: AuthorizedCase, caseId: string, docI
     .from(DOCUMENTS_BUCKET)
     .createSignedUrl(doc.storage_path, 60);
   if (error || !data) {
-    console.error("[documents open]", error?.name ?? "erreur");
+    reportError("[documents open]", error?.name ?? "erreur");
     throw new ApiError(500, "Impossible d'ouvrir le document");
   }
   return data.signedUrl;
@@ -185,7 +186,7 @@ export async function deleteDocument(auth: AuthorizedCase, caseId: string, docId
     .remove([doc.storage_path]);
   if (removeError) {
     // La ligne est supprimée : le fichier restant est orphelin et inaccessible
-    console.error("[documents delete] fichier", removeError.name);
+    reportError("[documents delete] fichier", removeError.name);
   }
 
   await logCaseActivity(auth, caseId, {
@@ -292,7 +293,7 @@ export async function prepareArchive(auth: AuthorizedCase, caseId: string) {
       300,
     );
   if (error || !signed) {
-    console.error("[documents archive]", error?.name ?? "erreur");
+    reportError("[documents archive]", error?.name ?? "erreur");
     throw new ApiError(500, "Impossible de préparer l'archive");
   }
   const urlByPath = new Map(signed.map((s) => [s.path, s.signedUrl]));
@@ -303,7 +304,7 @@ export async function prepareArchive(auth: AuthorizedCase, caseId: string) {
     return url ? [{ path: paths.get(d.id) as string, url }] : [];
   });
   if (files.length < docs.length) {
-    console.error("[documents archive] liens manquants", docs.length - files.length);
+    reportError("[documents archive] liens manquants", docs.length - files.length);
   }
 
   await logCaseActivity(auth, caseId, {

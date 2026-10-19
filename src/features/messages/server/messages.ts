@@ -11,6 +11,7 @@ import {
 import type { StudentSession } from "@/features/student/server/session";
 import type { MessageItem } from "@/features/messages/schemas";
 import { memberNames } from "@/features/team/server/members";
+import { reportError } from "@/lib/report-error";
 
 // Conversation d'un dossier entre le candidat et l'agence. Lectures avec la
 // clé secrète, toujours filtrées sur l'agence (et le dossier) de la session.
@@ -27,7 +28,7 @@ export async function listMessages(agencyId: string, caseId: string) {
     .eq("agency_id", agencyId)
     .order("created_at", { ascending: false })
     .limit(MAX_SHOWN);
-  if (error) console.error("[messages read]", error.code);
+  if (error) reportError("[messages read]", error.code);
   const rows = (data ?? []).reverse() as {
     id: string;
     sender: MessageItem["sender"];
@@ -110,7 +111,7 @@ export const agencyUnreadCounts = cache(async (agencyId: string): Promise<Record
     p_agency_id: agencyId,
   });
   if (error) {
-    console.error("[messages unread]", error.code);
+    reportError("[messages unread]", error.code);
     return {};
   }
   return Object.fromEntries(
@@ -170,7 +171,7 @@ export async function studentUnreadCount(session: StudentSession) {
     p_agency_id: session.agencyId,
   });
   if (error) {
-    console.error("[student messages unread]", error.code);
+    reportError("[student messages unread]", error.code);
     return 0;
   }
   return Number(data ?? 0);

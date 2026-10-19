@@ -6,6 +6,7 @@ import { requireMember, type Member } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SubscriptionState } from "@/features/subscription/subscription";
 import type { PlatformPaymentInput } from "../schemas";
+import { reportError } from "@/lib/report-error";
 
 // Administrateur de la plateforme : désigné à la main dans la table
 // platform_admins (voir le README). Son compte est aussi celui d'une agence :
@@ -17,7 +18,7 @@ export const isPlatformAdmin = cache(async (userId: string): Promise<boolean> =>
     .select("user_id")
     .eq("user_id", userId)
     .maybeSingle();
-  if (error) console.error("[platform admin]", error.code);
+  if (error) reportError("[platform admin]", error.code);
   return !!data;
 });
 

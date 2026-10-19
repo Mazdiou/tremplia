@@ -11,6 +11,7 @@ import {
 } from "@/features/cases/server/authorize-case";
 import type { CampaignStage } from "../stages";
 import type { replaceStagesSchema } from "../schemas";
+import { reportError } from "@/lib/report-error";
 
 // Étapes des dossiers. Les fonctions SQL revérifient l'acteur et son rôle ;
 // l'agence vient toujours de la session.
@@ -22,7 +23,7 @@ export async function listAgencyStages(): Promise<CampaignStage[]> {
     .from("campaign_stages")
     .select("id, campaign_id, name, position")
     .order("position");
-  if (error) console.error("[campaign stages list]", error.code);
+  if (error) reportError("[campaign stages list]", error.code);
   return (data ?? []) as CampaignStage[];
 }
 

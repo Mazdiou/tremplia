@@ -4,6 +4,7 @@ import { ApiError } from "@/lib/api-errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Subscription, SubscriptionState } from "../subscription";
+import { reportError } from "@/lib/report-error";
 
 // Abonnement d'une agence, lu par le serveur (clé secrète). Mis en cache
 // pour la durée d'un affichage : coquille, layout et page le partagent.
@@ -15,7 +16,7 @@ export const getSubscription = cache(async (agencyId: string): Promise<Subscript
   });
   const row = (data as { ends_at: string; state: SubscriptionState }[] | null)?.[0];
   if (error || !row) {
-    if (error) console.error("[subscription]", error.code);
+    if (error) reportError("[subscription]", error.code);
     return { state: "active", endsAt: new Date(Date.now() + 365 * 86_400_000).toISOString() };
   }
   return { state: row.state, endsAt: row.ends_at };
@@ -41,7 +42,7 @@ export const listPlatformPayments = cache(async (): Promise<PlatformPayment[]> =
     .select("id, months, amount, method, note, recorded_at, cancelled_at, cancel_reason")
     .order("recorded_at", { ascending: false })
     .limit(24);
-  if (error) console.error("[subscription payments]", error.code);
+  if (error) reportError("[subscription payments]", error.code);
   return (data ?? []) as PlatformPayment[];
 });
 
