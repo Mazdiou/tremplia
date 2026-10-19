@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { TreeCase } from "./fetch-campaign-cases";
-import { buildCampaignBranches, linkFilter, matchesPayment, type TreeGroup } from "./tree";
+import {
+  buildCampaignBranches,
+  linkFilter,
+  matchesPayment,
+  treeCaseOrder,
+  type TreeGroup,
+} from "./tree";
 
 const person = (id: string, campaign = "fr"): TreeCase => ({
   id,
@@ -109,5 +115,33 @@ describe("linkFilter", () => {
   it("ignore une valeur inconnue", () => {
     expect(linkFilter("autre")).toBeNull();
     expect(linkFilter(null)).toBeNull();
+  });
+});
+
+describe("treeCaseOrder", () => {
+  const c = (last: string, first: string, level: string) => ({
+    ...person(`${last}-${first}`),
+    last_name: last,
+    first_name: first,
+    education_level: level,
+  });
+  const names = (list: TreeCase[]) => list.map((x) => `${x.last_name} ${x.first_name}`);
+
+  it("trie par nom puis prénom, sans tenir compte des accents ni de la casse", () => {
+    const list = [c("Zitouni", "Ali", "l1"), c("élias", "Yanis", "m1"), c("Elias", "Amel", "l3")];
+    expect(names([...list].sort(treeCaseOrder("name")))).toEqual([
+      "Elias Amel",
+      "élias Yanis",
+      "Zitouni Ali",
+    ]);
+  });
+
+  it("trie par niveau d'études, puis par nom à niveau égal", () => {
+    const list = [c("Brahimi", "Ines", "m1"), c("Amrani", "Sofia", "l3"), c("Aouadi", "Rayan", "m1")];
+    expect(names([...list].sort(treeCaseOrder("level")))).toEqual([
+      "Amrani Sofia",
+      "Aouadi Rayan",
+      "Brahimi Ines",
+    ]);
   });
 });

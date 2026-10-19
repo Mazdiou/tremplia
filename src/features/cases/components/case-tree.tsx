@@ -1,48 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import {
-  AlarmClock,
   CheckSquare,
-  ChevronDown,
-  ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
-  Search,
   SlidersHorizontal,
-  X,
 } from "lucide-react";
-import { PILL_TONE_CLASSES } from "@/components/page-ui";
 import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  EDUCATION_LEVELS,
-  EDUCATION_LEVEL_LABELS,
-  STATUS_SUFFIXES,
-  educationRank,
-  labelOf,
-} from "@/features/cases/labels";
-import { displayName, fullName } from "@/lib/names";
-import { formatDA } from "@/lib/money";
-import { UnreadBadge } from "@/features/messages/components/unread-badge";
 import { cn } from "@/lib/utils";
-import { TREE_WIDTH, useUiPrefs } from "@/lib/ui-prefs";
+import { useUiPrefs } from "@/lib/ui-prefs";
 import { NEW_CASE_LINK_PROPS, NEW_CASE_TITLE } from "../new-case-link";
-import { createClient } from "@/lib/supabase/client";
-import {
-  fetchCampaignCases,
-  type CampaignCases,
-  type TreeCase,
-} from "@/features/cases/fetch-campaign-cases";
+import type { CampaignCases, TreeCase } from "@/features/cases/fetch-campaign-cases";
 import {
   buildCampaignBranches,
   linkFilter,
   matchesPayment,
   NO_FILTERS,
+  treeCaseOrder,
   type TreeGroup,
 } from "@/features/cases/tree";
+import { useCampaignCases } from "@/features/cases/use-campaign-cases";
 import {
   stageFilterOptions,
   stageKey,
@@ -51,7 +32,10 @@ import {
 import { isCasesIndex } from "./cases-content";
 import { BulkActionsBar } from "./bulk-actions-bar";
 import { TreeSearchResults } from "./tree-search-results";
-import { CampaignMenu, GroupActions, InlineNameInput, groupApi } from "./tree-actions";
+import { CampaignMenu, InlineNameInput, groupApi } from "./tree-actions";
+import { CampaignHeader, TreeBranch } from "./tree-branch";
+import { TreeDisplaySettings, TreeFilters, TreeSearchBox } from "./tree-filters";
+import { useTreeWidth } from "./tree-resize";
 import { BRAND } from "@/config/brand";
 import { plural } from "@/lib/plural";
 
@@ -63,37 +47,6 @@ export type TreeMember = {
   last_name: string;
   is_active: boolean;
 };
-
-const collator = new Intl.Collator("fr", { sensitivity: "base" });
-
-function byName(a: TreeCase, b: TreeCase) {
-  return (
-    collator.compare(a.last_name, b.last_name) ||
-    collator.compare(a.first_name, b.first_name)
-  );
-}
-
-function byLevel(a: TreeCase, b: TreeCase) {
-  return (
-    educationRank(a.education_level) - educationRank(b.education_level) ||
-    byName(a, b)
-  );
-}
-
-// Réglages d'affichage (bouton à côté du nom de l'application)
-const DISPLAY_OPTIONS = [
-  { key: "showLevel", label: "Afficher le niveau d'études" },
-  { key: "showPayments", label: "Afficher le reste à payer" },
-  { key: "showStage", label: "Afficher l'étape" },
-  { key: "showClosed", label: "Afficher clos et abandonnés" },
-  { key: "showArchived", label: "Afficher les campagnes archivées" },
-] as const;
-type DisplayOption = (typeof DISPLAY_OPTIONS)[number]["key"];
-
-const selectClass =
-  "h-8 min-w-0 flex-1 rounded-lg border bg-card px-2 text-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
-// Panneau étroit : un filtre par ligne plutôt que deux libellés coupés
-const narrowFull = "@max-[16rem]:basis-full";
 
 export function CaseTree({
   campaigns,
@@ -131,7 +84,6 @@ export function CaseTree({
   const [prefs, setPrefs] = useUiPrefs();
 
   const [query, setQuery] = useState("");
-  const [dragWidth, setDragWidth] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   // Saisie en cours d'un nouveau groupe (id de campagne) ou d'un renommage
   const [addingGroupFor, setAddingGroupFor] = useState<string | null>(null);
@@ -204,62 +156,11 @@ export function CaseTree({
     router.replace(pathname, { scroll: false });
   }, [campaigns, stages, pathname, router, setPrefs]);
 
-  const width = dragWidth ?? prefs.width;
+  const { width, separator } = useTreeWidth();
 
-  // --- Autres campagnes : chargées à l'ouverture (ou pendant une recherche) ---
-  const [extra, setExtra] = useState<Record<string, CampaignCases>>({});
-  const [errors, setErrors] = useState<Record<string, boolean>>({});
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
-    null,
-  );
-  const inflight = useRef(new Set<string>());
-  const loaded = useRef(new Set<string>());
-  const lookedUp = useRef(new Set<string>());
-
-  const load = useCallback(async (id: string) => {
-    if (inflight.current.has(id)) return;
-    inflight.current.add(id);
-    try {
-      const data = await fetchCampaignCases(createClient(), id);
-      loaded.current.add(id);
-      setExtra((e) => ({ ...e, [id]: data }));
-      setErrors((e) => (e[id] ? { ...e, [id]: false } : e));
-    } catch {
-      setErrors((e) => ({ ...e, [id]: true }));
-    } finally {
-      inflight.current.delete(id);
-    }
-  }, []);
-
-  const { cases, caseGroups } = useMemo(() => {
-    const all = [...Object.values(initialData), ...Object.values(extra)];
-    return {
-      cases: all.flatMap((d) => d.cases),
-      caseGroups: all.flatMap((d) => d.caseGroups),
-    };
-  }, [initialData, extra]);
+  const { cases, caseGroups, selectedCampaignId, loadMissing, isLoaded, failed, retry } =
+    useCampaignCases(initialData, selectedId);
   const selectedCase = cases.find((c) => c.id === selectedId);
-
-  // Après un router.refresh(), les campagnes déjà chargées sont relues
-  useEffect(() => {
-    for (const id of loaded.current) void load(id);
-  }, [initialData, load]);
-
-  // Dossier ouvert dont la campagne n'est pas chargée (lien direct) : on
-  // cherche sa campagne pour la charger et l'ouvrir
-  useEffect(() => {
-    if (!selectedId || cases.some((c) => c.id === selectedId)) return;
-    if (lookedUp.current.has(selectedId)) return;
-    lookedUp.current.add(selectedId);
-    void (async () => {
-      const { data } = await createClient()
-        .from("cases")
-        .select("campaign_id")
-        .eq("id", selectedId)
-        .maybeSingle();
-      if (data?.campaign_id) setSelectedCampaignId(data.campaign_id as string);
-    })();
-  }, [selectedId, cases]);
 
   // --- Recherche globale (serveur) et filtres (sur les dossiers chargés) ---
   const searching = query.trim() !== "";
@@ -285,20 +186,15 @@ export function CaseTree({
         selectedCampaignId === camp.id)
     );
   }
-  const isLoaded = (id: string) => id in initialData || id in extra;
+  // Campagnes ouvertes : chargées à l'ouverture
   const wantedKey = shownCampaigns
-    .filter((c) => !(c.id in initialData) && isCampOpen(c))
+    .filter(isCampOpen)
     .map((c) => c.id)
     .join(",");
-
   useEffect(() => {
-    const ids = wantedKey
-      .split(",")
-      .filter((id) => id && !(id in extra) && !errors[id]);
-    if (ids.length === 0) return;
-    const t = setTimeout(() => ids.forEach((id) => void load(id)), 0);
+    const t = setTimeout(() => loadMissing(wantedKey.split(",").filter(Boolean)), 0);
     return () => clearTimeout(t);
-  }, [wantedKey, extra, errors, load]);
+  }, [wantedKey, loadMissing]);
 
   // Nom de l'étape de chaque dossier, par identifiant d'étape
   const stageNames = useMemo(() => new Map(stages.map((s) => [s.id, s.name])), [stages]);
@@ -330,6 +226,12 @@ export function CaseTree({
   const shownCase = (c: TreeCase) =>
     prefs.showClosed || c.status === "active" || c.id === selectedId;
   const selectedCases = found.filter((c) => checked.has(c.id) && shownCase(c));
+  const order = treeCaseOrder(prefs.sortBy);
+  const rowShow = {
+    level: prefs.showLevel,
+    payments: prefs.showPayments,
+    stage: prefs.showStage,
+  };
   // Les compteurs ne portent que sur les dossiers chargés : on ne les montre
   // que lorsque toutes les campagnes actives le sont (sinon « 0 » trompeur).
   const allLoaded = activeCampaigns.every((c) => isLoaded(c.id));
@@ -349,27 +251,6 @@ export function CaseTree({
   function reset() {
     setQuery("");
     setPrefs(NO_FILTERS);
-  }
-
-  function startResize(e: React.PointerEvent) {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startWidth = prefs.width;
-    let last = startWidth;
-    function onMove(ev: PointerEvent) {
-      last = Math.min(TREE_WIDTH.max, Math.max(TREE_WIDTH.min, startWidth + ev.clientX - startX));
-      setDragWidth(last);
-    }
-    function onUp() {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      document.body.style.userSelect = "";
-      setPrefs({ width: last });
-      setDragWidth(null);
-    }
-    document.body.style.userSelect = "none";
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
   }
 
   // Le repli ne concerne que l'ordinateur : sur téléphone, l'arbre occupe
@@ -457,177 +338,16 @@ export function CaseTree({
           </Button>
         </div>
 
-        {settingsOpen && (
-          <div className="absolute top-12 right-3 left-3 z-20 space-y-2 rounded-xl border bg-popover p-3 text-sm shadow-lg">
-            {DISPLAY_OPTIONS.map(({ key, label }) => (
-              <label key={key} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={prefs[key]}
-                  onChange={(e) =>
-                    setPrefs({ [key]: e.target.checked } as Partial<Record<DisplayOption, boolean>>)
-                  }
-                />
-                {label}
-              </label>
-            ))}
-            <label className="flex items-center justify-between gap-2">
-              Trier par
-              <select
-                value={prefs.sortBy}
-                onChange={(e) =>
-                  setPrefs({ sortBy: e.target.value as "name" | "level" })
-                }
-                className={cn(selectClass, "max-w-36 flex-none")}
-              >
-                <option value="name">Nom</option>
-                <option value="level">Niveau d&apos;études</option>
-              </select>
-            </label>
-          </div>
-        )}
+        {settingsOpen && <TreeDisplaySettings />}
 
-        {/* Recherche */}
-        <div className="px-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-3 left-3 size-4 text-muted-foreground" />
-            <input
-              ref={searchRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") setQuery("");
-              }}
-              placeholder="Rechercher un candidat"
-              aria-label="Rechercher un candidat dans toutes les campagnes"
-              className="h-10 w-full rounded-lg border bg-card pr-16 pl-9 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            />
-            {!query && (
-              <kbd className="pointer-events-none absolute top-2.5 right-2.5 rounded-md border px-1.5 text-[11px] text-muted-foreground max-md:hidden">
-                Ctrl K
-              </kbd>
-            )}
-            {query && (
-              <button
-                type="button"
-                onClick={() => {
-                  setQuery("");
-                  searchRef.current?.focus();
-                }}
-                aria-label="Effacer la recherche"
-                className="absolute top-2.5 right-2.5 grid size-5 place-items-center rounded text-muted-foreground hover:bg-muted"
-              >
-                <X className="size-3.5" />
-              </button>
-            )}
-          </div>
-        </div>
+        <TreeSearchBox query={query} onChange={setQuery} inputRef={searchRef} />
 
-        {/* Filtres */}
-        <div className="flex flex-wrap items-center gap-1.5 px-4 pt-3 pb-2">
-          <div
-            role="group"
-            aria-label="Portée des dossiers"
-            className="mb-1 flex w-full rounded-xl bg-muted p-[3px]"
-          >
-            {[
-              { mine: false, label: "Tous", n: allCount },
-              { mine: true, label: "Mes dossiers", n: mineCount },
-            ].map((opt) => (
-              <button
-                key={opt.label}
-                type="button"
-                aria-pressed={prefs.mine === opt.mine}
-                onClick={() => setPrefs({ mine: opt.mine, responsible: "" })}
-                className={cn(
-                  "h-8 min-w-0 flex-1 truncate rounded-[9px] px-2 text-sm transition-colors",
-                  prefs.mine === opt.mine
-                    ? "bg-card font-medium text-foreground ring-1 ring-border"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {opt.label}{" "}
-                {allLoaded && <span className="tabular-nums">{opt.n}</span>}
-              </button>
-            ))}
-          </div>
-          <select
-            value={prefs.level}
-            onChange={(e) => setPrefs({ level: e.target.value })}
-            aria-label="Filtrer par niveau d'études"
-            className={cn(selectClass, narrowFull)}
-          >
-            <option value="">Tous niveaux</option>
-            {EDUCATION_LEVELS.map((l) => (
-              <option key={l} value={l}>
-                {EDUCATION_LEVEL_LABELS[l]}
-              </option>
-            ))}
-          </select>
-          <select
-            value={prefs.payment}
-            onChange={(e) =>
-              setPrefs({ payment: e.target.value as typeof prefs.payment })
-            }
-            aria-label="Filtrer par paiement"
-            className={cn(selectClass, narrowFull)}
-          >
-            <option value="">Tous paiements</option>
-            <option value="due">Reste à payer</option>
-            <option value="paid">Soldés</option>
-            <option value="unset">Montant à fixer</option>
-          </select>
-          {stageOptions.length > 0 && (
-            <select
-              value={prefs.stage}
-              onChange={(e) => setPrefs({ stage: e.target.value })}
-              aria-label="Filtrer par étape"
-              className={cn(selectClass, "basis-full")}
-            >
-              <option value="">Toutes étapes</option>
-              {stageOptions.map((o) => (
-                <option key={o.key} value={o.key}>
-                  {o.name}
-                </option>
-              ))}
-              {prefs.stage && !stageOptions.some((o) => o.key === prefs.stage) && (
-                <option value={prefs.stage}>{prefs.stage}</option>
-              )}
-            </select>
-          )}
-          {(prefs.overdue || Object.keys(overdue).length > 0) && (
-            <button
-              type="button"
-              aria-pressed={prefs.overdue}
-              onClick={() => setPrefs({ overdue: !prefs.overdue })}
-              className={cn(
-                "flex h-8 basis-full items-center gap-1.5 rounded-lg border px-2.5 text-sm transition-colors",
-                prefs.overdue
-                  ? "border-destructive/40 bg-destructive/10 font-medium text-destructive"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <AlarmClock className="size-4" aria-hidden />
-              Tâches en retard
-            </button>
-          )}
-          {!prefs.mine && (
-            <select
-              value={prefs.responsible}
-              onChange={(e) => setPrefs({ responsible: e.target.value })}
-              aria-label="Filtrer par responsable"
-              className={cn(selectClass, "basis-full")}
-            >
-              <option value="">Tous responsables</option>
-              {responsibles.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {fullName(m.first_name, m.last_name)}
-                  {m.is_active ? "" : " (désactivé)"}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+        <TreeFilters
+          counts={allLoaded ? { all: allCount, mine: mineCount } : null}
+          stageOptions={stageOptions}
+          responsibles={responsibles}
+          hasOverdue={Object.keys(overdue).length > 0}
+        />
 
         {filtersActive && !searching && (
           <div className="flex items-center justify-between border-y bg-muted/50 px-3 py-1.5 text-xs">
@@ -675,27 +395,14 @@ export function CaseTree({
 
                 return (
                   <div key={camp.id}>
-                    <div className="flex items-center pr-2 hover:bg-muted/60">
-                      <button
-                        type="button"
-                        aria-expanded={campOpen}
-                        onClick={() =>
-                          setPrefs((p) => ({
-                            open: { ...p.open, [camp.id]: !campOpen },
-                          }))
-                        }
-                        className="flex min-w-0 flex-1 items-center gap-1 px-3 py-2 text-left text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
-                      >
-                        {campOpen ? (
-                          <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                        ) : (
-                          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                        )}
-                        <span className="truncate">{camp.name}</span>
-                        {!campActive && (
-                          <span className="shrink-0 normal-case">(archivée)</span>
-                        )}
-                      </button>
+                    <CampaignHeader
+                      name={camp.name}
+                      archived={!campActive}
+                      open={campOpen}
+                      onToggle={() =>
+                        setPrefs((p) => ({ open: { ...p.open, [camp.id]: !campOpen } }))
+                      }
+                    >
                       <CampaignMenu
                         campaignId={camp.id}
                         campaignName={camp.name}
@@ -705,7 +412,7 @@ export function CaseTree({
                           setAddingGroupFor(camp.id);
                         }}
                       />
-                    </div>
+                    </CampaignHeader>
 
                     {addingGroupFor === camp.id && (
                       <InlineNameInput
@@ -719,12 +426,10 @@ export function CaseTree({
 
                     {campOpen && !isLoaded(camp.id) && (
                       <div className="py-1 pr-3 pl-9 text-sm text-muted-foreground">
-                        {errors[camp.id] ? (
+                        {failed(camp.id) ? (
                           <button
                             type="button"
-                            onClick={() =>
-                              setErrors((e) => ({ ...e, [camp.id]: false }))
-                            }
+                            onClick={() => retry(camp.id)}
                             className="underline-offset-2 hover:underline"
                           >
                             Chargement impossible. Réessayer
@@ -739,8 +444,7 @@ export function CaseTree({
                       isLoaded(camp.id) &&
                       buildCampaignBranches(camp.id, groups, campCases, caseGroups).map(
                         (branch) => {
-                          const key = branch.key;
-                          const groupId = branch.groupId;
+                          const { key, groupId } = branch;
                           const count = branch.cases.filter(
                             (c) => c.status === "active",
                           ).length;
@@ -750,11 +454,6 @@ export function CaseTree({
                             prefs.open[key] ??
                             (branch.cases.some((c) => c.id === selectedId) ||
                               (filtersActive && count > 0));
-                          const visible = branch.cases
-                            .filter(shownCase)
-                            .sort(prefs.sortBy === "level" ? byLevel : byName);
-                          const visibleIds = visible.map((c) => c.id);
-                          const checkedCount = visibleIds.filter((id) => checked.has(id)).length;
 
                           if (groupId && renamingGroup === groupId) {
                             return (
@@ -773,134 +472,34 @@ export function CaseTree({
                           }
 
                           return (
-                            <div key={key}>
-                              <div className="group flex items-center pr-2 hover:bg-muted/60">
-                                {selecting &&
-                                  (visible.length > 0 ? (
-                                    <BranchCheckbox
-                                      label={`Cocher tous les dossiers de ${branch.label}`}
-                                      checked={checkedCount === visible.length}
-                                      indeterminate={checkedCount > 0 && checkedCount < visible.length}
-                                      onChange={(on) => toggleChecked(visibleIds, on)}
-                                    />
-                                  ) : (
-                                    // Groupe vide : même retrait, les chevrons restent alignés
-                                    <span aria-hidden className="ml-3 size-4 shrink-0" />
-                                  ))}
-                                <button
-                                  type="button"
-                                  aria-expanded={branchOpen}
-                                  onClick={() =>
-                                    setPrefs((p) => ({
-                                      open: { ...p.open, [key]: !branchOpen },
-                                    }))
-                                  }
-                                  className={cn(
-                                    "flex min-w-0 flex-1 items-center gap-1 py-1.5 pr-2 pl-4 text-left text-sm font-medium",
-                                    selecting && "pl-1",
-                                    groupId === null && "text-muted-foreground",
-                                  )}
-                                >
-                                  {branchOpen ? (
-                                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                                  ) : (
-                                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                                  )}
-                                  <span className="truncate">{branch.label}</span>
-                                  <span className="ml-auto text-xs text-muted-foreground tabular-nums">
-                                    {count}
-                                  </span>
-                                </button>
-                                {groupId && campActive && !readOnly && !selecting && (
-                                  <GroupActions
-                                    campaignId={camp.id}
-                                    groupId={groupId}
-                                    groupName={branch.label}
-                                    onRename={() => setRenamingGroup(groupId)}
-                                    className="opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
-                                  />
-                                )}
-                              </div>
-
-                              {branchOpen &&
-                                visible.map((c) => {
-                                  const isSelected = c.id === selectedId;
-                                  const suffix = STATUS_SUFFIXES[c.status];
-                                  const rowClass = cn(
-                                    "mx-3 flex items-center gap-2 rounded-lg py-1.5 pr-2 pl-8 text-sm hover:bg-muted/60",
-                                    c.status !== "active" && "text-muted-foreground",
-                                  );
-                                  const content = (
-                                    <>
-                                      <span className="truncate">
-                                        {displayName(c.first_name, c.last_name)}
-                                      </span>
-                                      {suffix && (
-                                        <span className="shrink-0 text-xs">
-                                          ({suffix})
-                                        </span>
-                                      )}
-                                      <span className="ml-auto flex shrink-0 items-center gap-1.5">
-                                        {(overdue[c.id] ?? 0) > 0 && (
-                                          <AlarmClock
-                                            className="size-3.5 text-destructive"
-                                            role="img"
-                                            aria-label={plural(overdue[c.id], "tâche en retard", "tâches en retard")}
-                                          />
-                                        )}
-                                        {(unread[c.id] ?? 0) > 0 && (
-                                          <UnreadBadge count={unread[c.id]} />
-                                        )}
-                                        {prefs.showPayments &&
-                                          (c.remaining_amount ?? 0) > 0 && (
-                                            <span className={cn("rounded-full px-1.5 py-px text-[11px] font-medium tabular-nums", PILL_TONE_CLASSES.warn)}>
-                                              <span className="sr-only">Reste à payer : </span>
-                                              {formatDA(c.remaining_amount ?? 0)}
-                                            </span>
-                                          )}
-                                        {prefs.showStage && c.stage_id && stageNames.has(c.stage_id) && (
-                                          <span className="max-w-28 truncate text-xs text-muted-foreground">
-                                            <span className="sr-only">Étape : </span>
-                                            {stageNames.get(c.stage_id)}
-                                          </span>
-                                        )}
-                                        {prefs.showLevel && (
-                                          <span className="text-xs text-muted-foreground">
-                                            {labelOf(EDUCATION_LEVEL_LABELS, c.education_level)}
-                                          </span>
-                                        )}
-                                      </span>
-                                    </>
-                                  );
-                                  // Mode sélection : la ligne coche le dossier au lieu de l'ouvrir
-                                  if (selecting) {
-                                    return (
-                                      <label key={c.id} className={cn(rowClass, "cursor-pointer pl-5")}>
-                                        <input
-                                          type="checkbox"
-                                          checked={checked.has(c.id)}
-                                          onChange={(e) => toggleChecked([c.id], e.target.checked)}
-                                          className="size-4 shrink-0 accent-primary"
-                                        />
-                                        {content}
-                                      </label>
-                                    );
-                                  }
-                                  return (
-                                    <Link
-                                      key={c.id}
-                                      href={`/cases/${c.id}`}
-                                      aria-current={isSelected ? "page" : undefined}
-                                      className={cn(
-                                        rowClass,
-                                        isSelected && "bg-accent font-medium text-accent-foreground",
-                                      )}
-                                    >
-                                      {content}
-                                    </Link>
-                                  );
-                                })}
-                            </div>
+                            <TreeBranch
+                              key={key}
+                              label={branch.label}
+                              count={count}
+                              cases={branch.cases.filter(shownCase).sort(order)}
+                              open={branchOpen}
+                              onToggle={() =>
+                                setPrefs((p) => ({ open: { ...p.open, [key]: !branchOpen } }))
+                              }
+                              muted={groupId === null}
+                              actions={
+                                groupId && campActive && !readOnly
+                                  ? {
+                                      campaignId: camp.id,
+                                      groupId,
+                                      onRename: () => setRenamingGroup(groupId),
+                                    }
+                                  : null
+                              }
+                              selectedId={selectedId}
+                              selecting={selecting}
+                              checked={checked}
+                              onCheck={toggleChecked}
+                              overdue={overdue}
+                              unread={unread}
+                              stageNames={stageNames}
+                              show={rowShow}
+                            />
                           );
                         },
                       )}
@@ -943,69 +542,27 @@ export function CaseTree({
             onClear={() => setChecked(new Set())}
             onExit={exitSelection}
           />
-        ) : !readOnly && (
-        <div className="p-4">
-          <Link
-            href={
-              selectedCase
-                ? `/cases/new?campaign=${selectedCase.campaign_id}`
-                : "/cases/new"
-            }
-            className={cn(buttonVariants(), "w-full")}
-            title={NEW_CASE_TITLE}
-            {...NEW_CASE_LINK_PROPS}
-          >
-            <Plus /> Nouveau dossier
-          </Link>
-        </div>
+        ) : (
+          !readOnly && (
+            <div className="p-4">
+              <Link
+                href={
+                  selectedCase
+                    ? `/cases/new?campaign=${selectedCase.campaign_id}`
+                    : "/cases/new"
+                }
+                className={cn(buttonVariants(), "w-full")}
+                title={NEW_CASE_TITLE}
+                {...NEW_CASE_LINK_PROPS}
+              >
+                <Plus /> Nouveau dossier
+              </Link>
+            </div>
+          )
         )}
       </aside>
 
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Redimensionner le panneau"
-        aria-valuenow={width}
-        aria-valuemin={TREE_WIDTH.min}
-        aria-valuemax={TREE_WIDTH.max}
-        tabIndex={0}
-        onPointerDown={startResize}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowLeft") setPrefs({ width: width - 16 });
-          if (e.key === "ArrowRight") setPrefs({ width: width + 16 });
-        }}
-        className={cn(
-          "hidden w-px shrink-0 cursor-col-resize bg-border outline-none transition-colors hover:w-0.5 hover:bg-primary/40 focus-visible:w-0.5 focus-visible:bg-ring",
-          !collapsed && "md:block",
-        )}
-      />
+      {separator}
     </>
-  );
-}
-
-// Case « tout cocher » d'un groupe : cochée, vide, ou à moitié quand une
-// partie seulement de ses dossiers est cochée
-function BranchCheckbox({
-  label,
-  checked,
-  indeterminate,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  indeterminate: boolean;
-  onChange: (on: boolean) => void;
-}) {
-  return (
-    <input
-      type="checkbox"
-      aria-label={label}
-      checked={checked}
-      ref={(el) => {
-        if (el) el.indeterminate = indeterminate;
-      }}
-      onChange={(e) => onChange(e.target.checked)}
-      className="ml-3 size-4 shrink-0 accent-primary"
-    />
   );
 }

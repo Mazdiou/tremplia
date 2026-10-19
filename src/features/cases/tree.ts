@@ -1,6 +1,7 @@
 import { UNCLASSIFIED_LABEL } from "@/features/campaigns/labels";
-import type { PaymentFilter } from "@/lib/ui-prefs";
+import type { PaymentFilter, UiPrefs } from "@/lib/ui-prefs";
 import type { TreeCase, TreeCaseGroup } from "./fetch-campaign-cases";
+import { educationRank } from "./labels";
 
 export type TreeGroup = {
   id: string;
@@ -59,6 +60,27 @@ export function buildCampaignBranches(
     });
   }
   return branches;
+}
+
+const collator = new Intl.Collator("fr", { sensitivity: "base" });
+
+type Sortable = Pick<TreeCase, "first_name" | "last_name" | "education_level">;
+
+function byName(a: Sortable, b: Sortable) {
+  return (
+    collator.compare(a.last_name, b.last_name) ||
+    collator.compare(a.first_name, b.first_name)
+  );
+}
+
+function byLevel(a: Sortable, b: Sortable) {
+  return educationRank(a.education_level) - educationRank(b.education_level) || byName(a, b);
+}
+
+// Ordre des dossiers dans une branche : nom (accents et casse ignorés), ou
+// niveau d'études puis nom
+export function treeCaseOrder(sortBy: UiPrefs["sortBy"]) {
+  return sortBy === "level" ? byLevel : byName;
 }
 
 // Filtre des paiements de l'arbre : reste à payer, soldés (gratuits compris),

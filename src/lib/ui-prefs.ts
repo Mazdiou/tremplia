@@ -8,7 +8,7 @@ import { useSyncExternalStore } from "react";
 export const PAYMENT_FILTERS = ["", "due", "paid", "unset"] as const;
 export type PaymentFilter = (typeof PAYMENT_FILTERS)[number];
 
-type UiPrefs = {
+export type UiPrefs = {
   width: number;
   collapsed: boolean;
   open: Record<string, boolean>;

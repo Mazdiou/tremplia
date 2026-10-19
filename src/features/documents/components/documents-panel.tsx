@@ -2,31 +2,21 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ChevronDown,
-  ChevronRight,
-  Eye,
-  FileText,
-  Folder,
-  FolderInput,
-  FolderPlus,
-  GripVertical,
-  Loader2,
-  Lock,
-  LockOpen,
-  Pencil,
-  Plus,
-  Trash2,
-  Upload,
-} from "lucide-react";
+import { FolderPlus, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
-import { DOCUMENTS_BUCKET, MAX_DOCUMENT_BYTES } from "@/features/documents/schemas";
 import { useDragAutoScroll } from "@/features/documents/drag-autoscroll";
+import { pdfProblem, uploadDocument, uploadSummary } from "@/features/documents/upload";
 import { callApi } from "@/lib/api-client";
 import { DownloadArchiveButton } from "./download-archive-button";
+import {
+  DOC_DRAG_TYPE,
+  DocumentRow,
+  NO_FOLDER,
+  type DocRowActions,
+  type DocRowMode,
+} from "./document-row";
+import { FolderSection, type FolderActions, type FolderMode } from "./folder-section";
 import { cn } from "@/lib/utils";
-import { plural } from "@/lib/plural";
 import { StatusMessage, type ActionMessage } from "@/components/page-ui";
 
 export type DocItem = {
@@ -40,11 +30,6 @@ export type DocItem = {
 };
 
 export type FolderItem = { id: string; name: string };
-
-// Clé des sections : l'identifiant du dossier, ou NO_FOLDER (« Sans dossier »)
-const NO_FOLDER = "none";
-// Type propre au glisser-déposer d'un document de cette page
-const DOC_DRAG_TYPE = "application/x-tremplia-doc";
 
 const lockedMessage = (verb: string) =>
   `Ce document est verrouillé par le patron : il ne peut plus être ${verb}.`;
@@ -76,171 +61,22 @@ export function DocumentsPanel({
 
   const [message, setMessage] = useState<ActionMessage>(null);
   const [uploading, setUploading] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [working, setWorking] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  // Un seul document à la fois est renommé, déplacé ou en attente de
+  // confirmation de suppression
+  const [row, setRow] = useState<{ id: string; mode: DocRowMode } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [working, setWorking] = useState<string | null>(null);
 
   // Dossiers de rangement
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [dragDocId, setDragDocId] = useState<string | null>(null);
   const [overKey, setOverKey] = useState<string | null>(null);
-  const [movingId, setMovingId] = useState<string | null>(null);
   const [creatingFolder, setCreatingFolder] = useState(false);
-  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
-  const [confirmFolderId, setConfirmFolderId] = useState<string | null>(null);
+  const [folderRow, setFolderRow] = useState<{ id: string; mode: FolderMode } | null>(null);
   const [folderBusy, setFolderBusy] = useState(false);
 
   const say = (text: string, error = false) => setMessage({ text, error });
-
-  async function uploadFiles(files: File[], folderId: string | null = null) {
-    if (files.length === 0) return;
-    setMessage(null);
-    let added = 0;
-    let lastError: string | null = null;
-
-    for (const file of files) {
-      if (!/\.pdf$/i.test(file.name)) {
-        lastError = `${file.name} : seuls les fichiers PDF sont acceptés`;
-        continue;
-      }
-      if (file.size < 1 || file.size > MAX_DOCUMENT_BYTES) {
-        lastError = `${file.name} : le fichier doit faire 10 Mo au maximum`;
-        continue;
-      }
-      setUploading(file.name);
-      const name =
-        file.name.replace(/\.pdf$/i, "").trim().slice(0, 120) || "Document";
-
-      // 1. Le serveur contrôle la demande et renvoie une URL signée
-      const step1 = await callApi<{ documentId: string; path: string; token: string }>(
-        `${base}/upload-url`,
-        { body: { name, originalFileName: file.name, sizeBytes: file.size } },
-      );
-      if (!step1.ok) {
-        lastError = `${file.name} : ${step1.error}`;
-        continue;
-      }
-
-      // 2. Le navigateur envoie le PDF directement au stockage
-      const { error: uploadError } = await createClient()
-        .storage.from(DOCUMENTS_BUCKET)
-        .uploadToSignedUrl(step1.data.path, step1.data.token, file, {
-          contentType: "application/pdf",
-        });
-      if (uploadError) {
-        lastError = `${file.name} : l'envoi a échoué, réessayez`;
-        continue;
-      }
-
-      // 3. Le serveur vérifie le fichier reçu et crée le document
-      const step3 = await callApi(base, {
-        body: {
-          documentId: step1.data.documentId,
-          name,
-          originalFileName: file.name,
-          folderId,
-        },
-      });
-      if (!step3.ok) {
-        lastError = `${file.name} : ${step3.error}`;
-        continue;
-      }
-      added += 1;
-    }
-
-    setUploading(null);
-    const addedText = added > 1 ? `${added} documents ajoutés` : "Document ajouté";
-    // Envoi de plusieurs fichiers en partie réussi : on le dit aussi
-    if (lastError) say(added > 0 ? `${addedText} · ${lastError}` : lastError, true);
-    else say(addedText);
-    if (added > 0) router.refresh();
-    if (inputRef.current) inputRef.current.value = "";
-  }
-
-  async function open(id: string) {
-    setMessage(null);
-    // Fenêtre ouverte tout de suite (clic de l'utilisateur) pour éviter le
-    // blocage des fenêtres, puis dirigée vers le lien signé d'une minute.
-    const win = window.open("about:blank", "_blank");
-    const res = await callApi<{ url?: unknown }>(`${base}/${id}/open`);
-    if (!res.ok || typeof res.data.url !== "string") {
-      win?.close();
-      say(res.ok ? "Impossible d'ouvrir le document" : res.error, true);
-      return;
-    }
-    if (!win) {
-      say("Le navigateur a bloqué l'ouverture. Autorisez les fenêtres pour ce site.", true);
-      return;
-    }
-    win.opener = null;
-    win.location.href = res.data.url;
-  }
-
-  function startRename(d: DocItem) {
-    if (d.locked) {
-      say(lockedMessage("renommé"), true);
-      return;
-    }
-    setMessage(null);
-    setConfirmId(null);
-    setEditingId(d.id);
-  }
-
-  async function rename(d: DocItem, value: string) {
-    const name = value.trim();
-    if (!name) {
-      say("Saisissez un nom pour le document.", true);
-      return;
-    }
-    if (name === d.name) {
-      setEditingId(null);
-      return;
-    }
-    setSaving(true);
-    const res = await callApi(`${base}/${d.id}`, { method: "PATCH", body: { name } });
-    setSaving(false);
-    if (!res.ok) {
-      say(res.error, true);
-      return;
-    }
-    setEditingId(null);
-    say("Document renommé");
-    router.refresh();
-  }
-
-  function askDelete(d: DocItem) {
-    if (d.locked) {
-      say(lockedMessage("supprimé"), true);
-      return;
-    }
-    setMessage(null);
-    setEditingId(null);
-    setConfirmId(d.id);
-  }
-
-  async function remove(id: string) {
-    setWorking(id);
-    const res = await callApi(`${base}/${id}`, { method: "DELETE" });
-    setWorking(null);
-    setConfirmId(null);
-    if (!res.ok) say(res.error, true);
-    else say("Document supprimé");
-    router.refresh();
-  }
-
-  async function toggleLock(d: DocItem) {
-    setMessage(null);
-    setWorking(d.id);
-    const res = await callApi(`${base}/${d.id}/lock`, { body: { locked: !d.locked } });
-    setWorking(null);
-    if (!res.ok) say(res.error, true);
-    else say(d.locked ? "Document déverrouillé" : "Document verrouillé");
-    router.refresh();
-  }
-
-  // --- Dossiers de rangement -------------------------------------------------
 
   const folderIds = useMemo(() => new Set(folders.map((f) => f.id)), [folders]);
 
@@ -254,6 +90,141 @@ export function DocumentsPanel({
     return map;
   }, [docs, folderIds]);
 
+  async function uploadFiles(files: File[], folderId: string | null = null) {
+    if (files.length === 0) return;
+    setMessage(null);
+    let added = 0;
+    let lastError: string | null = null;
+
+    for (const file of files) {
+      const problem = pdfProblem(file);
+      if (problem) {
+        lastError = `${file.name} : ${problem}`;
+        continue;
+      }
+      setUploading(file.name);
+      const error = await uploadDocument(base, file, folderId);
+      if (error) lastError = `${file.name} : ${error}`;
+      else added += 1;
+    }
+
+    setUploading(null);
+    const summary = uploadSummary(added, lastError);
+    say(summary.text, summary.error);
+    if (added > 0) router.refresh();
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  // --- Documents ---------------------------------------------------------------
+
+  // Un document verrouillé ne se renomme, ne se déplace ni ne se supprime
+  function startOn(d: DocItem, mode: DocRowMode, verb: string) {
+    if (d.locked) {
+      say(lockedMessage(verb), true);
+      return;
+    }
+    setMessage(null);
+    setRow({ id: d.id, mode });
+  }
+
+  // Déplace un document (bouton ou glisser-déposer) ; rien si déjà en place
+  async function moveDoc(d: DocItem, folderId: string | null) {
+    const current = d.folderId && folderIds.has(d.folderId) ? d.folderId : null;
+    if (current === folderId) return;
+    if (d.locked) {
+      say(lockedMessage("déplacé"), true);
+      return;
+    }
+    setMessage(null);
+    setWorking(d.id);
+    const res = await callApi(`${base}/${d.id}/move`, { body: { folderId } });
+    setWorking(null);
+    if (!res.ok) {
+      say(res.error, true);
+    } else {
+      const target = folders.find((f) => f.id === folderId);
+      say(target ? `Document déplacé dans « ${target.name} »` : "Document retiré de son dossier");
+    }
+    router.refresh();
+  }
+
+  const rowActions: DocRowActions = {
+    async open(d) {
+      setMessage(null);
+      // Fenêtre ouverte tout de suite (clic de l'utilisateur) pour éviter le
+      // blocage des fenêtres, puis dirigée vers le lien signé d'une minute.
+      const win = window.open("about:blank", "_blank");
+      const res = await callApi<{ url?: unknown }>(`${base}/${d.id}/open`);
+      if (!res.ok || typeof res.data.url !== "string") {
+        win?.close();
+        say(res.ok ? "Impossible d'ouvrir le document" : res.error, true);
+        return;
+      }
+      if (!win) {
+        say("Le navigateur a bloqué l'ouverture. Autorisez les fenêtres pour ce site.", true);
+        return;
+      }
+      win.opener = null;
+      win.location.href = res.data.url;
+    },
+    startRename: (d) => startOn(d, "rename", "renommé"),
+    async rename(d, value) {
+      const name = value.trim();
+      if (!name) {
+        say("Saisissez un nom pour le document.", true);
+        return;
+      }
+      if (name === d.name) {
+        setRow(null);
+        return;
+      }
+      setSaving(true);
+      const res = await callApi(`${base}/${d.id}`, { method: "PATCH", body: { name } });
+      setSaving(false);
+      if (!res.ok) {
+        say(res.error, true);
+        return;
+      }
+      setRow(null);
+      say("Document renommé");
+      router.refresh();
+    },
+    startMove: (d) => startOn(d, "move", "déplacé"),
+    move(d, folderId) {
+      setRow(null);
+      void moveDoc(d, folderId);
+    },
+    askDelete: (d) => startOn(d, "confirm", "supprimé"),
+    async remove(d) {
+      setWorking(d.id);
+      const res = await callApi(`${base}/${d.id}`, { method: "DELETE" });
+      setWorking(null);
+      setRow(null);
+      if (!res.ok) say(res.error, true);
+      else say("Document supprimé");
+      router.refresh();
+    },
+    async toggleLock(d) {
+      setMessage(null);
+      setWorking(d.id);
+      const res = await callApi(`${base}/${d.id}/lock`, { body: { locked: !d.locked } });
+      setWorking(null);
+      if (!res.ok) say(res.error, true);
+      else say(d.locked ? "Document déverrouillé" : "Document verrouillé");
+      router.refresh();
+    },
+    cancel: () => setRow(null),
+    // Mise à jour différée : modifier l'affichage pendant le démarrage du
+    // glisser peut l'annuler dans certains navigateurs.
+    dragStart: (d) => setTimeout(() => setDragDocId(d.id), 0),
+    dragEnd() {
+      setDragDocId(null);
+      setOverKey(null);
+    },
+  };
+
+  // --- Dossiers de rangement -------------------------------------------------
+
   function toggleCollapsed(key: string) {
     setCollapsed((prev) => {
       const next = new Set(prev);
@@ -263,30 +234,9 @@ export function DocumentsPanel({
     });
   }
 
-  async function moveDoc(docId: string, folderId: string | null) {
-    const d = docs.find((x) => x.id === docId);
-    if (!d) return;
-    const current = d.folderId && folderIds.has(d.folderId) ? d.folderId : null;
-    if (current === folderId) return;
-    if (d.locked) {
-      say(lockedMessage("déplacé"), true);
-      return;
-    }
-    setMessage(null);
-    setWorking(docId);
-    const res = await callApi(`${base}/${docId}/move`, { body: { folderId } });
-    setWorking(null);
-    if (!res.ok) {
-      say(res.error, true);
-    } else {
-      const target = folders.find((f) => f.id === folderId);
-      say(
-        target
-          ? `Document déplacé dans « ${target.name} »`
-          : "Document retiré de son dossier",
-      );
-    }
-    router.refresh();
+  function pickFilesFor(folderId: string | null) {
+    uploadTarget.current = folderId;
+    inputRef.current?.click();
   }
 
   async function createFolder(value: string) {
@@ -307,33 +257,44 @@ export function DocumentsPanel({
     router.refresh();
   }
 
-  async function renameFolder(f: FolderItem, value: string) {
-    const name = value.trim();
-    if (!name || name === f.name) {
-      setEditingFolderId(null);
-      return;
-    }
-    setFolderBusy(true);
-    const res = await callApi(`${foldersBase}/${f.id}`, { method: "PATCH", body: { name } });
-    setFolderBusy(false);
-    if (!res.ok) {
-      say(res.error, true);
-      return;
-    }
-    setEditingFolderId(null);
-    say("Dossier renommé");
-    router.refresh();
-  }
-
-  async function removeFolder(f: FolderItem) {
-    setFolderBusy(true);
-    const res = await callApi(`${foldersBase}/${f.id}`, { method: "DELETE" });
-    setFolderBusy(false);
-    setConfirmFolderId(null);
-    if (!res.ok) say(res.error, true);
-    else say("Dossier supprimé");
-    router.refresh();
-  }
+  const folderActions: FolderActions = {
+    addFiles: pickFilesFor,
+    startRename(f) {
+      setMessage(null);
+      setFolderRow({ id: f.id, mode: "rename" });
+    },
+    async rename(f, value) {
+      const name = value.trim();
+      if (!name || name === f.name) {
+        setFolderRow(null);
+        return;
+      }
+      setFolderBusy(true);
+      const res = await callApi(`${foldersBase}/${f.id}`, { method: "PATCH", body: { name } });
+      setFolderBusy(false);
+      if (!res.ok) {
+        say(res.error, true);
+        return;
+      }
+      setFolderRow(null);
+      say("Dossier renommé");
+      router.refresh();
+    },
+    askDelete(f) {
+      setMessage(null);
+      setFolderRow({ id: f.id, mode: "confirm" });
+    },
+    async remove(f) {
+      setFolderBusy(true);
+      const res = await callApi(`${foldersBase}/${f.id}`, { method: "DELETE" });
+      setFolderBusy(false);
+      setFolderRow(null);
+      if (!res.ok) say(res.error, true);
+      else say("Dossier supprimé");
+      router.refresh();
+    },
+    cancel: () => setFolderRow(null),
+  };
 
   // Zone de dépôt d'une section : accepte un document de cette page (déplacer)
   // ou des fichiers de l'ordinateur (envoyer directement dans ce dossier).
@@ -356,9 +317,10 @@ export function DocumentsPanel({
         e.stopPropagation();
         setOverKey(null);
         const docId = e.dataTransfer.getData(DOC_DRAG_TYPE);
+        const d = docId ? docs.find((x) => x.id === docId) : undefined;
         if (docId) {
           setDragDocId(null);
-          void moveDoc(docId, folderId);
+          if (d) void moveDoc(d, folderId);
         } else if (hasType(e, "Files")) {
           void uploadFiles(Array.from(e.dataTransfer.files), folderId);
         }
@@ -366,330 +328,36 @@ export function DocumentsPanel({
     };
   }
 
-  function pickFilesFor(folderId: string | null) {
-    uploadTarget.current = folderId;
-    inputRef.current?.click();
-  }
-
-  function renderRow(d: DocItem) {
-    const draggable = !d.locked && editingId !== d.id && movingId !== d.id;
-    return (
-      <li
-        key={d.id}
-        draggable={draggable}
-        onDragStart={(e) => {
-          e.dataTransfer.setData(DOC_DRAG_TYPE, d.id);
-          e.dataTransfer.effectAllowed = "move";
-          // Mise à jour différée : modifier l'affichage pendant le démarrage
-          // du glisser peut l'annuler dans certains navigateurs.
-          setTimeout(() => setDragDocId(d.id), 0);
-        }}
-        onDragEnd={() => {
-          setDragDocId(null);
-          setOverKey(null);
-        }}
-        className={cn(
-          "flex items-center gap-3 px-3 py-2.5 text-sm max-sm:flex-wrap",
-          dragDocId === d.id && "opacity-50",
-        )}
-      >
-        {draggable ? (
-          <GripVertical
-            className="-ml-1 size-4 shrink-0 cursor-grab text-muted-foreground"
-            aria-hidden
-          />
-        ) : (
-          <span className="-ml-1 size-4 shrink-0" aria-hidden />
-        )}
-        <FileText className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-
-        {editingId === d.id ? (
-          <input
-            autoFocus
-            defaultValue={d.name}
-            maxLength={120}
-            aria-label="Nom du document"
-            disabled={saving}
-            onFocus={(e) => e.currentTarget.select()}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setEditingId(null);
-              if (e.key === "Enter") void rename(d, e.currentTarget.value);
-            }}
-            onBlur={() => {
-              if (!saving) setEditingId(null);
-            }}
-            className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          />
-        ) : (
-          <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-2">
-              <span className="truncate font-medium">{d.name}</span>
-              {d.locked && (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-400">
-                  <Lock className="size-3" aria-hidden /> Verrouillé
-                </span>
-              )}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {d.sizeLabel} · ajouté par {d.uploadedBy}, le {d.dateLabel}
-            </p>
-          </div>
-        )}
-
-        {/* Téléphone : boutons sous le nom, qui garde toute la largeur */}
-        <div className="flex shrink-0 items-center gap-1 max-sm:-mt-1 max-sm:w-full max-sm:justify-end">
-          {movingId === d.id ? (
-            <select
-              autoFocus
-              aria-label={`Déplacer ${d.name} vers`}
-              defaultValue={d.folderId ?? NO_FOLDER}
-              onChange={(e) => {
-                const value = e.target.value;
-                setMovingId(null);
-                void moveDoc(d.id, value === NO_FOLDER ? null : value);
-              }}
-              onBlur={() => setMovingId(null)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") setMovingId(null);
-              }}
-              className="h-8 max-w-48 rounded-lg border bg-background px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <option value={NO_FOLDER}>Sans dossier</option>
-              {folders.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-          ) : confirmId === d.id ? (
-            <>
-              <span className="mr-1 text-xs">Supprimer ce document ?</span>
-              <Button
-                variant="destructive"
-                size="xs"
-                disabled={working === d.id}
-                onClick={() => void remove(d.id)}
-              >
-                Supprimer
-              </Button>
-              <Button variant="ghost" size="xs" onClick={() => setConfirmId(null)}>
-                Annuler
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => void open(d.id)}
-                aria-label={`Ouvrir ${d.name}`}
-                title="Ouvrir dans un nouvel onglet"
-              >
-                <Eye />
-              </Button>
-              {folders.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={working === d.id}
-                  onClick={() => {
-                    if (d.locked) {
-                      say(lockedMessage("déplacé"), true);
-                      return;
-                    }
-                    setMessage(null);
-                    setEditingId(null);
-                    setConfirmId(null);
-                    setMovingId(d.id);
-                  }}
-                  aria-label={`Déplacer ${d.name}`}
-                  title="Déplacer vers un dossier (ou glissez le document)"
-                >
-                  <FolderInput />
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => startRename(d)}
-                aria-label={`Renommer ${d.name}`}
-                title="Renommer"
-              >
-                <Pencil />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => askDelete(d)}
-                aria-label={`Supprimer ${d.name}`}
-                title="Supprimer"
-              >
-                <Trash2 />
-              </Button>
-              {isOwner && (
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={working === d.id}
-                  onClick={() => void toggleLock(d)}
-                  aria-label={
-                    d.locked ? `Déverrouiller ${d.name}` : `Verrouiller ${d.name}`
-                  }
-                  title={d.locked ? "Déverrouiller" : "Verrouiller"}
-                >
-                  {d.locked ? <LockOpen /> : <Lock />}
-                </Button>
-              )}
-            </>
-          )}
-        </div>
-      </li>
-    );
-  }
-
   function renderSection(key: string, folder: FolderItem | null) {
     const list = byKey.get(key) ?? [];
-    const isCollapsed = collapsed.has(key);
-    const title = folder?.name ?? "Sans dossier";
-    const isOver = overKey === key;
-    const editing = folder !== null && editingFolderId === folder.id;
-    const confirming = folder !== null && confirmFolderId === folder.id;
-
     return (
-      <section
+      <FolderSection
         key={key}
-        aria-label={title}
-        {...dropProps(key, folder?.id ?? null)}
-        className={cn(
-          "rounded-xl border transition-colors",
-          isOver && "border-primary bg-accent/40",
-        )}
+        folder={folder}
+        count={list.length}
+        collapsed={collapsed.has(key)}
+        onToggle={() => toggleCollapsed(key)}
+        over={overKey === key}
+        dropProps={dropProps(key, folder?.id ?? null)}
+        mode={folder && folderRow?.id === folder.id ? folderRow.mode : "view"}
+        busy={folderBusy}
+        isOwner={isOwner}
+        actions={folderActions}
       >
-        <header className="flex items-center gap-2 px-3 py-2">
-          <button
-            type="button"
-            onClick={() => toggleCollapsed(key)}
-            aria-expanded={!isCollapsed}
-            aria-label={isCollapsed ? `Déplier ${title}` : `Replier ${title}`}
-            className="touch-target shrink-0 rounded text-muted-foreground hover:text-foreground"
-          >
-            {isCollapsed ? (
-              <ChevronRight className="size-4" aria-hidden />
-            ) : (
-              <ChevronDown className="size-4" aria-hidden />
-            )}
-          </button>
-          <Folder className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-
-          {editing && folder ? (
-            <input
-              autoFocus
-              defaultValue={folder.name}
-              maxLength={80}
-              aria-label="Nom du dossier"
-              disabled={folderBusy}
-              onFocus={(e) => e.currentTarget.select()}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") setEditingFolderId(null);
-                if (e.key === "Enter") {
-                  void renameFolder(folder, e.currentTarget.value);
-                }
-              }}
-              onBlur={() => {
-                if (!folderBusy) setEditingFolderId(null);
-              }}
-              className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            />
-          ) : (
-            <h3 className="min-w-0 flex-1 truncate text-sm font-medium">
-              {title}
-              <span className="ml-2 text-xs font-normal text-muted-foreground">
-                {list.length}
-              </span>
-            </h3>
-          )}
-
-          <div className="flex shrink-0 items-center gap-1">
-            {confirming && folder ? (
-              <>
-                <span className="mr-1 text-xs">
-                  {list.length > 0
-                    ? `Supprimer ce dossier ? Ses ${plural(list.length, "document")} iront dans « Sans dossier ».`
-                    : "Supprimer ce dossier ?"}
-                </span>
-                <Button
-                  variant="destructive"
-                  size="xs"
-                  disabled={folderBusy}
-                  onClick={() => void removeFolder(folder)}
-                >
-                  Supprimer
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={() => setConfirmFolderId(null)}
-                >
-                  Annuler
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => pickFilesFor(folder?.id ?? null)}
-                  aria-label={`Ajouter des PDF dans ${title}`}
-                  title="Ajouter des PDF dans ce dossier"
-                >
-                  <Plus />
-                </Button>
-                {folder && (
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => {
-                      setMessage(null);
-                      setConfirmFolderId(null);
-                      setEditingFolderId(folder.id);
-                    }}
-                    aria-label={`Renommer le dossier ${folder.name}`}
-                    title="Renommer le dossier"
-                  >
-                    <Pencil />
-                  </Button>
-                )}
-                {folder && isOwner && (
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => {
-                      setMessage(null);
-                      setEditingFolderId(null);
-                      setConfirmFolderId(folder.id);
-                    }}
-                    aria-label={`Supprimer le dossier ${folder.name}`}
-                    title="Supprimer le dossier (patron)"
-                  >
-                    <Trash2 />
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
-        </header>
-
-        {!isCollapsed &&
-          (list.length === 0 ? (
-            <p className="border-t px-3 py-3 text-xs text-muted-foreground">
-              {key === NO_FOLDER
-                ? "Déposez ici un document pour le sortir de son dossier."
-                : "Dossier vide : déposez des PDF ici."}
-            </p>
-          ) : (
-            <ul className="divide-y border-t">{list.map(renderRow)}</ul>
-          ))}
-      </section>
+        {list.map((d) => (
+          <DocumentRow
+            key={d.id}
+            doc={d}
+            folders={folders}
+            isOwner={isOwner}
+            mode={row?.id === d.id ? row.mode : "view"}
+            busy={working === d.id}
+            saving={saving}
+            dragging={dragDocId === d.id}
+            actions={rowActions}
+          />
+        ))}
+      </FolderSection>
     );
   }
 
