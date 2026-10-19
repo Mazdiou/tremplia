@@ -1,7 +1,7 @@
 import { Panel } from "@/components/page-ui";
 import { PROGRAM_RESULT_LABELS, type ProgramResult } from "@/features/programs/schemas";
 import type { Results } from "../server/dashboard";
-import { plural, pluralWord } from "@/lib/plural";
+import { plural } from "@/lib/plural";
 
 // Réponses des établissements : une barre répartie et la légende chiffrée.
 // L'ordre suit le parcours, de la meilleure nouvelle à l'attente.
@@ -14,7 +14,7 @@ const ORDER: { result: ProgramResult; color: string }[] = [
 ];
 
 export function ResultsPanel({ results }: { results: Results }) {
-  const { counts, total, admitted } = results;
+  const { counts, total } = results;
   return (
     <Panel title="Réponses des établissements">
       {total === 0 ? (
@@ -23,12 +23,6 @@ export function ResultsPanel({ results }: { results: Results }) {
         </p>
       ) : (
         <div className="space-y-4 px-5 py-4">
-          <p>
-            <span className="text-3xl font-semibold tracking-tight tabular-nums">{admitted}</span>{" "}
-            <span className="text-sm text-muted-foreground">
-              {pluralWord(admitted, "candidat admis", "candidats admis")} dans au moins une formation
-            </span>
-          </p>
           <div
             className="flex h-2.5 overflow-hidden rounded-full bg-muted"
             role="img"
