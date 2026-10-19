@@ -99,7 +99,12 @@ export default async function TeamPage() {
         {!readOnly && (
           <Panel
             title="Ajouter un employé"
-            description="Un mot de passe temporaire est créé : l'employé le remplace à sa première connexion."
+            description={
+              list.length <= 1
+                ? "Vous êtes seul pour l'instant. Chaque employé a son compte et travaille sur les mêmes dossiers ; un mot de passe temporaire est créé, qu'il remplace à sa première connexion."
+                : "Un mot de passe temporaire est créé : l'employé le remplace à sa première connexion."
+            }
+            highlight={list.length <= 1}
           >
             <AddEmployeeForm />
           </Panel>

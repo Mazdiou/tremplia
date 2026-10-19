@@ -904,6 +904,27 @@ export function CaseTree({
                           );
                         },
                       )}
+
+                    {/* Campagne encore vide : de quoi commencer */}
+                    {campOpen &&
+                      isLoaded(camp.id) &&
+                      !filtersActive &&
+                      !cases.some((c) => c.campaign_id === camp.id) && (
+                        <div className="py-1.5 pr-3 pl-9 text-sm text-muted-foreground">
+                          Aucun dossier pour l&apos;instant.
+                          {campActive && !readOnly && (
+                            <>
+                              {" "}
+                              <Link
+                                href={`/cases/new?campaign=${camp.id}`}
+                                className="font-medium text-link hover:underline"
+                              >
+                                Ajouter le premier
+                              </Link>
+                            </>
+                          )}
+                        </div>
+                      )}
                   </div>
                 );
               })}

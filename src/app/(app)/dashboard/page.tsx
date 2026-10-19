@@ -2,7 +2,8 @@ import Link from "next/link";
 import { CalendarClock, CalendarRange, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getShellUser } from "@/components/shell/app-shell";
-import { isReadOnly } from "@/features/subscription/server/subscription";
+import { getSubscription, isReadOnly } from "@/features/subscription/server/subscription";
+import { daysLeft } from "@/features/subscription/subscription";
 import { EmptyState } from "@/components/empty-state";
 import {
   NewCaseLink,
@@ -35,6 +36,10 @@ import { InstallAppCard } from "@/features/pwa/components/install-app-card";
 import { StagePipeline } from "@/features/stages/components/stage-pipeline";
 import { MyTasksPanel } from "@/features/tasks/components/my-tasks-panel";
 import { loadMyTasks, myTaskCounts } from "@/features/tasks/server/read";
+import { OnboardingChecklist } from "@/features/onboarding/components/onboarding-checklist";
+import { WelcomeDialog } from "@/features/onboarding/components/welcome-dialog";
+import { loadOnboarding, needsWelcome } from "@/features/onboarding/server/onboarding";
+import type { Member } from "@/lib/auth/require-member";
 import { plural, pluralWord } from "@/lib/plural";
 import type { Metadata } from "next";
 
@@ -69,6 +74,8 @@ export default async function DashboardPage({
   // Abonnement expiré : pas de bouton de création. Lu en même temps que le
   // reste (déjà demandé par la coquille : même lecture, mise en cache).
   const readOnlyPromise = isReadOnly(u.member.agencyId);
+  // Mot de bienvenue et guide « Bien démarrer » (nouvelle agence)
+  const guidePromise = loadGuide(u.member, readOnlyPromise);
 
   const allActive = campaignList.filter((c) => c.status === "active");
   const selected = allActive.find((c) => c.id === wanted) ?? null;
@@ -76,21 +83,26 @@ export default async function DashboardPage({
   const ids = campaigns.map((c) => c.id);
 
   if (ids.length === 0) {
-    const readOnly = await readOnlyPromise;
+    const [readOnly, guide] = await Promise.all([readOnlyPromise, guidePromise]);
     return (
       <PageContainer width="narrow">
         <PageHeader title={`Bonjour ${u.member.firstName}`} subtitle={todayLabel} />
+        {guide.welcome}
+        {/* Le guide, quand il est affiché, remplace l'écran vide */}
+        {guide.checklist}
         <InstallAppCard appName={BRAND.name} />
-        <EmptyState
-          icon={CalendarRange}
-          title={`Bienvenue dans ${BRAND.name}`}
-          description={
-            u.member.isOwner
-              ? "Commencez par créer une campagne ou importer un modèle (Campus France, par exemple) : vous pourrez ensuite y ajouter vos dossiers."
-              : "Aucune campagne active pour le moment. Prévenez le patron : il doit créer une campagne avant que vous puissiez ajouter des dossiers."
-          }
-        />
-        {u.member.isOwner && !readOnly && (
+        {!guide.checklist && (
+          <EmptyState
+            icon={CalendarRange}
+            title={`Bienvenue dans ${BRAND.name}`}
+            description={
+              u.member.isOwner
+                ? "Commencez par créer une campagne ou importer un modèle (Campus France, par exemple) : vous pourrez ensuite y ajouter vos dossiers."
+                : "Aucune campagne active pour le moment. Prévenez le patron : il doit créer une campagne avant que vous puissiez ajouter des dossiers."
+            }
+          />
+        )}
+        {u.member.isOwner && !readOnly && !guide.checklist && (
           <div className="flex justify-center gap-2">
             <Link href="/campaigns#modeles" className={buttonVariants({ variant: "outline" })}>
               Importer un modèle
@@ -162,7 +174,7 @@ export default async function DashboardPage({
         : Promise.resolve({ data: null }),
     ]);
   const recent = recentRes.data;
-  const [myTasks, myCounts] = await tasksPromise;
+  const [[myTasks, myCounts], guide] = await Promise.all([tasksPromise, guidePromise]);
 
   const active = countCases(stats, { status: "active" });
   const mine = countCases(stats, { status: "active", assignedTo: u.member.userId });
@@ -235,6 +247,8 @@ export default async function DashboardPage({
           </>
         }
       />
+      {guide.welcome}
+      {guide.checklist}
       <InstallAppCard appName={BRAND.name} />
 
       <TodoPanel todo={todo} />
@@ -404,6 +418,27 @@ export default async function DashboardPage({
 
     </PageContainer>
   );
+}
+
+// Mot de bienvenue (première connexion) et guide du patron. Le guide
+// disparaît en lecture seule : ses étapes ne pourraient plus se faire.
+async function loadGuide(member: Member, readOnlyPromise: Promise<boolean>) {
+  const [welcome, readOnly, sub, progress] = await Promise.all([
+    needsWelcome(member),
+    readOnlyPromise,
+    getSubscription(member.agencyId),
+    loadOnboarding(member),
+  ]);
+  return {
+    welcome: welcome ? (
+      <WelcomeDialog
+        firstName={member.firstName}
+        isOwner={member.isOwner}
+        trialDays={sub.state === "trial" ? daysLeft(sub.endsAt) : null}
+      />
+    ) : null,
+    checklist: progress && !readOnly ? <OnboardingChecklist progress={progress} /> : null,
+  };
 }
 
 // Chiffre du bloc Paiements ; avec `href`, il mène aux dossiers concernés

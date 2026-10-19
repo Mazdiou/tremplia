@@ -123,7 +123,7 @@ export default async function TasksPage({
         <EmptyState
           icon={ListTodo}
           title={who === "moi" ? "Aucune tâche pour vous" : "Aucune tâche"}
-          description="Les tâches s'ajoutent depuis l'onglet Tâches d'un dossier, ou depuis le menu ⋯ de son en-tête."
+          description="Une tâche note ce qu'il reste à faire sur un dossier, et pour quand. Ajoutez-la depuis l'onglet Tâches du dossier, ou pour plusieurs dossiers à la fois avec la sélection de la liste."
         />
       ) : (
         <TasksOverview

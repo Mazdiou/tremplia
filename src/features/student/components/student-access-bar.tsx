@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -18,7 +18,11 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { TRACK_INDENT, TrackRow } from "@/features/cases/components/case-header";
+import {
+  TRACK_INDENT,
+  TrackRow,
+  useHeaderTarget,
+} from "@/features/cases/components/case-header";
 import {
   WhatsAppAccessButton,
   type WhatsAppMenuContext,
@@ -85,8 +89,26 @@ export function StudentAccessBar({
 
   const enabled = access?.enabled === true;
 
+  // Arrivée depuis le guide de démarrage : la ligne est montrée et soulignée
+  const targeted = useHeaderTarget() === "espace-candidat";
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [glow, setGlow] = useState(targeted);
+  useEffect(() => {
+    if (!targeted) return;
+    rootRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    const t = setTimeout(() => setGlow(false), 2500);
+    return () => clearTimeout(t);
+  }, [targeted]);
+
   return (
-    <div>
+    <div
+      ref={rootRef}
+      id="espace-candidat"
+      className={cn(
+        "transition-colors duration-700",
+        glow && "bg-highlight",
+      )}
+    >
       <TrackRow
         icon={UserRound}
         label="Espace candidat"

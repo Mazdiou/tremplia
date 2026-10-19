@@ -49,7 +49,8 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 | **Historique** | Journal de tout ce qui a été fait sur le dossier, et par qui. |
 | **Tableau de bord** | « À traiter », mes tâches, échéances, réponses des formations, activité récente, par campagne. |
 | **Export Excel** | Classeur complet d'une campagne (patron). |
-| **Réglages** | Mon compte, mot de passe, apparence (thème clair ou sombre, retenu sur l'appareil ; c'est là qu'il se change sur téléphone) ; pour le patron, l'agence, les valeurs des nouvelles campagnes et l'abonnement. |
+| **Réglages** | Mon compte, mot de passe, apparence (thème clair ou sombre, retenu sur l'appareil ; c'est là qu'il se change sur téléphone) ; pour le patron, l'agence, les valeurs des nouvelles campagnes, le guide de démarrage et l'abonnement. |
+| **Guide de démarrage** | Mot de bienvenue à la première connexion de chaque membre, puis, pour le patron d'une nouvelle agence, la liste « Bien démarrer » en haut du tableau de bord : six étapes (campagne, dossier, document, espace candidat, tâche, employé) qui se cochent d'après les vraies données et mènent chacune au bon écran. Masquable (pour toute l'agence), réaffichable dans les réglages. Les agences déjà inscrites ne le voient pas. |
 | **Équipe** | Le patron ajoute ses employés (mot de passe temporaire à remplacer à la première connexion), les désactive ou les supprime. |
 
 **Patron / employé.** Les employés travaillent sur les dossiers. Sont réservés
@@ -402,6 +403,7 @@ Les migrations (`supabase/migrations/`) sont découpées par domaine :
 | `bulk_case_actions` | actions groupées (étape, responsable) |
 | `agency_settings` | réglages de l'agence et valeurs des nouvelles campagnes |
 | `case_tasks` | tâches des dossiers, actions groupées et temps réel des tâches |
+| `onboarding` | guide de démarrage : avancement, guide masqué, mot de bienvenue vu |
 
 Chaque domaine a son fichier de tests pgTAP dans `supabase/tests/`.
 

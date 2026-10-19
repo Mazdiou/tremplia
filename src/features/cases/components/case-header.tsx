@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronUp, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUiPrefs } from "@/lib/ui-prefs";
@@ -11,15 +12,30 @@ import { cn } from "@/lib/utils";
 // l'en-tête est réduit sur téléphone (déplié, il remplirait l'écran) et
 // complet sur ordinateur.
 
+// Lien qui mène à une ligne de l'en-tête (guide de démarrage) :
+// /cases/…?ouvrir=espace-candidat. L'en-tête s'affiche alors en entier.
+const HEADER_TARGETS = ["espace-candidat"];
+export function useHeaderTarget(): string | null {
+  const target = useSearchParams().get("ouvrir");
+  return target && HEADER_TARGETS.includes(target) ? target : null;
+}
+
 // `collapsed` : l'en-tête où se trouve le bouton est la version réduite
 export function CaseHeaderToggle({ collapsed }: { collapsed: boolean }) {
   const [, setPrefs] = useUiPrefs();
+  const router = useRouter();
+  const pathname = usePathname();
+  const target = useHeaderTarget();
   const label = collapsed ? "Afficher l'en-tête du dossier" : "Réduire l'en-tête du dossier";
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setPrefs({ caseHeader: collapsed ? "expanded" : "collapsed" })}
+      onClick={() => {
+        setPrefs({ caseHeader: collapsed ? "expanded" : "collapsed" });
+        // Arrivé par un lien du guide : l'en-tête suit de nouveau le choix
+        if (target) router.replace(pathname, { scroll: false });
+      }}
       aria-expanded={!collapsed}
       aria-label={label}
       title={label}
@@ -39,6 +55,8 @@ export function CaseHeaderDetails({
   children: React.ReactNode;
 }) {
   const [prefs] = useUiPrefs();
+  const target = useHeaderTarget();
+  if (target) return children;
   if (prefs.caseHeader === "collapsed") return compact;
   if (prefs.caseHeader === "expanded") return children;
   // Pas de choix : la largeur décide, en CSS (rien ne saute à l'affichage)

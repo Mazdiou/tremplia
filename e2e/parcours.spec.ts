@@ -56,6 +56,22 @@ test("inscription d'une agence puis connexion du patron", async () => {
   await expect(page).toHaveURL(/\/dashboard$/);
 });
 
+test("mot de bienvenue puis guide de démarrage", async () => {
+  const welcome = page.getByRole("dialog", { name: /Bienvenue/ });
+  await expect(welcome).toBeVisible();
+  await welcome.getByRole("button", { name: "C'est parti" }).click();
+  await expect(welcome).toBeHidden();
+  await expect(page.getByRole("progressbar", { name: "Avancement" })).toHaveAttribute(
+    "aria-valuenow",
+    "0",
+  );
+
+  // Vu une fois : il ne revient pas
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Bien démarrer" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: /Bienvenue/ })).toBeHidden();
+});
+
 test("import du modèle Campus France", async () => {
   await page.goto("/campaigns");
   await page.getByRole("button", { name: "Importer ce modèle" }).first().click();
@@ -107,6 +123,19 @@ test("ouverture de l'espace candidat", async () => {
   const code = page.locator("code").filter({ hasText: /^[A-Z0-9]{4}-[A-Z0-9]{4}$/ });
   await expect(code).toBeVisible();
   studentCode = (await code.textContent())!.trim();
+});
+
+test("le guide coche les étapes faites", async () => {
+  await page.goto("/dashboard");
+  // Campagne, dossier, document et espace candidat
+  await expect(page.getByRole("progressbar", { name: "Avancement" })).toHaveAttribute(
+    "aria-valuenow",
+    "4",
+  );
+  await expect(page.getByRole("button", { name: /Créer une tâche de relance/ })).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
 });
 
 test("le candidat se connecte et écrit à l'agence", async ({ browser }) => {

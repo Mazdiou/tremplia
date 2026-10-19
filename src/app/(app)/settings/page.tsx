@@ -9,6 +9,8 @@ import { PasswordForm } from "@/features/settings/components/password-form";
 import { SessionActions } from "@/features/settings/components/session-actions";
 import { ThemeChoice } from "@/features/settings/components/theme-choice";
 import { getAgencySettings } from "@/features/settings/server/settings";
+import { GuideSetting } from "@/features/onboarding/components/guide-setting";
+import { isOnboardingHidden } from "@/features/onboarding/server/onboarding";
 import { DEFAULT_STAGES } from "@/features/stages/stages";
 import { SubscriptionPanel } from "@/features/subscription/components/subscription-panel";
 import { getSubscription, listPlatformPayments } from "@/features/subscription/server/subscription";
@@ -30,10 +32,11 @@ export default async function SettingsPage() {
   // Paiements de l'abonnement : demandés dès maintenant pour l'encart
   if (isOwner) void listPlatformPayments();
   const supabase = await createClient();
-  const [{ data: claimsData }, subscription, agency] = await Promise.all([
+  const [{ data: claimsData }, subscription, agency, guideHidden] = await Promise.all([
     supabase.auth.getClaims(),
     getSubscription(member.agencyId),
     isOwner ? getAgencySettings(member.agencyId) : Promise.resolve(null),
+    isOwner ? isOnboardingHidden(member.agencyId) : Promise.resolve(true),
   ]);
   const email = typeof claimsData?.claims.email === "string" ? claimsData.claims.email : "";
   // Abonnement expiré : tout se consulte, rien ne se modifie (sauf le mot
@@ -119,6 +122,16 @@ export default async function SettingsPage() {
               }}
               readOnly={readOnly}
             />
+          </FormSection>
+        )}
+
+        {isOwner && !readOnly && (
+          <FormSection
+            id="guide"
+            title="Guide de démarrage"
+            description="Les étapes « Bien démarrer » du tableau de bord, pour toute l'agence."
+          >
+            <GuideSetting hidden={guideHidden} />
           </FormSection>
         )}
 
