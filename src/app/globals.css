@@ -26,6 +26,8 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-highlight: var(--highlight);
+  --color-band: var(--band);
+  --color-band-panel: var(--band-panel);
   --color-success: var(--success);
   --color-success-bg: var(--success-bg);
   --color-sidebar: var(--sidebar);
@@ -62,6 +64,10 @@
   --success: oklch(0.527 0.154 150);
   --success-bg: oklch(0.962 0.044 157);
   --sidebar: oklch(0.984 0.003 248);
+  /* Bandeau d'en-tête (dossier) : se détache du fond de la page ; ses
+     blocs (suivi du dossier) se détachent à leur tour du bandeau */
+  --band: oklch(0.952 0.014 262);
+  --band-panel: oklch(1 0 0);
   --radius: 0.75rem;
 }
 .dark {
@@ -86,6 +92,8 @@
   --success: oklch(0.8 0.17 150);
   --success-bg: oklch(0.28 0.06 155);
   --sidebar: oklch(0.17 0.01 260);
+  --band: oklch(0.195 0.022 262);
+  --band-panel: oklch(0.235 0.02 262);
 }
 
 @layer base {

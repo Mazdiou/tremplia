@@ -73,7 +73,7 @@ export function CaseHeaderDetails({
 // gauche, contenu, actions à droite.
 export function TrackPanel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-4 divide-y overflow-hidden rounded-xl border bg-card text-sm">
+    <div className="mt-4 divide-y overflow-hidden rounded-xl border bg-band-panel text-sm">
       {children}
     </div>
   );

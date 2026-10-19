@@ -117,7 +117,7 @@ export default async function CaseLayout({
       {/* En-tête partagé par tous les onglets. Fixe sur ordinateur ; sur
           téléphone il défile avec la page : déplié, il prendrait presque
           tout l'écran et le contenu glisserait dessous */}
-      <header className="z-10 border-b bg-background/95 backdrop-blur md:sticky md:top-0">
+      <header className="z-10 border-b bg-band/95 backdrop-blur md:sticky md:top-0">
         <div className="mx-auto max-w-5xl px-4 pt-5 md:px-8">
           <Link
             href="/cases"
