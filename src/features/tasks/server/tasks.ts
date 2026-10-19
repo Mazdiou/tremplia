@@ -4,14 +4,14 @@ import {
   logCaseActivity,
   type AuthorizedCase,
 } from "@/features/cases/server/authorize-case";
-import type { TaskInput } from "@/features/tasks/schemas";
+import { MAX_OPEN_TASKS, type TaskInput } from "@/features/tasks/schemas";
 
 // Tâches d'un dossier. L'intitulé et la précision ne sont jamais écrits dans
 // le journal ni dans les logs du serveur. Les droits (auteur, responsable,
 // patron) sont appliqués par les fonctions SQL ; voir la migration case_tasks.
 
 const ASSIGNEE_ERROR = "Ce membre ne peut pas recevoir de tâche (compte désactivé ?)";
-const LIMIT_ERROR = "Ce dossier a déjà 100 tâches à faire";
+const LIMIT_ERROR = `Ce dossier a déjà ${MAX_OPEN_TASKS} tâches à faire`;
 
 // La tâche doit appartenir à ce dossier
 async function assertTaskInCase(auth: AuthorizedCase, caseId: string, taskId: string) {

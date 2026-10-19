@@ -215,11 +215,17 @@ export function CaseTree({
     return matchesPayment(c, prefs.payment);
   }
 
-  const found = cases.filter(matches);
-  const allCount = cases.filter((c) => c.status === "active").length;
-  const mineCount = cases.filter(
-    (c) => c.status === "active" && c.assigned_to === currentUserId,
-  ).length;
+  // Une campagne archivée dépliée puis masquée garde ses dossiers en mémoire :
+  // on ne garde que ceux des campagnes affichées
+  const shownIds = new Set(shownCampaigns.map((c) => c.id));
+  const shownCases = cases.filter((c) => shownIds.has(c.campaign_id));
+  const found = shownCases.filter(matches);
+  // « Tous » et « Mes dossiers » : dossiers actifs des campagnes actives
+  // seulement, qu'une campagne archivée soit dépliée ou non
+  const activeIds = new Set(activeCampaigns.map((c) => c.id));
+  const activeCases = cases.filter((c) => c.status === "active" && activeIds.has(c.campaign_id));
+  const allCount = activeCases.length;
+  const mineCount = activeCases.filter((c) => c.assigned_to === currentUserId).length;
   const resultCount = found.filter((c) => c.status === "active").length;
   // Le dossier ouvert reste visible même s'il est clos. Une action groupée
   // ne porte que sur les dossiers cochés encore affichés (filtres, clos).
@@ -382,7 +388,7 @@ export function CaseTree({
                   Aucune campagne active.
                 </p>
               )}
-              {filtersActive && found.length === 0 && cases.length > 0 && (
+              {filtersActive && found.length === 0 && shownCases.length > 0 && (
                 <p className="px-3 py-3 text-sm text-muted-foreground">
                   Aucun dossier ne correspond. Modifiez ou réinitialisez les filtres.
                 </p>

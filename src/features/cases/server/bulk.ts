@@ -3,6 +3,7 @@ import { dbError } from "@/lib/api-errors";
 import { logActivities, type ActivityEntry } from "@/lib/audit/log-activity";
 import type { Member } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { MAX_OPEN_TASKS } from "@/features/tasks/schemas";
 import type { BulkCasesInput } from "../schemas";
 
 // Actions groupées sur des dossiers de l'agence de l'appelant (étape,
@@ -54,7 +55,7 @@ export async function applyBulkAction(member: Member, input: BulkCasesInput): Pr
         P0002: "Un des dossiers est introuvable",
         "22023": "Ce membre ne peut pas recevoir de tâche (compte désactivé ?)",
         "23514": "Tâche invalide",
-        "54000": "Un des dossiers a déjà 100 tâches à faire",
+        "54000": `Un des dossiers a déjà ${MAX_OPEN_TASKS} tâches à faire`,
       });
     }
     const rows = (data ?? []) as { case_id: string; task_id: string }[];
