@@ -35,6 +35,7 @@ export const ACTIVITY_ACTIONS = [
   "document.unlocked",
   "document.moved",
   "document.archive_downloaded",
+  "document.copied_locally",
   "document_folder.created",
   "document_folder.renamed",
   "document_folder.deleted",

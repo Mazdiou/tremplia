@@ -4,6 +4,7 @@ import { initialsOf } from "@/lib/names";
 import { SubscriptionBanner } from "@/features/subscription/components/subscription-banner";
 import { isPlatformAdmin } from "@/features/admin/server/admin";
 import { LiveRefresh } from "@/components/live-refresh";
+import { LocalCopyProvider } from "@/features/local-copy/components/local-copy-provider";
 import { NewCaseShortcut } from "@/features/cases/components/new-case-shortcut";
 import { myTaskCounts } from "@/features/tasks/server/read";
 import { AppRail } from "./app-rail";
@@ -35,21 +36,25 @@ export async function ShellFrame({
   // Pastille de « Tâches » : mes tâches en retard et du jour
   const tasks = await myTaskCounts(member.userId);
   return (
-    <div className="flex h-dvh flex-col-reverse overflow-hidden md:flex-row">
-      <LiveRefresh agencyId={member.agencyId} />
-      <SearchPalette isOwner={member.isOwner} isPlatformAdmin={isPlatformAdmin} />
-      <NewCaseShortcut />
-      <AppRail
-        isOwner={member.isOwner}
-        initials={initials}
-        isPlatformAdmin={isPlatformAdmin}
-        taskBadge={{ count: tasks.overdue + tasks.today, overdue: tasks.overdue > 0 }}
-      />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <SubscriptionBanner agencyId={member.agencyId} />
-        {children}
+    // Copie des documents sur l'ordinateur : Réglages, fiche du candidat et
+    // rattrapage à l'ouverture
+    <LocalCopyProvider agencyId={member.agencyId} userId={member.userId}>
+      <div className="flex h-dvh flex-col-reverse overflow-hidden md:flex-row">
+        <LiveRefresh agencyId={member.agencyId} />
+        <SearchPalette isOwner={member.isOwner} isPlatformAdmin={isPlatformAdmin} />
+        <NewCaseShortcut />
+        <AppRail
+          isOwner={member.isOwner}
+          initials={initials}
+          isPlatformAdmin={isPlatformAdmin}
+          taskBadge={{ count: tasks.overdue + tasks.today, overdue: tasks.overdue > 0 }}
+        />
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <SubscriptionBanner agencyId={member.agencyId} />
+          {children}
+        </div>
       </div>
-    </div>
+    </LocalCopyProvider>
   );
 }
 

@@ -7,9 +7,18 @@ import { displayName } from "@/lib/names";
 
 const FORBIDDEN = /[\\/:*?"<>|\u0000-\u001f]/g;
 
-export function safeFileName(name: string, fallback: string) {
-  const clean = name.replace(FORBIDDEN, "-").replace(/\s+/g, " ").trim().replace(/[. ]+$/, "");
-  return clean.slice(0, 120) || fallback;
+// Noms réservés par Windows, même suivis d'une extension (« CON », « nul.pdf »)
+const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i;
+
+export function safeFileName(name: string, fallback: string, max = 120) {
+  const clean = name
+    .replace(FORBIDDEN, "-")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max)
+    .replace(/[. ]+$/, "");
+  if (!clean) return fallback;
+  return RESERVED.test(clean) ? `${clean}_` : clean;
 }
 
 export function archiveEntries(

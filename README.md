@@ -49,7 +49,8 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 | **Historique** | Journal de tout ce qui a été fait sur le dossier, et par qui. |
 | **Tableau de bord** | « À traiter », mes tâches, échéances, réponses des formations, activité récente, par campagne. |
 | **Export Excel** | Classeur complet d'une campagne (patron). |
-| **Réglages** | Mon compte, mot de passe, apparence (thème clair ou sombre, retenu sur l'appareil ; c'est là qu'il se change sur téléphone) ; pour le patron, l'agence, les valeurs des nouvelles campagnes, le guide de démarrage et l'abonnement. |
+| **Copie sur l'ordinateur** | Chrome et Edge sur ordinateur : chaque membre choisit un dossier (Réglages › Sur cet ordinateur) où Tremplia recopie les PDF des dossiers en cours, rangés comme l'arbre (campagne / groupe ou « Non classés » / NOM Prénom / dossier de documents), pour les déposer facilement sur les plateformes. Mise à jour à l'ouverture de Tremplia, dès qu'un document change dans un dossier ouvert, ou avec un bouton (Réglages, onglet Documents). Tremplia ne touche qu'aux fichiers qu'il a copiés (liste cachée `.tremplia-copie.json`). |
+| **Réglages** | Mon compte, mot de passe, apparence (thème clair ou sombre, retenu sur l'appareil ; c'est là qu'il se change sur téléphone), copie sur l'ordinateur ; pour le patron, l'agence, les valeurs des nouvelles campagnes, le guide de démarrage et l'abonnement. |
 | **Guide de démarrage** | Mot de bienvenue à la première connexion de chaque membre, puis, pour le patron d'une nouvelle agence, la liste « Bien démarrer » en haut du tableau de bord : six étapes (campagne, dossier, document, espace candidat, tâche, employé) qui se cochent d'après les vraies données et mènent chacune au bon écran. Masquable (pour toute l'agence), réaffichable dans les réglages. Les agences déjà inscrites ne le voient pas. |
 | **Équipe** | Le patron ajoute ses employés (mot de passe temporaire à remplacer à la première connexion), les désactive ou les supprime. |
 
@@ -320,7 +321,7 @@ scripts/backup/         sauvegarde chiffrée et restauration
 ```
 
 Domaines de `features/` : `admin`, `agency`, `auth`, `campaigns`, `cases`,
-`dashboard`, `documents`, `export`, `history`, `landing`, `messages`,
+`dashboard`, `documents`, `export`, `history`, `landing`, `local-copy`, `messages`,
 `motivation-letter`, `notes`, `payments`, `programs`, `pwa`, `settings`,
 `stages`, `student`, `subscription`, `tasks`, `team`, `whatsapp`.
 

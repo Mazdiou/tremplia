@@ -10,6 +10,7 @@ import { SessionActions } from "@/features/settings/components/session-actions";
 import { ThemeChoice } from "@/features/settings/components/theme-choice";
 import { getAgencySettings } from "@/features/settings/server/settings";
 import { GuideSetting } from "@/features/onboarding/components/guide-setting";
+import { LocalCopySettings } from "@/features/local-copy/components/local-copy-settings";
 import { isOnboardingHidden } from "@/features/onboarding/server/onboarding";
 import { DEFAULT_STAGES } from "@/features/stages/stages";
 import { SubscriptionPanel } from "@/features/subscription/components/subscription-panel";
@@ -83,6 +84,14 @@ export default async function SettingsPage() {
           description="Retenu sur cet appareil."
         >
           <ThemeChoice />
+        </FormSection>
+
+        <FormSection
+          id="ordinateur"
+          title="Sur cet ordinateur"
+          description="Les documents des dossiers en cours, rangés comme dans Tremplia (campagne, groupe, candidat), pour les déposer facilement sur les plateformes. Propre à cet ordinateur et à votre compte."
+        >
+          <LocalCopySettings />
         </FormSection>
 
         {email && (

@@ -8,6 +8,7 @@ import { useDragAutoScroll } from "@/features/documents/drag-autoscroll";
 import { pdfProblem, uploadDocument, uploadSummary } from "@/features/documents/upload";
 import { callApi } from "@/lib/api-client";
 import { DownloadArchiveButton } from "./download-archive-button";
+import { CaseCopyButton, useAutoCaseCopy } from "@/features/local-copy/components/case-copy-button";
 import {
   DOC_DRAG_TYPE,
   DocumentRow,
@@ -79,6 +80,17 @@ export function DocumentsPanel({
   const say = (text: string, error = false) => setMessage({ text, error });
 
   const folderIds = useMemo(() => new Set(folders.map((f) => f.id)), [folders]);
+
+  // Copie sur l'ordinateur : mise à jour dès que les documents changent
+  const copySignature = useMemo(
+    () =>
+      JSON.stringify([
+        docs.map((d) => [d.id, d.name, d.folderId]),
+        folders.map((f) => [f.id, f.name]),
+      ]),
+    [docs, folders],
+  );
+  useAutoCaseCopy(caseId, copySignature, say);
 
   // Documents par section (un document dont le dossier est inconnu va dans « Sans dossier »)
   const byKey = useMemo(() => {
@@ -421,6 +433,7 @@ export function DocumentsPanel({
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <StatusMessage message={message} className="flex-1" />
+        {docs.length > 0 && <CaseCopyButton caseId={caseId} onMessage={say} />}
         {docs.length > 0 && <DownloadArchiveButton caseId={caseId} onMessage={say} />}
         {creatingFolder ? (
           <input

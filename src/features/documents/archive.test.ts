@@ -9,6 +9,13 @@ describe("archive ZIP des documents", () => {
     expect(safeFileName("  ", "Document")).toBe("Document");
   });
 
+  it("évite les noms réservés par Windows et coupe sans laisser de point final", () => {
+    expect(safeFileName("CON", "Document")).toBe("CON_");
+    expect(safeFileName("nul.pdf", "Document")).toBe("nul.pdf_");
+    expect(safeFileName("Console", "Document")).toBe("Console");
+    expect(safeFileName("Bac S. Maths", "Document", 6)).toBe("Bac S");
+  });
+
   it("range les documents par dossier et numérote les noms en double", () => {
     expect(
       archiveEntries(

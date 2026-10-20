@@ -121,6 +121,35 @@ test("envoi d'un PDF dans les documents", async () => {
   await expect(page.getByRole("button", { name: "Ouvrir passeport" })).toBeVisible();
 });
 
+test("copie des documents sur l'ordinateur", async () => {
+  // Le navigateur de test ne sait pas répondre à la fenêtre de choix d'un
+  // dossier : elle est remplacée par un dossier privé du navigateur (OPFS),
+  // qui s'écrit avec la même API
+  await page.addInitScript(() => {
+    (window as unknown as { showDirectoryPicker: () => Promise<FileSystemDirectoryHandle> }).showDirectoryPicker =
+      async () => (await navigator.storage.getDirectory()).getDirectoryHandle("Copie", { create: true });
+  });
+  await page.goto("/settings");
+  const section = page.locator("#ordinateur");
+  await section.getByRole("button", { name: "Choisir le dossier" }).click();
+  await expect(section.getByText("Copie à jour : 1 document copié.")).toBeVisible();
+
+  const files = await page.evaluate(async () => {
+    const out: string[] = [];
+    async function walk(dir: FileSystemDirectoryHandle, prefix: string) {
+      for await (const [name, handle] of dir.entries()) {
+        if (handle.kind === "directory") await walk(handle as FileSystemDirectoryHandle, `${prefix}${name}/`);
+        else out.push(`${prefix}${name}`);
+      }
+    }
+    await walk(await (await navigator.storage.getDirectory()).getDirectoryHandle("Copie"), "");
+    return out;
+  });
+  // Campagne / groupe (ou « Non classés ») / NOM Prénom / document
+  const folder = `${candidate.lastName.toLocaleUpperCase("fr")} ${candidate.firstName}`;
+  expect(files.some((f) => /^[^/]+\/[^/]+\//.test(f) && f.endsWith(`/${folder}/passeport.pdf`))).toBe(true);
+});
+
 test("ouverture de l'espace candidat", async () => {
   await page.goto(caseUrl);
   await page.getByRole("button", { name: "Ouvrir l'accès" }).click();

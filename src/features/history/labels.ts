@@ -39,6 +39,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "document.unlocked": "a déverrouillé un document",
   "document.moved": "a déplacé un document",
   "document.archive_downloaded": "a téléchargé les documents d'un dossier (ZIP)",
+  "document.copied_locally": "a copié des documents sur son ordinateur",
   "document_folder.created": "a créé un dossier de documents",
   "document_folder.renamed": "a renommé un dossier de documents",
   "document_folder.deleted": "a supprimé un dossier de documents",
@@ -86,6 +87,7 @@ const CASE_LABELS: Record<ActivityAction, string> = {
   "message.sent": "a écrit au candidat",
   "payment.agreed_amount_set": "a fixé le montant convenu",
   "document.archive_downloaded": "a téléchargé tous les documents (ZIP)",
+  "document.copied_locally": "a copié les documents sur son ordinateur",
   "task.all_completed": "a marqué faites les tâches du dossier",
 };
 

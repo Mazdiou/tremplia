@@ -10,23 +10,24 @@ export type TreeGroup = {
   position: number;
 };
 
-type TreeBranch = {
+type TreeBranch<C> = {
   key: string;
   // null : « Non classés », qui n'est pas un vrai groupe
   groupId: string | null;
   label: string;
-  cases: TreeCase[];
+  cases: C[];
 };
 
 // Branches d'une campagne : ses groupes dans l'ordre, puis « Non classés »
 // s'il contient des dossiers. Un dossier rangé dans plusieurs groupes
 // apparaît dans chacun. `cases` est déjà filtré et trié par l'appelant.
-export function buildCampaignBranches(
+// Sert aussi à la copie des documents sur l'ordinateur (même arbre).
+export function buildCampaignBranches<C extends Pick<TreeCase, "id" | "campaign_id">>(
   campaignId: string,
   groups: TreeGroup[],
-  cases: TreeCase[],
+  cases: C[],
   caseGroups: TreeCaseGroup[],
-): TreeBranch[] {
+): TreeBranch<C>[] {
   const own = cases.filter((c) => c.campaign_id === campaignId);
   const groupsByCase = new Map<string, Set<string>>();
   for (const cg of caseGroups) {
@@ -35,7 +36,7 @@ export function buildCampaignBranches(
     groupsByCase.set(cg.case_id, set);
   }
 
-  const branches: TreeBranch[] = groups
+  const branches: TreeBranch<C>[] = groups
     .filter((g) => g.campaign_id === campaignId)
     .sort((a, b) => a.position - b.position)
     .map((g) => ({
