@@ -127,7 +127,9 @@ export default async function CaseLayout({
           </Link>
           <CaseHeaderDetails
             compact={
-              <div className="flex items-center justify-between gap-3">
+              // Réduit : moins d'espace sous la ligne et, sur ordinateur (pas
+              // de lien « Dossiers » au-dessus), moins d'espace au-dessus
+              <div className="-mb-2 flex items-center justify-between gap-3 md:-mt-2">
                 {title}
                 <CaseHeaderToggle collapsed />
               </div>

@@ -30,7 +30,7 @@ export function CaseHeaderToggle({ collapsed }: { collapsed: boolean }) {
   return (
     <Button
       variant="ghost"
-      size="icon"
+      size={collapsed ? "icon-sm" : "icon"}
       onClick={() => {
         setPrefs({ caseHeader: collapsed ? "expanded" : "collapsed" });
         // Arrivé par un lien du guide : l'en-tête suit de nouveau le choix
@@ -39,7 +39,7 @@ export function CaseHeaderToggle({ collapsed }: { collapsed: boolean }) {
       aria-expanded={!collapsed}
       aria-label={label}
       title={label}
-      className="text-muted-foreground"
+      className={cn("text-muted-foreground", collapsed && "touch-target")}
     >
       {collapsed ? <ChevronDown /> : <ChevronUp />}
     </Button>
