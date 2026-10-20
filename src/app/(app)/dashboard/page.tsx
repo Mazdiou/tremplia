@@ -323,7 +323,7 @@ export default async function DashboardPage({
           actions={
             <Link
               href={selected ? `/payments?campagne=${selected.id}` : "/payments"}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-link underline-offset-2 hover:underline"
+              className="touch-target inline-flex items-center gap-1.5 text-xs font-medium text-link underline-offset-2 hover:underline"
             >
               <Wallet className="size-3.5" aria-hidden /> Tous les paiements
             </Link>

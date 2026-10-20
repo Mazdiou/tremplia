@@ -29,6 +29,8 @@ export type UiPrefs = {
   stage: string;
   // Seulement les dossiers qui ont une tâche en retard
   overdue: boolean;
+  // Panneau des filtres déplié sous « Tous / Mes dossiers »
+  filtersOpen: boolean;
   // En-tête de la fiche d'un dossier : réduit à une ligne ou complet ;
   // « auto » (pas encore choisi) = réduit sur téléphone, complet ailleurs
   caseHeader: "auto" | "collapsed" | "expanded";
@@ -50,6 +52,7 @@ export const DEFAULT_PREFS: UiPrefs = {
   payment: "",
   stage: "",
   overdue: false,
+  filtersOpen: false,
   caseHeader: "auto",
 };
 
@@ -87,6 +90,7 @@ export function sanitize(raw: unknown): UiPrefs {
       : "",
     stage: typeof r.stage === "string" ? r.stage : "",
     overdue: r.overdue === true,
+    filtersOpen: r.filtersOpen === true,
     caseHeader:
       r.caseHeader === "collapsed" || r.caseHeader === "expanded" ? r.caseHeader : "auto",
   };

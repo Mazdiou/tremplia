@@ -93,7 +93,7 @@ export function PasswordField({
             visible ? "Masquer le mot de passe" : "Afficher le mot de passe"
           }
           aria-pressed={visible}
-          className="absolute top-1/2 right-1.5 grid size-7 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="absolute top-1/2 right-1.5 grid size-7 -translate-y-1/2 pointer-coarse:size-9 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           <Toggle className="size-4" />
         </button>
