@@ -23,6 +23,7 @@ import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import { countCases } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
+import { can } from "@/lib/permissions";
 import { amountInputValue, formatDA } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { isUuid } from "@/lib/validation";
@@ -108,7 +109,9 @@ export default async function CampaignPage({
     todayInAppTimezone(),
   );
   const next = items.find((d) => d.days >= 0) ?? null;
-  const canEdit = member?.isOwner === true && !archived && !readOnly;
+  // Patron, ou permission « Gérer les campagnes »
+  const manages = member !== null && can(member, "campaigns_manage");
+  const canEdit = manages && !archived && !readOnly;
   const platforms = (campaign.suggested_platforms ?? []) as string[];
   const defaultFee = (campaign.default_fee as number | null) ?? null;
 
@@ -127,7 +130,7 @@ export default async function CampaignPage({
         actions={
           <>
             {/* Export : aussi en archive et en lecture seule (simple lecture) */}
-            {member?.isOwner && <ExportCampaignButton campaignId={id} />}
+            {manages && <ExportCampaignButton campaignId={id} />}
             {!archived && (
               <NewCaseLink campaignId={id} />
             )}
@@ -259,7 +262,7 @@ export default async function CampaignPage({
         <GroupsManager campaignId={id} groups={groups} readOnly={archived || readOnly} />
       </FormSection>
 
-      {member?.isOwner && !readOnly && (
+      {manages && !readOnly && (
         <FormSection
           title="Zone sensible"
           description="Archiver met la campagne en pause ; la supprimer est définitif."

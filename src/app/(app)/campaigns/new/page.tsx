@@ -6,18 +6,19 @@ import { getAgencySettings } from "@/features/settings/server/settings";
 import { DEFAULT_STAGES } from "@/features/stages/stages";
 import { ReadOnlyNotice } from "@/features/subscription/components/read-only-notice";
 import { isReadOnly } from "@/features/subscription/server/subscription";
-import { requireOwner } from "@/lib/auth/require-member";
+import { requirePermission } from "@/lib/auth/require-member";
 import { amountInputValue } from "@/lib/money";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Nouvelle campagne" };
 
 export default async function NewCampaignPage() {
-  const owner = await requireOwner();
-  if (!owner) redirect("/campaigns");
+  // Patron, ou permission « Gérer les campagnes »
+  const member = await requirePermission("campaigns_manage");
+  if (!member) redirect("/campaigns");
   const [readOnly, settings] = await Promise.all([
-    isReadOnly(owner.agencyId),
-    getAgencySettings(owner.agencyId),
+    isReadOnly(member.agencyId),
+    getAgencySettings(member.agencyId),
   ]);
   if (readOnly) {
     return <ReadOnlyNotice backHref="/campaigns" backLabel="Retour aux campagnes" />;

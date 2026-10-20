@@ -9,6 +9,7 @@ import { requireMember } from "@/lib/auth/require-member";
 import { isReadOnly } from "@/features/subscription/server/subscription";
 import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import { can } from "@/lib/permissions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Dossiers" };
@@ -24,18 +25,20 @@ export default async function CasesHomePage() {
   ]);
 
   if (active.length === 0) {
+    // Patron, ou permission « Gérer les campagnes »
+    const manages = member !== null && can(member, "campaigns_manage");
     return (
       <PageContainer width="narrow">
         <EmptyState
           icon={CalendarDays}
           title="Aucune campagne active"
           description={
-            member?.isOwner
+            manages
               ? "Créez une campagne ou importez un modèle depuis la page Campagnes."
               : "Demandez au patron de créer une campagne."
           }
         />
-        {member?.isOwner && (
+        {manages && (
           <div className="flex justify-center">
             <Link href="/campaigns" className={buttonVariants()}>
               Ouvrir les campagnes

@@ -10,6 +10,7 @@ import { useModalDialog } from "@/hooks/use-modal-dialog";
 import { displayName, normalizeName } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
+import type { Permission } from "@/lib/permissions";
 
 const OPEN_EVENT = "tremplia:open-search";
 
@@ -24,9 +25,11 @@ export function openSearchPalette() {
 export function SearchPalette({
   isOwner,
   isPlatformAdmin,
+  permissions,
 }: {
   isOwner: boolean;
   isPlatformAdmin: boolean;
+  permissions: Permission[];
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -53,6 +56,7 @@ export function SearchPalette({
     <PaletteDialog
       isOwner={isOwner}
       isPlatformAdmin={isPlatformAdmin}
+      permissions={permissions}
       onClose={() => setOpen(false)}
     />
   );
@@ -73,10 +77,12 @@ type Entry = {
 function PaletteDialog({
   isOwner,
   isPlatformAdmin,
+  permissions,
   onClose,
 }: {
   isOwner: boolean;
   isPlatformAdmin: boolean;
+  permissions: Permission[];
   onClose: () => void;
 }) {
   const ref = useModalDialog(true);
@@ -87,7 +93,7 @@ function PaletteDialog({
   const search = useCaseSearch(query);
 
   const words = normalizeName(query).split(" ").filter(Boolean);
-  const pages: Entry[] = navItems(isOwner, isPlatformAdmin)
+  const pages: Entry[] = navItems(isOwner, isPlatformAdmin, permissions)
     .filter((p) => words.every((w) => normalizeName(p.label).includes(w)))
     .map((p) => ({ key: p.href, href: p.href, label: p.label, icon: p.icon }));
   const cases: Entry[] = search.results.map((r) => ({

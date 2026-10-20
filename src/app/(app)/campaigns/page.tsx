@@ -20,6 +20,7 @@ import { countCases } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
 import { cn } from "@/lib/utils";
 import { pluralWord } from "@/lib/plural";
+import { can } from "@/lib/permissions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Campagnes" };
@@ -85,13 +86,15 @@ export default async function CampaignsPage() {
   const [member, campaigns] = await Promise.all([requireMember(), listCampaigns()]);
   // Dossiers actifs par campagne : une lecture pour toutes (vue case_stats).
   // Abonnement expiré : rien à créer ni à importer.
+  // Patron, ou permission « Gérer les campagnes »
+  const manages = member !== null && can(member, "campaigns_manage");
   const [dates, groups, stats, readOnly] = await Promise.all([
     listCampaignDates(campaigns),
     listGroups(campaigns.map((c) => c.id)),
     listCaseStats(),
-    member?.isOwner ? isReadOnly(member.agencyId) : true,
+    manages ? isReadOnly(member.agencyId) : true,
   ]);
-  const canCreate = member?.isOwner === true && !readOnly;
+  const canCreate = manages && !readOnly;
   const today = todayInAppTimezone();
 
   const cards: CardData[] = campaigns.map((c) => ({
@@ -108,7 +111,7 @@ export default async function CampaignsPage() {
       <PageHeader
         title="Campagnes"
         subtitle={
-          member?.isOwner
+          manages
             ? "Créez vos campagnes ou partez d'un modèle préconfiguré."
             : "Consultation seulement : le patron gère les campagnes, vous gérez les groupes."
         }
@@ -131,7 +134,7 @@ export default async function CampaignsPage() {
           icon={CalendarRange}
           title="Aucune campagne"
           description={
-            member?.isOwner
+            manages
               ? "Créez votre première campagne ou importez un modèle préconfiguré ci-dessous."
               : "Le patron de l'agence doit créer une campagne."
           }

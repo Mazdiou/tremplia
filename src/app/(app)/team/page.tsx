@@ -8,6 +8,8 @@ import { requireOwner } from "@/lib/auth/require-member";
 import { fullName, initialsOf } from "@/lib/names";
 import { AddEmployeeForm } from "@/features/team/components/add-employee-form";
 import { ToggleActiveButton } from "@/features/team/components/toggle-active-button";
+import { EmployeePermissions } from "@/features/team/components/employee-permissions";
+import { parsePermissions, type Permission } from "@/lib/permissions";
 import { getSubscription } from "@/features/subscription/server/subscription";
 import { plural } from "@/lib/plural";
 import type { Metadata } from "next";
@@ -20,9 +22,11 @@ type TeamMember = {
   last_name: string;
   role: string;
   is_active: boolean;
+  permissions: Permission[];
 };
 
-// Une ligne de la liste : identité, rôle, état et actions du patron
+// Une ligne de la liste : identité, rôle, état et actions du patron ; pour
+// un employé actif, ses permissions dessous
 function MemberRow({
   member: m,
   email,
@@ -32,6 +36,7 @@ function MemberRow({
   email: string;
   canManage: boolean;
 }) {
+  const name = fullName(m.first_name, m.last_name);
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-5 py-3 last:border-b-0">
       <span
@@ -41,7 +46,7 @@ function MemberRow({
         {initialsOf(m.first_name, m.last_name)}
       </span>
       <div className="min-w-0 flex-1 basis-48">
-        <p className="truncate text-sm font-medium">{fullName(m.first_name, m.last_name)}</p>
+        <p className="truncate text-sm font-medium">{name}</p>
         <p className="truncate text-xs text-muted-foreground">{email}</p>
       </div>
       <span className="w-20 text-sm text-muted-foreground max-md:hidden">
@@ -56,12 +61,18 @@ function MemberRow({
         {canManage && (
           <>
             {m.role === "employee" && !m.is_active && (
-              <DeleteEmployeeButton id={m.id} name={fullName(m.first_name, m.last_name)} />
+              <DeleteEmployeeButton id={m.id} name={name} />
             )}
             <ToggleActiveButton id={m.id} isActive={m.is_active} />
           </>
         )}
       </div>
+      {m.role === "employee" && m.is_active && (
+        // Sous le nom sur ordinateur (largeur de l'avatar + écart)
+        <div className="basis-full md:pl-13">
+          <EmployeePermissions id={m.id} name={name} permissions={m.permissions} canEdit={canManage} />
+        </div>
+      )}
     </li>
   );
 }
@@ -73,7 +84,10 @@ export default async function TeamPage() {
   // Lecture via le RLS : uniquement les profils de l'agence du patron
   const supabase = await createClient();
   const [{ data: members }, subscription] = await Promise.all([
-    supabase.from("profiles").select("id, first_name, last_name, role, is_active").order("created_at"),
+    supabase
+      .from("profiles")
+      .select("id, first_name, last_name, role, is_active, permissions")
+      .order("created_at"),
     getSubscription(caller.agencyId),
   ]);
 
@@ -87,7 +101,9 @@ export default async function TeamPage() {
     }),
   );
 
-  const list = (members ?? []) as TeamMember[];
+  const list = ((members ?? []) as (Omit<TeamMember, "permissions"> & { permissions: unknown })[]).map(
+    (m) => ({ ...m, permissions: parsePermissions(m.permissions) }),
+  );
   // Les anciens membres (désactivés) s'accumulent au fil des années : ils
   // sont rangés à part, dans une section repliée
   const active = list.filter((m) => m.is_active);
@@ -107,7 +123,7 @@ export default async function TeamPage() {
     <PageContainer>
       <PageHeader
         title="Équipe"
-        subtitle={`${plural(active.length, "membre actif", "membres actifs")} · seul le patron gère l'équipe`}
+        subtitle={`${plural(active.length, "membre actif", "membres actifs")} · seul le patron gère l'équipe et les permissions`}
       />
 
       <div className="space-y-5">

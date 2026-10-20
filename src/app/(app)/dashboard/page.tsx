@@ -41,6 +41,7 @@ import { WelcomeDialog } from "@/features/onboarding/components/welcome-dialog";
 import { loadOnboarding, needsWelcome } from "@/features/onboarding/server/onboarding";
 import type { Member } from "@/lib/auth/require-member";
 import { plural, pluralWord } from "@/lib/plural";
+import { can } from "@/lib/permissions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
@@ -118,8 +119,10 @@ export default async function DashboardPage({
 
   // Lectures indépendantes, lancées ensemble. Tous les compteurs viennent
   // d'une seule lecture de la vue case_stats (via le RLS).
-  // Paiements et journal : réservés au patron
+  // Journal : réservé au patron ; paiements : voir seesPayments
   const monthStart = `${today.slice(0, 7)}-01`;
+  // Chiffres de paiement : patron, ou permission « Voir la caisse »
+  const seesPayments = can(u.member, "payments_view");
   // Messages non lus : servent aussi à « À traiter »
   const unreadPromise = agencyUnreadCounts(u.member.agencyId);
   // Une seule campagne affichée : l'avancement de ses dossiers par étape
@@ -142,7 +145,7 @@ export default async function DashboardPage({
         .order("created_at", { ascending: false })
         .limit(5),
       listCampaignDates(campaigns),
-      u.member.isOwner
+      seesPayments
         ? supabase
             .from("payment_months")
             .select("amount, payments")
@@ -150,7 +153,7 @@ export default async function DashboardPage({
             .eq("month", monthStart)
         : Promise.resolve({ data: null }),
       // Candidats qui doivent le plus (dossiers non abandonnés)
-      u.member.isOwner
+      seesPayments
         ? supabase
             .from("cases")
             .select("id, first_name, last_name, remaining_amount")
@@ -309,13 +312,13 @@ export default async function DashboardPage({
         </ul>
       )}
 
-      {u.member.isOwner && (
+      {seesPayments && (
         <Panel
           title="Paiements"
           description={
             campaigns.length > 1
-              ? "Toutes les campagnes actives · visible par le patron seulement."
-              : "Visible par le patron seulement."
+              ? "Toutes les campagnes actives · visible par le patron et les membres autorisés."
+              : "Visible par le patron et les membres autorisés."
           }
           actions={
             <Link

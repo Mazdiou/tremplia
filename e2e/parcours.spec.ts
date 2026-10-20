@@ -345,16 +345,17 @@ test("page Paiements : encaissements, restes à payer et export", async () => {
   await expect(page.getByText("Aucun encaissement sur cette période")).toBeVisible();
 });
 
-test("page Paiements : réservée au patron", async ({ browser }) => {
+test("permissions d'un employé : caisse et campagnes", async ({ browser }) => {
+  const email = `employe-${run}@e2e.test`;
   const res = await page.request.post("/api/team/employees", {
-    data: { firstName: "Sara", lastName: `Employee${run}`, email: `employe-${run}@e2e.test` },
+    data: { firstName: "Sara", lastName: `Employee${run}`, email },
   });
   expect(res.status()).toBe(201);
   const { temporaryPassword } = (await res.json()) as { temporaryPassword: string };
 
   const employee = await browser.newPage();
   await employee.goto("/login");
-  await employee.getByLabel("Adresse e-mail").fill(`employe-${run}@e2e.test`);
+  await employee.getByLabel("Adresse e-mail").fill(email);
   await employee.getByLabel("Mot de passe", { exact: true }).fill(temporaryPassword);
   await employee.getByRole("button", { name: "Se connecter" }).click();
   await expect(employee).toHaveURL(/\/change-password$/);
@@ -363,11 +364,56 @@ test("page Paiements : réservée au patron", async ({ browser }) => {
   await employee.getByRole("button", { name: "Enregistrer" }).click();
   await expect(employee).toHaveURL(/\/dashboard$/);
 
-  await expect(
-    employee.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Paiements" }),
-  ).toHaveCount(0);
+  // Sans permission : ni caisse, ni création de campagne
+  const nav = employee.getByRole("navigation", { name: "Navigation principale" });
+  await expect(nav.getByRole("link", { name: "Paiements" })).toHaveCount(0);
   await employee.goto("/payments");
   await expect(employee).toHaveURL(/\/dashboard$/);
   expect((await employee.request.get("/api/payments/export")).status()).toBe(403);
+  await employee.goto("/campaigns");
+  await expect(employee.getByRole("link", { name: "Créer une campagne" })).toHaveCount(0);
+
+  // Le patron accorde « Voir la caisse » et « Gérer les campagnes »
+  const name = `Sara Employee${run}`;
+  await page.goto("/team");
+  await page.getByRole("button", { name: `Modifier les permissions de ${name}` }).click();
+  await page.getByRole("checkbox", { name: /Voir la caisse/ }).check();
+  await page.getByRole("checkbox", { name: /Gérer les campagnes/ }).check();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  const granted = page.getByRole("list", { name: `Permissions de ${name}` });
+  await expect(granted.getByText("Voir la caisse")).toBeVisible();
+  await expect(granted.getByText("Gérer les campagnes")).toBeVisible();
+
+  // (première visite : la fenêtre de bienvenue couvre le menu, on ne clique pas)
+  await employee.goto("/dashboard");
+  await expect(nav.getByRole("link", { name: "Paiements" })).toHaveCount(1);
+  await employee.goto("/payments");
+  await expect(employee).toHaveURL(/\/payments$/);
+  await expect(employee.getByRole("heading", { name: "Paiements", level: 1 })).toBeVisible();
+  expect((await employee.request.get("/api/payments/export")).status()).toBe(200);
+  await employee.goto("/campaigns");
+  await expect(employee.getByRole("link", { name: "Créer une campagne" })).toBeVisible();
+  // … et en crée vraiment une, avec les valeurs par défaut de l'agence
+  await employee.goto("/campaigns/new");
+  await expect(employee.getByLabel("Tarif par défaut")).toHaveValue("120 000");
+  await employee.getByLabel("Nom de la campagne").fill(`Campagne employé ${run}`);
+  await employee.getByRole("button", { name: "Créer la campagne" }).click();
+  await expect(employee).toHaveURL(/\/campaigns\/[0-9a-f-]{36}$/);
+  await expect(employee.getByRole("heading", { level: 1 })).toContainText(`Campagne employé ${run}`);
+
+  // « Corriger les paiements » non accordée : pas d'annulation dans le dossier
+  await employee.goto(`${caseUrl}/payments`);
+  await expect(employee.getByText("Paiements reçus")).toBeVisible();
+  await expect(employee.getByRole("button", { name: /^Annuler le paiement/ })).toHaveCount(0);
+  await expect(employee.getByRole("button", { name: "Modifier le montant" })).toHaveCount(0);
+
+  // Retrait : l'accès se ferme
+  await page.getByRole("button", { name: `Modifier les permissions de ${name}` }).click();
+  await page.getByRole("checkbox", { name: /Voir la caisse/ }).uncheck();
+  await page.getByRole("checkbox", { name: /Gérer les campagnes/ }).uncheck();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(page.getByText("Aucune permission en plus")).toBeVisible();
+  await employee.goto("/payments");
+  await expect(employee).toHaveURL(/\/dashboard$/);
   await employee.close();
 });

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireMember, type Member } from "@/lib/auth/require-member";
 import { initialsOf } from "@/lib/names";
+import { effectivePermissions } from "@/lib/permissions";
 import { SubscriptionBanner } from "@/features/subscription/components/subscription-banner";
 import { isPlatformAdmin } from "@/features/admin/server/admin";
 import { LiveRefresh } from "@/components/live-refresh";
@@ -41,10 +42,15 @@ export async function ShellFrame({
     <LocalCopyProvider agencyId={member.agencyId} userId={member.userId}>
       <div className="flex h-dvh flex-col-reverse overflow-hidden md:flex-row">
         <LiveRefresh agencyId={member.agencyId} />
-        <SearchPalette isOwner={member.isOwner} isPlatformAdmin={isPlatformAdmin} />
+        <SearchPalette
+          isOwner={member.isOwner}
+          isPlatformAdmin={isPlatformAdmin}
+          permissions={effectivePermissions(member)}
+        />
         <NewCaseShortcut />
         <AppRail
           isOwner={member.isOwner}
+          permissions={effectivePermissions(member)}
           initials={initials}
           isPlatformAdmin={isPlatformAdmin}
           taskBadge={{ count: tasks.overdue + tasks.today, overdue: tasks.overdue > 0 }}

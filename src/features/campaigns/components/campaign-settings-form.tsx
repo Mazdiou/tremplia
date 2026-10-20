@@ -38,7 +38,7 @@ const PHONE_SECOND = "max-sm:col-start-1 max-sm:row-start-2";
 const PHONE_REMOVE = "max-sm:col-start-2 max-sm:row-start-1";
 
 // Création (avec les groupes de départ) ou modification des réglages d'une
-// campagne. Réservé au patron ; la base le revérifie.
+// campagne. Patron, ou permission « Gérer les campagnes » ; la base le revérifie.
 export function CampaignSettingsForm({
   campaignId,
   initial,

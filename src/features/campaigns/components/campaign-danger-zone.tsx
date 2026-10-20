@@ -27,7 +27,7 @@ const DIALOGS: Record<Action, { title: string; body: string; confirm: string }> 
   },
 };
 
-// Zone sensible de la page d'une campagne : patron seulement
+// Zone sensible de la page d'une campagne : patron, ou permission « Gérer les campagnes »
 export function CampaignDangerZone({
   campaignId,
   archived,

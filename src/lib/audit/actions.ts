@@ -8,6 +8,7 @@ export const ACTIVITY_ACTIONS = [
   "employee.created",
   "employee.deactivated",
   "employee.reactivated",
+  "employee.permissions_changed",
   "employee.deleted",
   "campaign.created",
   "campaign.imported",

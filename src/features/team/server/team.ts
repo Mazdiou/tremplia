@@ -6,6 +6,7 @@ import type { Member } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireWritableAgency } from "@/features/subscription/server/subscription";
 import type { NewEmployeeInput } from "../schemas";
+import type { Permission } from "@/lib/permissions";
 import { reportError } from "@/lib/report-error";
 
 // Comptes des employés : patron seulement (l'appelant est vérifié par la
@@ -114,6 +115,42 @@ export async function setEmployeeActive(owner: Member, employeeId: string, isAct
     targetType: "profile",
     targetId: employeeId,
   });
+}
+
+// Permissions d'un employé (règles revérifiées par set_employee_permissions :
+// patron seulement, jamais un patron)
+export async function setEmployeePermissions(
+  owner: Member,
+  employeeId: string,
+  permissions: Permission[],
+) {
+  await requireWritableAgency(owner.agencyId);
+  const target = await findEmployee(owner, employeeId);
+  if (target.role !== "employee") {
+    throw new ApiError(400, "Le patron a déjà toutes les permissions");
+  }
+  const { data: changed, error } = await target.admin.rpc("set_employee_permissions", {
+    p_agency_id: owner.agencyId,
+    p_actor_id: owner.userId,
+    p_employee_id: employeeId,
+    p_permissions: permissions,
+  });
+  if (error) {
+    throw dbError("team permissions", error, {
+      P0002: "Employé introuvable",
+      "22023": "Permission inconnue",
+    });
+  }
+  if (changed === true) {
+    await logActivity(target.admin, {
+      agencyId: owner.agencyId,
+      actorId: owner.userId,
+      action: "employee.permissions_changed",
+      targetType: "profile",
+      targetId: employeeId,
+      details: { permissions: [...permissions].sort() },
+    });
+  }
 }
 
 // Supprimer un employé désactivé. La base refuse d'elle-même un patron, un

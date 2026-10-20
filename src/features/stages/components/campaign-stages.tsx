@@ -25,7 +25,8 @@ type StageWithCounts = {
 type DraftStage = { key: string; id: string | null; name: string };
 
 // Étapes d'une campagne : avancement des dossiers actifs pour toute
-// l'équipe, et modification de la liste par le patron (campagne active).
+// l'équipe, et modification de la liste par le patron ou un membre autorisé
+// (campagne active).
 export function CampaignStages({
   campaignId,
   stages,

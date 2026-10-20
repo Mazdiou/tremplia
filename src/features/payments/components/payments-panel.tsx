@@ -40,7 +40,8 @@ const PAYMENT_STATE_PILL: Record<PaymentState, { tone: PillTone; label: string }
   paid: { tone: "ok", label: "Soldé" },
 };
 
-// Montant convenu : saisie (première fois, ou modification par le patron)
+// Montant convenu : saisie (première fois, ou modification avec la permission
+// « Corriger les paiements »)
 function AgreedAmountForm({
   caseId,
   initial,
@@ -318,7 +319,7 @@ export function PaymentsPanel({
   agreed,
   paid,
   payments,
-  isOwner,
+  canCorrect,
   defaultFee,
 }: {
   caseId: string;
@@ -326,7 +327,9 @@ export function PaymentsPanel({
   // Total des paiements non annulés, tenu par la base
   paid: number;
   payments: PaymentItem[];
-  isOwner: boolean;
+  // Patron, ou permission « Corriger les paiements » : annuler un paiement,
+  // modifier le montant convenu
+  canCorrect: boolean;
   // Tarif de la campagne, proposé quand le montant n'est pas encore fixé
   defaultFee: number | null;
 }) {
@@ -392,7 +395,8 @@ export function PaymentsPanel({
                 <p className="text-sm font-medium">Montant convenu non fixé</p>
                 <p className="mt-0.5 text-sm text-muted-foreground">
                   Indiquez ce que le candidat doit à l&apos;agence pour suivre ses paiements.
-                  {!isOwner && " Une fois fixé, seul le patron pourra le modifier."}
+                  {!canCorrect &&
+                    " Une fois fixé, seuls le patron et les membres autorisés pourront le modifier."}
                 </p>
               </div>
               <AgreedAmountForm
@@ -448,7 +452,7 @@ export function PaymentsPanel({
                 {summary.percent} % payé
               </span>
             </div>
-            {isOwner && mode !== "agreed" && (
+            {canCorrect && mode !== "agreed" && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -494,7 +498,7 @@ export function PaymentsPanel({
               <PaymentLine
                 key={p.id}
                 payment={p}
-                canCancel={isOwner}
+                canCancel={canCorrect}
                 onCancel={() => {
                   setMessage(null);
                   setReason("");

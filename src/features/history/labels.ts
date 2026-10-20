@@ -12,6 +12,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "employee.created": "a ajouté un employé",
   "employee.deactivated": "a désactivé un employé",
   "employee.reactivated": "a réactivé un employé",
+  "employee.permissions_changed": "a changé les permissions d'un employé",
   "employee.deleted": "a supprimé un employé",
   "campaign.created": "a créé une campagne",
   "campaign.imported": "a importé un modèle de campagne",

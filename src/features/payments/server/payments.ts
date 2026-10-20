@@ -11,9 +11,10 @@ import { isUuid } from "@/lib/validation";
 import { reportError } from "@/lib/report-error";
 
 // Paiements du candidat à l'agence. Tout membre actif enregistre un paiement
-// et fixe un montant convenu encore vide ; seul le patron annule un paiement
-// ou change le montant convenu (revérifié par les fonctions SQL, qui gardent
-// le total payé sous le montant convenu). Le journal garde les montants,
+// et fixe un montant convenu encore vide ; annuler un paiement ou changer le
+// montant convenu demande la permission « Corriger les paiements », que le
+// patron a toujours (revérifié par les fonctions SQL, qui gardent aussi le
+// total payé sous le montant convenu). Le journal garde les montants,
 // jamais la note ni le motif d'annulation.
 
 const MESSAGES = {
@@ -91,7 +92,7 @@ export async function setAgreedAmount(auth: AuthorizedCase, caseId: string, amou
   if (error) {
     throw dbError("payments agreed amount", error, {
       P0002: "Dossier introuvable",
-      "42501": "Seul le patron modifie le montant convenu",
+      "42501": "Vous n'avez pas la permission de modifier le montant convenu",
       "22003": "Le montant convenu ne peut pas être inférieur au total déjà payé",
       "23514": "Montant invalide",
     });
@@ -138,7 +139,7 @@ export async function recordPayment(
   return data;
 }
 
-// Patron seulement
+// Permission « Corriger les paiements »
 export async function cancelPayment(
   auth: AuthorizedCase,
   caseId: string,
@@ -155,7 +156,7 @@ export async function cancelPayment(
   if (error) {
     throw dbError("payments cancel", error, {
       ...MESSAGES,
-      "42501": "Seul le patron annule un paiement",
+      "42501": "Vous n'avez pas la permission d'annuler un paiement",
       "55000": "Ce paiement est déjà annulé",
       "23514": "Motif invalide",
     });

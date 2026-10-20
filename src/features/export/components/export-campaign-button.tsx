@@ -18,7 +18,7 @@ function fileNameOf(res: Response) {
   return /filename="([^"]+)"/i.exec(header)?.[1] ?? "export.xlsx";
 }
 
-// Téléchargement du classeur Excel d'une campagne (patron seulement)
+// Téléchargement du classeur Excel d'une campagne (permission « Gérer les campagnes »)
 export function ExportCampaignButton({ campaignId }: { campaignId: string }) {
   return <ExcelDownloadButton url={`/api/campaigns/${campaignId}/export`} />;
 }

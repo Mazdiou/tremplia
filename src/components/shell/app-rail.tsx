@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
+import type { Permission } from "@/lib/permissions";
 import { openSearchPalette } from "./search-palette";
 
 // Taille commune des boutons. Sur téléphone, ils se partagent la largeur de
@@ -17,11 +18,14 @@ const RAIL_BUTTON =
 // Barre d'icônes : colonne à gauche sur ordinateur, barre en bas sur mobile.
 export function AppRail({
   isOwner,
+  permissions,
   initials,
   isPlatformAdmin = false,
   taskBadge,
 }: {
   isOwner: boolean;
+  // Permissions accordées par le patron (pages qu'elles ouvrent)
+  permissions: Permission[];
   initials: string;
   isPlatformAdmin?: boolean;
   // Mes tâches en retard ou du jour (rouge s'il y a du retard)
@@ -41,7 +45,7 @@ export function AppRail({
       aria-label="Navigation principale"
       className="z-20 flex shrink-0 items-center justify-around border-t bg-background px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:w-14 md:flex-col md:justify-start md:gap-2 md:border-t-0 md:border-r md:px-0 md:py-4"
     >
-      {navItems(isOwner, isPlatformAdmin).map(
+      {navItems(isOwner, isPlatformAdmin, permissions).map(
         ({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           const badge = href === "/tasks" && taskBadge.count > 0 ? taskBadge : null;

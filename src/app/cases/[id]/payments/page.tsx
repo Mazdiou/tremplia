@@ -3,6 +3,7 @@ import { requireMember } from "@/lib/auth/require-member";
 import { getCase } from "@/features/cases/server/get-case";
 import { PaymentsPanel } from "@/features/payments/components/payments-panel";
 import { listPayments } from "@/features/payments/server/payments";
+import { can } from "@/lib/permissions";
 
 export default async function PaymentsPage({
   params,
@@ -23,7 +24,7 @@ export default async function PaymentsPage({
       agreed={data.c.agreed_amount}
       paid={data.c.paid_amount}
       payments={payments}
-      isOwner={member.isOwner}
+      canCorrect={can(member, "payments_manage")}
       defaultFee={data.campaign?.default_fee ?? null}
     />
   );

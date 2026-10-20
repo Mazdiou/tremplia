@@ -17,7 +17,7 @@ import {
 } from "@/features/payments/overview";
 import { loadPaymentsOverview } from "@/features/payments/server/overview";
 import { isReadOnly } from "@/features/subscription/server/subscription";
-import { requireOwner } from "@/lib/auth/require-member";
+import { requirePermission } from "@/lib/auth/require-member";
 import { formatDA } from "@/lib/money";
 import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
@@ -79,8 +79,9 @@ function ViewTabs({ filters }: { filters: OverviewFilters }) {
   );
 }
 
-// Tous les paiements de l'agence (patron seulement, comme les chiffres de
-// paiement du tableau de bord) : ce qui est entré, et ce qui reste dû.
+// Tous les paiements de l'agence (permission « Voir la caisse », comme les
+// chiffres de paiement du tableau de bord) : ce qui est entré, et ce qui
+// reste dû.
 // L'enregistrement et l'annulation restent ceux de l'onglet Paiements du
 // dossier (« Encaisser » ouvre le même formulaire).
 export default async function PaymentsPage({
@@ -88,7 +89,7 @@ export default async function PaymentsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const member = await requireOwner();
+  const member = await requirePermission("payments_view");
   if (!member) redirect("/dashboard");
 
   const [data, readOnly, agency] = await Promise.all([
@@ -129,7 +130,11 @@ export default async function PaymentsPage({
     <PageContainer>
       <PageHeader
         title="Paiements"
-        subtitle="Tous les paiements de l'agence · visible par le patron seulement"
+        subtitle={
+          member.isOwner
+            ? "Tous les paiements de l'agence · visible par vous et les membres autorisés"
+            : "Tous les paiements de l'agence · accès accordé par le patron"
+        }
         actions={
           rowCount > 0 && (
             <ExcelDownloadButton url={query ? `/api/payments/export?${query}` : "/api/payments/export"} />
