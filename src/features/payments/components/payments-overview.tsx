@@ -190,7 +190,8 @@ export function BalanceList({
   return (
     <div className="space-y-2">
       <StatusMessage message={message} />
-      <ul className="divide-y overflow-hidden rounded-xl border bg-card">
+      {/* Sans overflow-hidden : le menu WhatsApp dépasse de la liste */}
+      <ul className="divide-y rounded-xl border bg-card">
         {rows.map((r) => {
           const percent = Math.min(100, Math.floor((r.paid / r.agreed) * 100));
           const context: WhatsAppMenuContext = {
@@ -234,7 +235,7 @@ export function BalanceList({
                 </div>
                 <div className="flex flex-wrap items-center gap-1 max-sm:w-full sm:ml-auto">
                   <StatusPill tone="warn">Reste {formatDA(r.remaining)}</StatusPill>
-                  <WhatsAppMenu phone={r.phone} recipient={r.candidate} context={context} />
+                  <WhatsAppMenu phone={r.phone} recipient={r.candidate} context={context} align="end" />
                   {!readOnly && open !== r.caseId && (
                     <Button
                       variant="outline"

@@ -32,11 +32,16 @@ export function WhatsAppMenu({
   phone,
   recipient,
   context,
+  align = "start",
 }: {
   phone: string | null;
   // « Yacine Benali », « Karim Benali » : pour les lecteurs d'écran
   recipient: string;
   context: WhatsAppMenuContext;
+  // Bord du bouton auquel le menu s'aligne : "end" pour un bouton près du
+  // bord droit (le menu s'ouvre alors vers la gauche). Téléphone : en bas
+  // de l'écran, sur toute sa largeur, dans les deux cas.
+  align?: "start" | "end";
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -70,7 +75,13 @@ export function WhatsAppMenu({
       {open && (
         <div
           role="menu"
-          className="absolute top-8 left-0 z-30 w-72 max-sm:fixed max-sm:inset-x-4 max-sm:top-auto max-sm:mt-1 max-sm:w-auto rounded-xl border bg-popover p-1 shadow-lg"
+          className={cn(
+            "absolute top-8 z-30 w-72 rounded-xl border bg-popover p-1 shadow-lg",
+            // Téléphone : en bas de l'écran, au-dessus de la barre de
+            // navigation, où que soit le bouton (même après défilement)
+            "max-sm:fixed max-sm:inset-x-4 max-sm:top-auto max-sm:right-4 max-sm:bottom-[calc(5rem+env(safe-area-inset-bottom))] max-sm:left-4 max-sm:w-auto",
+            align === "end" ? "right-0" : "left-0",
+          )}
         >
           {availableTemplates(context).map((t) => (
             <a
