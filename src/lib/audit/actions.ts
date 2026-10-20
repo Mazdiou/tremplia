@@ -55,6 +55,7 @@ export const ACTIVITY_ACTIONS = [
   "payment.agreed_amount_set",
   "payment.recorded",
   "payment.cancelled",
+  "payment.exported",
   "task.created",
   "task.updated",
   "task.assigned",

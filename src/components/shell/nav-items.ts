@@ -6,12 +6,14 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  Wallet,
 } from "lucide-react";
 
 const ITEMS = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutGrid, ownerOnly: false },
   { href: "/cases", label: "Dossiers", icon: FolderOpen, ownerOnly: false },
   { href: "/tasks", label: "Tâches", icon: ListTodo, ownerOnly: false },
+  { href: "/payments", label: "Paiements", icon: Wallet, ownerOnly: true },
   { href: "/campaigns", label: "Campagnes", icon: CalendarRange, ownerOnly: false },
   { href: "/team", label: "Équipe", icon: Users, ownerOnly: true },
   { href: "/settings", label: "Réglages", icon: Settings, ownerOnly: false },

@@ -302,3 +302,72 @@ test("réglages : changement du mot de passe", async () => {
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
 });
+
+test("page Paiements : encaissements, restes à payer et export", async () => {
+  const name = `${candidate.lastName.toLocaleUpperCase("fr")} ${candidate.firstName}`;
+  await page.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Paiements" }).click();
+  await expect(page).toHaveURL(/\/payments$/);
+  await expect(page.getByRole("heading", { name: "Paiements", level: 1 })).toBeVisible();
+
+  // Le paiement fait à la création du dossier (50 000 DA en espèces)
+  const totals = page.getByRole("region", { name: "Totaux" });
+  await expect(totals.getByText("50 000 DA").first()).toBeVisible();
+  await expect(page.getByRole("link", { name })).toBeVisible();
+
+  // Restes à payer : encaisser sans quitter la page
+  await page.getByRole("link", { name: "Restes à payer" }).click();
+  await expect(page).toHaveURL(/\/payments\?vue=restes$/);
+  const row = page.getByRole("listitem").filter({ has: page.getByRole("link", { name }) });
+  await expect(row.getByText("Reste 100 000 DA")).toBeVisible();
+  await row.getByRole("button", { name: `Encaisser un paiement de ${name}` }).click();
+  await row.getByLabel("Montant payé").fill("30000");
+  await row.getByLabel("Moyen de paiement").selectOption("ccp");
+  await row.getByRole("button", { name: "Enregistrer le paiement" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Paiement de 30 000 DA enregistré" })).toBeVisible();
+  await expect(row.getByText("Reste 70 000 DA")).toBeVisible();
+
+  // Encaissements : total et répartition par moyen
+  await page.getByRole("link", { name: "Encaissements" }).click();
+  await expect(totals.getByText("80 000 DA")).toBeVisible();
+  await expect(totals.getByText("30 000 DA")).toBeVisible();
+
+  // Export Excel de la vue affichée
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Exporter en Excel" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toMatch(/^Encaissements - .+\.xlsx$/);
+  const bytes = await (await import("node:fs/promises")).readFile((await file.path())!);
+  expect(bytes.subarray(0, 2).toString()).toBe("PK");
+
+  // Autre période : rien
+  await page.getByLabel("Période").selectOption("mois-dernier");
+  await expect(page).toHaveURL(/periode=mois-dernier/);
+  await expect(page.getByText("Aucun encaissement sur cette période")).toBeVisible();
+});
+
+test("page Paiements : réservée au patron", async ({ browser }) => {
+  const res = await page.request.post("/api/team/employees", {
+    data: { firstName: "Sara", lastName: `Employee${run}`, email: `employe-${run}@e2e.test` },
+  });
+  expect(res.status()).toBe(201);
+  const { temporaryPassword } = (await res.json()) as { temporaryPassword: string };
+
+  const employee = await browser.newPage();
+  await employee.goto("/login");
+  await employee.getByLabel("Adresse e-mail").fill(`employe-${run}@e2e.test`);
+  await employee.getByLabel("Mot de passe", { exact: true }).fill(temporaryPassword);
+  await employee.getByRole("button", { name: "Se connecter" }).click();
+  await expect(employee).toHaveURL(/\/change-password$/);
+  await employee.getByLabel("Nouveau mot de passe").fill("E2e-employe-mdp-1");
+  await employee.getByLabel("Confirmer le mot de passe").fill("E2e-employe-mdp-1");
+  await employee.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(employee).toHaveURL(/\/dashboard$/);
+
+  await expect(
+    employee.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Paiements" }),
+  ).toHaveCount(0);
+  await employee.goto("/payments");
+  await expect(employee).toHaveURL(/\/dashboard$/);
+  expect((await employee.request.get("/api/payments/export")).status()).toBe(403);
+  await employee.close();
+});

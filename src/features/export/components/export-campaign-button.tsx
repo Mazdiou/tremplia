@@ -18,10 +18,14 @@ function fileNameOf(res: Response) {
   return /filename="([^"]+)"/i.exec(header)?.[1] ?? "export.xlsx";
 }
 
-// Téléchargement du classeur Excel d'une campagne (patron seulement). Le
-// fichier passe par le navigateur pour qu'une erreur s'affiche ici au lieu
-// d'être téléchargée.
+// Téléchargement du classeur Excel d'une campagne (patron seulement)
 export function ExportCampaignButton({ campaignId }: { campaignId: string }) {
+  return <ExcelDownloadButton url={`/api/campaigns/${campaignId}/export`} />;
+}
+
+// Téléchargement d'un classeur Excel. Le fichier passe par le navigateur
+// pour qu'une erreur s'affiche ici au lieu d'être téléchargée.
+export function ExcelDownloadButton({ url }: { url: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +33,7 @@ export function ExportCampaignButton({ campaignId }: { campaignId: string }) {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/campaigns/${campaignId}/export`, { cache: "no-store" });
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: unknown } | null;
         setError(typeof data?.error === "string" ? data.error : `Erreur ${res.status}`);

@@ -59,6 +59,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "payment.agreed_amount_set": "a fixé le montant convenu d'un dossier",
   "payment.recorded": "a enregistré un paiement",
   "payment.cancelled": "a annulé un paiement",
+  "payment.exported": "a exporté les paiements en Excel",
   "task.created": "a ajouté une tâche",
   "task.updated": "a modifié une tâche",
   "task.assigned": "a confié une tâche à un autre membre",

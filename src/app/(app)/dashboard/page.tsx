@@ -317,7 +317,14 @@ export default async function DashboardPage({
               ? "Toutes les campagnes actives · visible par le patron seulement."
               : "Visible par le patron seulement."
           }
-          actions={<Wallet className="size-4 text-muted-foreground" aria-hidden />}
+          actions={
+            <Link
+              href={selected ? `/payments?campagne=${selected.id}` : "/payments"}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-link underline-offset-2 hover:underline"
+            >
+              <Wallet className="size-3.5" aria-hidden /> Tous les paiements
+            </Link>
+          }
         >
           <div className="grid gap-5 px-5 py-4 lg:grid-cols-[1fr_1fr]">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
@@ -325,12 +332,19 @@ export default async function DashboardPage({
                 label={`Encaissé en ${monthName.format(new Date())}`}
                 value={formatDA(collected)}
                 hint={plural(collectedCount, "paiement")}
+                href={selected ? `/payments?campagne=${selected.id}` : "/payments"}
               />
               <PaymentFigure
                 label="Reste à encaisser"
                 value={formatDA(remaining)}
                 hint={plural(owing, "dossier")}
-                href={owing > 0 ? casesLink("reste-a-payer") : undefined}
+                href={
+                  owing > 0
+                    ? selected
+                      ? `/payments?vue=restes&campagne=${selected.id}`
+                      : "/payments?vue=restes"
+                    : undefined
+                }
               />
               <PaymentFigure
                 label="Montant à fixer"

@@ -125,8 +125,9 @@ function Figure({
   );
 }
 
-// Nouveau paiement : montant (au plus le reste à payer), date, moyen, note
-function PaymentForm({
+// Nouveau paiement : montant (au plus le reste à payer), date, moyen, note.
+// Sert aussi au bouton « Encaisser » de la page Paiements.
+export function PaymentForm({
   caseId,
   remaining,
   onDone,
