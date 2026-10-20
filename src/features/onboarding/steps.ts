@@ -52,6 +52,7 @@ export function buildSteps(p: OnboardingProgress): OnboardingStep[] {
       description: "Passeport, relevés de notes, diplômes : rangés dans le dossier du candidat.",
       done: p.hasDocument,
       action: onCase("Ouvrir les documents", "/documents"),
+      secondary: { label: "Les retrouver aussi sur cet ordinateur", href: "/settings#ordinateur" },
     },
     {
       id: "espace-candidat",

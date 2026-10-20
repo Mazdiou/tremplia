@@ -9,6 +9,7 @@ import { pdfProblem, uploadDocument, uploadSummary } from "@/features/documents/
 import { callApi } from "@/lib/api-client";
 import { DownloadArchiveButton } from "./download-archive-button";
 import { CaseCopyButton, useAutoCaseCopy } from "@/features/local-copy/components/case-copy-button";
+import { CopyTip } from "@/features/local-copy/components/copy-tip";
 import {
   DOC_DRAG_TYPE,
   DocumentRow,
@@ -430,6 +431,8 @@ export function DocumentsPanel({
           }
         />
       </div>
+
+      {docs.length > 0 && <CopyTip />}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <StatusMessage message={message} className="flex-1" />

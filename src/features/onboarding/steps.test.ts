@@ -33,6 +33,7 @@ describe("buildSteps", () => {
     const steps = buildSteps({ ...none, hasCampaign: true, hasCase: true, latestCaseId: "abc" });
     const byId = Object.fromEntries(steps.map((s) => [s.id, s]));
     expect(byId.document.action?.href).toBe("/cases/abc/documents");
+    expect(byId.document.secondary?.href).toBe("/settings#ordinateur");
     expect(byId["espace-candidat"].action?.href).toBe("/cases/abc?ouvrir=espace-candidat");
     expect(byId.tache.action?.href).toBe("/cases/abc/tasks");
     expect(firstOpenStep(steps)).toBe("document");
