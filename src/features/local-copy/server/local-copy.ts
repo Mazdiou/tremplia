@@ -126,11 +126,15 @@ export async function signCopyUrls(
   input: { ids: string[]; caseId?: string; logCount?: number },
 ): Promise<{ id: string; url: string }[]> {
   const admin = createAdminClient();
-  const { data, error } = await admin
+  // Avec `caseId`, seulement les documents de ce dossier de l'agence : le
+  // journal ne peut pas nommer un autre dossier que celui copié
+  let query = admin
     .from("documents")
     .select("id, storage_path")
     .in("id", input.ids)
     .eq("agency_id", member.agencyId);
+  if (input.caseId) query = query.eq("case_id", input.caseId);
+  const { data, error } = await query;
   if (error) throw dbError("local copy urls", error);
   const docs = (data ?? []) as { id: string; storage_path: string }[];
   if (docs.length === 0) return [];

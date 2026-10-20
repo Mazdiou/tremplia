@@ -27,4 +27,8 @@ describe("activityActor", () => {
     expect(activityActor("note.created", "Yasmine K", "case")).toBe("Yasmine K");
     expect(activityActor("note.created", undefined, "agency")).toBe("Un ancien membre");
   });
+
+  it("met la majuscule au nom neutre (noms illisibles)", () => {
+    expect(activityActor("note.created", "un membre", "case")).toBe("Un membre");
+  });
 });

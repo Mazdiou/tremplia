@@ -113,5 +113,7 @@ export function activityActor(
   scope: "case" | "agency",
 ) {
   if (action.startsWith("student.")) return scope === "case" ? "Le candidat" : "Un candidat";
-  return memberName || "Un ancien membre";
+  // Majuscule en tête de ligne (« un membre » quand le nom est illisible)
+  const name = memberName || "Un ancien membre";
+  return name.charAt(0).toUpperCase() + name.slice(1);
 }

@@ -69,7 +69,17 @@ export async function updateTask(
   taskId: string,
   input: TaskInput,
 ) {
-  await assertTaskInCase(auth, caseId, taskId);
+  // Contenu d'avant, comparé en mémoire seulement (jamais écrit au journal)
+  const { data: before, error: readError } = await auth.admin
+    .from("case_tasks")
+    .select("title, details, due_date")
+    .eq("id", taskId)
+    .eq("case_id", caseId)
+    .eq("agency_id", auth.agencyId)
+    .maybeSingle();
+  if (readError) throw dbError("tasks read", readError);
+  if (!before) throw new ApiError(404, "Tâche introuvable");
+
   const { data: previous, error } = await auth.admin.rpc("update_case_task", {
     p_task_id: taskId,
     p_agency_id: auth.agencyId,
@@ -85,18 +95,27 @@ export async function updateTask(
     });
   }
 
-  await logCaseActivity(
-    auth,
-    caseId,
-    previous !== input.assignedTo
-      ? {
-          action: "task.assigned",
-          targetType: "case_task",
-          targetId: taskId,
-          details: { from: previous as string, to: input.assignedTo },
-        }
-      : { action: "task.updated", targetType: "case_task", targetId: taskId },
-  );
+  // Les deux lignes si l'intitulé, la précision ou l'échéance changent en
+  // même temps que le responsable ; aucune si rien ne change
+  const edited =
+    before.title !== input.title ||
+    (before.details ?? null) !== (input.details ?? null) ||
+    (before.due_date ?? null) !== (input.dueDate ?? null);
+  if (edited) {
+    await logCaseActivity(auth, caseId, {
+      action: "task.updated",
+      targetType: "case_task",
+      targetId: taskId,
+    });
+  }
+  if (previous !== input.assignedTo) {
+    await logCaseActivity(auth, caseId, {
+      action: "task.assigned",
+      targetType: "case_task",
+      targetId: taskId,
+      details: { from: previous as string, to: input.assignedTo },
+    });
+  }
 }
 
 // Cocher « faite » ou rouvrir : son auteur, son responsable, ou un patron

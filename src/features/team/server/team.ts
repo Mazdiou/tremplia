@@ -153,6 +153,9 @@ export async function setEmployeePermissions(
   }
 }
 
+const HAS_HISTORY =
+  "Ce membre a déjà travaillé sur des dossiers (historique, notes, paiements, documents…). Pour garder cet historique, son compte ne peut pas être supprimé. Désactivé, il ne peut plus se connecter.";
+
 // Supprimer un employé désactivé. La base refuse d'elle-même un patron, un
 // compte actif, ou un compte qui a un historique (dossiers, documents,
 // notes…) : il reste alors désactivé.
@@ -170,14 +173,20 @@ export async function deleteEmployee(owner: Member, employeeId: string) {
     throw new ApiError(400, "Désactivez d'abord ce compte avant de le supprimer");
   }
 
+  // Le journal n'a pas de clé étrangère vers les profils : sans ce contrôle,
+  // un membre qui n'a fait que lire ou changer des dossiers (mot de passe
+  // affiché, statut, export…) perdrait son nom dans l'historique.
+  const { count, error: logError } = await target.admin
+    .from("activity_log")
+    .select("id", { count: "exact", head: true })
+    .eq("agency_id", owner.agencyId)
+    .eq("actor_id", employeeId);
+  if (logError) throw dbError("employee delete history", logError);
+  if ((count ?? 0) > 0) throw new ApiError(409, HAS_HISTORY);
+
   // Supprime le compte Auth ; le profil part en cascade
   const { error } = await target.admin.auth.admin.deleteUser(employeeId);
-  if (error) {
-    throw new ApiError(
-      409,
-      "Ce membre a déjà travaillé sur des dossiers (notes, paiements, documents…). Pour garder cet historique, son compte ne peut pas être supprimé. Désactivé, il ne peut plus se connecter.",
-    );
-  }
+  if (error) throw new ApiError(409, HAS_HISTORY);
 
   await logActivity(target.admin, {
     agencyId: owner.agencyId,

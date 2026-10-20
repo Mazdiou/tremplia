@@ -1,7 +1,8 @@
 import "server-only";
 import type { z } from "zod";
-import { dbError } from "@/lib/api-errors";
-import { logActivity } from "@/lib/audit/log-activity";
+import { ApiError, dbError } from "@/lib/api-errors";
+import { readAll } from "@/lib/supabase/read-all";
+import { logActivities, type ActivityEntry } from "@/lib/audit/log-activity";
 import type { Member } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -34,6 +35,40 @@ export async function replaceCampaignStages(
   stages: z.infer<typeof replaceStagesSchema>["stages"],
 ) {
   const admin = createAdminClient();
+  // Dossiers que la fonction SQL déplace (étape retirée, ou aucune étape) :
+  // chacun doit le voir dans son historique
+  const kept = new Set(stages.flatMap((s) => (s.id ? [s.id] : [])));
+  const { data: oldStages, error: stagesError } = await admin
+    .from("campaign_stages")
+    .select("id")
+    .eq("agency_id", member.agencyId)
+    .eq("campaign_id", campaignId);
+  if (stagesError) throw dbError("stages replace read", stagesError);
+  const removed = ((oldStages ?? []) as { id: string }[])
+    .map((s) => s.id)
+    .filter((id) => !kept.has(id));
+  // Les dossiers sans étape vont aussi sur la première, s'il y en a une
+  const filters = [
+    ...(stages.length > 0 ? ["stage_id.is.null"] : []),
+    ...(removed.length > 0 ? [`stage_id.in.(${removed.join(",")})`] : []),
+  ];
+  const before =
+    filters.length === 0
+      ? []
+      : await readAll<{ id: string; stage_id: string | null }>((from, to) =>
+          admin
+            .from("cases")
+            .select("id, stage_id")
+            .eq("agency_id", member.agencyId)
+            .eq("campaign_id", campaignId)
+            .or(filters.join(","))
+            .order("id")
+            .range(from, to),
+        ).catch(() => {
+          throw new ApiError(500, "Impossible de lire les dossiers de la campagne");
+        });
+  const previousStage = new Map(before.map((c) => [c.id, c.stage_id]));
+
   const { data, error } = await admin.rpc("replace_campaign_stages", {
     p_campaign_id: campaignId,
     p_agency_id: member.agencyId,
@@ -47,14 +82,41 @@ export async function replaceCampaignStages(
     });
   }
   const moved = typeof data === "number" ? data : 0;
-  await logActivity(admin, {
-    agencyId: member.agencyId,
-    actorId: member.userId,
-    action: "campaign.stages_updated",
-    targetType: "campaign",
-    targetId: campaignId,
-    details: { stages: stages.length, cases_moved: moved },
-  });
+
+  const entries: ActivityEntry[] = [
+    {
+      agencyId: member.agencyId,
+      actorId: member.userId,
+      action: "campaign.stages_updated",
+      targetType: "campaign",
+      targetId: campaignId,
+      details: { stages: stages.length, cases_moved: moved },
+    },
+  ];
+  // Étape d'arrivée relue par lots (adresse de requête courte)
+  const ids = [...previousStage.keys()];
+  for (let i = 0; i < ids.length; i += 200) {
+    const { data: after, error: afterError } = await admin
+      .from("cases")
+      .select("id, stage_id")
+      .eq("agency_id", member.agencyId)
+      .in("id", ids.slice(i, i + 200));
+    if (afterError) reportError("[stages replace log]", afterError.code);
+    for (const c of (after ?? []) as { id: string; stage_id: string | null }[]) {
+      const from = previousStage.get(c.id) ?? null;
+      if (c.stage_id === from) continue;
+      entries.push({
+        agencyId: member.agencyId,
+        actorId: member.userId,
+        caseId: c.id,
+        action: "case.stage_changed",
+        targetType: "case",
+        targetId: c.id,
+        details: { from, to: c.stage_id, stages_updated: true },
+      });
+    }
+  }
+  await logActivities(admin, entries);
   return moved;
 }
 

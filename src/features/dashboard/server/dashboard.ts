@@ -180,6 +180,9 @@ export async function loadActivity(
       ? supabase.from("profiles").select("id, first_name, last_name").in("id", profileIds)
       : Promise.resolve({ data: [] as Named[] }),
   ]);
+  // Membres illisibles : auteur neutre, pas « ancien membre » (ce serait faux)
+  const profilesFailed = "error" in profilesRes && profilesRes.error != null;
+  if (profilesFailed) reportError("[dashboard activity]", profilesRes.error.code);
   const caseById = new Map(((casesRes.data ?? []) as Named[]).map((c) => [c.id, c]));
   const profileById = new Map(((profilesRes.data ?? []) as Named[]).map((p) => [p.id, p]));
   const campaignById = new Map(campaigns.map((c) => [c.id, c.name]));
@@ -195,7 +198,11 @@ export async function loadActivity(
       const p = profileById.get(g.target_id);
       if (p) object = { label: fullName(p.first_name, p.last_name), href: "/team" };
     }
-    const actor = g.actor_id ? (profileById.get(g.actor_id) ?? null) : null;
+    const actor = !g.actor_id
+      ? null
+      : profilesFailed
+        ? { first_name: "Un", last_name: "membre" }
+        : (profileById.get(g.actor_id) ?? null);
     return { ...g, actor, object };
   });
 }

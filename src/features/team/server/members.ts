@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { fullName } from "@/lib/names";
 import { reportError } from "@/lib/report-error";
 
+const UNKNOWN_MEMBER = "un membre";
+
 // « Prénom Nom » des membres demandés, par identifiant ; un compte supprimé
 // n'y figure pas. `agencyId` est obligatoire avec la clé secrète, qui ne
 // passe pas par le RLS.
@@ -16,7 +18,12 @@ export async function memberNames(
   let query = supabase.from("profiles").select("id, first_name, last_name").in("id", ids);
   if (agencyId) query = query.eq("agency_id", agencyId);
   const { data, error } = await query;
-  if (error) reportError("[member names]", error.code);
+  if (error) {
+    // Lecture impossible : nom neutre, pas « ancien membre » (ce serait faux)
+    reportError("[member names]", error.code);
+    for (const id of ids) names.set(id, UNKNOWN_MEMBER);
+    return names;
+  }
   for (const p of (data ?? []) as { id: string; first_name: string; last_name: string }[]) {
     names.set(p.id, fullName(p.first_name, p.last_name));
   }

@@ -14,6 +14,7 @@ const candidate = { firstName: "Amine", lastName: `Madiou${run}` };
 
 let page: Page;
 let caseUrl = "";
+let campaignUrl = "";
 let studentCode = "";
 
 // Un PDF minimal : le serveur vérifie seulement la signature « %PDF- »
@@ -80,6 +81,7 @@ test("import du modèle Campus France", async () => {
   await page.goto("/campaigns");
   await page.getByRole("button", { name: "Importer ce modèle" }).first().click();
   await expect(page).toHaveURL(/\/campaigns\/[0-9a-f-]{36}$/);
+  campaignUrl = new URL(page.url()).pathname;
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Campus France");
 });
 
@@ -416,4 +418,78 @@ test("permissions d'un employé : caisse et campagnes", async ({ browser }) => {
   await employee.goto("/payments");
   await expect(employee).toHaveURL(/\/dashboard$/);
   await employee.close();
+});
+
+test("une étape retirée se voit dans l'historique du dossier", async () => {
+  const campaignId = campaignUrl.split("/").pop();
+  const caseId = caseUrl.split("/").pop();
+  const put = (stages: { id: string | null; name: string }[]) =>
+    page.request.put(`/api/campaigns/${campaignId}/stages`, { data: { stages } });
+
+  expect((await put([{ id: null, name: "Dépôt" }, { id: null, name: "Entretien" }])).ok()).toBe(true);
+  await page.goto(caseUrl);
+  const options = page.locator(`#stage-${caseId} option[value]:not([value=""])`);
+  await expect(options).toHaveCount(2);
+  const [first, second] = await options.evaluateAll((els) =>
+    els.map((e) => ({ id: (e as HTMLOptionElement).value, name: e.textContent ?? "" })),
+  );
+
+  const moved = await page.request.patch(`/api/cases/${caseId}/stage`, {
+    data: { stageId: second.id },
+  });
+  expect(moved.ok()).toBe(true);
+  // « Entretien » retirée : le dossier recule à « Dépôt »
+  const res = await put([first]);
+  expect(await res.json()).toMatchObject({ moved: 1 });
+
+  // Placé sur la 1re étape à sa création, avancé, puis reculé
+  await page.goto(`${caseUrl}/history`);
+  await expect(page.getByText("a changé l'étape du dossier")).toHaveCount(3);
+});
+
+test("un employé qui a un historique ne peut pas être supprimé", async ({ browser }) => {
+  // Ses seules traces : le dossier clos puis rouvert, inscrits au journal
+  // seulement.
+  // Sans le contrôle du journal, la base le laisserait supprimer et son nom
+  // disparaîtrait de l'historique.
+  const email = `nadia-${run}@e2e.test`;
+  const name = `Nadia Journal${run}`;
+  const res = await page.request.post("/api/team/employees", {
+    data: { firstName: "Nadia", lastName: `Journal${run}`, email },
+  });
+  expect(res.status()).toBe(201);
+  const { temporaryPassword } = (await res.json()) as { temporaryPassword: string };
+
+  const employee = await browser.newPage();
+  await employee.goto("/login");
+  await employee.getByLabel("Adresse e-mail").fill(email);
+  await employee.getByLabel("Mot de passe", { exact: true }).fill(temporaryPassword);
+  await employee.getByRole("button", { name: "Se connecter" }).click();
+  await employee.getByLabel("Nouveau mot de passe").fill("E2e-employe-mdp-2");
+  await employee.getByLabel("Confirmer le mot de passe").fill("E2e-employe-mdp-2");
+  await employee.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(employee).toHaveURL(/\/dashboard$/);
+  const caseId = caseUrl.split("/").pop();
+  for (const status of ["closed", "active"]) {
+    const changed = await employee.request.patch(`/api/cases/${caseId}/status`, { data: { status } });
+    expect(changed.ok()).toBe(true);
+  }
+  await employee.close();
+
+  await page.goto("/team");
+  const row = page.getByRole("listitem").filter({ hasText: name });
+  await row.getByRole("button", { name: "Désactiver" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Désactiver" }).click();
+
+  await page.getByText(/Anciens membres/).click();
+  await row.getByRole("button", { name: "Supprimer" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Supprimer définitivement" }).click();
+  await expect(dialog.getByText(/garder cet historique/)).toBeVisible();
+  await dialog.getByRole("button", { name: "Fermer" }).click();
+
+  // Toujours là, parmi les anciens membres
+  await page.reload();
+  await page.getByText(/Anciens membres/).click();
+  await expect(row.getByRole("button", { name: "Supprimer" })).toBeVisible();
 });
