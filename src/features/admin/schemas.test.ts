@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { cancelPlatformPaymentSchema, newEndDate, platformPaymentSchema } from "./schemas";
+import {
+  cancelPlatformPaymentSchema,
+  giftMonthsSchema,
+  newEndDate,
+  platformPaymentSchema,
+} from "./schemas";
 
 describe("platformPaymentSchema", () => {
   it("accepte 1, 3 ou 12 mois et un montant saisi avec espaces", () => {
@@ -11,6 +16,20 @@ describe("platformPaymentSchema", () => {
     const r = platformPaymentSchema.safeParse({ months: 2, amount: "0", method: "carte" });
     expect(r.success).toBe(false);
     expect(r.error?.issues.map((i) => i.path[0])).toEqual(["months", "amount", "method"]);
+  });
+});
+
+describe("giftMonthsSchema", () => {
+  it("accepte une durée et un motif", () => {
+    expect(giftMonthsSchema.parse({ months: 3, note: " Partenaire " })).toEqual({
+      months: 3,
+      note: "Partenaire",
+    });
+  });
+
+  it("exige le motif et refuse un moyen « offert » côté paiement", () => {
+    expect(giftMonthsSchema.safeParse({ months: 3, note: " " }).success).toBe(false);
+    expect(platformPaymentSchema.safeParse({ months: 1, amount: "0", method: "gift" }).success).toBe(false);
   });
 });
 

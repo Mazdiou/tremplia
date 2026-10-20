@@ -1,4 +1,5 @@
 import { dayFormat } from "@/lib/dates";
+import { formatDA } from "@/lib/money";
 import { plural } from "@/lib/plural";
 
 // Abonnement d'une agence (voir la migration subscriptions) : essai, actif
@@ -76,11 +77,17 @@ export const PLATFORM_PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "Espèces",
   ccp: "CCP",
   baridimob: "BaridiMob",
+  gift: "Offert",
 };
 
 // Un moyen inconnu s'affiche tel quel
 export function platformPaymentMethodLabel(method: string) {
   return PLATFORM_PAYMENT_METHOD_LABELS[method] ?? method;
+}
+
+// Montant d'une ligne de l'historique : « Offert » pour des mois offerts
+export function platformPaymentAmountLabel(p: { amount: number; method: string }) {
+  return p.method === "gift" ? "Offert" : formatDA(p.amount);
 }
 
 // Message montré au candidat d'une agence en lecture seule

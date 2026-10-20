@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageContainer, PageHeader, Panel, StatusPill } from "@/components/page-ui";
-import { PaymentButton } from "@/features/admin/components/payment-dialog";
+import { GiftButton, PaymentButton } from "@/features/admin/components/payment-dialog";
 import { PaymentsHistory } from "@/features/admin/components/payments-history";
 import {
   listAgencies,
@@ -49,7 +49,14 @@ export default async function AdminAgencyPage({ params }: { params: Promise<{ id
         subtitle={[agency.city, agency.ownerName && `patron : ${agency.ownerName}`, agency.phone]
           .filter(Boolean)
           .join(" · ")}
-        actions={exempt ? undefined : <PaymentButton agency={agency} variant="default" />}
+        actions={
+          exempt ? undefined : (
+            <div className="flex flex-wrap gap-2">
+              <GiftButton agency={agency} />
+              <PaymentButton agency={agency} variant="default" />
+            </div>
+          )
+        }
       />
 
       <Panel

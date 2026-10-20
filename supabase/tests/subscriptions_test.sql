@@ -1,5 +1,5 @@
 begin;
-select plan(38);
+select plan(42);
 
 -- Patron A, employé A1, employé désactivé A3, patron B, administrateur P
 insert into auth.users (id, email) values
@@ -171,6 +171,21 @@ select throws_ok(
   $$select public.record_platform_payment('99999999-9999-9999-9999-999999999999',
       (select agency_a from ctx), 1, 0, 'cash', null)$$,
   '23514', null, 'un montant nul est refusé');
+
+-- Mois offerts : moyen « gift », montant 0 obligatoire
+select throws_ok(
+  $$select public.record_platform_payment('99999999-9999-9999-9999-999999999999',
+      (select agency_b from ctx), 1, 5000, 'gift', 'Partenaire')$$,
+  '23514', null, 'des mois offerts ont un montant nul');
+select lives_ok(
+  $$select public.record_platform_payment('99999999-9999-9999-9999-999999999999',
+      (select agency_b from ctx), 3, 0, 'gift', 'Partenaire')$$,
+  'l''administrateur offre des mois sans paiement');
+select is(pg_temp.state((select agency_b from ctx)), 'active', 'des mois offerts rendent l''agence active');
+select ok(public.cancel_platform_payment('99999999-9999-9999-9999-999999999999',
+    (select id from public.platform_payments where agency_id = (select agency_b from ctx) and method = 'gift'),
+    'Erreur') is not null,
+  'des mois offerts s''annulent comme un paiement');
 
 -- 4. Annulation -------------------------------------------------------------
 

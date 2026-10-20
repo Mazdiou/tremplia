@@ -12,7 +12,7 @@ import {
   type SubscriptionState,
 } from "@/features/subscription/subscription";
 import { normalizeName as normalize } from "@/lib/names";
-import { PaymentButton } from "./payment-dialog";
+import { GiftButton, PaymentButton } from "./payment-dialog";
 import { plural } from "@/lib/plural";
 
 type AgencyRow = {
@@ -94,6 +94,7 @@ export function AgenciesTable({ agencies }: { agencies: AgencyRow[] }) {
                   <span className="w-28 text-sm tabular-nums text-muted-foreground">
                     {a.state === "expired" ? "depuis le" : "jusqu'au"} {formatEndDate(a.endsAt)}
                   </span>
+                  <GiftButton agency={a} variant="ghost" />
                   <PaymentButton agency={a} />
                 </>
               )}

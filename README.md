@@ -530,7 +530,9 @@ directes, comme sur l'ancien.
 
 Chaque agence a 7 jours d'essai, puis un abonnement payé (espèces, CCP ou
 BaridiMob) que l'administrateur de la plateforme enregistre dans `/admin`
-(« Paiement reçu » : 1, 3 ou 12 mois). Des bandeaux préviennent l'agence
+(« Paiement reçu » : 1, 3 ou 12 mois). « Offrir des mois » prolonge
+l'abonnement sans paiement, avec un motif : la ligne apparaît « Offert »
+dans l'historique et s'annule comme un paiement. Des bandeaux préviennent l'agence
 avant la fin. Après la date de fin, l'agence est en lecture seule : la base
 refuse toute écriture sur ses données.
 

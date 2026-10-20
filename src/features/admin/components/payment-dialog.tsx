@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AmountField, SelectField, TextField, optionsOf } from "@/components/form-fields";
 import { callApi } from "@/lib/api-client";
@@ -17,19 +18,26 @@ import { useModalDialog } from "@/hooks/use-modal-dialog";
 
 const methodOptions = optionsOf(PLATFORM_PAYMENT_METHODS, PLATFORM_PAYMENT_METHOD_LABELS);
 
+type DialogAgency = { id: string; name: string; endsAt: string };
+
 // Fenêtre « Paiement reçu » : durée, montant, moyen et note ; la nouvelle
-// date de fin s'affiche avant d'enregistrer
+// date de fin s'affiche avant d'enregistrer. En mode « Offrir des mois »
+// (gift), ni montant ni moyen : seulement la durée et le motif, obligatoire.
 function PaymentDialog({
   agency,
+  gift,
   open,
   onClose,
 }: {
-  agency: { id: string; name: string; endsAt: string };
+  agency: DialogAgency;
+  gift: boolean;
   open: boolean;
   onClose: () => void;
 }) {
   const router = useRouter();
   const ref = useModalDialog(open);
+  // Les deux fenêtres d'une même agence peuvent être sur la page
+  const idPrefix = `${gift ? "gift" : "payment"}-${agency.id}`;
   const [months, setMonths] = useState<SubscriptionMonths>(12);
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("cash");
@@ -41,9 +49,11 @@ function PaymentDialog({
   async function save() {
     setSaving(true);
     setError(null);
-    const res = await callApi(`/api/admin/agencies/${agency.id}/payments`, {
-      body: { months, amount, method, note },
-    });
+    const res = gift
+      ? await callApi(`/api/admin/agencies/${agency.id}/gifts`, { body: { months, note } })
+      : await callApi(`/api/admin/agencies/${agency.id}/payments`, {
+          body: { months, amount, method, note },
+        });
     setSaving(false);
     if (!res.ok) {
       setFieldErrors(res.fieldErrors);
@@ -62,7 +72,7 @@ function PaymentDialog({
       ref={ref}
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose()}
-      aria-labelledby={`payment-title-${agency.id}`}
+      aria-labelledby={`${idPrefix}-title`}
       className="m-auto w-[min(28rem,calc(100%-2rem))] rounded-2xl border bg-card p-5 text-card-foreground backdrop:bg-black/45"
     >
       <form
@@ -73,9 +83,15 @@ function PaymentDialog({
         }}
         className="space-y-4"
       >
-        <h2 id={`payment-title-${agency.id}`} className="text-base font-semibold">
-          Paiement reçu · {agency.name}
+        <h2 id={`${idPrefix}-title`} className="text-base font-semibold">
+          {gift ? "Offrir des mois" : "Paiement reçu"} · {agency.name}
         </h2>
+        {gift && (
+          <p className="text-sm text-muted-foreground">
+            L&apos;abonnement est prolongé sans paiement. La ligne apparaît « Offert » dans
+            l&apos;historique et peut être annulée comme un paiement.
+          </p>
+        )}
 
         <fieldset>
           <legend className="mb-1.5 text-sm font-medium">Durée</legend>
@@ -90,7 +106,7 @@ function PaymentDialog({
               >
                 <input
                   type="radio"
-                  name={`months-${agency.id}`}
+                  name={`${idPrefix}-months`}
                   value={m}
                   checked={months === m}
                   onChange={() => setMonths(m)}
@@ -102,13 +118,21 @@ function PaymentDialog({
           </div>
         </fieldset>
 
-        <AmountField id={`amount-${agency.id}`} label="Montant" required value={amount}
-          onChange={setAmount} error={fieldErrors.amount} />
-        <SelectField id={`method-${agency.id}`} label="Moyen" required value={method}
-          onChange={setMethod} options={methodOptions} error={fieldErrors.method} />
-        <TextField id={`note-${agency.id}`} label="Note" maxLength={300} value={note}
-          onChange={setNote} placeholder="Ex. : reçu n° 12" hint="Facultatif"
-          error={fieldErrors.note} />
+        {gift ? (
+          <TextField id={`${idPrefix}-note`} label="Motif" required maxLength={300} value={note}
+            onChange={setNote} placeholder="Ex. : partenaire, geste commercial"
+            error={fieldErrors.note} />
+        ) : (
+          <>
+            <AmountField id={`${idPrefix}-amount`} label="Montant" required value={amount}
+              onChange={setAmount} error={fieldErrors.amount} />
+            <SelectField id={`${idPrefix}-method`} label="Moyen" required value={method}
+              onChange={setMethod} options={methodOptions} error={fieldErrors.method} />
+            <TextField id={`${idPrefix}-note`} label="Note" maxLength={300} value={note}
+              onChange={setNote} placeholder="Ex. : reçu n° 12" hint="Facultatif"
+              error={fieldErrors.note} />
+          </>
+        )}
 
         <p className="rounded-lg bg-muted px-3 py-2 text-sm">
           Nouvelle fin :{" "}
@@ -128,7 +152,7 @@ function PaymentDialog({
             Annuler
           </Button>
           <Button type="submit" disabled={saving}>
-            {saving ? "Patientez…" : "Enregistrer"}
+            {saving ? "Patientez…" : gift ? "Offrir" : "Enregistrer"}
           </Button>
         </div>
       </form>
@@ -136,12 +160,12 @@ function PaymentDialog({
   );
 }
 
-// Bouton qui ouvre la fenêtre
+// Bouton qui ouvre la fenêtre « Paiement reçu »
 export function PaymentButton({
   agency,
   variant = "outline",
 }: {
-  agency: { id: string; name: string; endsAt: string };
+  agency: DialogAgency;
   variant?: "outline" | "default";
 }) {
   const [open, setOpen] = useState(false);
@@ -150,7 +174,27 @@ export function PaymentButton({
       <Button variant={variant} size="sm" onClick={() => setOpen(true)}>
         Paiement reçu
       </Button>
-      <PaymentDialog agency={agency} open={open} onClose={() => setOpen(false)} />
+      <PaymentDialog agency={agency} gift={false} open={open} onClose={() => setOpen(false)} />
+    </>
+  );
+}
+
+// Bouton qui ouvre la fenêtre « Offrir des mois »
+export function GiftButton({
+  agency,
+  variant = "outline",
+}: {
+  agency: DialogAgency;
+  variant?: "outline" | "ghost";
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant={variant} size="sm" onClick={() => setOpen(true)}>
+        <Gift aria-hidden />
+        Offrir des mois
+      </Button>
+      <PaymentDialog agency={agency} gift open={open} onClose={() => setOpen(false)} />
     </>
   );
 }

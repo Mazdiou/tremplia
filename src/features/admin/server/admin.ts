@@ -5,7 +5,7 @@ import { ApiError, dbError } from "@/lib/api-errors";
 import { requireMember, type Member } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SubscriptionState } from "@/features/subscription/subscription";
-import type { PlatformPaymentInput } from "../schemas";
+import { GIFT_METHOD, type GiftMonthsInput, type PlatformPaymentInput } from "../schemas";
 import { reportError } from "@/lib/report-error";
 
 // Administrateur de la plateforme : désigné à la main dans la table
@@ -133,7 +133,7 @@ const MESSAGES = {
 export async function recordPlatformPayment(
   adminId: string,
   agencyId: string,
-  input: PlatformPaymentInput,
+  input: PlatformPaymentInput | { months: number; amount: 0; method: typeof GIFT_METHOD; note: string },
 ): Promise<string> {
   const { data, error } = await createAdminClient().rpc("record_platform_payment", {
     p_admin_id: adminId,
@@ -145,6 +145,20 @@ export async function recordPlatformPayment(
   });
   if (error) throw dbError("admin payment", error, { ...MESSAGES, P0002: "Agence introuvable" });
   return data as string;
+}
+
+// « Offrir des mois » : un paiement de montant 0, même calcul de la fin
+export function recordGiftMonths(
+  adminId: string,
+  agencyId: string,
+  input: GiftMonthsInput,
+): Promise<string> {
+  return recordPlatformPayment(adminId, agencyId, {
+    months: input.months,
+    amount: 0,
+    method: GIFT_METHOD,
+    note: input.note,
+  });
 }
 
 export async function cancelPlatformPayment(

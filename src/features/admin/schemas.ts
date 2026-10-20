@@ -10,13 +10,27 @@ export type SubscriptionMonths = (typeof SUBSCRIPTION_MONTHS)[number];
 
 export const PLATFORM_PAYMENT_METHODS = ["cash", "ccp", "baridimob"] as const;
 
+// Mois offerts : enregistrés comme un paiement de moyen « gift » et de
+// montant 0 (migration gift_months)
+export const GIFT_METHOD = "gift" as const;
+
+const monthsSchema = z.union([z.literal(1), z.literal(3), z.literal(12)], "Choisissez une durée");
+
 export const platformPaymentSchema = z.object({
-  months: z.union([z.literal(1), z.literal(3), z.literal(12)], "Choisissez une durée"),
+  months: monthsSchema,
   amount: paymentAmountSchema,
   method: z.enum(PLATFORM_PAYMENT_METHODS, "Choisissez le moyen de paiement"),
   note: optionalText(300),
 });
 export type PlatformPaymentInput = z.infer<typeof platformPaymentSchema>;
+
+// « Offrir des mois » : le motif est obligatoire, pour se souvenir plus tard
+// pourquoi l'agence n'a pas payé
+export const giftMonthsSchema = z.object({
+  months: monthsSchema,
+  note: requiredText(300, "Indiquez pourquoi ces mois sont offerts"),
+});
+export type GiftMonthsInput = z.infer<typeof giftMonthsSchema>;
 
 export const cancelPlatformPaymentSchema = z.object({
   reason: requiredText(300, "Indiquez le motif de l'annulation"),

@@ -1,11 +1,11 @@
 import { Panel, StatusPill } from "@/components/page-ui";
-import { formatDA } from "@/lib/money";
 import { dayFormat } from "@/lib/dates";
 import {
   STATE_LABELS,
   STATE_TONES,
   daysLeft,
   formatEndDate,
+  platformPaymentAmountLabel,
   platformPaymentMethodLabel,
 } from "../subscription";
 import { getSubscription, listPlatformPayments, supportPhone } from "../server/subscription";
@@ -77,10 +77,11 @@ export async function SubscriptionPanel({
                 >
                   <span className="tabular-nums">{dayFormat.format(new Date(p.recorded_at))}</span>
                   <span className={p.cancelled_at ? "line-through" : "font-medium"}>
-                    {formatDA(p.amount)}
+                    {platformPaymentAmountLabel(p)}
                   </span>
                   <span>
-                    {p.months} mois · {platformPaymentMethodLabel(p.method)}
+                    {p.months} mois
+                    {p.method !== "gift" && ` · ${platformPaymentMethodLabel(p.method)}`}
                   </span>
                   {p.cancelled_at && (
                     <span className="text-xs">Annulé{p.cancel_reason ? ` : ${p.cancel_reason}` : ""}</span>

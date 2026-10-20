@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { callApi } from "@/lib/api-client";
-import { formatDA } from "@/lib/money";
 import { cn } from "@/lib/utils";
-import { formatEndDate, platformPaymentMethodLabel } from "@/features/subscription/subscription";
+import {
+  formatEndDate,
+  platformPaymentAmountLabel,
+  platformPaymentMethodLabel,
+} from "@/features/subscription/subscription";
 import { TextField } from "@/components/form-fields";
 
 type HistoryPayment = {
@@ -68,10 +71,11 @@ export function PaymentsHistory({ payments }: { payments: HistoryPayment[] }) {
           >
             <span className="w-24 tabular-nums">{p.recordedLabel}</span>
             <span className={cn("w-28 font-medium", p.cancelledAt && "line-through")}>
-              {formatDA(p.amount)}
+              {platformPaymentAmountLabel(p)}
             </span>
             <span className="min-w-0 flex-1">
-              {p.months} mois · {platformPaymentMethodLabel(p.method)}
+              {p.months} mois
+              {p.method !== "gift" && ` · ${platformPaymentMethodLabel(p.method)}`}
               {p.note && <span className="text-muted-foreground"> · {p.note}</span>}
               {p.cancelledAt ? (
                 <span className="block text-xs">Annulé : {p.cancelReason}</span>
