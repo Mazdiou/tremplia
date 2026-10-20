@@ -65,3 +65,6 @@ desktop.ini
 # Sauvegardes et clés age : jamais dans le dépôt
 *.age
 cle-privee*
+
+# supports marketing (vidéo Remotion…), gardés hors du dépôt
+/marketing/
