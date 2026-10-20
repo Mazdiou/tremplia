@@ -47,6 +47,9 @@ export function DeleteEmployeeButton({
         title={`Supprimer le compte de ${name} ?`}
         body={error ?? "Le compte est supprimé définitivement. Cette action est irréversible."}
         confirmLabel="Supprimer définitivement"
+        // Refusée (historique) : réessayer donnerait la même réponse
+        cancelLabel={error ? "Fermer" : "Annuler"}
+        confirmDisabled={error !== null}
         danger
         loading={loading}
         onCancel={() => setConfirming(false)}

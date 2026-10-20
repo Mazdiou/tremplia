@@ -136,7 +136,10 @@ export async function deleteEmployee(owner: Member, employeeId: string) {
   // Supprime le compte Auth ; le profil part en cascade
   const { error } = await target.admin.auth.admin.deleteUser(employeeId);
   if (error) {
-    throw new ApiError(409, "Suppression impossible : ce compte a un historique. Gardez-le désactivé.");
+    throw new ApiError(
+      409,
+      "Ce membre a déjà travaillé sur des dossiers (notes, paiements, documents…). Pour garder cet historique, son compte ne peut pas être supprimé. Désactivé, il ne peut plus se connecter.",
+    );
   }
 
   await logActivity(target.admin, {

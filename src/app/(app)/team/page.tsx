@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { PageContainer, PageHeader, Panel, StatusPill } from "@/components/page-ui";
 import { DeleteEmployeeButton } from "@/features/team/components/delete-employee-button";
 import { createClient } from "@/lib/supabase/server";
@@ -12,6 +13,58 @@ import { plural } from "@/lib/plural";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Équipe" };
+
+type TeamMember = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  is_active: boolean;
+};
+
+// Une ligne de la liste : identité, rôle, état et actions du patron
+function MemberRow({
+  member: m,
+  email,
+  canManage,
+}: {
+  member: TeamMember;
+  email: string;
+  canManage: boolean;
+}) {
+  return (
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-5 py-3 last:border-b-0">
+      <span
+        aria-hidden
+        className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-foreground"
+      >
+        {initialsOf(m.first_name, m.last_name)}
+      </span>
+      <div className="min-w-0 flex-1 basis-48">
+        <p className="truncate text-sm font-medium">{fullName(m.first_name, m.last_name)}</p>
+        <p className="truncate text-xs text-muted-foreground">{email}</p>
+      </div>
+      <span className="w-20 text-sm text-muted-foreground max-md:hidden">
+        {m.role === "owner" ? "Patron" : "Employé"}
+      </span>
+      <span className="w-24">
+        <StatusPill tone={m.is_active ? "ok" : "off"}>
+          {m.is_active ? "Actif" : "Désactivé"}
+        </StatusPill>
+      </span>
+      <div className="flex min-w-44 flex-wrap justify-end gap-2 max-md:w-full max-md:justify-start">
+        {canManage && (
+          <>
+            {m.role === "employee" && !m.is_active && (
+              <DeleteEmployeeButton id={m.id} name={fullName(m.first_name, m.last_name)} />
+            )}
+            <ToggleActiveButton id={m.id} isActive={m.is_active} />
+          </>
+        )}
+      </div>
+    </li>
+  );
+}
 
 export default async function TeamPage() {
   const caller = await requireOwner();
@@ -34,77 +87,66 @@ export default async function TeamPage() {
     }),
   );
 
-  const list = members ?? [];
+  const list = (members ?? []) as TeamMember[];
+  // Les anciens membres (désactivés) s'accumulent au fil des années : ils
+  // sont rangés à part, dans une section repliée
+  const active = list.filter((m) => m.is_active);
+  const former = list.filter((m) => !m.is_active);
   // Abonnement expiré : l'équipe se consulte, mais ne se modifie plus
   const readOnly = subscription.state === "expired";
+  const row = (m: TeamMember) => (
+    <MemberRow
+      key={m.id}
+      member={m}
+      email={emails.get(m.id) ?? ""}
+      canManage={m.id !== caller.userId && !readOnly}
+    />
+  );
 
   return (
     <PageContainer>
       <PageHeader
         title="Équipe"
-        subtitle={`${plural(list.length, "membre")} · seul le patron gère l'équipe`}
+        subtitle={`${plural(active.length, "membre actif", "membres actifs")} · seul le patron gère l'équipe`}
       />
 
       <div className="space-y-5">
         <Panel
           title="Membres"
-          description="Un employé qui a créé des dossiers, documents ou notes se désactive : il ne peut plus être supprimé."
+          description="Un employé qui part se désactive : il ne peut plus se connecter, et tout ce qu'il a fait reste dans l'historique."
         >
-          <ul>
-            {list.map((m) => (
-              <li
-                key={m.id}
-                className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-5 py-3 last:border-b-0"
-              >
-                <span
-                  aria-hidden
-                  className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-foreground"
-                >
-                  {initialsOf(m.first_name, m.last_name)}
-                </span>
-                <div className="min-w-0 flex-1 basis-48">
-                  <p className="truncate text-sm font-medium">
-                    {fullName(m.first_name, m.last_name)}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {emails.get(m.id) ?? ""}
-                  </p>
-                </div>
-                <span className="w-20 text-sm text-muted-foreground max-md:hidden">
-                  {m.role === "owner" ? "Patron" : "Employé"}
-                </span>
-                <span className="w-24">
-                  <StatusPill tone={m.is_active ? "ok" : "off"}>
-                    {m.is_active ? "Actif" : "Désactivé"}
-                  </StatusPill>
-                </span>
-                <div className="flex min-w-44 flex-wrap justify-end gap-2 max-md:w-full max-md:justify-start">
-                  {m.id !== caller.userId && !readOnly && (
-                    <>
-                      {m.role === "employee" && !m.is_active && (
-                        <DeleteEmployeeButton
-                          id={m.id}
-                          name={fullName(m.first_name, m.last_name)}
-                        />
-                      )}
-                      <ToggleActiveButton id={m.id} isActive={m.is_active} />
-                    </>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <ul>{active.map(row)}</ul>
         </Panel>
+
+        {former.length > 0 && (
+          <details className="group overflow-hidden rounded-2xl border bg-card [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none">
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">
+                  Anciens membres ({former.length})
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Comptes désactivés. Seul un compte sans historique peut être supprimé.
+                </span>
+              </span>
+              <ChevronDown
+                aria-hidden
+                className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <ul className="border-t">{former.map(row)}</ul>
+          </details>
+        )}
 
         {!readOnly && (
           <Panel
             title="Ajouter un employé"
             description={
-              list.length <= 1
+              active.length <= 1
                 ? "Vous êtes seul pour l'instant. Chaque employé a son compte et travaille sur les mêmes dossiers ; un mot de passe temporaire est créé, qu'il remplace à sa première connexion."
                 : "Un mot de passe temporaire est créé : l'employé le remplace à sa première connexion."
             }
-            highlight={list.length <= 1}
+            highlight={active.length <= 1}
           >
             <AddEmployeeForm />
           </Panel>
