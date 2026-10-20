@@ -150,6 +150,59 @@ test("copie des documents sur l'ordinateur", async () => {
   expect(files.some((f) => /^[^/]+\/[^/]+\//.test(f) && f.endsWith(`/${folder}/passeport.pdf`))).toBe(true);
 });
 
+test("photos assemblées en un PDF de plusieurs pages", async () => {
+  await page.goto(`${caseUrl}/documents`);
+  // Deux photos (portrait puis paysage) dessinées par le navigateur
+  const photo = (width: number, height: number, color: string) =>
+    page.evaluate(
+      ({ width, height, color }) => {
+        const c = document.createElement("canvas");
+        c.width = width;
+        c.height = height;
+        const ctx = c.getContext("2d")!;
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = "#000";
+        ctx.font = "80px sans-serif";
+        ctx.fillText("Relevé de notes", 40, 200);
+        return c.toDataURL("image/png").split(",")[1];
+      },
+      { width, height, color },
+    );
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Choisir des fichiers" }).click();
+  await (await chooser).setFiles([
+    { name: "IMG_0001.png", mimeType: "image/png", buffer: Buffer.from(await photo(1500, 2000, "#fde68a"), "base64") },
+    { name: "IMG_0002.png", mimeType: "image/png", buffer: Buffer.from(await photo(2000, 1500, "#bfdbfe"), "base64") },
+  ]);
+
+  const composer = page.getByRole("region", { name: "Photos à transformer en PDF" });
+  await expect(composer.getByText("2 photos à transformer en PDF")).toBeVisible();
+  // La deuxième photo passe en premier, puis revient
+  await composer.getByRole("button", { name: "Avancer la page 2" }).click();
+  await expect(composer.getByRole("img").first()).toHaveAttribute("alt", "Page 1 : IMG_0002.png");
+  await composer.getByRole("button", { name: "Reculer la page 1" }).click();
+  await expect(composer.getByRole("img").first()).toHaveAttribute("alt", "Page 1 : IMG_0001.png");
+
+  await composer.getByLabel("Nom du document").fill("Relevé de notes");
+  await composer.getByRole("button", { name: "Créer le PDF" }).click();
+  await expect(page.getByRole("button", { name: "Ouvrir Relevé de notes" })).toBeVisible();
+  await expect(composer).toBeHidden();
+
+  // Le fichier enregistré est un PDF de deux pages contenant les photos en JPEG
+  // (lien signé lu dans la réponse : le navigateur de test n'affiche pas les PDF)
+  const opened = page.waitForResponse((r) => /\/documents\/[0-9a-f-]{36}\/open$/.test(r.url()));
+  const popup = page.waitForEvent("popup");
+  await page.getByRole("button", { name: "Ouvrir Relevé de notes" }).click();
+  const { url } = (await (await opened).json()) as { url: string };
+  await (await popup).close();
+  const res = await page.request.get(url);
+  const pdf = (await res.body()).toString("latin1");
+  expect(pdf.startsWith("%PDF-")).toBe(true);
+  expect(pdf).toContain("/Count 2");
+  expect(pdf.match(/\/Filter \/DCTDecode/g)).toHaveLength(2);
+});
+
 test("ouverture de l'espace candidat", async () => {
   await page.goto(caseUrl);
   await page.getByRole("button", { name: "Ouvrir l'accès" }).click();

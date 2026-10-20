@@ -6,8 +6,16 @@ import { FolderPlus, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDragAutoScroll } from "@/features/documents/drag-autoscroll";
 import { pdfProblem, uploadDocument, uploadSummary } from "@/features/documents/upload";
+import {
+  MAX_PHOTOS_PER_PDF,
+  PhotoError,
+  isImageFile,
+  photoNameOf,
+  photosToPdf,
+} from "@/features/documents/photo-pdf";
 import { callApi } from "@/lib/api-client";
 import { DownloadArchiveButton } from "./download-archive-button";
+import { PhotoComposer, usePhotoPages, type ComposeMode } from "./photo-composer";
 import { CaseCopyButton, useAutoCaseCopy } from "@/features/local-copy/components/case-copy-button";
 import { CopyTip } from "@/features/local-copy/components/copy-tip";
 import {
@@ -63,6 +71,10 @@ export function DocumentsPanel({
 
   const [message, setMessage] = useState<ActionMessage>(null);
   const [uploading, setUploading] = useState<string | null>(null);
+  // Photos à assembler en PDF, et le dossier qui recevra le résultat
+  const photos = usePhotoPages();
+  const [photoFolder, setPhotoFolder] = useState<string | null>(null);
+  const [composing, setComposing] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   // Un seul document à la fois est renommé, déplacé ou en attente de
   // confirmation de suppression
@@ -103,13 +115,28 @@ export function DocumentsPanel({
     return map;
   }, [docs, folderIds]);
 
+  // Envoi des PDF tels quels ; les photos attendent dans l'assemblage, qui
+  // garde le dossier choisi pour les premières photos
   async function uploadFiles(files: File[], folderId: string | null = null) {
+    if (inputRef.current) inputRef.current.value = "";
     if (files.length === 0) return;
     setMessage(null);
+
+    const images = files.filter(isImageFile);
+    const others = files.filter((f) => !isImageFile(f));
+    let skippedPhotos = 0;
+    if (images.length > 0) {
+      if (photos.pages.length === 0) setPhotoFolder(folderId);
+      skippedPhotos = photos.add(images);
+    }
+    if (others.length === 0) {
+      if (skippedPhotos > 0) say(tooManyPhotos(skippedPhotos), true);
+      return;
+    }
+
     let added = 0;
     let lastError: string | null = null;
-
-    for (const file of files) {
+    for (const file of others) {
       const problem = pdfProblem(file);
       if (problem) {
         lastError = `${file.name} : ${problem}`;
@@ -122,10 +149,63 @@ export function DocumentsPanel({
     }
 
     setUploading(null);
+    if (skippedPhotos > 0) lastError = tooManyPhotos(skippedPhotos);
     const summary = uploadSummary(added, lastError);
     say(summary.text, summary.error);
     if (added > 0) router.refresh();
-    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  function tooManyPhotos(skipped: number) {
+    return `${MAX_PHOTOS_PER_PDF} photos au plus à la fois : ${skipped} laissée(s) de côté`;
+  }
+
+  // Crée le ou les PDF à partir des photos, puis les envoie
+  async function composePhotos(mode: ComposeMode, name: string) {
+    const pages = photos.pages;
+    if (pages.length === 0) return;
+    setMessage(null);
+    const single = pages.length === 1 ? photoNameOf(pages[0].file.name) : "Document scanné";
+    const groups =
+      mode === "single"
+        ? [{ name: name.trim().slice(0, 120) || single, pages }]
+        : pages.map((p) => ({ name: photoNameOf(p.file.name), pages: [p] }));
+
+    let added = 0;
+    let lastError: string | null = null;
+    const sent: string[] = [];
+    for (const [g, group] of groups.entries()) {
+      const files = group.pages.map((p) => p.file);
+      const prefix = groups.length > 1 ? `Document ${g + 1} sur ${groups.length} · ` : "";
+      try {
+        const bytes = await photosToPdf(files, (n) =>
+          setComposing(
+            files.length > 1
+              ? `${prefix}Préparation de la page ${n} sur ${files.length}…`
+              : `${prefix}Préparation du PDF…`,
+          ),
+        );
+        setComposing(`${prefix}Envoi de « ${group.name} »…`);
+        const pdf = new File([bytes as BlobPart], `${group.name}.pdf`, { type: "application/pdf" });
+        const error = await uploadDocument(base, pdf, photoFolder);
+        if (error) {
+          lastError = `${group.name} : ${error}`;
+        } else {
+          added += 1;
+          sent.push(...group.pages.map((p) => p.id));
+        }
+      } catch (e) {
+        lastError = e instanceof PhotoError ? e.message : "La préparation du PDF a échoué, réessayez";
+      }
+    }
+
+    setComposing(null);
+    const summary = uploadSummary(added, lastError);
+    say(summary.text, summary.error);
+    if (added > 0) router.refresh();
+    // Les photos envoyées quittent l'assemblage, qui se ferme une fois vide ;
+    // les autres restent pour pouvoir réessayer
+    if (added === groups.length) photos.clear();
+    else sent.forEach(photos.remove);
   }
 
   // --- Documents ---------------------------------------------------------------
@@ -406,7 +486,7 @@ export function DocumentsPanel({
         ) : (
           <>
             <Upload className="size-5" aria-hidden />
-            <p>Glissez des PDF ici</p>
+            <p>Glissez des PDF ou des photos ici</p>
             <Button
               variant="outline"
               size="sm"
@@ -415,15 +495,16 @@ export function DocumentsPanel({
               Choisir des fichiers
             </Button>
             <p className="text-xs">
-              PDF uniquement, 10 Mo maximum. Ajoutés sans dossier : pour les
-              ranger tout de suite, déposez-les sur un dossier ci-dessous.
+              PDF ou photos (JPG, PNG), 10 Mo maximum par document. Les photos
+              sont assemblées en PDF avant l&apos;envoi. Ajoutés sans dossier : pour
+              les ranger tout de suite, déposez-les sur un dossier ci-dessous.
             </p>
           </>
         )}
         <input
           ref={inputRef}
           type="file"
-          accept="application/pdf,.pdf"
+          accept="application/pdf,.pdf,image/*"
           multiple
           className="hidden"
           onChange={(e) =>
@@ -431,6 +512,23 @@ export function DocumentsPanel({
           }
         />
       </div>
+
+      {photos.pages.length > 0 && (
+        <PhotoComposer
+          pages={photos.pages}
+          folderName={folders.find((f) => f.id === photoFolder)?.name ?? null}
+          busy={composing !== null}
+          progress={composing}
+          onAdd={(files) => {
+            const skipped = photos.add(files.filter(isImageFile));
+            if (skipped > 0) say(tooManyPhotos(skipped), true);
+          }}
+          onRemove={photos.remove}
+          onMove={photos.move}
+          onCancel={photos.clear}
+          onSubmit={(mode, name) => void composePhotos(mode, name)}
+        />
+      )}
 
       {docs.length > 0 && <CopyTip />}
 

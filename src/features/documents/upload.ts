@@ -8,7 +8,7 @@ import { DOCUMENTS_BUCKET, MAX_DOCUMENT_BYTES } from "./schemas";
 
 // Fichier refusé avant tout envoi : la raison, sinon null
 export function pdfProblem(file: Pick<File, "name" | "size">): string | null {
-  if (!/\.pdf$/i.test(file.name)) return "seuls les fichiers PDF sont acceptés";
+  if (!/\.pdf$/i.test(file.name)) return "seuls les PDF et les photos sont acceptés";
   if (file.size < 1 || file.size > MAX_DOCUMENT_BYTES) {
     return "le fichier doit faire 10 Mo au maximum";
   }

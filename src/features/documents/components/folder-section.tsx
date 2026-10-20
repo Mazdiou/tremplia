@@ -11,7 +11,7 @@ import type { FolderItem } from "./documents-panel";
 export type FolderMode = "view" | "rename" | "confirm";
 
 export type FolderActions = {
-  // Ajouter des PDF dans ce dossier (null : « Sans dossier »)
+  // Ajouter des PDF ou des photos dans ce dossier (null : « Sans dossier »)
   addFiles: (folderId: string | null) => void;
   startRename: (f: FolderItem) => void;
   rename: (f: FolderItem, value: string) => void;
@@ -122,8 +122,8 @@ export function FolderSection({
                 variant="ghost"
                 size="icon-sm"
                 onClick={() => actions.addFiles(folder?.id ?? null)}
-                aria-label={`Ajouter des PDF dans ${title}`}
-                title="Ajouter des PDF dans ce dossier"
+                aria-label={`Ajouter des documents dans ${title}`}
+                title="Ajouter des PDF ou des photos dans ce dossier"
               >
                 <Plus />
               </Button>
@@ -158,7 +158,7 @@ export function FolderSection({
         (count === 0 ? (
           <p className="border-t px-3 py-3 text-xs text-muted-foreground">
             {folder
-              ? "Dossier vide : déposez des PDF ici."
+              ? "Dossier vide : déposez des PDF ou des photos ici."
               : "Déposez ici un document pour le sortir de son dossier."}
           </p>
         ) : (
