@@ -4,7 +4,10 @@ import { EmptyState } from "@/components/empty-state";
 import { NewCaseLink, PageContainer, PageHeader } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { countdownLabel, timeline } from "@/features/campaigns/timeline";
-import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
+import {
+  listCampaignDates,
+  listCampaigns,
+} from "@/features/campaigns/server/queries";
 import { requireMember } from "@/lib/auth/require-member";
 import { isReadOnly } from "@/features/subscription/server/subscription";
 import { formatLongDate, todayInAppTimezone } from "@/lib/dates";
@@ -16,7 +19,10 @@ export const metadata: Metadata = { title: "Dossiers" };
 
 // Aucun dossier sélectionné : les dates des campagnes actives
 export default async function CasesHomePage() {
-  const [member, campaigns] = await Promise.all([requireMember(), listCampaigns()]);
+  const [member, campaigns] = await Promise.all([
+    requireMember(),
+    listCampaigns(),
+  ]);
   const active = campaigns.filter((c) => c.status === "active");
   const today = todayInAppTimezone();
   const [readOnly, dates] = await Promise.all([
@@ -53,7 +59,7 @@ export default async function CasesHomePage() {
     <PageContainer width="narrow">
       <PageHeader
         title="Dossiers"
-        subtitle="Choisissez un dossier dans l'arbre, ou consultez les échéances de vos campagnes."
+        subtitle="Choisissez un dossier dans l'arbre."
         actions={!readOnly && <NewCaseLink />}
       />
       {active.map((campaign) => {
