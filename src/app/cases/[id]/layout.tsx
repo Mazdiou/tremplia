@@ -12,7 +12,7 @@ import {
   STATUS_LABELS,
   labelOf,
 } from "@/features/cases/labels";
-import { displayName, initialsOf } from "@/lib/names";
+import { displayName } from "@/lib/names";
 import { mergePlatforms } from "@/features/cases/platforms";
 import { listUsedPlatforms } from "@/features/cases/server/lookups";
 import { getCase } from "@/features/cases/server/get-case";
@@ -136,58 +136,50 @@ export default async function CaseLayout({
             }
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex min-w-0 items-start gap-3">
-                <span
-                  aria-hidden
-                  className="mt-0.5 grid size-11 shrink-0 place-items-center rounded-full bg-accent text-sm font-semibold text-accent-foreground max-sm:hidden"
-                >
-                  {initialsOf(c.first_name, c.last_name)}
-                </span>
-                <div className="min-w-0">
-                  {title}
-                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                    <span>{summary}</span>
-                    {groups.length > 0 && (
-                      <ul className="flex flex-wrap gap-1.5" aria-label="Groupes">
-                        {groups.map((g) => (
-                          <li
-                            key={g.id}
-                            className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground"
-                          >
-                            {g.name}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                  <ul className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" aria-label="Contacts">
+              <div className="min-w-0">
+                {title}
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                  <span>{summary}</span>
+                  {groups.length > 0 && (
+                    <ul className="flex flex-wrap gap-1.5" aria-label="Groupes">
+                      {groups.map((g) => (
+                        <li
+                          key={g.id}
+                          className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground"
+                        >
+                          {g.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <ul className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" aria-label="Contacts">
+                  <li className="flex items-center gap-1">
+                    <Phone className="size-3.5 text-muted-foreground" aria-hidden />
+                    <a href={telHref(c.phone)} className="touch-target hover:underline">
+                      {c.phone}
+                    </a>
+                    <WhatsAppMenu
+                      phone={c.phone}
+                      recipient={displayName(c.first_name, c.last_name)}
+                      context={whatsapp}
+                    />
+                  </li>
+                  {c.secondary_contact_name && c.secondary_contact_phone && (
                     <li className="flex items-center gap-1">
-                      <Phone className="size-3.5 text-muted-foreground" aria-hidden />
-                      <a href={telHref(c.phone)} className="touch-target hover:underline">
-                        {c.phone}
+                      <UserRound className="size-3.5 text-muted-foreground" aria-hidden />
+                      <span className="text-muted-foreground">{c.secondary_contact_name} ·</span>
+                      <a href={telHref(c.secondary_contact_phone)} className="hover:underline">
+                        {c.secondary_contact_phone}
                       </a>
                       <WhatsAppMenu
-                        phone={c.phone}
-                        recipient={displayName(c.first_name, c.last_name)}
-                        context={whatsapp}
+                        phone={c.secondary_contact_phone}
+                        recipient={c.secondary_contact_name}
+                        context={{ ...whatsapp, parent: c.secondary_contact_name }}
                       />
                     </li>
-                    {c.secondary_contact_name && c.secondary_contact_phone && (
-                      <li className="flex items-center gap-1">
-                        <UserRound className="size-3.5 text-muted-foreground" aria-hidden />
-                        <span className="text-muted-foreground">{c.secondary_contact_name} ·</span>
-                        <a href={telHref(c.secondary_contact_phone)} className="hover:underline">
-                          {c.secondary_contact_phone}
-                        </a>
-                        <WhatsAppMenu
-                          phone={c.secondary_contact_phone}
-                          recipient={c.secondary_contact_name}
-                          context={{ ...whatsapp, parent: c.secondary_contact_name }}
-                        />
-                      </li>
-                    )}
-                  </ul>
-                </div>
+                  )}
+                </ul>
               </div>
               <div className="flex items-center gap-2 max-sm:w-full">
                 {/* Abonnement expiré : rien à modifier */}
