@@ -6,28 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { callApi } from "@/lib/api-client";
-
-function CopyButton({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(value);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        } catch {
-          // copie impossible : le mot de passe reste affiché
-        }
-      }}
-    >
-      {copied ? "Copié" : "Copier"}
-    </Button>
-  );
-}
+import { CopyButton } from "./copy-button";
 
 export function AddEmployeeForm() {
   const router = useRouter();

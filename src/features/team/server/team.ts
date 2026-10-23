@@ -75,6 +75,48 @@ async function findEmployee(owner: Member, employeeId: string) {
   return { admin, role: data.role as string, isActive: data.is_active as boolean };
 }
 
+// Nouveau mot de passe temporaire pour un employé actif (oublié, pas
+// d'accès à sa boîte mail) : l'ancien cesse de marcher, ses sessions sont
+// fermées et il devra en choisir un à sa prochaine connexion. Renvoie le mot
+// de passe, montré une seule fois au patron.
+export async function resetEmployeePassword(owner: Member, employeeId: string) {
+  if (employeeId === owner.userId) {
+    throw new ApiError(400, "Changez votre propre mot de passe dans les réglages");
+  }
+  const target = await findEmployee(owner, employeeId);
+  if (target.role !== "employee") {
+    throw new ApiError(400, "Seul un compte employé peut recevoir un mot de passe temporaire");
+  }
+  if (!target.isActive) throw new ApiError(400, "Réactivez d'abord ce compte");
+  const { admin } = target;
+
+  const password = temporaryPassword();
+  const { error: pwError } = await admin.auth.admin.updateUserById(employeeId, { password });
+  if (pwError) {
+    reportError("[team password]", pwError.code ?? pwError.status);
+    throw new ApiError(500, "Opération impossible");
+  }
+
+  const { error: flagError } = await admin
+    .from("profiles")
+    .update({ must_change_password: true })
+    .eq("id", employeeId)
+    .eq("agency_id", owner.agencyId);
+  if (flagError) {
+    reportError("[team password]", flagError.code);
+    throw new ApiError(500, "Opération impossible");
+  }
+
+  await logActivity(admin, {
+    agencyId: owner.agencyId,
+    actorId: owner.userId,
+    action: "employee.password_reset",
+    targetType: "profile",
+    targetId: employeeId,
+  });
+  return password;
+}
+
 // Désactiver / réactiver un employé, jamais soi-même (règles revérifiées par
 // set_employee_active)
 export async function setEmployeeActive(owner: Member, employeeId: string, isActive: boolean) {

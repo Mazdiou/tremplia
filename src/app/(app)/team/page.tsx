@@ -8,6 +8,7 @@ import { requireOwner } from "@/lib/auth/require-member";
 import { fullName, initialsOf } from "@/lib/names";
 import { AddEmployeeForm } from "@/features/team/components/add-employee-form";
 import { ToggleActiveButton } from "@/features/team/components/toggle-active-button";
+import { ResetPasswordButton } from "@/features/team/components/reset-password-button";
 import { EmployeePermissions } from "@/features/team/components/employee-permissions";
 import { parsePermissions, type Permission } from "@/lib/permissions";
 import { getSubscription } from "@/features/subscription/server/subscription";
@@ -64,6 +65,10 @@ function MemberRow({
               <DeleteEmployeeButton id={m.id} name={name} />
             )}
             <ToggleActiveButton id={m.id} isActive={m.is_active} />
+            {/* En dernier : le mot de passe créé s'affiche sous les boutons */}
+            {m.role === "employee" && m.is_active && (
+              <ResetPasswordButton id={m.id} name={name} />
+            )}
           </>
         )}
       </div>

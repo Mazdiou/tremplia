@@ -489,6 +489,22 @@ test("un employé qui a un historique ne peut pas être supprimé", async ({ bro
 
   await page.goto("/team");
   const row = page.getByRole("listitem").filter({ hasText: name });
+
+  // Mot de passe oublié : le patron lui en donne un temporaire
+  await row.getByRole("button", { name: "Nouveau mot de passe" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Créer le mot de passe" }).click();
+  const reset = (await row.getByRole("status").locator("code").textContent())!.trim();
+  const again = await browser.newPage();
+  await again.goto("/login");
+  await again.getByLabel("Adresse e-mail").fill(email);
+  await again.getByLabel("Mot de passe", { exact: true }).fill("E2e-employe-mdp-2");
+  await again.getByRole("button", { name: "Se connecter" }).click();
+  await expect(again.getByText("E-mail ou mot de passe incorrect.")).toBeVisible();
+  await again.getByLabel("Mot de passe", { exact: true }).fill(reset);
+  await again.getByRole("button", { name: "Se connecter" }).click();
+  await expect(again).toHaveURL(/\/change-password$/);
+  await again.close();
+
   await row.getByRole("button", { name: "Désactiver" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Désactiver" }).click();
 
@@ -510,6 +526,8 @@ test("mot de passe oublié : lien reçu par e-mail puis nouveau mot de passe", a
   const visitor = await browser.newPage();
   await visitor.goto("/login");
   await visitor.getByRole("link", { name: "Mot de passe oublié ?" }).click();
+  // Sinon l'adresse peut être tapée dans la page de connexion, pas encore quittée
+  await expect(visitor.getByRole("heading", { name: "Mot de passe oublié" })).toBeVisible();
   await visitor.getByLabel("Adresse e-mail").fill(owner.email);
   await visitor.getByRole("button", { name: "Recevoir le lien" }).click();
   await expect(visitor.getByRole("heading", { name: "Vérifiez votre boîte mail" })).toBeVisible();
