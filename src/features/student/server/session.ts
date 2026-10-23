@@ -5,13 +5,14 @@ import { timingSafeEqual } from "node:crypto";
 import { ApiError } from "@/lib/api-errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { signSession } from "./keys";
+import { STUDENT_COOKIE } from "../session-hint";
 import { reportError } from "@/lib/report-error";
 
 // Session du candidat : un cookie signé par le serveur, séparé de la
 // session des employés (Supabase Auth). Revérifiée à chaque affichage :
 // accès fermé, nouveau code ou dossier abandonné la rendent invalide.
 
-export const STUDENT_COOKIE = "sf_student";
+export { STUDENT_COOKIE };
 const MAX_AGE = 7 * 24 * 3600;
 
 type Payload = { c: string; a: string; g: number; e: number };

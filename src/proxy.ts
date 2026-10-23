@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { publicEnv } from "@/lib/env";
+import { STUDENT_COOKIE, hasStudentSessionHint } from "@/features/student/session-hint";
 
 // Pages publiques. Une personne déjà connectée qui les ouvre est envoyée sur
 // son tableau de bord (la page d'accueil « / » comprise).
@@ -66,6 +67,12 @@ export async function proxy(request: NextRequest) {
 
   // Visiteur non connecté
   if (!userId) {
+    // Appli installée rouverte (iPhone : elle repart toujours du tableau de
+    // bord) par un candidat qui y était connecté : son espace, pas la
+    // connexion de l'agence
+    if (path === "/dashboard" && hasStudentSessionHint(request.cookies.get(STUDENT_COOKIE)?.value)) {
+      return redirectTo("/student");
+    }
     if (!isPublic && !isApi) return redirectTo("/login");
     return response;
   }
