@@ -18,6 +18,7 @@ import { InstallAppCard } from "@/features/pwa/components/install-app-card";
 import { LiveRefresh } from "@/components/live-refresh";
 import { PushKeeper } from "@/features/notifications/components/push-keeper";
 import { pushPublicKey } from "@/features/notifications/server/push";
+import { StudentNotificationsButton } from "@/features/notifications/components/student-notifications-button";
 import { telHref } from "@/lib/phone";
 
 export const metadata: Metadata = {
@@ -31,6 +32,8 @@ export const metadata: Metadata = {
 // motivation et de ses formations.
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const session = await requireStudent();
+  const publicKey = pushPublicKey();
+  const owner = `case:${session.caseId}`;
   const [{ c, agency }, review, hasContent, fingerprint, unread, readOnly] = await Promise.all([
     getStudentCase(),
     readReview(session.agencyId, session.caseId),
@@ -43,13 +46,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <LiveRefresh />
-      {pushPublicKey() && (
-        <PushKeeper
-          publicKey={pushPublicKey()!}
-          deviceUrl="/api/student/push"
-          owner={`case:${session.caseId}`}
-        />
-      )}
+      {publicKey && <PushKeeper publicKey={publicKey} deviceUrl="/api/student/push" owner={owner} />}
       <header className="z-10 border-b bg-background/95 backdrop-blur sm:sticky sm:top-0">
         <div className="mx-auto max-w-4xl px-4 md:px-8">
           <div className="flex h-14 items-center justify-between gap-3">
@@ -60,6 +57,13 @@ export default async function StudentLayout({ children }: { children: React.Reac
               </span>
             </div>
             <div className="flex items-center gap-1">
+              {publicKey && !readOnly && (
+                <StudentNotificationsButton
+                  publicKey={publicKey}
+                  owner={owner}
+                  agencyName={agency.name}
+                />
+              )}
               <ThemeToggle className="size-9 rounded-xl text-muted-foreground" />
               <StudentLogout />
             </div>

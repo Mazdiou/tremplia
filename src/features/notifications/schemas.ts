@@ -21,6 +21,12 @@ export const pushSubscriptionSchema = pushEndpointSchema.extend({
 
 export type PushSubscriptionInput = z.infer<typeof pushSubscriptionSchema>;
 
+// Essai vers cet appareil ; « delayed » : envoyé après TEST_DELAY_SECONDS,
+// le temps de fermer complètement l'appli pour vérifier qu'il arrive quand
+// même
+export const TEST_DELAY_SECONDS = 15;
+export const pushTestSchema = pushEndpointSchema.extend({ delayed: z.boolean().optional() });
+
 // Choix de chaque membre, pour lui-même
 export const notificationPreferencesSchema = z.object({
   studentMessages: z.boolean(),

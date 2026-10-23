@@ -8,7 +8,7 @@ import { MessageThread } from "@/features/messages/components/message-thread";
 import { getStudentCase, requireStudent } from "@/features/student/server/student-case";
 import { STUDENT_READ_ONLY } from "@/features/subscription/subscription";
 import { isReadOnly } from "@/features/subscription/server/subscription";
-import { PushDevice } from "@/features/notifications/components/push-device";
+import { StudentPushDevice } from "@/features/notifications/components/student-notifications-button";
 import { pushPublicKey } from "@/features/notifications/server/push";
 
 export default async function StudentMessagesPage() {
@@ -27,14 +27,10 @@ export default async function StudentMessagesPage() {
       {/* Notifications des messages de l'agence sur cet appareil */}
       {publicKey && !readOnly && (
         <section aria-label="Notifications" className="rounded-xl border bg-card p-4">
-          <PushDevice
+          <StudentPushDevice
             publicKey={publicKey}
-            deviceUrl="/api/student/push"
-            appName="Mon dossier"
             owner={`case:${session.caseId}`}
-            activateLabel="Être prévenu des nouveaux messages"
-            offLabel={`Recevez une notification à chaque message de ${agency.name}, même l'appli fermée.`}
-            onLabel={`Vous êtes prévenu des messages de ${agency.name} sur cet appareil.`}
+            agencyName={agency.name}
           />
         </section>
       )}

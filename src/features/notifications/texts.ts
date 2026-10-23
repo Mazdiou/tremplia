@@ -16,9 +16,14 @@ export type PushPayload = {
 
 const PREVIEW_LENGTH = 140;
 
+// « de Karim », « d'Atlas Études »
+export function ofName(name: string) {
+  return /^[aeiouhàâäéèêëîïôöûüœ]/i.test(name) ? `d'${name}` : `de ${name}`;
+}
+
 // « Message de Karim », « Message d'Atlas Études »
 export function messageFrom(name: string) {
-  return /^[aeiouhàâäéèêëîïôöûüœ]/i.test(name) ? `Message d'${name}` : `Message de ${name}`;
+  return `Message ${ofName(name)}`;
 }
 
 // Début du message, sur une ligne
@@ -105,11 +110,19 @@ export function agencyMessagePush(agencyName: string, body: string): PushPayload
   };
 }
 
-export function testPush(): PushPayload {
-  return {
-    title: "Notifications activées",
-    body: "Cet appareil recevra les notifications choisies dans Réglages.",
-    url: "/settings#notifications",
-    tag: "test",
-  };
+// Essai : membre (vers Réglages) ou candidat (vers ses messages)
+export function testPush(student = false): PushPayload {
+  return student
+    ? {
+        title: "Notifications activées",
+        body: "Vous serez prévenu ici des messages de votre agence.",
+        url: "/student/messages",
+        tag: "test",
+      }
+    : {
+        title: "Notifications activées",
+        body: "Cet appareil recevra les notifications choisies dans Réglages.",
+        url: "/settings#notifications",
+        tag: "test",
+      };
 }

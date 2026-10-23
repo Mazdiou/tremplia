@@ -43,9 +43,11 @@ function keyBytes(base64url: string) {
   return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 }
 
+// Clé inconnue (navigateur qui ne la donne pas) : considérée comme la même,
+// pour ne jamais retirer un abonnement qui marche peut-être
 function sameKey(subscription: PushSubscription, publicKey: string) {
-  const current = subscription.options.applicationServerKey;
-  if (!current) return false;
+  const current = subscription.options?.applicationServerKey;
+  if (!current) return true;
   const a = new Uint8Array(current);
   const b = keyBytes(publicKey);
   return a.length === b.length && a.every((v, i) => v === b[i]);
@@ -68,13 +70,15 @@ export type SubscribeResult =
 
 // Abonnement de cet appareil, créé s'il manque (autorisation déjà donnée).
 // Le service worker est enregistré au besoin (en développement, il ne l'est
-// pas d'office).
-async function ensureSubscription(publicKey: string) {
+// pas d'office). replaceStale : seulement après un toucher sur « Activer »,
+// car l'iPhone n'accepte de créer un abonnement qu'à ce moment-là ; la
+// réparation automatique ne retire donc jamais rien.
+async function ensureSubscription(publicKey: string, { replaceStale = false } = {}) {
   await navigator.serviceWorker.register("/sw.js", { scope: "/" });
   const registration = await navigator.serviceWorker.ready;
   let subscription = await registration.pushManager.getSubscription();
   // Clés changées sur le serveur : l'ancien abonnement ne sert plus
-  if (subscription && !sameKey(subscription, publicKey)) {
+  if (replaceStale && subscription && !sameKey(subscription, publicKey)) {
     await subscription.unsubscribe();
     subscription = null;
   }
@@ -97,8 +101,9 @@ async function ensureSubscription(publicKey: string) {
 // recrée et le réenregistre alors tout seul.
 
 const DEVICE_KEY = "tremplia.push-device";
-// Réenregistré au plus toutes les 6 heures quand rien n'a changé
-const RESYNC_MS = 6 * 3600 * 1000;
+// Réenregistré au plus toutes les heures quand rien n'a changé (le serveur
+// peut l'avoir retiré : autre appareil déconnecté, mot de passe changé…)
+const RESYNC_MS = 3600 * 1000;
 
 type DeviceMark = { owner: string; endpoint: string; syncedAt: number };
 
@@ -111,12 +116,18 @@ function readMark(): DeviceMark | null {
   }
 }
 
-export function rememberPushDevice(owner: string, endpoint: string) {
+export function rememberPushDevice(owner: string, endpoint: string, syncedAt = Date.now()) {
   try {
-    localStorage.setItem(DEVICE_KEY, JSON.stringify({ owner, endpoint, syncedAt: Date.now() }));
+    localStorage.setItem(DEVICE_KEY, JSON.stringify({ owner, endpoint, syncedAt }));
   } catch {
     // Stockage indisponible : pas de réparation automatique, rien de plus
   }
+}
+
+// À réenregistrer dès la prochaine ouverture (après une déconnexion)
+function markNeedsSync() {
+  const mark = readMark();
+  if (mark) rememberPushDevice(mark.owner, mark.endpoint, 0);
 }
 
 function forgetMark() {
@@ -130,6 +141,15 @@ function forgetMark() {
 // Une réparation à la fois : la suivante attend la précédente (deux
 // abonnements créés en même temps se remplaceraient)
 let queue: Promise<void> = Promise.resolve();
+// Augmenté à chaque déconnexion : une réparation commencée avant ne marque
+// pas l'appareil « à jour » (il doit être réenregistré à la reconnexion)
+let pauses = 0;
+
+// Attendre la réparation en cours, 5 secondes au plus : une déconnexion ne
+// doit jamais rester bloquée
+function settled() {
+  return Promise.race([queue, new Promise<void>((resolve) => setTimeout(resolve, 5000))]);
+}
 
 // Si cet appareil a été activé par ce compte : abonnement recréé s'il a
 // disparu, et réenregistré sur le serveur (deviceUrl, POST) s'il a changé
@@ -148,6 +168,7 @@ export function keepPushDevice(opts: {
 }
 
 async function keep(opts: { publicKey: string; deviceUrl: string; owner: string; force?: boolean }) {
+  const started = pauses;
   const mark = readMark();
   if (!mark || mark.owner !== opts.owner) return;
   if (pushSupport() !== "supported") return;
@@ -162,7 +183,7 @@ async function keep(opts: { publicKey: string; deviceUrl: string; owner: string;
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(subscription),
   });
-  if (res.ok) rememberPushDevice(opts.owner, subscription.endpoint);
+  if (res.ok && pauses === started) rememberPushDevice(opts.owner, subscription.endpoint);
 }
 
 // Demande l'autorisation puis abonne cet appareil. Le service worker est
@@ -179,7 +200,8 @@ export async function subscribePush(publicKey: string): Promise<SubscribeResult>
             : "Autorisation non donnée : réessayez et choisissez « Autoriser ».",
       };
     }
-    return { ok: true, subscription: (await ensureSubscription(publicKey)).toJSON() };
+    const subscription = await ensureSubscription(publicKey, { replaceStale: true });
+    return { ok: true, subscription: subscription.toJSON() };
   } catch {
     return {
       ok: false,
@@ -189,46 +211,53 @@ export async function subscribePush(publicKey: string): Promise<SubscribeResult>
   }
 }
 
-// À la déconnexion : le serveur oublie cet appareil (tant que la session
-// est encore ouverte), puis l'abonnement du navigateur est retiré. `url` :
-// route DELETE qui reçoit { endpoint } (null : l'appareil n'est pas abonné).
-export async function forgetPushDevice(url: string) {
-  // Toujours oublié, même si l'abonnement avait déjà disparu (iPhone) : rien
-  // ne doit le recréer après une déconnexion
-  forgetMark();
-  const subscription = await currentPushSubscription();
-  if (!subscription) return null;
+async function deleteOnServer(url: string, endpoint: string | null) {
   try {
     await fetch(url, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ endpoint: subscription.endpoint }),
+      body: JSON.stringify({ endpoint }),
       keepalive: true,
     });
   } catch {
     // Hors connexion : l'appareil sera retiré au premier envoi refusé
   }
+}
+
+// À la déconnexion : le serveur oublie cet appareil (tant que la session est
+// encore ouverte), plus rien n'arrive. L'appareil reste retenu pour ce
+// compte : à sa prochaine connexion ici, les notifications reviennent toutes
+// seules (un autre compte, lui, ne les reçoit jamais sans les activer).
+export async function pausePushDevice(url: string) {
+  pauses++;
+  // Une réparation en cours (page Réglages ouverte à l'instant) le
+  // réenregistrerait juste après : elle se termine d'abord
+  await settled();
+  const subscription = await currentPushSubscription();
+  if (subscription) await deleteOnServer(url, subscription.endpoint);
+  markNeedsSync();
+}
+
+// « Désactiver » : oublié sur le serveur et sur l'appareil, abonnement retiré
+export async function forgetPushDevice(url: string) {
+  await settled();
+  forgetMark();
+  const subscription = await currentPushSubscription();
+  if (!subscription) return;
+  await deleteOnServer(url, subscription.endpoint);
   await subscription.unsubscribe().catch(() => false);
-  return subscription.endpoint;
 }
 
 // Après « déconnecter les autres appareils » (keepThisDevice) ou à la
-// déconnexion de tous : les appareils concernés ne reçoivent plus les
-// notifications du membre
+// déconnexion de toutes les sessions : les appareils concernés ne reçoivent
+// plus les notifications du membre (chacun les retrouve à sa reconnexion)
 export async function forgetOtherPushDevices({ keepThisDevice }: { keepThisDevice: boolean }) {
+  if (!keepThisDevice) pauses++;
+  await settled();
   const subscription = await currentPushSubscription();
-  try {
-    await fetch("/api/push/device/others", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ endpoint: keepThisDevice ? (subscription?.endpoint ?? null) : null }),
-      keepalive: true,
-    });
-  } catch {
-    // Hors connexion : rien de plus à faire ici
-  }
-  if (!keepThisDevice) {
-    forgetMark();
-    await subscription?.unsubscribe().catch(() => false);
-  }
+  await deleteOnServer(
+    "/api/push/device/others",
+    keepThisDevice ? (subscription?.endpoint ?? null) : null,
+  );
+  if (!keepThisDevice) markNeedsSync();
 }

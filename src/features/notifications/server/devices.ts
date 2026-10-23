@@ -5,11 +5,12 @@ import type { Member } from "@/lib/auth/require-member";
 import type { StudentSession } from "@/features/student/server/session";
 import {
   DEFAULT_PREFERENCES,
+  TEST_DELAY_SECONDS,
   type NotificationPreferences,
   type PushSubscriptionInput,
 } from "../schemas";
 import { testPush } from "../texts";
-import { pushConfigured, sendPush, type PushTarget } from "./push";
+import { pushConfigured, pushInBackground, sendPush, type PushTarget } from "./push";
 import { reportError } from "@/lib/report-error";
 
 // Appareils abonnés et choix de chaque membre. Clé secrète : toujours filtrés
@@ -97,21 +98,49 @@ export async function isMemberDevice(member: Member, endpoint: string) {
   return (await memberDevice(member, endpoint)) !== null;
 }
 
-// Essai, vers cet appareil seulement
-export async function sendTestPush(member: Member, endpoint: string) {
+// Essai, vers cet appareil seulement. Différé : réponse tout de suite, envoi
+// TEST_DELAY_SECONDS plus tard (le résultat n'est alors plus connu de la page).
+async function sendTest(device: PushTarget | null, student: boolean, delayed: boolean) {
   assertConfigured();
-  const device = await memberDevice(member, endpoint);
   // reactivate : le bouton « Activer » revient
   if (!device) {
     throw new ApiError(404, "Notifications non activées sur cet appareil", { reactivate: true });
   }
-  const result = await sendPush([device], testPush());
+  if (delayed) {
+    pushInBackground("push test delayed", async () => {
+      await new Promise((resolve) => setTimeout(resolve, TEST_DELAY_SECONDS * 1000));
+      await sendPush([device], testPush(student));
+    });
+    return;
+  }
+  const result = await sendPush([device], testPush(student));
   if (result.removed > 0) {
     throw new ApiError(410, "Cet appareil n'accepte plus les notifications : réactivez-les", {
       reactivate: true,
     });
   }
   if (result.sent === 0) throw new ApiError(502, "Envoi impossible pour le moment, réessayez");
+}
+
+export async function sendTestPush(member: Member, endpoint: string, delayed = false) {
+  return sendTest(await memberDevice(member, endpoint), false, delayed);
+}
+
+export async function sendStudentTestPush(
+  session: StudentSession,
+  endpoint: string,
+  delayed = false,
+) {
+  const { data, error } = await createAdminClient()
+    .from("push_subscriptions")
+    .select("id, endpoint, p256dh, auth")
+    .eq("endpoint", endpoint)
+    .eq("case_id", session.caseId)
+    .eq("agency_id", session.agencyId)
+    .eq("student_generation", session.generation)
+    .maybeSingle();
+  if (error) throw dbError("push device read", error);
+  return sendTest(data as PushTarget | null, true, delayed);
 }
 
 export async function getPreferences(member: Member): Promise<NotificationPreferences> {

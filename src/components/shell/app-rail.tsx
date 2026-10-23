@@ -37,7 +37,7 @@ export function AppRail({
 
   async function logout() {
     // Déconnexion de toutes les sessions du compte : plus aucun appareil ne
-    // reçoit ses notifications
+    // reçoit ses notifications avant la reconnexion
     await forgetOtherPushDevices({ keepThisDevice: false });
     await createClient().auth.signOut();
     router.replace("/login");

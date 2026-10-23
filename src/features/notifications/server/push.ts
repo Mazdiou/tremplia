@@ -30,6 +30,17 @@ export function pushConfigured() {
 
 export type PushTarget = { id: string; endpoint: string; p256dh: string; auth: string };
 
+// Raison du refus donnée par le service (Apple : {"reason":"BadJwtToken"}),
+// seulement si c'est un simple mot : jamais d'autre contenu dans les logs
+function refusalReason(body: unknown) {
+  try {
+    const reason = (JSON.parse(String(body)) as { reason?: unknown }).reason;
+    return typeof reason === "string" && /^[A-Za-z]{1,40}$/.test(reason) ? reason : null;
+  } catch {
+    return null;
+  }
+}
+
 // Une notification vers chaque appareil. Un appareil que le service ne
 // connaît plus (désabonné, navigateur effacé : 404 ou 410) est retiré.
 // Ne lève jamais : une notification manquée ne doit pas faire échouer
@@ -56,13 +67,18 @@ export async function sendPush(targets: PushTarget[], payload: PushPayload) {
   let firstFailure: string | null = null;
   results.forEach((r, i) => {
     if (r.status === "fulfilled") return;
-    const status = r.reason instanceof WebPushError ? r.reason.statusCode : null;
+    const error = r.reason instanceof WebPushError ? r.reason : null;
+    const status = error?.statusCode ?? null;
     if (status === 404 || status === 410) {
       gone.push(targets[i].id);
       return;
     }
     failed++;
-    firstFailure ??= status ? String(status) : r.reason instanceof Error ? r.reason.name : "erreur";
+    firstFailure ??= status
+      ? [status, refusalReason(error?.body)].filter(Boolean).join(" ")
+      : r.reason instanceof Error
+        ? r.reason.name
+        : "erreur";
   });
 
   if (gone.length > 0) {

@@ -677,9 +677,12 @@ le lisent pas. Code : `src/features/notifications`, affichage par
   reçoit rien.
 - **Appareils** : à activer sur chacun (10 au plus par membre, 5 par
   candidat). Un appareil partagé appartient au dernier qui l'active. Se
-  déconnecter le retire ; « déconnecter les autres appareils » (changement
-  de mot de passe) et la déconnexion depuis le menu les retirent aussi ;
-  un mot de passe temporaire donné par le patron retire ceux de l'employé.
+  déconnecter met l'appareil en pause : rien n'arrive, et les notifications
+  reviennent toutes seules quand **le même compte** se reconnecte ici
+  (jamais pour un autre compte) ; « Désactiver » les coupe pour de bon.
+  « Déconnecter les autres appareils » (changement de mot de passe) et la
+  déconnexion depuis le menu font de même pour les autres appareils ; un mot
+  de passe temporaire donné par le patron retire ceux de l'employé.
   Un appareil que le service ne connaît plus (404, 410) est retiré au
   premier envoi.
 - **iPhone et iPad** (iOS 16.4 ou plus) : seulement dans l'appli installée
@@ -691,11 +694,18 @@ le lisent pas. Code : `src/features/notifications`, affichage par
   envois sans rien afficher.
 - **Réparation automatique** (`PushKeeper`, coquille de l'agence et espace
   candidat) : un appareil activé par ce compte est retenu sur l'appareil ; à
-  l'ouverture et à chaque retour sur l'appli, son abonnement est recréé s'il
-  a disparu et réenregistré s'il a changé (au plus toutes les 6 heures sinon).
-  Se déconnecter ou désactiver l'oublie.
-- **Essai** : « Envoyer un essai » dans Réglages, vers cet appareil
-  seulement.
+  l'ouverture et à chaque retour sur l'appli, il est réenregistré s'il a
+  changé ou après une reconnexion (au plus toutes les heures sinon), et son
+  abonnement recréé s'il a disparu (quand le navigateur l'accepte sans
+  toucher de bouton). Cette réparation ne retire jamais un abonnement.
+  « Désactiver » l'oublie.
+- **Essai** (Réglages, et cloche de l'espace candidat) : « Envoyer un
+  essai », vers cet appareil seulement, ou « Essai dans 15 s » pour fermer
+  complètement l'appli et vérifier que la notification arrive quand même.
+- **Candidat** : cloche « Notifications » dans l'en-tête de son espace, et
+  bouton en haut de ses messages.
+- **Refus d'un service** : le code et la raison (Apple : `BadJwtToken`…)
+  partent au suivi des erreurs (`[push send]`).
 
 ### Mise en place en production (une fois)
 

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BellOff, BellRing, Loader2, Send } from "lucide-react";
+import { BellOff, BellRing, Loader2, Send, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusMessage, type ActionMessage } from "@/components/page-ui";
 import { callApi } from "@/lib/api-client";
+import { TEST_DELAY_SECONDS } from "../schemas";
 import {
   currentPushSubscription,
   forgetPushDevice,
@@ -34,7 +35,7 @@ export function PushDevice({
   publicKey: string | null;
   // POST : activer ; DELETE : désactiver ; <deviceUrl>/status : état
   deviceUrl: string;
-  // Notification d'essai (membres seulement)
+  // Notification d'essai, tout de suite ou différée
   testUrl?: string;
   activateLabel?: string;
   onLabel?: string;
@@ -138,19 +139,24 @@ export function PushDevice({
     setMessage({ text: "Notifications désactivées sur cet appareil.", error: false });
   }
 
-  async function test() {
+  async function test(delayed: boolean) {
     const subscription = await currentPushSubscription();
     if (!subscription || !testUrl) return setState("off");
     setBusy(true);
     setMessage(null);
-    const res = await callApi(testUrl, { body: { endpoint: subscription.endpoint } });
+    const res = await callApi(testUrl, { body: { endpoint: subscription.endpoint, delayed } });
     setBusy(false);
     if (!res.ok) {
       // Appareil plus reconnu par le serveur ou le navigateur : à réactiver
       if (res.data?.reactivate === true) setState("off");
       return setMessage({ text: res.error, error: true });
     }
-    setMessage({ text: "Essai envoyé : la notification arrive dans quelques secondes.", error: false });
+    setMessage({
+      text: delayed
+        ? `Essai dans ${TEST_DELAY_SECONDS} secondes : fermez complètement ${appName} pour vérifier que la notification arrive quand même.`
+        : "Essai envoyé : la notification arrive dans quelques secondes.",
+      error: false,
+    });
   }
 
   return (
@@ -174,10 +180,16 @@ export function PushDevice({
         ) : (
           <>
             {testUrl && (
-              <Button variant="outline" onClick={() => void test()} disabled={busy}>
-                {busy ? <Loader2 className="animate-spin" aria-hidden /> : <Send aria-hidden />}
-                Envoyer un essai
-              </Button>
+              <>
+                <Button variant="outline" onClick={() => void test(false)} disabled={busy}>
+                  {busy ? <Loader2 className="animate-spin" aria-hidden /> : <Send aria-hidden />}
+                  Envoyer un essai
+                </Button>
+                <Button variant="outline" onClick={() => void test(true)} disabled={busy}>
+                  <Timer aria-hidden />
+                  Essai dans {TEST_DELAY_SECONDS} s
+                </Button>
+              </>
             )}
             <Button variant="ghost" onClick={() => void deactivate()} disabled={busy}>
               <BellOff aria-hidden />

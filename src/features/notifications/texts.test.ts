@@ -4,6 +4,7 @@ import {
   assignedTaskPush,
   assignedTasksPush,
   messageFrom,
+  ofName,
   preview,
   studentMessagePush,
   studentReviewPush,
@@ -23,6 +24,13 @@ describe("preview", () => {
     expect(cut).toHaveLength(140);
     expect(cut.endsWith("…")).toBe(true);
     expect(preview("x".repeat(140))).toBe("x".repeat(140));
+  });
+});
+
+describe("ofName", () => {
+  it("de ou d'", () => {
+    expect(ofName("Atlas Études")).toBe("d'Atlas Études");
+    expect(ofName("Yastene")).toBe("de Yastene");
   });
 });
 
@@ -91,6 +99,7 @@ describe("notifications de l'agence", () => {
 
   it("l'essai ouvre Réglages", () => {
     expect(testPush()).toMatchObject({ url: "/settings#notifications" });
+    expect(testPush(true)).toMatchObject({ url: "/student/messages" });
   });
 });
 
