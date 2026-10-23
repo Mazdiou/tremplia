@@ -6,9 +6,10 @@ import { publicEnv } from "@/lib/env";
 // son tableau de bord (la page d'accueil « / » comprise).
 const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password"];
 
-// Lien reçu par e-mail : ouvert avec ou sans session (un patron déjà
-// connecté peut ouvrir le lien de confirmation d'un autre appareil)
-const OPEN_PATHS = ["/auth/confirm"];
+// Ouvertes avec ou sans session : lien reçu par e-mail (un patron déjà
+// connecté peut ouvrir le lien de confirmation d'un autre appareil) et
+// pages légales
+const OPEN_PATHS = ["/auth/confirm", "/mentions-legales", "/conditions", "/confidentialite"];
 
 // Espace candidat : sa propre session (cookie signé), vérifiée par ses pages
 // et ses routes. La session des employés n'y est pas consultée.

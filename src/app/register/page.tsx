@@ -103,6 +103,7 @@ export default function RegisterPage() {
   const [values, setValues] = useState<Values>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   // Inscription réussie : adresse à confirmer, et l'e-mail est-il parti ?
   const [done, setDone] = useState<{ email: string; emailSent: boolean } | null>(null);
 
@@ -132,7 +133,9 @@ export default function RegisterPage() {
     setLoading(true);
     const { confirm, ...payload } = values;
     void confirm;
-    const res = await callApi<{ emailSent?: boolean }>("/api/auth/register", { body: payload });
+    const res = await callApi<{ emailSent?: boolean }>("/api/auth/register", {
+      body: { ...payload, acceptTerms },
+    });
     if (res.ok) {
       // Le mot de passe n'a plus de raison de rester en mémoire
       setValues(EMPTY);
@@ -297,6 +300,27 @@ export default function RegisterPage() {
             required
             {...bind("confirm")}
           />
+
+          <label className="flex items-start gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={acceptTerms}
+              onChange={(e) => setAcceptTerms(e.target.checked)}
+              required
+              className="mt-0.5 size-4 shrink-0 accent-primary"
+            />
+            <span className="text-muted-foreground">
+              J&apos;accepte les{" "}
+              <Link href="/conditions" target="_blank" className="font-medium text-link hover:underline">
+                conditions générales
+              </Link>{" "}
+              et la{" "}
+              <Link href="/confidentialite" target="_blank" className="font-medium text-link hover:underline">
+                politique de confidentialité
+              </Link>
+              .
+            </span>
+          </label>
 
           <div className="flex gap-3">
             <Button

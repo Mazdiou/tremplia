@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { LEGAL_LINKS } from "@/config/legal";
 import {
   ArrowRight,
   Check,
@@ -514,6 +515,14 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
             <Link href="/register" className="py-2 hover:text-foreground">Créer une agence</Link>
             <Link href="/student/login" className="py-2 hover:text-foreground">Espace candidat</Link>
             <Link href="#faq" className="py-2 hover:text-foreground">FAQ</Link>
+            {LEGAL_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className="py-2 hover:text-foreground">
+                {l.label}
+              </Link>
+            ))}
+            <a href={`mailto:${BRAND.email.contact}`} className="py-2 hover:text-foreground">
+              {BRAND.email.contact}
+            </a>
           </nav>
         </div>
       </footer>

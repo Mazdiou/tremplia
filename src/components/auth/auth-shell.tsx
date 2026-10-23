@@ -13,6 +13,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 import { BRAND } from "@/config/brand";
 import { LogoMark } from "@/components/logo-mark";
+import { LEGAL_LINKS } from "@/config/legal";
 
 // Carte « verre » du panneau de présentation
 function Glass({ className, children }: { className?: string; children: ReactNode }) {
@@ -183,6 +184,16 @@ export function AuthShell({
         >
           {children}
         </div>
+        <nav
+          aria-label="Pages légales"
+          className="flex flex-wrap justify-center gap-x-4 gap-y-1 pb-2 text-xs text-muted-foreground"
+        >
+          {LEGAL_LINKS.map((l) => (
+            <Link key={l.href} href={l.href} className="touch-target hover:text-foreground">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
       </main>
     </div>
   );

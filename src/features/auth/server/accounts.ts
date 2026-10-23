@@ -6,6 +6,7 @@ import { ipHash } from "@/features/student/server/keys";
 import type { RegisterInput } from "../schemas";
 import { reportError } from "@/lib/report-error";
 import { sendWelcomeConfirmation } from "./emails";
+import { LEGAL } from "@/config/legal";
 
 // Inscription d'une agence : compte du patron, agence et profil. Essais
 // limités par adresse IP (gardée seulement en empreinte). Le compte reste
@@ -56,6 +57,8 @@ export async function registerAgency(input: RegisterInput, ip: string): Promise<
     action: "agency.created",
     targetType: "agency",
     targetId: agencyId,
+    // Version des conditions acceptées à l'inscription
+    details: { terms: LEGAL.updatedAt },
   });
 
   return sendWelcomeConfirmation(input.email, input.firstName);

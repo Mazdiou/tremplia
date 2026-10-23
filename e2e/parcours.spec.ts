@@ -48,6 +48,7 @@ test("inscription d'une agence puis connexion du patron", async () => {
   await page.getByLabel("Adresse e-mail").fill(owner.email);
   await page.getByLabel("Mot de passe", { exact: true }).fill(owner.password);
   await page.getByLabel("Confirmer le mot de passe").fill(owner.password);
+  await page.getByLabel(/J'accepte les conditions générales/).check();
   await page.getByRole("button", { name: "Créer mon compte" }).click();
   await expect(page.getByRole("heading", { name: "Confirmez votre adresse e-mail" })).toBeVisible();
   await expect(page.getByText(/Un e-mail vient de partir/)).toBeVisible();

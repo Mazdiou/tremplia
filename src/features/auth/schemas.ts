@@ -31,6 +31,7 @@ export const registerSchema = z.object({
   lastName: requiredText(100, "Saisissez votre nom"),
   email: emailSchema,
   password: passwordSchema,
+  acceptTerms: z.literal(true, "Acceptez les conditions pour créer le compte"),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 

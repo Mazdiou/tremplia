@@ -23,10 +23,11 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 12. [Sauvegardes](#sauvegardes)
 13. [Abonnements et administration](#abonnements-et-administration)
 14. [E-mails](#e-mails)
-15. [Application installable (PWA)](#application-installable-pwa)
-16. [Nom et couleurs](#nom-et-couleurs)
-17. [Ajouter un modèle de campagne](#ajouter-un-modèle-de-campagne)
-18. [Glossaire](#glossaire)
+15. [Pages légales](#pages-légales)
+16. [Application installable (PWA)](#application-installable-pwa)
+17. [Nom et couleurs](#nom-et-couleurs)
+18. [Ajouter un modèle de campagne](#ajouter-un-modèle-de-campagne)
+19. [Glossaire](#glossaire)
 
 ---
 
@@ -308,6 +309,7 @@ src/
                         use-browser-value
   config/
     brand.ts            nom, accroche, adresse, e-mails, couleurs
+    legal.ts            éditeur, prestataires, liens des pages légales
     campaign-templates/ modèles de campagne (un fichier par modèle)
   features/<domaine>/
     components/         composants React du domaine
@@ -632,6 +634,19 @@ jamais un administrateur. L'adresse e-mail redevient libre.
    signup »), avec les sujets de `supabase/config.toml`. Ces fichiers sont
    produits par `templates.ts` ; après une modification :
    `WRITE_SUPABASE_TEMPLATES=1 npx vitest run templates`.
+
+---
+
+## Pages légales
+
+`/mentions-legales`, `/conditions` (conditions générales d'utilisation et de
+vente) et `/confidentialite`, ouvertes avec ou sans connexion, liées depuis le
+pied de page de l'accueil et des écrans de connexion. Toutes leurs
+informations variables (éditeur, statut, NIF, immatriculation, contact,
+prestataires, tribunal, date de mise à jour) sont dans `src/config/legal.ts`.
+L'inscription demande d'accepter les conditions ; la date de la version
+acceptée est gardée dans le journal (`agency.created`, détail `terms`).
+Après une modification des conditions, changer `updatedAt`.
 
 ---
 
