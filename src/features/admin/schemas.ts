@@ -32,6 +32,18 @@ export const giftMonthsSchema = z.object({
 });
 export type GiftMonthsInput = z.infer<typeof giftMonthsSchema>;
 
+// Suppression d'une agence : son nom, retapé pour confirmer
+export const deleteAgencySchema = z.object({
+  confirmName: z.string().trim().min(1, "Tapez le nom de l'agence pour confirmer").max(200),
+});
+
+// Le nom retapé correspond-il ? (sans tenir compte des majuscules ni des
+// espaces en trop)
+export function sameAgencyName(typed: string, name: string) {
+  const norm = (v: string) => v.trim().replace(/\s+/g, " ").toLocaleLowerCase("fr");
+  return norm(typed) === norm(name);
+}
+
 export const cancelPlatformPaymentSchema = z.object({
   reason: requiredText(300, "Indiquez le motif de l'annulation"),
 });

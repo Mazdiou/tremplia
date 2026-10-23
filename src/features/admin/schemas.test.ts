@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  deleteAgencySchema,
+  sameAgencyName,
   cancelPlatformPaymentSchema,
   giftMonthsSchema,
   newEndDate,
@@ -55,5 +57,19 @@ describe("newEndDate", () => {
   it("comme la base : fin de mois ramenée au dernier jour", () => {
     expect(newEndDate("2027-01-31T08:00:00Z", 1, now).toISOString()).toBe("2027-02-28T08:00:00.000Z");
     expect(newEndDate("2027-11-30T08:00:00Z", 3, now).toISOString()).toBe("2028-02-29T08:00:00.000Z");
+  });
+});
+
+describe("suppression d'une agence", () => {
+  it("le nom retapé doit correspondre, sans tenir compte des majuscules ni des espaces", () => {
+    expect(sameAgencyName("  agence   HORIZON ", "Agence Horizon")).toBe(true);
+    expect(sameAgencyName("École Étoile", "école étoile")).toBe(true);
+    expect(sameAgencyName("Agence Horizo", "Agence Horizon")).toBe(false);
+    expect(sameAgencyName("", "Agence Horizon")).toBe(false);
+  });
+
+  it("nom vide refusé", () => {
+    expect(deleteAgencySchema.safeParse({ confirmName: "   " }).success).toBe(false);
+    expect(deleteAgencySchema.safeParse({}).success).toBe(false);
   });
 });

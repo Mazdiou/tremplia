@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageContainer, PageHeader, Panel, StatusPill } from "@/components/page-ui";
 import { GiftButton, PaymentButton } from "@/features/admin/components/payment-dialog";
+import { DeleteAgencyButton } from "@/features/admin/components/delete-agency-button";
 import { PaymentsHistory } from "@/features/admin/components/payments-history";
 import {
   listAgencies,
@@ -21,7 +22,7 @@ import { isUuid } from "@/lib/validation";
 
 export const metadata: Metadata = { title: "Agence · Administration" };
 
-// Fiche d'une agence pour l'administrateur : abonnement et paiements
+// Fiche d'une agence pour l'administrateur : abonnement, paiements et suppression
 export default async function AdminAgencyPage({ params }: { params: Promise<{ id: string }> }) {
   const admin = await requirePlatformAdminPage();
   const { id } = await params;
@@ -108,6 +109,21 @@ export default async function AdminAgencyPage({ params }: { params: Promise<{ id
           }))}
         />
       </section>
+
+      {!exempt && (
+        <section className="space-y-3">
+          <h2 className="text-base font-semibold">Suppression</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4">
+            <p className="max-w-xl text-sm text-muted-foreground">
+              Supprime l&apos;agence et tout ce qui la concerne : dossiers, documents, paiements,
+              messages, campagnes, historique et comptes de ses membres. Irréversible.
+            </p>
+            <DeleteAgencyButton
+              agency={{ id: agency.id, name: agency.name, cases: agency.cases, members: agency.members }}
+            />
+          </div>
+        </section>
+      )}
     </PageContainer>
   );
 }

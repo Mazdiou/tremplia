@@ -70,8 +70,8 @@ lettre et de ses formations, et échange avec l'agence par messages.
 
 ### Pour l'administrateur de la plateforme (`/admin`)
 
-Liste des agences, enregistrement des paiements d'abonnement et annulation
-d'un paiement saisi par erreur.
+Liste des agences, enregistrement des paiements d'abonnement, annulation
+d'un paiement saisi par erreur, et suppression définitive d'une agence.
 
 ---
 
@@ -451,6 +451,7 @@ Les migrations (`supabase/migrations/`) sont découpées par domaine :
 | `employee_permissions` | permissions des employés (caisse, campagnes…) |
 | `emails` | limites des e-mails demandés (mot de passe oublié, confirmation), compte lié à une adresse, rappels d'abonnement |
 | `purge_unconfirmed` | suppression des inscriptions jamais confirmées (7 jours) |
+| `delete_agency` | suppression d'une agence par l'administrateur, exception `is_purging()` des règles de protection |
 
 Chaque domaine a son fichier de tests pgTAP dans `supabase/tests/`.
 
@@ -572,6 +573,17 @@ select id from auth.users where email = 'votre-email@exemple.com';
 ```
 
 Pour retirer ce droit : `delete from public.platform_admins where user_id = '…';`.
+
+**Supprimer une agence** (fiche de l'agence dans `/admin`, nom retapé pour
+confirmer) : la fonction SQL `delete_agency` (migration `delete_agency`)
+supprime d'un coup l'agence, tout ce qui lui est rattaché (campagnes,
+dossiers, documents même verrouillés, paiements, messages, historique…) et
+les comptes de connexion de ses membres ; le serveur efface ensuite ses
+fichiers du stockage (`<agence>/…`, envois jamais confirmés compris). Les
+règles de protection habituelles (lecture seule, verrouillage, campagne
+archivée, patron non supprimable) laissent passer cette seule suppression
+(`is_purging()`). Jamais l'agence de l'administrateur. Les données restent
+dans les sauvegardes jusqu'à leur expiration (12 mois au plus).
 
 ---
 

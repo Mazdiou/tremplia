@@ -108,7 +108,7 @@ export default function ConfidentialitePage() {
         <LegalList
           items={[
             "Comptes, dossiers et documents : tant que l'agence utilise le service. Après la fin d'un abonnement, ils restent consultables en lecture seule.",
-            "Sur demande du patron de l'agence, toutes les données de l'agence sont supprimées dans un délai de 30 jours.",
+            "Sur demande du patron de l'agence, toutes les données de l'agence sont supprimées dans un délai de 30 jours ; elles disparaissent ensuite des sauvegardes à mesure que celles-ci expirent (12 mois au plus).",
             `Inscription jamais confirmée : supprimée après ${UNCONFIRMED_DAYS} jours.`,
             "Empreintes d'adresses IP et d'adresses e-mail (limites d'essais) : 1 jour.",
             "Sauvegardes chiffrées : 30 jours pour les quotidiennes, 12 mois pour les mensuelles.",

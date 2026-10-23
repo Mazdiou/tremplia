@@ -5,7 +5,13 @@ import { ApiError, dbError } from "@/lib/api-errors";
 import { requireMember, type Member } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SubscriptionState } from "@/features/subscription/subscription";
-import { GIFT_METHOD, type GiftMonthsInput, type PlatformPaymentInput } from "../schemas";
+import {
+  GIFT_METHOD,
+  sameAgencyName,
+  type GiftMonthsInput,
+  type PlatformPaymentInput,
+} from "../schemas";
+import { DOCUMENTS_BUCKET } from "@/features/documents/schemas";
 import { reportError } from "@/lib/report-error";
 
 // Administrateur de la plateforme : désigné à la main dans la table
@@ -173,4 +179,79 @@ export async function cancelPlatformPayment(
   });
   if (error) throw dbError("admin payment cancel", error, { ...MESSAGES, P0002: "Paiement introuvable" });
   return data as string;
+}
+
+type Storage = ReturnType<ReturnType<typeof createAdminClient>["storage"]["from"]>;
+
+// Tous les fichiers d'une agence dans le stockage : <agence>/<dossier>/<document>.pdf
+// (documents enregistrés et envois jamais confirmés)
+async function listAgencyFiles(storage: Storage, agencyId: string): Promise<string[]> {
+  const PAGE = 1000;
+  async function list(prefix: string) {
+    const names: { name: string; folder: boolean }[] = [];
+    for (let offset = 0; ; offset += PAGE) {
+      const { data, error } = await storage.list(prefix, { limit: PAGE, offset });
+      if (error) throw new ApiError(500, "Lecture des fichiers impossible : rien n'a été supprimé");
+      for (const e of data ?? []) names.push({ name: e.name, folder: e.id === null });
+      if (!data || data.length < PAGE) return names;
+    }
+  }
+  const paths: string[] = [];
+  for (const entry of await list(agencyId)) {
+    if (!entry.folder) {
+      paths.push(`${agencyId}/${entry.name}`);
+      continue;
+    }
+    for (const file of await list(`${agencyId}/${entry.name}`)) {
+      if (!file.folder) paths.push(`${agencyId}/${entry.name}/${file.name}`);
+    }
+  }
+  return paths;
+}
+
+// Supprime une agence et tout ce qui la concerne : données (dans la base,
+// d'un seul coup), comptes de ses membres, puis fichiers du stockage. Le nom
+// retapé doit correspondre. Jamais l'agence de l'administrateur (refusé par
+// la base). Renvoie le nombre de comptes et de fichiers supprimés.
+export async function deleteAgency(adminId: string, agencyId: string, confirmName: string) {
+  const db = createAdminClient();
+  const { data: agency, error: readError } = await db
+    .from("agencies")
+    .select("name")
+    .eq("id", agencyId)
+    .maybeSingle();
+  if (readError) throw dbError("admin delete read", readError);
+  if (!agency) throw new ApiError(404, "Agence introuvable");
+  if (!sameAgencyName(confirmName, agency.name as string)) {
+    throw new ApiError(400, "Le nom tapé ne correspond pas à celui de l'agence", {
+      fields: [{ path: "confirmName", message: "Le nom ne correspond pas" }],
+    });
+  }
+
+  // Liste des fichiers avant la suppression : ensuite, plus rien ne les relie
+  const storage = db.storage.from(DOCUMENTS_BUCKET);
+  const files = await listAgencyFiles(storage, agencyId);
+
+  const { data: users, error } = await db.rpc("delete_agency", {
+    p_admin_id: adminId,
+    p_agency_id: agencyId,
+  });
+  if (error) {
+    throw dbError("admin delete", error, {
+      "42501": "L'agence de l'administrateur ne peut pas être supprimée",
+      P0002: "Agence introuvable",
+    });
+  }
+
+  // Les données sont parties : un fichier resté est orphelin et
+  // inaccessible, signalé sans faire échouer la suppression
+  let removed = 0;
+  for (let i = 0; i < files.length; i += 100) {
+    const chunk = files.slice(i, i + 100);
+    const { error: removeError } = await storage.remove(chunk);
+    if (removeError) reportError("[admin delete] fichiers", removeError.name);
+    else removed += chunk.length;
+  }
+
+  return { users: ((users as string[] | null) ?? []).length, files: removed };
 }
