@@ -17,7 +17,7 @@ type Account = { user_id: string; first_name: string | null; confirmed: boolean;
 
 // Lien de confirmation d'une adresse pas encore confirmée. Le lien
 // « magiclink » d'un compte non confirmé confirme l'adresse en l'ouvrant.
-export async function sendConfirmationLink(email: string, firstName?: string | null) {
+async function sendConfirmationLink(email: string, firstName?: string | null) {
   const { data, error } = await createAdminClient().auth.admin.generateLink({
     type: "magiclink",
     email,

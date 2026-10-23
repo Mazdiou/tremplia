@@ -78,7 +78,7 @@ export function renderEmail(subject: string, content: Content): Email {
 // Lien de connexion envoyé par e-mail : la page /auth/confirm le vérifie
 // (un seul usage, valable 1 heure). « recovery » mène au choix d'un nouveau
 // mot de passe, « email » confirme l'adresse et ouvre la session.
-export type AuthLinkType = "recovery" | "email";
+type AuthLinkType = "recovery" | "email";
 
 export function authLink(site: string, tokenHash: string, type: AuthLinkType) {
   return `${site}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=${type}`;

@@ -445,6 +445,9 @@ Les migrations (`supabase/migrations/`) sont découpées par domaine :
 | `agency_settings` | réglages de l'agence et valeurs des nouvelles campagnes |
 | `case_tasks`, `case_close_tasks` | tâches des dossiers, actions groupées, clôture avec tâches, temps réel des tâches (suppressions comprises) |
 | `onboarding` | guide de démarrage : avancement, guide masqué, mot de bienvenue vu |
+| `gift_months` | mois d'abonnement offerts par l'administrateur |
+| `employee_permissions` | permissions des employés (caisse, campagnes…) |
+| `emails` | limites des e-mails demandés (mot de passe oublié, confirmation), compte lié à une adresse, rappels d'abonnement |
 
 Chaque domaine a son fichier de tests pgTAP dans `supabase/tests/`.
 

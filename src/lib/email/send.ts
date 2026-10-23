@@ -11,7 +11,7 @@ import type { Email } from "./templates";
 // annuler un rappel…). Jamais le contenu dans l'erreur : il porte un lien
 // de connexion.
 
-export class EmailError extends Error {
+class EmailError extends Error {
   constructor(readonly code: string) {
     super(`Envoi d'e-mail impossible (${code})`);
     this.name = "EmailError";
