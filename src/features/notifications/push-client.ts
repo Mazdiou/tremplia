@@ -193,6 +193,9 @@ export async function subscribePush(publicKey: string): Promise<SubscribeResult>
 // est encore ouverte), puis l'abonnement du navigateur est retiré. `url` :
 // route DELETE qui reçoit { endpoint } (null : l'appareil n'est pas abonné).
 export async function forgetPushDevice(url: string) {
+  // Toujours oublié, même si l'abonnement avait déjà disparu (iPhone) : rien
+  // ne doit le recréer après une déconnexion
+  forgetMark();
   const subscription = await currentPushSubscription();
   if (!subscription) return null;
   try {
@@ -205,7 +208,6 @@ export async function forgetPushDevice(url: string) {
   } catch {
     // Hors connexion : l'appareil sera retiré au premier envoi refusé
   }
-  forgetMark();
   await subscription.unsubscribe().catch(() => false);
   return subscription.endpoint;
 }

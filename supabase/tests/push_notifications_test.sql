@@ -203,17 +203,24 @@ update public.case_tasks set done_at = now(), done_by = '11111111-1111-1111-1111
 where title = 'Faite';
 update public.campaigns set status = 'archived' where id = (select old from camp);
 
-select is((select count(*) from public.claim_task_digests('2026-10-23')), 0::bigint,
+-- Seuls les membres de ce test comptent (la base peut contenir d'autres agences)
+create temp table mine as select '11111111-1111-1111-1111-111111111111'::uuid as id;
+grant select on mine to public;
+select is((select count(*) from public.claim_task_digests('2026-10-23') d
+  where d.user_id in (select id from mine)), 0::bigint,
   'récapitulatif non demandé : rien');
 select public.save_notification_preferences((select a from ctx),
   '11111111-1111-1111-1111-111111111111', true, true, true, true);
 select results_eq(
-  $$select user_id, due_today, overdue from public.claim_task_digests('2026-10-23')$$,
+  $$select user_id, due_today, overdue from public.claim_task_digests('2026-10-23')
+    where user_id in (select id from mine)$$,
   $$values ('11111111-1111-1111-1111-111111111111'::uuid, 1, 1)$$,
   'récapitulatif : une du jour, une en retard (ni faite, ni archivée, ni plus tard)');
-select is((select count(*) from public.claim_task_digests('2026-10-23')), 0::bigint,
+select is((select count(*) from public.claim_task_digests('2026-10-23') d
+  where d.user_id in (select id from mine)), 0::bigint,
   'un seul récapitulatif par jour');
-select is((select count(*) from public.claim_task_digests('2026-10-24')), 1::bigint,
+select is((select count(*) from public.claim_task_digests('2026-10-24') d
+  where d.user_id in (select id from mine)), 1::bigint,
   'le lendemain, de nouveau');
 
 -- 5. Suppression de l'agence : appareils et choix partent avec elle -----------------------
