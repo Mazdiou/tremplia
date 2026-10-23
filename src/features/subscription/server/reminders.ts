@@ -18,7 +18,7 @@ type DueRow = {
 };
 
 // Rappels de fin d'essai ou d'abonnement (7 jours et 1 jour avant), lancés
-// une fois par jour (.github/workflows/rappels.yml). Chaque rappel est
+// une fois par jour (.github/workflows/taches-quotidiennes.yml). Chaque rappel est
 // réservé dans la base avant l'envoi : jamais deux fois le même, et libéré
 // si aucun e-mail n'est parti, pour le lancement suivant.
 export async function sendDueReminders(): Promise<{ sent: number; failed: number }> {

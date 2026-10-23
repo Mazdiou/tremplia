@@ -1,0 +1,50 @@
+name: Tâches quotidiennes
+
+# Chaque matin, par l'application :
+# - e-mails de fin d'essai ou d'abonnement (7 jours et 1 jour avant) ;
+# - suppression des inscriptions jamais confirmées depuis 7 jours.
+# Ne dépend pas de l'hébergeur : la même tâche servira sur un autre serveur.
+# Mise en place : README, « E-mails ».
+
+on:
+  schedule:
+    # 7 h UTC = 8 h à Alger
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: taches-quotidiennes
+  cancel-in-progress: false
+
+jobs:
+  taches:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      # Facultatif : adresse du site, https://www.tremplia.com par défaut
+      APP_URL: ${{ secrets.APP_URL }}
+    steps:
+      - name: Tâches configurées ?
+        id: config
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::warning::Tâches non configurées : secret CRON_SECRET manquant (README, section E-mails)"
+          else
+            echo "active=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Rappels de fin d'essai ou d'abonnement
+        if: steps.config.outputs.active == 'true'
+        run: |
+          curl --fail-with-body --silent --show-error --max-time 120 \
+            --retry 2 --retry-delay 30 --retry-all-errors \
+            -X POST -H "Authorization: Bearer $CRON_SECRET" \
+            "${APP_URL:-https://www.tremplia.com}/api/cron/subscription-reminders"
+      - name: Inscriptions jamais confirmées
+        # Même si les rappels ont échoué
+        if: always() && steps.config.outputs.active == 'true'
+        run: |
+          curl --fail-with-body --silent --show-error --max-time 60 \
+            --retry 2 --retry-delay 30 --retry-all-errors \
+            -X POST -H "Authorization: Bearer $CRON_SECRET" \
+            "${APP_URL:-https://www.tremplia.com}/api/cron/purge-unconfirmed"

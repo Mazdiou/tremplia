@@ -5,6 +5,10 @@ import { phoneSchema, requiredText } from "@/lib/validation";
 // leurs routes. 72 caractères : limite de bcrypt, utilisé par Supabase Auth.
 export const MIN_PASSWORD_LENGTH = 8;
 export const MAX_PASSWORD_LENGTH = 72;
+// Inscription sans confirmation de l'adresse : supprimée après ce délai
+// (server/purge.ts)
+export const UNCONFIRMED_DAYS = 7;
+
 export const PASSWORD_TOO_SHORT = `Mot de passe trop court (${MIN_PASSWORD_LENGTH} caractères minimum)`;
 
 export const passwordSchema = z

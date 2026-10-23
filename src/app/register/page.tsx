@@ -28,6 +28,7 @@ import {
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
   PASSWORD_TOO_SHORT,
+  UNCONFIRMED_DAYS,
 } from "@/features/auth/schemas";
 
 type Values = {
@@ -173,6 +174,9 @@ export default function RegisterPage() {
               Rien reçu ? Regardez dans les courriers indésirables.
             </p>
           )}
+          <p className="mt-2 text-sm text-muted-foreground">
+            Sans confirmation sous {UNCONFIRMED_DAYS} jours, l&apos;inscription est annulée.
+          </p>
           <div className="mt-6 flex justify-center">
             <ResendConfirmation email={done.email} />
           </div>

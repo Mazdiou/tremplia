@@ -448,6 +448,7 @@ Les migrations (`supabase/migrations/`) sont découpées par domaine :
 | `gift_months` | mois d'abonnement offerts par l'administrateur |
 | `employee_permissions` | permissions des employés (caisse, campagnes…) |
 | `emails` | limites des e-mails demandés (mot de passe oublié, confirmation), compte lié à une adresse, rappels d'abonnement |
+| `purge_unconfirmed` | suppression des inscriptions jamais confirmées (7 jours) |
 
 Chaque domaine a son fichier de tests pgTAP dans `supabase/tests/`.
 
@@ -583,7 +584,7 @@ depuis `noreply@tremplia.com`, réponse vers `contact@tremplia.com`
 |---|---|---|
 | Confirmation de l'adresse | Inscription d'une agence ; « Renvoyer » sur la connexion et la fin de l'inscription | `src/features/auth/server/emails.ts` |
 | Mot de passe oublié | `/forgot-password` | idem |
-| Rappel de fin d'essai ou d'abonnement | 7 jours puis 1 jour avant, chaque matin à 8 h (`.github/workflows/rappels.yml` → `/api/cron/subscription-reminders`) | `src/features/subscription/server/reminders.ts` |
+| Rappel de fin d'essai ou d'abonnement | 7 jours puis 1 jour avant, chaque matin à 8 h (`.github/workflows/taches-quotidiennes.yml` → `/api/cron/subscription-reminders`) | `src/features/subscription/server/reminders.ts` |
 
 **Liens.** Les jetons viennent de Supabase Auth (`generateLink`, un seul
 usage, 1 heure). Le lien mène à `/auth/confirm`, qui ne vérifie le jeton
@@ -601,6 +602,12 @@ avant l'envoi (`subscription_reminders`) : jamais deux fois le même, libérés
 si l'envoi échoue. Pas de rappel à 7 jours pour une agence inscrite depuis
 moins de 2 jours, ni pour l'agence de l'administrateur.
 
+**Inscriptions jamais confirmées** : chaque matin, la même tâche supprime
+celles de plus de 7 jours (`/api/cron/purge-unconfirmed`, migration
+`purge_unconfirmed`) : compte et agence, seulement si l'agence est restée
+vide (aucun autre membre, campagne, dossier ni paiement d'abonnement) et
+jamais un administrateur. L'adresse e-mail redevient libre.
+
 **En local**, les e-mails arrivent dans Mailpit (`MAILPIT_URL`) :
 <http://127.0.0.1:54324>.
 
@@ -613,7 +620,8 @@ moins de 2 jours, ni pour l'agence de l'administrateur.
    (`node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`).
    Puis redéployer.
 3. **GitHub** (Settings › Secrets and variables › Actions) : `CRON_SECRET`,
-   la même valeur. Sans ce secret, la tâche « Rappels » ne fait rien.
+   la même valeur. Sans ce secret, la tâche « Tâches quotidiennes » ne fait
+   rien.
 4. **Supabase en ligne** : SMTP personnalisé (Authentication › Emails ›
    SMTP Settings : `smtp.resend.com`, port 465, utilisateur `resend`, mot de
    passe = une clé Resend, expéditeur `noreply@tremplia.com`, nom
