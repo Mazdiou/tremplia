@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Geist_Mono, Unbounded } from "next/font/google";
 import "./globals.css";
 import { BRAND } from "@/config/brand";
+import { siteUrl } from "@/lib/site-url";
 import { PwaSetup } from "@/features/pwa/components/pwa-setup";
 
 const sans = Manrope({
@@ -23,10 +24,24 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const DESCRIPTION = "CRM pour agences de démarches d'études à l'étranger";
+
 export const metadata: Metadata = {
+  // Adresse de base des liens absolus (aperçus de liens, plan du site)
+  metadataBase: new URL(siteUrl()),
   // Titre de chaque page suivi du nom de l'application : « Page introuvable · <nom> »
   title: { default: BRAND.name, template: `%s · ${BRAND.name}` },
-  description: "CRM pour agences de démarches d'études à l'étranger",
+  description: DESCRIPTION,
+  // Aperçu d'un lien partagé (WhatsApp, Facebook, LinkedIn…) : l'image vient
+  // de opengraph-image.tsx
+  openGraph: {
+    type: "website",
+    siteName: BRAND.name,
+    locale: "fr_FR",
+    title: `${BRAND.name} · ${BRAND.tagline}`,
+    description: DESCRIPTION,
+  },
+  twitter: { card: "summary_large_image" },
   // Application ajoutée à l'écran d'accueil d'un iPhone : plein écran
   appleWebApp: { capable: true, title: BRAND.name, statusBarStyle: "default" },
   // Ancienne balise, encore lue par les iPhone antérieurs à iOS 16.4

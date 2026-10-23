@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { emailLink } from "./mailpit";
 
 // Parcours principal d'une agence, de l'inscription à l'échange avec le
 // candidat. Les étapes s'enchaînent : chacune part de ce que la précédente a
@@ -48,12 +49,22 @@ test("inscription d'une agence puis connexion du patron", async () => {
   await page.getByLabel("Mot de passe", { exact: true }).fill(owner.password);
   await page.getByLabel("Confirmer le mot de passe").fill(owner.password);
   await page.getByRole("button", { name: "Créer mon compte" }).click();
-  await expect(page.getByRole("heading", { name: "Votre agence est créée" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Confirmez votre adresse e-mail" })).toBeVisible();
+  await expect(page.getByText(/Un e-mail vient de partir/)).toBeVisible();
 
+  // Adresse pas encore confirmée : connexion refusée, avec un nouvel e-mail
+  // proposé
   await page.goto("/login");
   await page.getByLabel("Adresse e-mail").fill(owner.email);
   await page.getByLabel("Mot de passe", { exact: true }).fill(owner.password);
   await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page.getByText(/Confirmez d'abord votre adresse e-mail/)).toBeVisible();
+  await page.getByRole("button", { name: "Renvoyer l'e-mail de confirmation" }).click();
+  await expect(page.getByText("Nouvel e-mail envoyé", { exact: false })).toBeVisible();
+
+  // Le lien reçu confirme l'adresse et ouvre la session
+  await page.goto(await emailLink(owner.email, "Confirmez votre adresse"));
+  await page.getByRole("button", { name: "Confirmer mon adresse" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
 });
 
@@ -492,4 +503,35 @@ test("un employé qui a un historique ne peut pas être supprimé", async ({ bro
   await page.reload();
   await page.getByText(/Anciens membres/).click();
   await expect(row.getByRole("button", { name: "Supprimer" })).toBeVisible();
+});
+
+test("mot de passe oublié : lien reçu par e-mail puis nouveau mot de passe", async ({ browser }) => {
+  const newPassword = "E2e-oublie-mdp-3";
+  const visitor = await browser.newPage();
+  await visitor.goto("/login");
+  await visitor.getByRole("link", { name: "Mot de passe oublié ?" }).click();
+  await visitor.getByLabel("Adresse e-mail").fill(owner.email);
+  await visitor.getByRole("button", { name: "Recevoir le lien" }).click();
+  await expect(visitor.getByRole("heading", { name: "Vérifiez votre boîte mail" })).toBeVisible();
+
+  // Une adresse inconnue reçoit exactement la même réponse
+  await visitor.goto("/forgot-password");
+  await visitor.getByLabel("Adresse e-mail").fill(`inconnu-${run}@e2e.test`);
+  await visitor.getByRole("button", { name: "Recevoir le lien" }).click();
+  await expect(visitor.getByRole("heading", { name: "Vérifiez votre boîte mail" })).toBeVisible();
+
+  const link = await emailLink(owner.email, "mot de passe");
+  await visitor.goto(link);
+  await visitor.getByRole("button", { name: "Continuer" }).click();
+  await expect(visitor).toHaveURL(/\/reset-password$/);
+  await visitor.getByLabel("Nouveau mot de passe").fill(newPassword);
+  await visitor.getByLabel("Confirmer le mot de passe").fill(newPassword);
+  await visitor.getByRole("button", { name: "Enregistrer et me connecter" }).click();
+  await expect(visitor).toHaveURL(/\/dashboard$/);
+
+  // Le lien ne sert qu'une fois
+  await visitor.goto(link);
+  await visitor.getByRole("button", { name: "Continuer" }).click();
+  await expect(visitor.getByRole("heading", { name: "Lien expiré ou déjà utilisé" })).toBeVisible();
+  await visitor.close();
 });

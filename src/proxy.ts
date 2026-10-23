@@ -4,7 +4,11 @@ import { publicEnv } from "@/lib/env";
 
 // Pages publiques. Une personne déjà connectée qui les ouvre est envoyée sur
 // son tableau de bord (la page d'accueil « / » comprise).
-const PUBLIC_PATHS = ["/", "/login", "/register"];
+const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password"];
+
+// Lien reçu par e-mail : ouvert avec ou sans session (un patron déjà
+// connecté peut ouvrir le lien de confirmation d'un autre appareil)
+const OPEN_PATHS = ["/auth/confirm"];
 
 // Espace candidat : sa propre session (cookie signé), vérifiée par ses pages
 // et ses routes. La session des employés n'y est pas consultée.
@@ -13,7 +17,9 @@ function isStudentPath(path: string) {
 }
 
 export async function proxy(request: NextRequest) {
-  if (isStudentPath(request.nextUrl.pathname)) return NextResponse.next();
+  if (isStudentPath(request.nextUrl.pathname) || OPEN_PATHS.includes(request.nextUrl.pathname)) {
+    return NextResponse.next();
+  }
 
   let response = NextResponse.next({ request });
 
@@ -95,9 +101,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Fichiers de l'application installable (manifeste, icônes, service
-  // worker, page hors connexion) et tunnel du suivi des erreurs
-  // (api/rapport) : publics, sans session
+  // worker, page hors connexion), fichiers pour les moteurs de recherche et
+  // les aperçus de liens, routes publiques de l'API (inscription, e-mails,
+  // tâches planifiées, tunnel du suivi des erreurs) : publics, sans session
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/auth/register|api/rapport|manifest.webmanifest|sw.js|icons/|icon|apple-icon|offline).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/auth/register|api/auth/forgot-password|api/auth/confirmation|api/cron/|api/rapport|manifest.webmanifest|sw.js|icons/|icon|apple-icon|offline|robots.txt|sitemap.xml|opengraph-image).*)",
   ],
 };

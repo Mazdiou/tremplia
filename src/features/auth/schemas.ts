@@ -31,3 +31,6 @@ export const registerSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 export const changePasswordSchema = z.object({ password: passwordSchema });
+
+// Mot de passe oublié, nouvel e-mail de confirmation
+export const emailRequestSchema = z.object({ email: emailSchema });

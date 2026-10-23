@@ -7,9 +7,9 @@ import {
   ArrowRight,
   Building2,
   Check,
-  CircleCheck,
   LoaderCircle,
   Mail,
+  MailCheck,
   MapPin,
   Phone,
   User,
@@ -21,6 +21,7 @@ import {
   FormError,
   PasswordField,
 } from "@/components/auth/auth-field";
+import { ResendConfirmation } from "@/components/auth/resend-confirmation";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import {
@@ -101,7 +102,8 @@ export default function RegisterPage() {
   const [values, setValues] = useState<Values>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+  // Inscription réussie : adresse à confirmer, et l'e-mail est-il parti ?
+  const [done, setDone] = useState<{ email: string; emailSent: boolean } | null>(null);
 
   function bind(name: keyof Values) {
     return {
@@ -129,11 +131,11 @@ export default function RegisterPage() {
     setLoading(true);
     const { confirm, ...payload } = values;
     void confirm;
-    const res = await callApi("/api/auth/register", { body: payload });
+    const res = await callApi<{ emailSent?: boolean }>("/api/auth/register", { body: payload });
     if (res.ok) {
       // Le mot de passe n'a plus de raison de rester en mémoire
       setValues(EMPTY);
-      setDone(true);
+      setDone({ email: payload.email.trim().toLowerCase(), emailSent: res.data.emailSent !== false });
       return;
     }
     setError(res.error);
@@ -145,20 +147,40 @@ export default function RegisterPage() {
       <AuthShell compact>
         <div className="text-center">
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-success-bg text-success">
-            <CircleCheck className="size-7" strokeWidth={1.8} />
+            <MailCheck className="size-7" strokeWidth={1.8} />
           </span>
           <h1 className="mt-6 text-2xl font-semibold tracking-tight">
-            Votre agence est créée
+            Confirmez votre adresse e-mail
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Connectez-vous avec votre e-mail et votre mot de passe pour
-            commencer.
+            {done.emailSent ? (
+              <>
+                Votre agence est créée. Un e-mail vient de partir à{" "}
+                <span className="font-medium text-foreground">{done.email}</span> : cliquez
+                sur le lien qu&apos;il contient pour ouvrir votre compte. Le lien est valable
+                1 heure.
+              </>
+            ) : (
+              <>
+                Votre agence est créée, mais l&apos;e-mail de confirmation n&apos;a pas pu
+                partir vers <span className="font-medium text-foreground">{done.email}</span>.
+                Demandez-en un nouveau ci-dessous.
+              </>
+            )}
           </p>
+          {done.emailSent && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Rien reçu ? Regardez dans les courriers indésirables.
+            </p>
+          )}
+          <div className="mt-6 flex justify-center">
+            <ResendConfirmation email={done.email} />
+          </div>
           <Link
             href="/login"
-            className={cn(buttonVariants({ size: "lg" }), "mt-8 w-full")}
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mt-8 w-full")}
           >
-            Se connecter
+            Aller à la connexion
             <ArrowRight />
           </Link>
         </div>

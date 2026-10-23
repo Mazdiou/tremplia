@@ -26,6 +26,12 @@ export function ipHash(ip: string) {
   return hmac("tremplia:student-ip", ip);
 }
 
+// Empreinte d'une adresse e-mail, pour limiter les e-mails envoyés depuis
+// les pages publiques (mot de passe oublié, confirmation) sans la garder
+export function emailHash(email: string) {
+  return hmac("tremplia:email", email.trim().toLowerCase());
+}
+
 // Signature du cookie de session du candidat
 export function signSession(payload: string) {
   return createHmac("sha256", derive("tremplia:student-session"))
