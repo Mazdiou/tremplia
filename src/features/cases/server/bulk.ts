@@ -5,6 +5,7 @@ import type { Member } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MAX_OPEN_TASKS } from "@/features/tasks/schemas";
 import type { BulkCasesInput } from "../schemas";
+import { notifyAssignedTasks } from "@/features/notifications/server/events";
 
 // Actions groupées sur des dossiers de l'agence de l'appelant (étape,
 // responsable, même tâche pour chacun). Les fonctions SQL revérifient
@@ -68,6 +69,11 @@ export async function applyBulkAction(member: Member, input: BulkCasesInput): Pr
       targetId: r.task_id,
       details: { assigned_to: task.assignedTo, bulk: true },
     }));
+    notifyAssignedTasks(
+      member,
+      task,
+      rows.map((r) => ({ caseId: r.case_id, taskId: r.task_id })),
+    );
   } else {
     const assignedTo = input.action.assignedTo;
     const { data, error } = await admin.rpc("set_cases_assignee", {

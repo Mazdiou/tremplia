@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   agencyMessagePush,
   assignedTaskPush,
+  assignedTasksPush,
   messageFrom,
   preview,
   studentMessagePush,
@@ -70,6 +71,14 @@ describe("notifications de l'agence", () => {
       body: "Relevé de notes · BENALI Karim",
       url: `/cases/${CASE}/tasks`,
       tag: "task-t1",
+    });
+  });
+
+  it("même tâche pour plusieurs dossiers : une notification vers la page Tâches", () => {
+    expect(assignedTasksPush("Relevé de notes", "Amine Madiou", 4)).toMatchObject({
+      title: "Tâche confiée par Amine Madiou",
+      body: "Relevé de notes · 4 dossiers",
+      url: "/tasks",
     });
   });
 

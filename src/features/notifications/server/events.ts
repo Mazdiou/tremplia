@@ -7,6 +7,7 @@ import type { Member } from "@/lib/auth/require-member";
 import {
   agencyMessagePush,
   assignedTaskPush,
+  assignedTasksPush,
   studentMessagePush,
   studentReviewPush,
   taskDigestPush,
@@ -91,6 +92,35 @@ export function notifyAssignedTask(
         fullName(actor.firstName, actor.lastName),
         await studentName(admin, actor.agencyId, caseId),
       ),
+    );
+  });
+}
+
+// Même tâche confiée pour plusieurs dossiers d'un coup
+export function notifyAssignedTasks(
+  actor: Member,
+  task: { title: string; assignedTo: string },
+  created: { caseId: string; taskId: string }[],
+) {
+  if (created.length === 0) return;
+  if (created.length === 1) {
+    return notifyAssignedTask(actor, created[0].caseId, {
+      id: created[0].taskId,
+      title: task.title,
+      assignedTo: task.assignedTo,
+    });
+  }
+  if (task.assignedTo === actor.userId) return;
+  pushInBackground("push assigned tasks", async () => {
+    const admin = createAdminClient();
+    const to = await targets(admin, "push_targets_assigned_task", {
+      p_agency_id: actor.agencyId,
+      p_user_id: task.assignedTo,
+    });
+    if (to.length === 0) return;
+    await sendPush(
+      to,
+      assignedTasksPush(task.title, fullName(actor.firstName, actor.lastName), created.length),
     );
   });
 }

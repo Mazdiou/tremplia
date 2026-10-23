@@ -38,15 +38,15 @@ export default async function SettingsPage() {
   // Paiements de l'abonnement : demandés dès maintenant pour l'encart
   if (isOwner) void listPlatformPayments();
   const supabase = await createClient();
+  const publicKey = pushPublicKey();
   const [{ data: claimsData }, subscription, agency, guideHidden, notificationPrefs] =
     await Promise.all([
       supabase.auth.getClaims(),
       getSubscription(member.agencyId),
       isOwner ? getAgencySettings(member.agencyId) : Promise.resolve(null),
       isOwner ? isOnboardingHidden(member.agencyId) : Promise.resolve(true),
-      getPreferences(member),
+      publicKey ? getPreferences(member) : Promise.resolve(null),
     ]);
-  const publicKey = pushPublicKey();
   const email = typeof claimsData?.claims.email === "string" ? claimsData.claims.email : "";
   // Abonnement expiré : tout se consulte, rien ne se modifie (sauf le mot
   // de passe et la connexion, qui protègent le compte)
@@ -105,7 +105,7 @@ export default async function SettingsPage() {
             testUrl="/api/push/test"
             appName={BRAND.name}
           />
-          {publicKey && (
+          {notificationPrefs && (
             <NotificationPreferencesForm
               initial={notificationPrefs}
               isOwner={isOwner}

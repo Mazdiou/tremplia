@@ -72,6 +72,17 @@ export function assignedTaskPush(
   };
 }
 
+// Même tâche pour plusieurs dossiers (mode sélection de l'arbre) : une
+// seule notification, vers la page Tâches
+export function assignedTasksPush(title: string, by: string, count: number): PushPayload {
+  return {
+    title: `Tâche confiée par ${by}`,
+    body: preview(`${title} · ${plural(count, "dossier")}`),
+    url: "/tasks",
+    tag: `tasks-${Date.now()}`,
+  };
+}
+
 // « 2 tâches pour aujourd'hui et 1 en retard »
 export function taskDigestPush(dueToday: number, overdue: number): PushPayload {
   const parts = [

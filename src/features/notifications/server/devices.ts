@@ -10,6 +10,7 @@ import {
 } from "../schemas";
 import { testPush } from "../texts";
 import { pushConfigured, sendPush, type PushTarget } from "./push";
+import { reportError } from "@/lib/report-error";
 
 // Appareils abonnés et choix de chaque membre. Clé secrète : toujours filtrés
 // sur le membre ou le dossier de la session, jamais sur une valeur de la
@@ -120,7 +121,11 @@ export async function getPreferences(member: Member): Promise<NotificationPrefer
     .eq("user_id", member.userId)
     .eq("agency_id", member.agencyId)
     .maybeSingle();
-  if (error) throw dbError("push preferences read", error);
+  // Jamais d'erreur : la page Réglages s'affiche quand même
+  if (error) {
+    reportError("[push preferences read]", error.code);
+    return DEFAULT_PREFERENCES;
+  }
   if (!data) return DEFAULT_PREFERENCES;
   return {
     studentMessages: data.student_messages as boolean,

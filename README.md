@@ -667,7 +667,7 @@ le lisent pas. Code : `src/features/notifications`, affichage par
 |---|---|---|
 | Message d'un candidat | Le responsable du dossier ; s'il n'y en a pas (ou plus d'actif), les patrons | `sendStudentMessage` |
 | Réponse du candidat (validation, demande de modification) | Idem | `submitReview` |
-| Tâche confiée | Le membre chargé de la tâche, quand un collègue la lui confie (création ou changement de responsable) | `createTask`, `updateTask` |
+| Tâche confiée | Le membre chargé de la tâche, quand un collègue la lui confie (création, changement de responsable, ou même tâche pour plusieurs dossiers : une seule notification) | `createTask`, `updateTask`, `applyBulkAction` |
 | Tâches du jour | Chaque matin vers 8 h, le membre qui l'a demandée, s'il a des tâches du jour ou en retard (campagnes actives) | `/api/cron/task-digest` (`.github/workflows/taches-quotidiennes.yml`) |
 | Message de l'agence | Le candidat, sur les appareils activés depuis ses messages, tant que son accès (code) reste le même | `sendAgencyMessage` |
 
