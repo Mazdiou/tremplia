@@ -200,8 +200,8 @@ select is(
       and a.grantee = 'service_role'::regrole
       and a.privilege_type <> 'SELECT'),
   array['activity_log:INSERT', 'document_folders:INSERT', 'documents:DELETE',
-        'documents:INSERT'],
-  'le serveur n''écrit directement que dans le journal et les documents');
+        'documents:INSERT', 'push_subscriptions:DELETE'],
+  'le serveur n''écrit directement que dans le journal, les documents, et retire des appareils abonnés');
 
 select is(
   (select array_agg(c.relname || '.' || att.attname

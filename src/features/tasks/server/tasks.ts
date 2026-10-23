@@ -5,6 +5,7 @@ import {
   type AuthorizedCase,
 } from "@/features/cases/server/authorize-case";
 import { MAX_OPEN_TASKS, type TaskInput } from "@/features/tasks/schemas";
+import { notifyAssignedTask } from "@/features/notifications/server/events";
 
 // Tâches d'un dossier. L'intitulé et la précision ne sont jamais écrits dans
 // le journal ni dans les logs du serveur. Les droits (auteur, responsable,
@@ -59,6 +60,7 @@ export async function createTask(auth: AuthorizedCase, caseId: string, input: Ta
     targetId: data,
     details: { assigned_to: input.assignedTo },
   });
+  notifyAssignedTask(auth.member, caseId, { id: data, title: input.title, assignedTo: input.assignedTo });
   return data;
 }
 
@@ -114,6 +116,11 @@ export async function updateTask(
       targetType: "case_task",
       targetId: taskId,
       details: { from: previous as string, to: input.assignedTo },
+    });
+    notifyAssignedTask(auth.member, caseId, {
+      id: taskId,
+      title: input.title,
+      assignedTo: input.assignedTo,
     });
   }
 }

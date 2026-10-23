@@ -62,7 +62,9 @@ export default function ConfidentialitePage() {
               seulement sous forme d&apos;empreinte illisible pour limiter les essais de connexion,
               d&apos;inscription et les demandes d&apos;e-mail ; journaux techniques de
               l&apos;hébergeur ; rapports d&apos;erreurs, dont les données personnelles sont
-              masquées avant l&apos;envoi.
+              masquées avant l&apos;envoi ; pour les appareils où les notifications sont
+              activées, l&apos;adresse d&apos;envoi donnée par le navigateur et ses clés de
+              chiffrement.
             </>,
           ]}
         />
@@ -74,6 +76,7 @@ export default function ConfidentialitePage() {
             "Fournir le service à l'agence : suivi des dossiers, documents, échanges avec le candidat.",
             "Assurer la sécurité : connexion, limites d'essais, historique, détection des erreurs.",
             "Envoyer les e-mails du service : confirmation de l'adresse, mot de passe oublié, rappels de fin d'essai ou d'abonnement.",
+            "Envoyer les notifications que chacun a activées sur ses appareils, selon ses choix.",
             "Gérer l'abonnement de l'agence.",
           ]}
         />
@@ -102,6 +105,11 @@ export default function ConfidentialitePage() {
           ))}
         />
         <p>Toutes les connexions sont chiffrées (HTTPS).</p>
+        <p>
+          Les notifications, si vous les activez, passent par le service de notification de
+          votre navigateur (Google, Apple ou Mozilla selon l&apos;appareil). Leur contenu est
+          chiffré pour votre appareil : ce service ne peut pas le lire.
+        </p>
       </LegalSection>
 
       <LegalSection title="Combien de temps">
@@ -111,6 +119,7 @@ export default function ConfidentialitePage() {
             "Sur demande du patron de l'agence, toutes les données de l'agence sont supprimées dans un délai de 30 jours ; elles disparaissent ensuite des sauvegardes à mesure que celles-ci expirent (12 mois au plus).",
             `Inscription jamais confirmée : supprimée après ${UNCONFIRMED_DAYS} jours.`,
             "Empreintes d'adresses IP et d'adresses e-mail (limites d'essais) : 1 jour.",
+            "Appareils abonnés aux notifications : jusqu'à leur désactivation ou la déconnexion, ou dès que le navigateur ne les accepte plus.",
             "Sauvegardes chiffrées : 30 jours pour les quotidiennes, 12 mois pour les mensuelles.",
           ]}
         />

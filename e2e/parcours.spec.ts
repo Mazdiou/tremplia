@@ -293,6 +293,19 @@ test("réglages : profil de l'agence et valeurs des nouvelles campagnes", async 
   await expect(page.getByRole("button", { name: "Retirer Pastel" })).toBeVisible();
 });
 
+test("réglages : choix des notifications, gardés pour ce membre", async () => {
+  await page.goto("/settings#notifications");
+  const section = page.locator("#notifications");
+  const daily = section.getByRole("checkbox", { name: /Tâches du jour/ });
+  // Par défaut : tout sauf le récapitulatif du matin
+  await expect(section.getByRole("checkbox", { name: /Messages des candidats/ })).toBeChecked();
+  await expect(daily).not.toBeChecked();
+  await daily.check();
+  await expect(section.getByRole("status").filter({ hasText: "Enregistré." })).toBeVisible();
+  await page.reload();
+  await expect(page.locator("#notifications").getByRole("checkbox", { name: /Tâches du jour/ })).toBeChecked();
+});
+
 test("réglages : changement du mot de passe", async () => {
   const newPassword = "E2e-nouveau-mdp-2";
   await page.goto("/settings");

@@ -11,9 +11,13 @@ const MARK_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(cairnSvg());
 // - « full » : fond plein jusqu'aux bords ; le système découpe lui-même la
 //   forme (iPhone, icône « maskable » d'Android). Le dessin reste dans la
 //   zone centrale sûre (80 %).
-export function appIcon(size: number, shape: "rounded" | "full") {
+// - « badge » : le cairn seul, blanc sur fond transparent : petite icône
+//   des notifications dans la barre d'état d'Android, qui n'en garde que la
+//   silhouette.
+export function appIcon(size: number, shape: "rounded" | "full" | "badge") {
   const full = shape === "full";
-  const mark = Math.round(size * (full ? 0.52 : 0.64));
+  const badge = shape === "badge";
+  const mark = Math.round(size * (badge ? 0.84 : full ? 0.52 : 0.64));
   return new ImageResponse(
     (
       <div
@@ -23,7 +27,7 @@ export function appIcon(size: number, shape: "rounded" | "full") {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: BRAND.colors.primary,
+          background: badge ? "transparent" : BRAND.colors.primary,
           borderRadius: full ? 0 : Math.round(size * 0.22),
         }}
       >

@@ -11,6 +11,11 @@ import { ThemeChoice } from "@/features/settings/components/theme-choice";
 import { getAgencySettings } from "@/features/settings/server/settings";
 import { GuideSetting } from "@/features/onboarding/components/guide-setting";
 import { LocalCopySettings } from "@/features/local-copy/components/local-copy-settings";
+import { NotificationPreferencesForm } from "@/features/notifications/components/notification-preferences";
+import { PushDevice } from "@/features/notifications/components/push-device";
+import { getPreferences } from "@/features/notifications/server/devices";
+import { pushPublicKey } from "@/features/notifications/server/push";
+import { BRAND } from "@/config/brand";
 import { isOnboardingHidden } from "@/features/onboarding/server/onboarding";
 import { DEFAULT_STAGES } from "@/features/stages/stages";
 import { SubscriptionPanel } from "@/features/subscription/components/subscription-panel";
@@ -33,12 +38,15 @@ export default async function SettingsPage() {
   // Paiements de l'abonnement : demandés dès maintenant pour l'encart
   if (isOwner) void listPlatformPayments();
   const supabase = await createClient();
-  const [{ data: claimsData }, subscription, agency, guideHidden] = await Promise.all([
-    supabase.auth.getClaims(),
-    getSubscription(member.agencyId),
-    isOwner ? getAgencySettings(member.agencyId) : Promise.resolve(null),
-    isOwner ? isOnboardingHidden(member.agencyId) : Promise.resolve(true),
-  ]);
+  const [{ data: claimsData }, subscription, agency, guideHidden, notificationPrefs] =
+    await Promise.all([
+      supabase.auth.getClaims(),
+      getSubscription(member.agencyId),
+      isOwner ? getAgencySettings(member.agencyId) : Promise.resolve(null),
+      isOwner ? isOnboardingHidden(member.agencyId) : Promise.resolve(true),
+      getPreferences(member),
+    ]);
+  const publicKey = pushPublicKey();
   const email = typeof claimsData?.claims.email === "string" ? claimsData.claims.email : "";
   // Abonnement expiré : tout se consulte, rien ne se modifie (sauf le mot
   // de passe et la connexion, qui protègent le compte)
@@ -84,6 +92,26 @@ export default async function SettingsPage() {
           description="Retenu sur cet appareil."
         >
           <ThemeChoice />
+        </FormSection>
+
+        <FormSection
+          id="notifications"
+          title="Notifications"
+          description="Sur votre téléphone ou votre ordinateur, même quand Tremplia est fermé. À activer sur chaque appareil. Vos choix ne valent que pour vous."
+        >
+          <PushDevice
+            publicKey={publicKey}
+            deviceUrl="/api/push/device"
+            testUrl="/api/push/test"
+            appName={BRAND.name}
+          />
+          {publicKey && (
+            <NotificationPreferencesForm
+              initial={notificationPrefs}
+              isOwner={isOwner}
+              readOnly={readOnly}
+            />
+          )}
         </FormSection>
 
         <FormSection

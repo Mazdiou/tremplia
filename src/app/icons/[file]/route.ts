@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import { appIcon } from "@/features/pwa/app-icon";
 
-// Icônes du manifeste, générées une fois à la compilation
-const ICONS: Record<string, [number, "rounded" | "full"]> = {
+// Icônes du manifeste et des notifications, générées une fois à la
+// compilation
+const ICONS: Record<string, [number, "rounded" | "full" | "badge"]> = {
   "icon-192.png": [192, "rounded"],
   "icon-512.png": [512, "rounded"],
   "maskable-512.png": [512, "full"],
+  "badge-96.png": [96, "badge"],
 };
 
 export const dynamic = "force-static";

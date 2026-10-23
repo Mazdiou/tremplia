@@ -11,6 +11,7 @@ import {
 import type { StudentSession } from "@/features/student/server/session";
 import type { MessageItem } from "@/features/messages/schemas";
 import { memberNames } from "@/features/team/server/members";
+import { notifyStudent, notifyStudentMessage } from "@/features/notifications/server/events";
 import { reportError } from "@/lib/report-error";
 
 // Conversation d'un dossier entre le candidat et l'agence. Lectures avec la
@@ -92,6 +93,7 @@ export async function sendAgencyMessage(auth: AuthorizedCase, caseId: string, bo
     targetType: "case_message",
     targetId: data,
   });
+  notifyStudent(auth.agencyId, caseId, body);
 }
 
 export async function markReadByAgency(auth: AuthorizedCase, caseId: string) {
@@ -152,6 +154,7 @@ export async function sendStudentMessage(session: StudentSession, body: string) 
     targetId: data,
     caseId: session.caseId,
   });
+  notifyStudentMessage(session.agencyId, session.caseId, body);
 }
 
 export async function markReadByStudent(session: StudentSession) {

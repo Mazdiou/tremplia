@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
 import type { Permission } from "@/lib/permissions";
 import { openSearchPalette } from "./search-palette";
+import { forgetOtherPushDevices } from "@/features/notifications/push-client";
 
 // Taille commune des boutons. Sur téléphone, ils se partagent la largeur de
 // la barre (44 px de haut, assez larges pour le pouce).
@@ -35,6 +36,9 @@ export function AppRail({
   const router = useRouter();
 
   async function logout() {
+    // Déconnexion de toutes les sessions du compte : plus aucun appareil ne
+    // reçoit ses notifications
+    await forgetOtherPushDevices({ keepThisDevice: false });
     await createClient().auth.signOut();
     router.replace("/login");
     router.refresh();

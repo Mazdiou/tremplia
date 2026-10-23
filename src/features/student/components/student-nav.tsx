@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { UnreadBadge } from "@/features/messages/components/unread-badge";
+import { forgetPushDevice } from "@/features/notifications/push-client";
 
 // Libellé court sur téléphone : les trois onglets tiennent sur 320 px
 const TABS = [
@@ -60,6 +61,7 @@ export function StudentLogout() {
       disabled={busy}
       onClick={async () => {
         setBusy(true);
+        await forgetPushDevice("/api/student/push");
         await callApi("/api/student/logout");
         router.replace("/student/login");
         router.refresh();

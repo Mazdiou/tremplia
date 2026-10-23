@@ -8,6 +8,7 @@ import { requireWritableAgency } from "@/features/subscription/server/subscripti
 import type { NewEmployeeInput } from "../schemas";
 import type { Permission } from "@/lib/permissions";
 import { reportError } from "@/lib/report-error";
+import { removeAllDevicesOf } from "@/features/notifications/server/devices";
 
 // Comptes des employés : patron seulement (l'appelant est vérifié par la
 // route, les règles revérifiées par les fonctions SQL). Le compte de
@@ -114,6 +115,10 @@ export async function resetEmployeePassword(owner: Member, employeeId: string) {
     targetType: "profile",
     targetId: employeeId,
   });
+  // Ses appareils ne reçoivent plus rien : il réactivera les notifications
+  // après sa connexion (téléphone perdu, compte repris par un autre…).
+  // Un échec est déjà signalé et ne bloque pas le nouveau mot de passe.
+  await removeAllDevicesOf(owner.agencyId, employeeId).catch(() => {});
   return password;
 }
 

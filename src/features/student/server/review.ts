@@ -9,6 +9,7 @@ import type {
   StudentReviewInput,
 } from "@/features/student/schemas";
 import type { StudentSession } from "./session";
+import { notifyStudentReview } from "@/features/notifications/server/events";
 import { reportError } from "@/lib/report-error";
 
 // Réponse du candidat (« Je valide » ou « Demander une modification »).
@@ -43,6 +44,13 @@ export async function submitReview(session: StudentSession, input: StudentReview
       targetId: session.caseId,
       caseId: session.caseId,
     });
+    notifyStudentReview(
+      session.agencyId,
+      session.caseId,
+      input.decision === "approved"
+        ? { decision: "approved" }
+        : { decision: "changes_requested", message: input.message },
+    );
   }
 }
 

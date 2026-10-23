@@ -3,6 +3,8 @@
 // « Pas de connexion » est mise de côté, pour l'afficher à la place de
 // l'erreur du navigateur quand le réseau manque. Tout le reste passe par le
 // réseau, comme sans service worker.
+// Il affiche aussi les notifications envoyées par le serveur (Web Push,
+// voir src/features/notifications), même quand l'appli est fermée.
 // Changer VERSION quand la page hors connexion change.
 const VERSION = "v1";
 const CACHE = `offline-${VERSION}`;
@@ -43,6 +45,70 @@ self.addEventListener("fetch", (event) => {
         const cached = await caches.match(OFFLINE_URL);
         return cached || Response.error();
       }
+    })(),
+  );
+});
+
+// Notifications ----------------------------------------------------------------
+
+// Contenu envoyé par le serveur : { title, body, url, tag, always? }
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    // Contenu illisible : notification générique ci-dessous
+  }
+  const url = typeof data.url === "string" && data.url.startsWith("/") ? data.url : "/dashboard";
+  event.waitUntil(
+    (async () => {
+      // Page déjà ouverte et regardée : elle se met à jour toute seule
+      // (sauf l'essai, montré même depuis Réglages)
+      const path = new URL(url, self.location.origin).pathname;
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const watching = windows.some(
+        (c) => c.focused && c.visibilityState === "visible" && new URL(c.url).pathname === path,
+      );
+      if (watching && !data.always) return;
+      await self.registration.showNotification(data.title || "Tremplia", {
+        body: data.body || "",
+        tag: data.tag || undefined,
+        // Même tag (plusieurs messages d'un dossier) : remplace l'ancienne et
+        // prévient de nouveau
+        renotify: Boolean(data.tag),
+        icon: "/icons/icon-192.png",
+        badge: "/icons/badge-96.png",
+        lang: "fr",
+        data: { url },
+      });
+    })(),
+  );
+});
+
+// Toucher la notification : ouvre la page, dans une fenêtre déjà ouverte
+// de l'appli si possible
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "/dashboard", self.location.origin);
+  if (target.origin !== self.location.origin) return;
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      // L'espace candidat et celui de l'agence sont deux applis distinctes
+      const student = target.pathname.startsWith("/student");
+      const same = windows.find(
+        (c) => new URL(c.url).pathname.startsWith("/student") === student,
+      );
+      if (same) {
+        try {
+          await same.focus();
+          if (same.url !== target.href) await same.navigate(target.href);
+          return;
+        } catch {
+          // Fenêtre que ce service worker ne contrôle pas : nouvelle fenêtre
+        }
+      }
+      await self.clients.openWindow(target.href);
     })(),
   );
 });

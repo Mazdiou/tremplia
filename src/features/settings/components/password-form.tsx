@@ -7,6 +7,7 @@ import { PasswordField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/api-client";
 import { createClient } from "@/lib/supabase/client";
+import { forgetOtherPushDevices } from "@/features/notifications/push-client";
 import {
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
@@ -65,6 +66,7 @@ export function PasswordForm({ email }: { email: string }) {
       return;
     }
     await supabase.auth.signOut({ scope: "others" });
+    await forgetOtherPushDevices({ keepThisDevice: true });
     setSaving(false);
     setDone(true);
     formEl.reset();

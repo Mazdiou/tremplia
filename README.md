@@ -23,11 +23,12 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 12. [Sauvegardes](#sauvegardes)
 13. [Abonnements et administration](#abonnements-et-administration)
 14. [E-mails](#e-mails)
-15. [Pages légales](#pages-légales)
-16. [Application installable (PWA)](#application-installable-pwa)
-17. [Nom et couleurs](#nom-et-couleurs)
-18. [Ajouter un modèle de campagne](#ajouter-un-modèle-de-campagne)
-19. [Glossaire](#glossaire)
+15. [Notifications](#notifications)
+16. [Pages légales](#pages-légales)
+17. [Application installable (PWA)](#application-installable-pwa)
+18. [Nom et couleurs](#nom-et-couleurs)
+19. [Ajouter un modèle de campagne](#ajouter-un-modèle-de-campagne)
+20. [Glossaire](#glossaire)
 
 ---
 
@@ -52,7 +53,8 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 | **Tableau de bord** | « À traiter », mes tâches, échéances, réponses des formations, activité récente, par campagne. |
 | **Export Excel** | Classeur complet d'une campagne (patron). |
 | **Copie sur l'ordinateur** | Chrome et Edge sur ordinateur : chaque membre choisit un dossier (Réglages › Sur cet ordinateur) où Tremplia recopie les PDF des dossiers en cours, rangés comme l'arbre (campagne / groupe ou « Non classés » / NOM Prénom / dossier de documents), pour les déposer facilement sur les plateformes. Mise à jour à l'ouverture de Tremplia, dès qu'un document change dans un dossier ouvert, ou avec un bouton (Réglages, onglet Documents). Tremplia ne touche qu'aux fichiers qu'il a copiés (liste cachée `.tremplia-copie.json`). |
-| **Réglages** | Mon compte, mot de passe, apparence (thème clair ou sombre, retenu sur l'appareil ; c'est là qu'il se change sur téléphone), copie sur l'ordinateur ; pour le patron, l'agence, les valeurs des nouvelles campagnes, le guide de démarrage et l'abonnement. |
+| **Notifications** | Sur le téléphone ou l'ordinateur, même Tremplia fermé : chaque membre les active sur chacun de ses appareils et choisit pour lui-même (Réglages › Notifications) : messages des candidats et réponses sur la lettre et les formations (dossiers dont il est responsable ; patron : aussi ceux sans responsable actif), tâche confiée par un collègue, tâches du jour chaque matin. Voir [Notifications](#notifications). |
+| **Réglages** | Mon compte, mot de passe, apparence (thème clair ou sombre, retenu sur l'appareil ; c'est là qu'il se change sur téléphone), notifications, copie sur l'ordinateur ; pour le patron, l'agence, les valeurs des nouvelles campagnes, le guide de démarrage et l'abonnement. |
 | **Guide de démarrage** | Mot de bienvenue à la première connexion de chaque membre, puis, pour le patron d'une nouvelle agence, la liste « Bien démarrer » en haut du tableau de bord : six étapes (campagne, dossier, document, espace candidat, tâche, employé) qui se cochent d'après les vraies données et mènent chacune au bon écran. Masquable (pour toute l'agence), réaffichable dans les réglages. Les agences déjà inscrites ne le voient pas. |
 | **Équipe** | Le patron ajoute ses employés (mot de passe temporaire à remplacer à la première connexion), leur donne un nouveau mot de passe temporaire s'ils ont oublié le leur (l'ancien cesse de marcher, leurs sessions sont fermées), les désactive ou les supprime. |
 | **Compte** | Inscription d'une agence confirmée par e-mail (compte fermé avant le clic sur le lien), mot de passe oublié (lien reçu par e-mail), rappels de fin d'essai ou d'abonnement 7 jours et 1 jour avant. Voir [E-mails](#e-mails). |
@@ -66,7 +68,9 @@ SQL.
 
 Connexion avec le code de son dossier, donné par l'agence (sans compte). Le
 candidat consulte ses informations, valide ou demande une modification de sa
-lettre et de ses formations, et échange avec l'agence par messages.
+lettre et de ses formations, et échange avec l'agence par messages. Il peut
+être prévenu des messages de l'agence sur son téléphone (bouton en haut de
+ses messages).
 
 ### Pour l'administrateur de la plateforme (`/admin`)
 
@@ -133,6 +137,7 @@ Modèle : `.env.example`. Aucune vraie valeur ne doit être commitée
 | `SITE_URL` | Facultatif. Adresse publique du site, pour les liens des e-mails, les aperçus de liens et le plan du site. Par défaut `https://www.tremplia.com` (`src/config/brand.ts`) ; en local `http://127.0.0.1:3000`. Jamais déduite de la requête |
 | `RESEND_API_KEY` | Production. Clé Resend (« Sending access », domaine `tremplia.com`) : envoi des e-mails de l'application. Secrète. Sans elle, en production, aucun e-mail ne part (erreur signalée à Sentry) |
 | `MAILPIT_URL` | Local et CI. Boîte de test du Supabase local (`http://127.0.0.1:54324`) : sans clé Resend, les e-mails y arrivent. Sans l'une ni l'autre, hors production, ils sont écrits dans la console |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Clés des notifications (Web Push), créées une fois avec `npx web-push generate-vapid-keys`. La publique est donnée aux navigateurs, la privée est secrète. Sans elles, les notifications ne sont pas proposées. Les changer oblige chacun à les réactiver |
 | `CRON_SECRET` | Production. Secret des tâches planifiées (`/api/cron/…`) : le même dans Vercel et dans les secrets GitHub. Sans lui, ces routes refusent tout |
 | `CLIENT_IP_HEADER` | Facultatif. En-tête qui porte l'IP du visiteur, pour les limites d'essais. Par défaut `x-forwarded-for` (dernière adresse) : correct sur Vercel et derrière nginx ; derrière Cloudflare, `cf-connecting-ip` |
 
@@ -338,7 +343,7 @@ scripts/backup/         sauvegarde chiffrée et restauration
 
 Domaines de `features/` : `admin`, `agency`, `auth`, `campaigns`, `cases`,
 `dashboard`, `documents`, `export`, `history`, `landing`, `local-copy`, `messages`,
-`motivation-letter`, `notes`, `payments`, `programs`, `pwa`, `settings`,
+`motivation-letter`, `notes`, `notifications`, `payments`, `programs`, `pwa`, `settings`,
 `stages`, `student`, `subscription`, `tasks`, `team`, `whatsapp`.
 
 ---
@@ -452,6 +457,7 @@ Les migrations (`supabase/migrations/`) sont découpées par domaine :
 | `emails` | limites des e-mails demandés (mot de passe oublié, confirmation), compte lié à une adresse, rappels d'abonnement |
 | `purge_unconfirmed` | suppression des inscriptions jamais confirmées (7 jours) |
 | `delete_agency` | suppression d'une agence par l'administrateur, exception `is_purging()` des règles de protection |
+| `push_notifications` | appareils abonnés aux notifications, choix de chaque membre, destinataires de chaque événement, récapitulatif du matin |
 
 Chaque domaine a son fichier de tests pgTAP dans `supabase/tests/`.
 
@@ -649,6 +655,52 @@ jamais un administrateur. L'adresse e-mail redevient libre.
 
 ---
 
+## Notifications
+
+Notifications **Web Push** : gratuites, sans application à publier, envoyées
+par le service de notification du navigateur (Google pour Chrome et Android,
+Apple, Mozilla). Leur contenu est chiffré pour l'appareil : ces services ne
+le lisent pas. Code : `src/features/notifications`, affichage par
+`public/sw.js`.
+
+| Notification | Qui la reçoit | Déclenchée par |
+|---|---|---|
+| Message d'un candidat | Le responsable du dossier ; s'il n'y en a pas (ou plus d'actif), les patrons | `sendStudentMessage` |
+| Réponse du candidat (validation, demande de modification) | Idem | `submitReview` |
+| Tâche confiée | Le membre chargé de la tâche, quand un collègue la lui confie (création ou changement de responsable) | `createTask`, `updateTask` |
+| Tâches du jour | Chaque matin vers 8 h, le membre qui l'a demandée, s'il a des tâches du jour ou en retard (campagnes actives) | `/api/cron/task-digest` (`.github/workflows/taches-quotidiennes.yml`) |
+| Message de l'agence | Le candidat, sur les appareils activés depuis ses messages, tant que son accès (code) reste le même | `sendAgencyMessage` |
+
+- **Choix** (Réglages › Notifications) : chaque membre pour lui-même, sur
+  tous ses appareils. Par défaut tout est coché sauf « Tâches du jour ».
+  Un employé désactivé ou qui doit remplacer son mot de passe temporaire ne
+  reçoit rien.
+- **Appareils** : à activer sur chacun (10 au plus par membre, 5 par
+  candidat). Un appareil partagé appartient au dernier qui l'active. Se
+  déconnecter le retire ; « déconnecter les autres appareils » (changement
+  de mot de passe) et la déconnexion depuis le menu les retirent aussi ;
+  un mot de passe temporaire donné par le patron retire ceux de l'employé.
+  Un appareil que le service ne connaît plus (404, 410) est retiré au
+  premier envoi.
+- **iPhone et iPad** (iOS 16.4 ou plus) : seulement dans l'appli installée
+  sur l'écran d'accueil ; Réglages l'explique. Android, ordinateurs : dans
+  le navigateur ou l'appli installée.
+- Les envois partent après la réponse (`after`) : une notification manquée
+  ne fait jamais échouer l'action. Une page ouverte sous les yeux de
+  l'utilisateur ne montre pas la notification qui la concerne.
+- **Essai** : « Envoyer un essai » dans Réglages, vers cet appareil
+  seulement.
+
+### Mise en place en production (une fois)
+
+1. Créer les clés : `npx web-push generate-vapid-keys`.
+2. **Vercel** (Production) : `VAPID_PUBLIC_KEY` et `VAPID_PRIVATE_KEY`,
+   puis redéployer. Garder une copie de la privée hors du dépôt : la
+   changer oblige chacun à réactiver ses notifications.
+3. La migration `push_notifications` doit être appliquée en ligne avant.
+
+---
+
 ## Pages légales
 
 `/mentions-legales`, `/conditions` (conditions générales d'utilisation et de
@@ -669,9 +721,12 @@ Après une modification des conditions, changer `updatedAt`.
 - Icônes générées : `src/features/pwa/app-icon.tsx`.
 - Service worker : `public/sw.js`. Il ne garde aucune donnée, seulement la
   page « Pas de connexion » (`/offline`). Après une modification de cette
-  page, changer `VERSION` dans `public/sw.js`.
+  page, changer `VERSION` dans `public/sw.js`. Il affiche aussi les
+  [notifications](#notifications).
 - Le service worker et l'installation n'existent qu'en production (HTTPS) :
-  rien n'apparaît avec `npm run dev`.
+  rien n'apparaît avec `npm run dev`, sauf si l'on active les notifications
+  (le service worker est alors enregistré à ce moment-là ; `localhost` compte
+  comme sécurisé).
 
 ---
 
