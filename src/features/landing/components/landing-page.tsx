@@ -254,7 +254,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
         id={HERO_ID}
         className="relative overflow-hidden border-b bg-decor pt-16 text-decor-foreground dark:border-transparent"
       >
-        <DecorLayers glowClassName="-top-48 size-[56rem] blur-[140px]" />
+        <DecorLayers glowClassName="-top-80 size-[74rem]" />
 
         <section className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-10 pb-20 sm:px-8 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-32">
           <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
@@ -480,7 +480,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
         {/* Appel final */}
         <section className="px-5 pb-20 sm:px-8 md:pb-28">
           <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl border bg-decor px-6 py-16 text-center text-decor-foreground sm:px-12 dark:border-transparent">
-            <DecorLayers glowClassName="-bottom-40 size-[36rem] blur-[120px]" />
+            <DecorLayers glowClassName="-bottom-64 size-[52rem]" />
             <div className="relative">
               <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
                 Prêt à mettre de l&apos;ordre dans vos dossiers ?

@@ -126,7 +126,7 @@ export function AuthShell({
     <div className="grid min-h-dvh lg:h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:overflow-hidden">
       <aside className="relative hidden overflow-hidden border-r bg-decor p-12 text-decor-foreground lg:flex lg:flex-col dark:border-transparent [@media(max-height:800px)]:p-10">
         {/* Halo et quadrillage discret, estompés vers les bords */}
-        <DecorLayers glowClassName="-top-40 size-[42rem] blur-[120px]" />
+        <DecorLayers glowClassName="-top-64 size-[58rem]" />
 
         {/* Logo : retour à la page d'accueil */}
         <Link href="/" className="relative flex w-fit items-center gap-3 rounded-xl focus-visible:ring-3 focus-visible:ring-decor-foreground/30 focus-visible:outline-none">
