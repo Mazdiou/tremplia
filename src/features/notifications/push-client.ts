@@ -66,6 +66,105 @@ export type SubscribeResult =
   | { ok: true; subscription: PushSubscriptionJSON }
   | { ok: false; error: string };
 
+// Abonnement de cet appareil, créé s'il manque (autorisation déjà donnée).
+// Le service worker est enregistré au besoin (en développement, il ne l'est
+// pas d'office).
+async function ensureSubscription(publicKey: string) {
+  await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+  const registration = await navigator.serviceWorker.ready;
+  let subscription = await registration.pushManager.getSubscription();
+  // Clés changées sur le serveur : l'ancien abonnement ne sert plus
+  if (subscription && !sameKey(subscription, publicKey)) {
+    await subscription.unsubscribe();
+    subscription = null;
+  }
+  return (
+    subscription ??
+    (await withTimeout(
+      registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: keyBytes(publicKey),
+      }),
+      SUBSCRIBE_TIMEOUT,
+    ))
+  );
+}
+
+// --- Appareil activé par ce compte --------------------------------------------
+// Retenu sur l'appareil (owner : membre ou dossier du candidat) : l'abonnement
+// peut disparaître sans que personne l'ait désactivé (Safari sur iPhone le
+// retire parfois, le navigateur peut le renouveler). keepPushDevice le
+// recrée et le réenregistre alors tout seul.
+
+const DEVICE_KEY = "tremplia.push-device";
+// Réenregistré au plus toutes les 6 heures quand rien n'a changé
+const RESYNC_MS = 6 * 3600 * 1000;
+
+type DeviceMark = { owner: string; endpoint: string; syncedAt: number };
+
+function readMark(): DeviceMark | null {
+  try {
+    const mark = JSON.parse(localStorage.getItem(DEVICE_KEY) ?? "null") as DeviceMark | null;
+    return mark && typeof mark.owner === "string" ? mark : null;
+  } catch {
+    return null;
+  }
+}
+
+export function rememberPushDevice(owner: string, endpoint: string) {
+  try {
+    localStorage.setItem(DEVICE_KEY, JSON.stringify({ owner, endpoint, syncedAt: Date.now() }));
+  } catch {
+    // Stockage indisponible : pas de réparation automatique, rien de plus
+  }
+}
+
+function forgetMark() {
+  try {
+    localStorage.removeItem(DEVICE_KEY);
+  } catch {
+    // Rien à faire
+  }
+}
+
+// Une réparation à la fois : la suivante attend la précédente (deux
+// abonnements créés en même temps se remplaceraient)
+let queue: Promise<void> = Promise.resolve();
+
+// Si cet appareil a été activé par ce compte : abonnement recréé s'il a
+// disparu, et réenregistré sur le serveur (deviceUrl, POST) s'il a changé
+// ou de temps en temps (force : tout de suite, page Réglages). Sans effet
+// sinon, et ne lève jamais.
+export function keepPushDevice(opts: {
+  publicKey: string;
+  deviceUrl: string;
+  owner: string;
+  force?: boolean;
+}) {
+  queue = queue.then(() => keep(opts)).catch(() => {
+    // Hors connexion, service indisponible : nouvel essai plus tard
+  });
+  return queue;
+}
+
+async function keep(opts: { publicKey: string; deviceUrl: string; owner: string; force?: boolean }) {
+  const mark = readMark();
+  if (!mark || mark.owner !== opts.owner) return;
+  if (pushSupport() !== "supported") return;
+  // Autorisation retirée dans les réglages du téléphone : plus rien à garder
+  if (notificationPermission() !== "granted") return forgetMark();
+  const subscription = (await ensureSubscription(opts.publicKey)).toJSON();
+  if (!subscription.endpoint) return;
+  const recent = Date.now() - mark.syncedAt < RESYNC_MS;
+  if (!opts.force && subscription.endpoint === mark.endpoint && recent) return;
+  const res = await fetch(opts.deviceUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(subscription),
+  });
+  if (res.ok) rememberPushDevice(opts.owner, subscription.endpoint);
+}
+
 // Demande l'autorisation puis abonne cet appareil. Le service worker est
 // enregistré au besoin (en développement, il ne l'est pas d'office).
 export async function subscribePush(publicKey: string): Promise<SubscribeResult> {
@@ -80,22 +179,7 @@ export async function subscribePush(publicKey: string): Promise<SubscribeResult>
             : "Autorisation non donnée : réessayez et choisissez « Autoriser ».",
       };
     }
-    await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-    const registration = await navigator.serviceWorker.ready;
-    let subscription = await registration.pushManager.getSubscription();
-    // Clés changées sur le serveur : l'ancien abonnement ne sert plus
-    if (subscription && !sameKey(subscription, publicKey)) {
-      await subscription.unsubscribe();
-      subscription = null;
-    }
-    subscription ??= await withTimeout(
-      registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: keyBytes(publicKey),
-      }),
-      SUBSCRIBE_TIMEOUT,
-    );
-    return { ok: true, subscription: subscription.toJSON() };
+    return { ok: true, subscription: (await ensureSubscription(publicKey)).toJSON() };
   } catch {
     return {
       ok: false,
@@ -121,6 +205,7 @@ export async function forgetPushDevice(url: string) {
   } catch {
     // Hors connexion : l'appareil sera retiré au premier envoi refusé
   }
+  forgetMark();
   await subscription.unsubscribe().catch(() => false);
   return subscription.endpoint;
 }
@@ -140,5 +225,8 @@ export async function forgetOtherPushDevices({ keepThisDevice }: { keepThisDevic
   } catch {
     // Hors connexion : rien de plus à faire ici
   }
-  if (!keepThisDevice) await subscription?.unsubscribe().catch(() => false);
+  if (!keepThisDevice) {
+    forgetMark();
+    await subscription?.unsubscribe().catch(() => false);
+  }
 }

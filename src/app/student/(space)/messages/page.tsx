@@ -31,6 +31,7 @@ export default async function StudentMessagesPage() {
             publicKey={publicKey}
             deviceUrl="/api/student/push"
             appName="Mon dossier"
+            owner={`case:${session.caseId}`}
             activateLabel="Être prévenu des nouveaux messages"
             offLabel={`Recevez une notification à chaque message de ${agency.name}, même l'appli fermée.`}
             onLabel={`Vous êtes prévenu des messages de ${agency.name} sur cet appareil.`}

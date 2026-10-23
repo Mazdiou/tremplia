@@ -89,8 +89,8 @@ describe("notifications de l'agence", () => {
     expect(taskDigestPush(0, 1)).toMatchObject({ body: "1 tâche en retard", url: "/tasks" });
   });
 
-  it("l'essai se montre même depuis Réglages", () => {
-    expect(testPush()).toMatchObject({ always: true, url: "/settings#notifications" });
+  it("l'essai ouvre Réglages", () => {
+    expect(testPush()).toMatchObject({ url: "/settings#notifications" });
   });
 });
 

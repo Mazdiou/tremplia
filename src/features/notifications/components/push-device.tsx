@@ -8,8 +8,10 @@ import { callApi } from "@/lib/api-client";
 import {
   currentPushSubscription,
   forgetPushDevice,
+  keepPushDevice,
   notificationPermission,
   pushSupport,
+  rememberPushDevice,
   subscribePush,
 } from "../push-client";
 
@@ -26,6 +28,7 @@ export function PushDevice({
   onLabel = "Activées sur cet appareil.",
   offLabel = "Pas encore activées sur cet appareil.",
   appName,
+  owner,
 }: {
   // null : notifications pas encore configurées sur le serveur
   publicKey: string | null;
@@ -38,6 +41,8 @@ export function PushDevice({
   offLabel?: string;
   // Nom de l'icône sur l'écran d'accueil (iPhone)
   appName: string;
+  // Compte qui active cet appareil (membre, ou dossier du candidat)
+  owner: string;
 }) {
   const [state, setState] = useState<State>("loading");
   const [busy, setBusy] = useState(false);
@@ -52,6 +57,9 @@ export function PushDevice({
       if (support !== "supported") next = support;
       else if (notificationPermission() === "denied") next = "denied";
       else {
+        // Abonnement disparu tout seul (iPhone, ou retiré par le serveur) :
+        // recréé et réenregistré avant de lire l'état
+        await keepPushDevice({ publicKey, deviceUrl, owner, force: true });
         const subscription = await currentPushSubscription();
         if (!subscription) next = "off";
         else {
@@ -60,6 +68,8 @@ export function PushDevice({
             body: { endpoint: subscription.endpoint },
           });
           next = res.ok && res.data.registered ? "on" : "off";
+          // Activé avant que l'appareil soit retenu : il l'est désormais
+          if (next === "on") rememberPushDevice(owner, subscription.endpoint);
         }
       }
       if (!cancelled) setState(next);
@@ -67,7 +77,7 @@ export function PushDevice({
     return () => {
       cancelled = true;
     };
-  }, [publicKey, deviceUrl]);
+  }, [publicKey, deviceUrl, owner]);
 
   if (!publicKey) {
     return <Notice>Les notifications ne sont pas encore disponibles.</Notice>;
@@ -114,6 +124,7 @@ export function PushDevice({
     const res = await callApi(deviceUrl, { body: result.subscription });
     setBusy(false);
     if (!res.ok) return setMessage({ text: res.error, error: true });
+    if (result.subscription.endpoint) rememberPushDevice(owner, result.subscription.endpoint);
     setState("on");
     setMessage({ text: "Notifications activées.", error: false });
   }

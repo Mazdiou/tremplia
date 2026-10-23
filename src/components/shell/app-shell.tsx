@@ -8,6 +8,8 @@ import { LiveRefresh } from "@/components/live-refresh";
 import { LocalCopyProvider } from "@/features/local-copy/components/local-copy-provider";
 import { NewCaseShortcut } from "@/features/cases/components/new-case-shortcut";
 import { myTaskCounts } from "@/features/tasks/server/read";
+import { PushKeeper } from "@/features/notifications/components/push-keeper";
+import { pushPublicKey } from "@/features/notifications/server/push";
 import { AppRail } from "./app-rail";
 import { SearchPalette } from "./search-palette";
 
@@ -36,6 +38,7 @@ export async function ShellFrame({
 }) {
   // Pastille de « Tâches » : mes tâches en retard et du jour
   const tasks = await myTaskCounts(member.userId);
+  const publicKey = pushPublicKey();
   return (
     // Copie des documents sur l'ordinateur : Réglages, fiche du candidat et
     // rattrapage à l'ouverture
@@ -48,6 +51,9 @@ export async function ShellFrame({
           permissions={effectivePermissions(member)}
         />
         <NewCaseShortcut />
+        {publicKey && (
+          <PushKeeper publicKey={publicKey} deviceUrl="/api/push/device" owner={member.userId} />
+        )}
         <AppRail
           isOwner={member.isOwner}
           permissions={effectivePermissions(member)}

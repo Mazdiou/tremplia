@@ -104,6 +104,7 @@ export default async function SettingsPage() {
             deviceUrl="/api/push/device"
             testUrl="/api/push/test"
             appName={BRAND.name}
+            owner={member.userId}
           />
           {notificationPrefs && (
             <NotificationPreferencesForm

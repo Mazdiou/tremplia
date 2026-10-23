@@ -51,7 +51,10 @@ self.addEventListener("fetch", (event) => {
 
 // Notifications ----------------------------------------------------------------
 
-// Contenu envoyé par le serveur : { title, body, url, tag, always? }
+// Contenu envoyé par le serveur : { title, body, url, tag }.
+// Chaque envoi affiche TOUJOURS une notification : Safari (iPhone) retire
+// l'abonnement d'un site qui reçoit des envois sans rien afficher, et
+// Chrome affiche alors un message générique à la place.
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -61,27 +64,17 @@ self.addEventListener("push", (event) => {
   }
   const url = typeof data.url === "string" && data.url.startsWith("/") ? data.url : "/dashboard";
   event.waitUntil(
-    (async () => {
-      // Page déjà ouverte et regardée : elle se met à jour toute seule
-      // (sauf l'essai, montré même depuis Réglages)
-      const path = new URL(url, self.location.origin).pathname;
-      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-      const watching = windows.some(
-        (c) => c.focused && c.visibilityState === "visible" && new URL(c.url).pathname === path,
-      );
-      if (watching && !data.always) return;
-      await self.registration.showNotification(data.title || "Tremplia", {
-        body: data.body || "",
-        tag: data.tag || undefined,
-        // Même tag (plusieurs messages d'un dossier) : remplace l'ancienne et
-        // prévient de nouveau
-        renotify: Boolean(data.tag),
-        icon: "/icons/icon-192.png",
-        badge: "/icons/badge-96.png",
-        lang: "fr",
-        data: { url },
-      });
-    })(),
+    self.registration.showNotification(data.title || "Tremplia", {
+      body: data.body || "",
+      tag: data.tag || undefined,
+      // Même tag (plusieurs messages d'un dossier) : remplace l'ancienne et
+      // prévient de nouveau
+      renotify: Boolean(data.tag),
+      icon: "/icons/icon-192.png",
+      badge: "/icons/badge-96.png",
+      lang: "fr",
+      data: { url },
+    }),
   );
 });
 

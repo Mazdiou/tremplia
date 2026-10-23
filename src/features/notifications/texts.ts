@@ -12,8 +12,6 @@ export type PushPayload = {
   // Une notification du même tag remplace la précédente (plusieurs
   // messages d'un même dossier = une seule notification)
   tag: string;
-  // Montrée même si la page visée est ouverte sous les yeux (essai)
-  always?: boolean;
 };
 
 const PREVIEW_LENGTH = 140;
@@ -113,6 +111,5 @@ export function testPush(): PushPayload {
     body: "Cet appareil recevra les notifications choisies dans Réglages.",
     url: "/settings#notifications",
     tag: "test",
-    always: true,
   };
 }

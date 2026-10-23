@@ -686,8 +686,14 @@ le lisent pas. Code : `src/features/notifications`, affichage par
   sur l'écran d'accueil ; Réglages l'explique. Android, ordinateurs : dans
   le navigateur ou l'appli installée.
 - Les envois partent après la réponse (`after`) : une notification manquée
-  ne fait jamais échouer l'action. Une page ouverte sous les yeux de
-  l'utilisateur ne montre pas la notification qui la concerne.
+  ne fait jamais échouer l'action. Chaque envoi affiche **toujours** une
+  notification : Safari (iPhone) retire l'abonnement d'un site qui reçoit des
+  envois sans rien afficher.
+- **Réparation automatique** (`PushKeeper`, coquille de l'agence et espace
+  candidat) : un appareil activé par ce compte est retenu sur l'appareil ; à
+  l'ouverture et à chaque retour sur l'appli, son abonnement est recréé s'il
+  a disparu et réenregistré s'il a changé (au plus toutes les 6 heures sinon).
+  Se déconnecter ou désactiver l'oublie.
 - **Essai** : « Envoyer un essai » dans Réglages, vers cet appareil
   seulement.
 
