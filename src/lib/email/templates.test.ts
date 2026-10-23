@@ -81,7 +81,8 @@ describe("modèles Supabase (supabase/templates)", () => {
     it(`${name}.html à jour`, () => {
       const file = path.resolve(__dirname, `../../../supabase/templates/${name}.html`);
       if (process.env.WRITE_SUPABASE_TEMPLATES) writeFileSync(file, email.html + "\n");
-      expect(readFileSync(file, "utf8")).toBe(email.html + "\n");
+      // Fins de ligne Windows possibles à l'extraction (core.autocrlf)
+      expect(readFileSync(file, "utf8").replace(/\r\n/g, "\n")).toBe(email.html + "\n");
       expect(email.html).toContain("{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=");
     });
   }

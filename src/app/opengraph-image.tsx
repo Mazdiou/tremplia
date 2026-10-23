@@ -66,7 +66,7 @@ export default function OpengraphImage() {
         </div>
         <div style={{ marginTop: 48, display: "flex", gap: 18, fontSize: 30, fontWeight: 700 }}>
           <div style={{ color: BRAND.colors.primary }}>{DOMAIN}</div>
-          <div style={{ color: "#64748b" }}>Essai gratuit de 7 jours</div>
+          <div style={{ color: "#64748b" }}>{"7 jours d'essai gratuit"}</div>
         </div>
       </div>
     ),

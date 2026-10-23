@@ -22,10 +22,11 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 11. [Déploiement](#déploiement)
 12. [Sauvegardes](#sauvegardes)
 13. [Abonnements et administration](#abonnements-et-administration)
-14. [Application installable (PWA)](#application-installable-pwa)
-15. [Nom et couleurs](#nom-et-couleurs)
-16. [Ajouter un modèle de campagne](#ajouter-un-modèle-de-campagne)
-17. [Glossaire](#glossaire)
+14. [E-mails](#e-mails)
+15. [Application installable (PWA)](#application-installable-pwa)
+16. [Nom et couleurs](#nom-et-couleurs)
+17. [Ajouter un modèle de campagne](#ajouter-un-modèle-de-campagne)
+18. [Glossaire](#glossaire)
 
 ---
 
@@ -53,6 +54,7 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 | **Réglages** | Mon compte, mot de passe, apparence (thème clair ou sombre, retenu sur l'appareil ; c'est là qu'il se change sur téléphone), copie sur l'ordinateur ; pour le patron, l'agence, les valeurs des nouvelles campagnes, le guide de démarrage et l'abonnement. |
 | **Guide de démarrage** | Mot de bienvenue à la première connexion de chaque membre, puis, pour le patron d'une nouvelle agence, la liste « Bien démarrer » en haut du tableau de bord : six étapes (campagne, dossier, document, espace candidat, tâche, employé) qui se cochent d'après les vraies données et mènent chacune au bon écran. Masquable (pour toute l'agence), réaffichable dans les réglages. Les agences déjà inscrites ne le voient pas. |
 | **Équipe** | Le patron ajoute ses employés (mot de passe temporaire à remplacer à la première connexion), les désactive ou les supprime. |
+| **Compte** | Inscription d'une agence confirmée par e-mail (compte fermé avant le clic sur le lien), mot de passe oublié (lien reçu par e-mail), rappels de fin d'essai ou d'abonnement 7 jours et 1 jour avant. Voir [E-mails](#e-mails). |
 
 **Patron / employé.** Les employés travaillent sur les dossiers. Sont réservés
 au patron : créer, régler, archiver et exporter une campagne ; gérer l'équipe ;
@@ -127,6 +129,10 @@ Modèle : `.env.example`. Aucune vraie valeur ne doit être commitée
 | `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY` | 32 octets en base64. Chiffre les mots de passe des comptes externes et les codes candidats, signe les sessions candidat. **À sauvegarder hors du dépôt** : la perdre rend ces données illisibles |
 | `SUPPORT_PHONE` | Facultatif. Numéro affiché aux agences pour renouveler leur abonnement ; sans lui, « contactez-nous » |
 | `NEXT_PUBLIC_SENTRY_DSN` | Facultatif. Adresse d'envoi du suivi des erreurs (Sentry). À définir **seulement en production**, avant le build (elle est intégrée au code du navigateur) ; sans elle, rien n'est envoyé. Pas secrète. Lue dans `src/lib/sentry.ts` |
+| `SITE_URL` | Facultatif. Adresse publique du site, pour les liens des e-mails, les aperçus de liens et le plan du site. Par défaut `https://www.tremplia.com` (`src/config/brand.ts`) ; en local `http://127.0.0.1:3000`. Jamais déduite de la requête |
+| `RESEND_API_KEY` | Production. Clé Resend (« Sending access », domaine `tremplia.com`) : envoi des e-mails de l'application. Secrète. Sans elle, en production, aucun e-mail ne part (erreur signalée à Sentry) |
+| `MAILPIT_URL` | Local et CI. Boîte de test du Supabase local (`http://127.0.0.1:54324`) : sans clé Resend, les e-mails y arrivent. Sans l'une ni l'autre, hors production, ils sont écrits dans la console |
+| `CRON_SECRET` | Production. Secret des tâches planifiées (`/api/cron/…`) : le même dans Vercel et dans les secrets GitHub. Sans lui, ces routes refusent tout |
 | `CLIENT_IP_HEADER` | Facultatif. En-tête qui porte l'IP du visiteur, pour les limites d'essais. Par défaut `x-forwarded-for` (dernière adresse) : correct sur Vercel et derrière nginx ; derrière Cloudflare, `cf-connecting-ip` |
 
 Générer la clé de chiffrement :
@@ -168,12 +174,15 @@ La CI a trois tâches :
 
 `e2e/parcours.spec.ts` rejoue le parcours principal, chaque étape partant
 de la précédente : redirection d'un visiteur vers la connexion, inscription
-d'une agence et connexion du patron, import du modèle Campus France, création
+d'une agence, connexion refusée tant que l'adresse n'est pas confirmée, lien
+de confirmation reçu par e-mail (Mailpit, `e2e/mailpit.ts`), import du modèle Campus France, création
 d'un dossier avec un premier paiement, envoi d'un PDF, ouverture de l'espace
 candidat, connexion du candidat et message reçu par l'agence, refus d'un
-mauvais code.
+mauvais code, et pour finir mot de passe oublié (lien reçu, nouveau mot de
+passe, lien inutilisable une seconde fois).
 
-En local : Supabase local démarré, `.env.local` pointé dessus, puis
+En local : Supabase local démarré, `.env.local` pointé dessus (avec
+`MAILPIT_URL=http://127.0.0.1:54324`), puis
 `npm run build` et `npm run test:e2e`. L'application tourne sur le port 3100
 (le 3000 reste à `npm run dev`). Chaque lancement crée sa propre agence
 (e-mail unique) sans rien effacer, et se présente avec une adresse IP
@@ -285,7 +294,9 @@ src/
                         notes, tâches, paiements, messages, historique)
     student/            espace candidat (login, puis (space)/…)
     api/                routes API, minces (une action par fichier)
-    login, register, change-password, offline, manifest, icônes…
+    auth/confirm        lien reçu par e-mail (confirmation, mot de passe)
+    login, register, forgot-password, reset-password, change-password,
+    offline, manifest, icônes, robots, sitemap, opengraph-image…
   components/
     ui/                 composants shadcn (button, input, label)
     shell/              coquille de l'application (rail, en-tête)
@@ -296,7 +307,7 @@ src/
   hooks/                use-dismiss (fermer un menu), use-modal-dialog,
                         use-browser-value
   config/
-    brand.ts            nom, accroche, couleurs
+    brand.ts            nom, accroche, adresse, e-mails, couleurs
     campaign-templates/ modèles de campagne (un fichier par modèle)
   features/<domaine>/
     components/         composants React du domaine
@@ -309,11 +320,14 @@ src/
     auth/               requireMember et dérivés
     audit/              journal d'activité
     crypto/             chiffrement et signatures
-    api-errors, api-client, env, env-server, client-ip, validation,
+    email/              envoi (Resend, Mailpit) et modèles des e-mails
+    api-errors, api-client, env, env-server, client-ip, site-url,
+    cron-auth, validation,
     dates, money, names, plural, phone, save-file, ui-prefs, xlsx, utils
 supabase/
   migrations/           une migration par domaine, dans l'ordre
   tests/                un fichier pgTAP par domaine
+  templates/            e-mails envoyés par Supabase lui-même (générés)
   config.toml           configuration du Supabase local
 test/                   doublure de "server-only" pour Vitest
 e2e/                    tests de bout en bout (Playwright)
@@ -454,7 +468,12 @@ le code qui en dépend.
   `fra1`, `eu-west-3` → `cdg1`, `eu-west-2` → `lhr1`, `us-east-1` → `iad1`).
 - **Supabase en ligne.** Les inscriptions directes à Supabase Auth sont
   désactivées : les comptes sont créés par le serveur (`/api/auth/register`,
-  ajout d'un employé).
+  ajout d'un employé). Authentication › URL Configuration : Site URL
+  `https://www.tremplia.com`, Redirect URLs `https://www.tremplia.com/**`.
+- **Domaine.** `tremplia.com`, DNS chez Hostarts : `A @` et `CNAME www` vers
+  Vercel (adresse principale `www.tremplia.com`, `tremplia.com` y redirige),
+  enregistrements Resend (`resend._domainkey`, `send`, `rsend`, `_dmarc`).
+  Changer d'hébergeur = changer le `A` et le `CNAME`.
 
 ---
 
@@ -547,6 +566,61 @@ select id from auth.users where email = 'votre-email@exemple.com';
 ```
 
 Pour retirer ce droit : `delete from public.platform_admins where user_id = '…';`.
+
+---
+
+## E-mails
+
+Les e-mails de l'application partent par **Resend** (`src/lib/email/send.ts`),
+depuis `noreply@tremplia.com`, réponse vers `contact@tremplia.com`
+(`src/config/brand.ts`). Une seule mise en page, HTML et texte, dans
+`src/lib/email/templates.ts`.
+
+| E-mail | Quand | Code |
+|---|---|---|
+| Confirmation de l'adresse | Inscription d'une agence ; « Renvoyer » sur la connexion et la fin de l'inscription | `src/features/auth/server/emails.ts` |
+| Mot de passe oublié | `/forgot-password` | idem |
+| Rappel de fin d'essai ou d'abonnement | 7 jours puis 1 jour avant, chaque matin à 8 h (`.github/workflows/rappels.yml` → `/api/cron/subscription-reminders`) | `src/features/subscription/server/reminders.ts` |
+
+**Liens.** Les jetons viennent de Supabase Auth (`generateLink`, un seul
+usage, 1 heure). Le lien mène à `/auth/confirm`, qui ne vérifie le jeton
+qu'au clic sur un bouton (les messageries qui ouvrent les liens pour les
+analyser ne le consomment pas). Il est construit sur `SITE_URL`, jamais sur
+l'hôte de la requête. `/reset-password` n'accepte qu'une session ouverte
+par un lien depuis moins d'une heure (`src/features/auth/link-session.ts`).
+
+**Limites** (migration `emails`) : mot de passe oublié et renvoi de
+confirmation, 5 demandes par heure et par adresse IP (429), 50 par heure pour
+tout le service, 3 par heure et par adresse e-mail (au-delà, même réponse
+mais rien n'est envoyé). La réponse est la même que le compte existe ou non ;
+un employé désactivé ne reçoit rien. Les rappels sont réservés dans la base
+avant l'envoi (`subscription_reminders`) : jamais deux fois le même, libérés
+si l'envoi échoue. Pas de rappel à 7 jours pour une agence inscrite depuis
+moins de 2 jours, ni pour l'agence de l'administrateur.
+
+**En local**, les e-mails arrivent dans Mailpit (`MAILPIT_URL`) :
+<http://127.0.0.1:54324>.
+
+### Mise en place en production (une fois)
+
+1. **Resend** : domaine `tremplia.com` vérifié (région Irlande). API Keys ›
+   Create : « Sending access », domaine `tremplia.com`.
+2. **Vercel** (Production) : `RESEND_API_KEY` = cette clé ; `CRON_SECRET` =
+   une valeur aléatoire
+   (`node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`).
+   Puis redéployer.
+3. **GitHub** (Settings › Secrets and variables › Actions) : `CRON_SECRET`,
+   la même valeur. Sans ce secret, la tâche « Rappels » ne fait rien.
+4. **Supabase en ligne** : SMTP personnalisé (Authentication › Emails ›
+   SMTP Settings : `smtp.resend.com`, port 465, utilisateur `resend`, mot de
+   passe = une clé Resend, expéditeur `noreply@tremplia.com`, nom
+   `Tremplia`), pour les e-mails envoyés depuis le tableau de bord Supabase.
+   Leurs modèles (Authentication › Emails › Templates) : recopier
+   `supabase/templates/recovery.html` (« Reset password »),
+   `magic_link.html` (« Magic link ») et `confirmation.html` (« Confirm
+   signup »), avec les sujets de `supabase/config.toml`. Ces fichiers sont
+   produits par `templates.ts` ; après une modification :
+   `WRITE_SUPABASE_TEMPLATES=1 npx vitest run templates`.
 
 ---
 
