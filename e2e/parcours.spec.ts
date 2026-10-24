@@ -238,6 +238,29 @@ test("le guide coche les étapes faites", async () => {
   );
 });
 
+test("tableau de bord personnalisé puis remis à la disposition de départ", async () => {
+  await page.goto("/dashboard");
+  const recent = page.getByRole("heading", { name: "Ajoutés récemment" });
+  await expect(recent).toBeVisible();
+
+  await page.getByRole("button", { name: "Personnaliser" }).click();
+  await page.getByRole("button", { name: "Masquer Ajoutés récemment" }).click();
+  await expect(page.getByRole("button", { name: "Ajouter Ajoutés récemment" })).toBeVisible();
+  const saved = page.waitForResponse((r) => r.url().endsWith("/api/dashboard/layout"));
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await saved).ok()).toBe(true);
+  await expect(page.getByRole("button", { name: "Enregistrer" })).toBeHidden();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Mes tâches" })).toBeVisible();
+  await expect(recent).toBeHidden();
+
+  await page.getByRole("button", { name: "Personnaliser" }).click();
+  await page.getByRole("button", { name: "Disposition de départ" }).click();
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByRole("button", { name: "Enregistrer" })).toBeHidden();
+  await expect(recent).toBeVisible();
+});
+
 test("le candidat se connecte et écrit à l'agence", async ({ browser }) => {
   const student = await browser.newPage();
   await student.goto("/student/login");

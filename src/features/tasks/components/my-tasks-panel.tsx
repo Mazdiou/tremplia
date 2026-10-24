@@ -61,7 +61,7 @@ export function MyTasksPanel({
         </div>
       ) : (
         <>
-          <ul className="grid gap-x-6 px-3 py-2 lg:grid-cols-2">
+          <ul className="grid gap-x-6 px-3 py-2 @3xl:grid-cols-2">
             {rows.slice(0, SHOWN).map((r) => {
               const state = dueState(r.due_date, today);
               return (

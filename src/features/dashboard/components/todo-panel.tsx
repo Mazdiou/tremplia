@@ -88,7 +88,7 @@ export function TodoPanel({ todo }: { todo: Todo }) {
           Rien en attente : aucun message non lu ni demande de candidat.
         </p>
       ) : (
-        <div className="grid gap-x-8 gap-y-5 px-5 py-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-x-8 gap-y-5 px-5 py-4 @2xl:grid-cols-2 @5xl:grid-cols-3">
           {groups.map(({ key, title, icon: Icon, tone, href, items }) => (
             <div key={key} className="min-w-0">
               <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">

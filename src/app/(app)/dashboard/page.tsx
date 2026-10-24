@@ -23,6 +23,9 @@ import { DeadlinesPanel } from "@/features/dashboard/components/deadlines-panel"
 import { ResultsPanel } from "@/features/dashboard/components/results-panel";
 import { TodoPanel } from "@/features/dashboard/components/todo-panel";
 import { loadActivity, loadResults, loadTodo } from "@/features/dashboard/server/dashboard";
+import { CustomizeButton, DashboardWidgets, type WidgetEntry } from "@/features/dashboard/components/dashboard-widgets";
+import { getDashboardLayouts } from "@/features/dashboard/server/layout";
+import { WIDGETS, WIDGET_IDS, allowedWidget, applicableWidget, type WidgetDef, type WidgetId } from "@/features/dashboard/widgets";
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
 import { countCases, countCreatedLastWeek, sumStat } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
@@ -54,21 +57,24 @@ const longToday = new Intl.DateTimeFormat("fr-FR", {
   month: "long",
 });
 
-// Tableau de bord, de haut en bas : ce qui attend l'agence (« À traiter »),
-// mes tâches, les chiffres clés (cliquables vers la liste filtrée), les campagnes, les
-// paiements (patron), les échéances et les réponses des établissements,
-// puis l'activité de l'agence (patron).
+// Tableau de bord : le bonjour et le guide de démarrage, puis les widgets
+// dans la disposition du membre (voir features/dashboard/widgets.ts). Par
+// défaut : ce qui attend l'agence (« À traiter »), mes tâches, les chiffres
+// clés (cliquables vers la liste filtrée), les campagnes, les paiements, les
+// échéances, les réponses des établissements, puis l'activité de l'agence.
 export default async function DashboardPage({
   searchParams,
 }: {
   searchParams: Promise<{ campaign?: string }>;
 }) {
   // Toutes les campagnes actives, ou celle choisie dans le sélecteur
-  const [u, supabase, campaignList, { campaign: wanted }] = await Promise.all([
-    getShellUser(),
+  const userPromise = getShellUser();
+  const [u, supabase, campaignList, { campaign: wanted }, layouts] = await Promise.all([
+    userPromise,
     createClient(),
     listCampaigns(),
     searchParams,
+    userPromise.then((user) => getDashboardLayouts(user.member)),
   ]);
   const today = todayInAppTimezone();
   const todayLabel = longToday.format(new Date());
@@ -117,43 +123,55 @@ export default async function DashboardPage({
     );
   }
 
+  // Widgets que le membre a le droit de voir, et ceux de sa disposition qui
+  // ont un sens ici (une ou plusieurs campagnes) : seuls ces derniers sont lus
+  const seesPayments = can(u.member, "payments_view");
+  const rights = { isOwner: u.member.isOwner, seesPayments };
+  const allowed = WIDGET_IDS.filter((id) => allowedWidget(id, rights));
+  const shown = new Set(
+    layouts.layout
+      .map((item) => item.id)
+      .filter((id) => allowedWidget(id, rights) && applicableWidget(id, campaigns.length)),
+  );
+  const needs = (...wanted: WidgetId[]) => wanted.some((id) => shown.has(id));
+
   // Lectures indépendantes, lancées ensemble. Tous les compteurs viennent
   // d'une seule lecture de la vue case_stats (via le RLS).
-  // Journal : réservé au patron ; paiements : voir seesPayments
   const monthStart = `${today.slice(0, 7)}-01`;
-  // Chiffres de paiement : patron, ou permission « Voir la caisse »
-  const seesPayments = can(u.member, "payments_view");
-  // Messages non lus : servent aussi à « À traiter »
-  const unreadPromise = agencyUnreadCounts(u.member.agencyId);
   // Une seule campagne affichée : l'avancement de ses dossiers par étape
   const single = campaigns.length === 1 ? campaigns[0] : null;
   // Mes tâches : toutes les campagnes actives, quel que soit le choix du
   // sélecteur (les compteurs sont déjà lus par la coquille)
-  const tasksPromise = Promise.all([
-    loadMyTasks(u.member.userId, u.member.isOwner),
-    myTaskCounts(u.member.userId),
-  ]);
+  const tasksPromise = needs("tasks")
+    ? Promise.all([loadMyTasks(u.member.userId, u.member.isOwner), myTaskCounts(u.member.userId)])
+    : null;
+  const none = Promise.resolve(null);
+  const noRows = Promise.resolve({ data: null });
   const [readOnly, stats, todo, recentRes, dates, monthRes, owingRes, results, activity, stagesRes, stageStatsRes] =
     await Promise.all([
       readOnlyPromise,
-      listCaseStats(ids),
-      loadTodo(supabase, ids, unreadPromise),
-      supabase
-        .from("cases")
-        .select("id, first_name, last_name, education_level, created_at")
-        .in("campaign_id", ids)
-        .order("created_at", { ascending: false })
-        .limit(5),
-      listCampaignDates(campaigns),
-      seesPayments
+      needs("stats", "campaigns", "payments") ? listCaseStats(ids) : Promise.resolve([]),
+      needs("todo")
+        ? loadTodo(supabase, ids, agencyUnreadCounts(u.member.agencyId))
+        : none,
+      needs("recent")
+        ? supabase
+            .from("cases")
+            .select("id, first_name, last_name, education_level, created_at")
+            .in("campaign_id", ids)
+            .order("created_at", { ascending: false })
+            .limit(5)
+        : noRows,
+      needs("campaigns", "deadlines") ? listCampaignDates(campaigns) : Promise.resolve([]),
+      needs("payments")
         ? supabase
             .from("payment_months")
             .select("amount, payments")
             .in("campaign_id", ids)
             .eq("month", monthStart)
-        : Promise.resolve({ data: null }),
+        : noRows,
       // Candidats qui doivent le plus (dossiers non abandonnés)
-      seesPayments
+      needs("payments")
         ? supabase
             .from("cases")
             .select("id, first_name, last_name, remaining_amount")
@@ -162,39 +180,21 @@ export default async function DashboardPage({
             .gt("remaining_amount", 0)
             .order("remaining_amount", { ascending: false })
             .limit(5)
-        : Promise.resolve({ data: null }),
-      loadResults(supabase, ids),
-      u.member.isOwner ? loadActivity(supabase, campaignList) : Promise.resolve([]),
-      single
+        : noRows,
+      needs("results", "stats") ? loadResults(supabase, ids) : none,
+      needs("activity") ? loadActivity(supabase, campaignList) : Promise.resolve([]),
+      needs("pipeline") && single
         ? supabase.from("campaign_stages").select("id, name").eq("campaign_id", single.id).order("position")
-        : Promise.resolve({ data: null }),
-      single
+        : noRows,
+      needs("pipeline") && single
         ? supabase
             .from("case_stage_stats")
             .select("stage_id, cases")
             .eq("campaign_id", single.id)
             .eq("status", "active")
-        : Promise.resolve({ data: null }),
+        : noRows,
     ]);
-  const recent = recentRes.data;
-  const [[myTasks, myCounts], guide] = await Promise.all([tasksPromise, guidePromise]);
-
-  const active = countCases(stats, { status: "active" });
-  const mine = countCases(stats, { status: "active", assignedTo: u.member.userId });
-  const week = countCreatedLastWeek(stats);
-
-  const monthRows = (monthRes.data ?? []) as { amount: number | string; payments: number }[];
-  const collected = monthRows.reduce((n, r) => n + Number(r.amount), 0);
-  const collectedCount = monthRows.reduce((n, r) => n + r.payments, 0);
-  const remaining = sumStat(stats, "remaining");
-  const owing = sumStat(stats, "owing");
-  const feeUnset = sumStat(stats, "fee_unset");
-  const topOwing = (owingRes.data ?? []) as {
-    id: string;
-    first_name: string;
-    last_name: string;
-    remaining_amount: number;
-  }[];
+  const [myTasks, guide] = await Promise.all([tasksPromise, guidePromise]);
 
   // Liens vers l'arbre des dossiers, filtré (et limité à la campagne choisie)
   const casesLink = (filtre?: string) => {
@@ -205,85 +205,70 @@ export default async function DashboardPage({
     return query ? `/cases?${query}` : "/cases";
   };
 
-  // Plusieurs campagnes : une carte chacune, avec sa prochaine échéance.
-  // Une seule : le bloc des prochaines échéances.
-  const cards =
-    campaigns.length > 1
-      ? campaigns.map((c) => ({
-          ...c,
-          activeCount: countCases(stats, { campaignId: c.id, status: "active" }),
-          next: nextDeadline(dates.filter((d) => d.campaignId === c.id), today),
-        }))
-      : [];
-  const activeByStage = new Map(
-    ((stageStatsRes.data ?? []) as { stage_id: string | null; cases: number }[]).map((r) => [
-      r.stage_id,
-      r.cases,
-    ]),
-  );
-  const pipeline = ((stagesRes.data ?? []) as { id: string; name: string }[]).map((st) => ({
-    ...st,
-    activeCases: activeByStage.get(st.id) ?? 0,
-  }));
+  // Contenu de chaque widget affiché
+  const render: Record<WidgetId, () => React.ReactNode> = {
+    todo: () => <TodoPanel todo={todo!} />,
 
-  return (
-    <PageContainer width="wide">
-      <PageHeader
-        title={`Bonjour ${u.member.firstName}`}
-        subtitle={
-          <span className="first-letter:uppercase">
-            {todayLabel} ·{" "}
-            {selected
-              ? selected.name
-              : campaigns.length > 1
-                ? `${campaigns.length} campagnes actives`
-                : campaigns[0].name}
-          </span>
-        }
-        actions={
-          <>
-            {allActive.length > 1 && (
-              <CampaignSelect campaigns={allActive} value={selected?.id ?? ""} />
-            )}
-            {/* Téléphone aussi : l'action la plus fréquente, sous le bonjour */}
-            {!readOnly && <NewCaseLink campaignId={selected?.id} />}
-          </>
-        }
-      />
-      {guide.welcome}
-      {guide.checklist}
-      <InstallAppCard appName={BRAND.name} />
-
-      <TodoPanel todo={todo} />
+    tasks: () => (
       <MyTasksPanel
-        rows={myTasks.rows}
-        counts={myCounts}
-        teamOverdue={myTasks.teamOverdue}
+        rows={myTasks![0].rows}
+        counts={myTasks![1]}
+        teamOverdue={myTasks![0].teamOverdue}
         today={today}
       />
+    ),
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Dossiers actifs" value={active} href={casesLink()} />
+    stats: () => (
+      <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-4">
+        <StatCard
+          label="Dossiers actifs"
+          value={countCases(stats, { status: "active" })}
+          href={casesLink()}
+        />
         <StatCard
           label="Mes dossiers"
-          value={mine}
+          value={countCases(stats, { status: "active", assignedTo: u.member.userId })}
           hint="actifs, dont je suis responsable"
           href={casesLink("mes-dossiers")}
         />
-        <StatCard label="Ajoutés cette semaine" value={week} className="max-md:hidden" />
+        <StatCard
+          label="Ajoutés cette semaine"
+          value={countCreatedLastWeek(stats)}
+          className="max-md:hidden"
+        />
         <StatCard
           label="Candidats admis"
-          value={results.admitted}
+          value={results!.admitted}
           hint="au moins une formation acceptée"
           className="max-md:hidden"
         />
       </div>
+    ),
 
-      {single && <StagePipeline campaignId={single.id} stages={pipeline} />}
+    pipeline: () => {
+      const activeByStage = new Map(
+        ((stageStatsRes.data ?? []) as { stage_id: string | null; cases: number }[]).map((r) => [
+          r.stage_id,
+          r.cases,
+        ]),
+      );
+      const pipeline = ((stagesRes.data ?? []) as { id: string; name: string }[]).map((st) => ({
+        ...st,
+        activeCases: activeByStage.get(st.id) ?? 0,
+      }));
+      return <StagePipeline campaignId={single!.id} stages={pipeline} />;
+    },
 
-      {cards.length > 0 && (
-        <ul className={cn("grid gap-4 md:grid-cols-2", cards.length > 2 && "xl:grid-cols-3")}>
-          {cards.map((c) => (
+    // Plusieurs campagnes : une carte chacune, avec sa prochaine échéance
+    campaigns: () => (
+      <ul className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-3">
+        {campaigns.map((c) => {
+          const activeCount = countCases(stats, { campaignId: c.id, status: "active" });
+          const next = nextDeadline(
+            dates.filter((d) => d.campaignId === c.id),
+            today,
+          );
+          return (
             <li key={c.id}>
               <Link
                 href={`/dashboard?campaign=${c.id}`}
@@ -291,15 +276,15 @@ export default async function DashboardPage({
               >
                 <span className="font-semibold group-hover:text-link">{c.name}</span>
                 <span className="mt-0.5 text-sm text-muted-foreground tabular-nums">
-                  {plural(c.activeCount, "dossier actif", "dossiers actifs")}
+                  {plural(activeCount, "dossier actif", "dossiers actifs")}
                 </span>
                 <span className="mt-3 flex items-center gap-2 border-t pt-3 text-sm">
                   <CalendarClock className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                  {c.next ? (
+                  {next ? (
                     <>
-                      <span className="min-w-0 truncate">{c.next.label}</span>
+                      <span className="min-w-0 truncate">{next.label}</span>
                       <span className="ml-auto shrink-0 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
-                        {countdownLabel(c.next.days)}
+                        {countdownLabel(next.days)}
                       </span>
                     </>
                   ) : (
@@ -308,11 +293,24 @@ export default async function DashboardPage({
                 </span>
               </Link>
             </li>
-          ))}
-        </ul>
-      )}
+          );
+        })}
+      </ul>
+    ),
 
-      {seesPayments && (
+    payments: () => {
+      const monthRows = (monthRes.data ?? []) as { amount: number | string; payments: number }[];
+      const collected = monthRows.reduce((n, r) => n + Number(r.amount), 0);
+      const collectedCount = monthRows.reduce((n, r) => n + r.payments, 0);
+      const owing = sumStat(stats, "owing");
+      const feeUnset = sumStat(stats, "fee_unset");
+      const topOwing = (owingRes.data ?? []) as {
+        id: string;
+        first_name: string;
+        last_name: string;
+        remaining_amount: number;
+      }[];
+      return (
         <Panel
           title="Paiements"
           description={
@@ -329,8 +327,8 @@ export default async function DashboardPage({
             </Link>
           }
         >
-          <div className="grid gap-5 px-5 py-4 lg:grid-cols-[1fr_1fr]">
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-5 px-5 py-4 @3xl:grid-cols-[1fr_1fr]">
+            <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-2 @5xl:grid-cols-3">
               <PaymentFigure
                 label={`Encaissé en ${monthName.format(new Date())}`}
                 value={formatDA(collected)}
@@ -339,7 +337,7 @@ export default async function DashboardPage({
               />
               <PaymentFigure
                 label="Reste à encaisser"
-                value={formatDA(remaining)}
+                value={formatDA(sumStat(stats, "remaining"))}
                 hint={plural(owing, "dossier")}
                 href={
                   owing > 0
@@ -354,7 +352,7 @@ export default async function DashboardPage({
                 value={String(feeUnset)}
                 hint={`${pluralWord(feeUnset, "dossier actif", "dossiers actifs")} sans montant convenu`}
                 href={feeUnset > 0 ? casesLink("montant-a-fixer") : undefined}
-                className="col-span-2 sm:col-span-1 lg:col-span-2 xl:col-span-1"
+                className="col-span-2 @md:col-span-1 @3xl:col-span-2 @5xl:col-span-1"
               />
             </div>
             <div className="min-w-0">
@@ -385,27 +383,38 @@ export default async function DashboardPage({
             </div>
           </div>
         </Panel>
-      )}
+      );
+    },
 
-      <div className={cn("grid items-start gap-5", single ? "lg:grid-cols-3" : "lg:grid-cols-2")}>
-        {single && (
-          <DeadlinesPanel
-            campaignId={single.id}
-            items={timeline(
-              dates.filter((d) => d.campaignId === single.id),
-              today,
-            )}
-          />
+    deadlines: () => (
+      <DeadlinesPanel
+        campaignId={single!.id}
+        items={timeline(
+          dates.filter((d) => d.campaignId === single!.id),
+          today,
         )}
-        <ResultsPanel results={results} />
+      />
+    ),
+
+    results: () => <ResultsPanel results={results!} />,
+
+    recent: () => {
+      const recent = (recentRes.data ?? []) as {
+        id: string;
+        first_name: string;
+        last_name: string;
+        education_level: string;
+        created_at: string;
+      }[];
+      return (
         <Panel title="Ajoutés récemment">
-          {(recent ?? []).length === 0 ? (
+          {recent.length === 0 ? (
             <p className="px-5 py-5 text-sm text-muted-foreground">
               Aucun dossier pour le moment.
             </p>
           ) : (
             <ul>
-              {(recent ?? []).map((c) => (
+              {recent.map((c) => (
                 <li key={c.id} className="border-b last:border-b-0">
                   <Link
                     href={`/cases/${c.id}`}
@@ -429,10 +438,58 @@ export default async function DashboardPage({
             </ul>
           )}
         </Panel>
-      </div>
+      );
+    },
 
-      {u.member.isOwner && <ActivityPanel entries={activity} />}
+    activity: () => <ActivityPanel entries={activity} />,
+  };
 
+  const widgets: WidgetEntry[] = allowed.map((id) => ({
+    id,
+    node: shown.has(id) ? render[id]() : null,
+    note: applicableWidget(id, campaigns.length)
+      ? undefined
+      : (WIDGETS[id] as WidgetDef).scope === "single"
+        ? "S'affiche quand une seule campagne est choisie."
+        : "S'affiche quand plusieurs campagnes sont actives.",
+  }));
+
+  return (
+    <PageContainer width="wide">
+      <PageHeader
+        title={`Bonjour ${u.member.firstName}`}
+        subtitle={
+          <span className="first-letter:uppercase">
+            {todayLabel} ·{" "}
+            {selected
+              ? selected.name
+              : campaigns.length > 1
+                ? `${campaigns.length} campagnes actives`
+                : campaigns[0].name}
+          </span>
+        }
+        actions={
+          <>
+            {allActive.length > 1 && (
+              <CampaignSelect campaigns={allActive} value={selected?.id ?? ""} />
+            )}
+            <CustomizeButton />
+            {/* Téléphone aussi : l'action la plus fréquente, sous le bonjour */}
+            {!readOnly && <NewCaseLink campaignId={selected?.id} />}
+          </>
+        }
+      />
+      {guide.welcome}
+      {guide.checklist}
+      <InstallAppCard appName={BRAND.name} />
+
+      <DashboardWidgets
+        layout={layouts.layout}
+        widgets={widgets}
+        personal={layouts.personal}
+        fallback={layouts.fallback}
+        isOwner={u.member.isOwner}
+      />
     </PageContainer>
   );
 }
