@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Search, Settings } from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 import { MENU_ITEM_CLASS } from "@/components/page-ui";
 import { useDismiss } from "@/hooks/use-dismiss";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -117,8 +117,9 @@ export function AppRail({
   );
 }
 
-// Pastille du compte (ordinateur) : ouvre un petit menu, au lieu de
-// déconnecter dès le premier clic
+// Pastille du compte (ordinateur) : ouvre un petit menu (nom, déconnexion),
+// au lieu de déconnecter dès le premier clic. Les Réglages restent dans la
+// barre, comme sur téléphone.
 function AccountMenu({
   initials,
   name,
@@ -151,15 +152,6 @@ function AccountMenu({
           className="absolute bottom-0 left-full z-30 ml-3 w-56 rounded-xl border bg-popover p-1 text-popover-foreground shadow-lg"
         >
           <p className="truncate px-2.5 pt-1.5 pb-2 text-sm font-medium">{name}</p>
-          <Link
-            href="/settings"
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className={cn(MENU_ITEM_CLASS, "flex items-center gap-2")}
-          >
-            <Settings className="size-4 text-muted-foreground" aria-hidden />
-            Réglages
-          </Link>
           <button
             type="button"
             role="menuitem"
