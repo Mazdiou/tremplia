@@ -28,8 +28,10 @@ import {
   GripVertical,
   Plus,
   RectangleHorizontal,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useModalDialog } from "@/hooks/use-modal-dialog";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { WIDGETS, type LayoutItem, type WidgetDef, type WidgetId } from "../widgets";
@@ -71,7 +73,7 @@ export function LayoutEditor({
   onClose: () => void;
 }) {
   const router = useRouter();
-  const instructionsId = useId();
+  const titleId = useId();
   const allowed = new Map(widgets.map((w) => [w.id, w]));
   // Disposition de départ, sans les widgets que le membre n'a pas le droit
   // de voir (sinon elle paraîtrait toujours modifiée)
@@ -83,12 +85,21 @@ export function LayoutEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, startTransition] = useTransition();
+  const [adding, setAdding] = useState(false);
+  // Widget tout juste ajouté : mis en évidence un instant
+  const [added, setAdded] = useState<WidgetId | null>(null);
   // À l'ouverture, l'éditeur peut se trouver sous le guide de démarrage
   const sectionRef = useRef<HTMLElement>(null);
+  // Sans animation : un clic pendant le défilement tomberait à côté
+  const toTop = () => sectionRef.current?.scrollIntoView({ block: "start" });
   useEffect(() => {
-    // Sans animation : un clic pendant le défilement tomberait à côté
     sectionRef.current?.scrollIntoView({ block: "start" });
   }, []);
+  useEffect(() => {
+    if (!added) return;
+    const timer = setTimeout(() => setAdded(null), 2000);
+    return () => clearTimeout(timer);
+  }, [added]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -108,16 +119,24 @@ export function LayoutEditor({
       items.findIndex((i) => i.id === over.id),
     );
   };
+  // Le widget ajouté arrive en tête, là où on le voit
+  const add = (id: WidgetId) => {
+    update([{ id, size: WIDGETS[id].defaultSize }, ...items]);
+    setAdding(false);
+    setAdded(id);
+    toTop();
+  };
 
   const hidden = widgets.filter((w) => !items.some((i) => i.id === w.id));
   const busy = saving || refreshing;
+  const atStart = usesFallback && sameLayout(items, start);
 
   async function save() {
     setSaving(true);
     setError(null);
     // Disposition de départ inchangée : on n'en garde pas de copie, pour
     // suivre ensuite celle que choisira le patron
-    const keepNothing = usesFallback && sameLayout(items, start) && !forAgency;
+    const keepNothing = atStart && !forAgency;
     const res = await callApi("/api/dashboard/layout", {
       method: "PUT",
       body: { layout: keepNothing ? null : items, forAgency: isOwner && forAgency },
@@ -134,27 +153,88 @@ export function LayoutEditor({
   }
 
   return (
-    <section
-      ref={sectionRef}
-      aria-labelledby={`${instructionsId}-title`}
-      className="scroll-mt-4 space-y-5"
-    >
-      <div className="rounded-2xl border bg-highlight/40 px-5 py-4">
-        <h2 id={`${instructionsId}-title`} className="font-semibold">
-          Personnaliser le tableau de bord
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Faites glisser un widget par sa poignée, ou utilisez les flèches. Au clavier :
-          Espace pour saisir la poignée, les flèches pour déplacer, Espace pour déposer.
-          Un widget en demi-largeur resté seul sur sa ligne prendra toute la largeur. Votre
-          disposition ne change que pour vous.
-        </p>
+    <section ref={sectionRef} aria-labelledby={titleId} className="scroll-mt-0 space-y-4">
+      {/* Barre fixée en haut pendant tout le rangement */}
+      <div className="sticky top-0 z-20 -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur md:-mx-8 md:px-8">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h2 id={titleId} className="mr-auto font-semibold">
+            Personnaliser
+          </h2>
+          <Button
+            variant="outline"
+            onClick={() => setAdding(true)}
+            disabled={busy || hidden.length === 0}
+            title={hidden.length === 0 ? "Tous les widgets sont déjà affichés" : undefined}
+          >
+            <Plus aria-hidden />
+            Ajouter un widget
+            {hidden.length > 0 && (
+              <span className="rounded-full bg-accent px-1.5 text-xs text-accent-foreground tabular-nums">
+                {hidden.length}
+              </span>
+            )}
+          </Button>
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <Button
+              variant="ghost"
+              className="-ml-2 mr-auto sm:ml-0"
+              disabled={busy || atStart}
+              onClick={() => {
+                setItems(start);
+                setUsesFallback(true);
+                setError(null);
+              }}
+            >
+              Disposition de départ
+            </Button>
+            <Button variant="outline" disabled={busy} onClick={onClose}>
+              Annuler
+            </Button>
+            <Button disabled={busy} onClick={save}>
+              {busy ? "Enregistrement…" : "Enregistrer"}
+            </Button>
+          </div>
+        </div>
+        {(isOwner || error) && (
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+            {isOwner && (
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={forAgency}
+                  onChange={(e) => setForAgency(e.target.checked)}
+                  className="size-4 accent-primary"
+                />
+                Proposer aussi à toute l&apos;équipe
+                <span className="text-xs text-muted-foreground max-sm:hidden">
+                  (membres qui n&apos;ont pas personnalisé leur tableau de bord)
+                </span>
+              </label>
+            )}
+            {error && (
+              <p className="text-sm font-medium text-destructive" role="alert">
+                {error}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
+      <p className="text-sm text-muted-foreground">
+        Faites glisser un widget par sa poignée ou utilisez les flèches (au clavier : Espace
+        pour saisir, flèches pour déplacer, Espace pour déposer). Un widget en demi-largeur
+        resté seul sur sa ligne prendra toute la largeur. Votre disposition ne change que
+        pour vous.
+      </p>
+
       {items.length === 0 && (
-        <p className="rounded-2xl border border-dashed px-5 py-8 text-center text-sm text-muted-foreground">
-          Aucun widget affiché : ajoutez-en depuis la liste ci-dessous.
-        </p>
+        <div className="rounded-2xl border border-dashed px-5 py-8 text-center text-sm text-muted-foreground">
+          <p>Aucun widget affiché.</p>
+          <Button variant="outline" className="mt-3" onClick={() => setAdding(true)}>
+            <Plus aria-hidden />
+            Ajouter un widget
+          </Button>
+        </div>
       )}
 
       <DndContext
@@ -176,6 +256,7 @@ export function LayoutEditor({
                 key={item.id}
                 item={item}
                 entry={allowed.get(item.id)!}
+                highlight={added === item.id}
                 first={index === 0}
                 last={index === items.length - 1}
                 onUp={() => move(index, index - 1)}
@@ -194,85 +275,95 @@ export function LayoutEditor({
         </SortableContext>
       </DndContext>
 
-      {hidden.length > 0 && (
-        <div className="rounded-2xl border bg-card">
-          <h3 className="border-b px-5 py-3.5 text-sm font-semibold">Widgets disponibles</h3>
-          <ul className="divide-y">
-            {hidden.map((w) => (
-              <li key={w.id} className="flex items-center gap-3 px-5 py-3">
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{WIDGETS[w.id].label}</span>
-                  <span className="block text-xs text-muted-foreground">
-                    {WIDGETS[w.id].description}
-                  </span>
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => update([...items, { id: w.id, size: WIDGETS[w.id].defaultSize }])}
-                  aria-label={`Ajouter ${WIDGETS[w.id].label}`}
-                >
-                  <Plus aria-hidden />
-                  Ajouter
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="sticky bottom-0 z-10 -mx-4 border-t bg-background/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border">
-        {isOwner && (
-          <label className="mb-3 flex items-start gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={forAgency}
-              onChange={(e) => setForAgency(e.target.checked)}
-              className="mt-0.5 size-4 accent-primary"
-            />
-            <span>
-              Proposer cette disposition à toute l&apos;équipe
-              <span className="block text-xs text-muted-foreground">
-                Les membres qui n&apos;ont pas personnalisé leur tableau de bord la verront.
-              </span>
-            </span>
-          </label>
-        )}
-        <div className="flex flex-wrap items-center gap-2">
-          {error && (
-            <p className="mr-auto text-sm font-medium text-destructive" role="alert">
-              {error}
-            </p>
-          )}
-          <Button
-            variant="ghost"
-            className={cn(!error && "mr-auto", "-ml-2")}
-            disabled={busy || (usesFallback && sameLayout(items, start))}
-            onClick={() => {
-              setItems(start);
-              setUsesFallback(true);
-              setError(null);
-            }}
-          >
-            Disposition de départ
-          </Button>
-          <div className="ml-auto flex gap-2">
-            <Button variant="outline" disabled={busy} onClick={onClose}>
-              Annuler
-            </Button>
-            <Button disabled={busy} onClick={save}>
-              {busy ? "Enregistrement…" : "Enregistrer"}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <AddWidgetPanel
+        open={adding}
+        widgets={hidden}
+        onAdd={add}
+        onClose={() => setAdding(false)}
+      />
     </section>
+  );
+}
+
+// Widgets disponibles : panneau qui glisse de la droite sur ordinateur et
+// monte du bas sur téléphone (<dialog> natif : focus gardé, Échap ferme)
+function AddWidgetPanel({
+  open,
+  widgets,
+  onAdd,
+  onClose,
+}: {
+  open: boolean;
+  widgets: WidgetEntry[];
+  onAdd: (id: WidgetId) => void;
+  onClose: () => void;
+}) {
+  const ref = useModalDialog(open);
+  const titleId = useId();
+  return (
+    <dialog
+      ref={ref}
+      aria-labelledby={titleId}
+      onClose={onClose}
+      onClick={(e) => e.target === ref.current && onClose()}
+      className="m-0 mt-auto max-h-[85dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border bg-card p-0 text-card-foreground backdrop:bg-black/45 md:mt-0 md:ml-auto md:h-dvh md:max-h-none md:w-[26rem] md:rounded-none md:rounded-l-2xl"
+    >
+      <div className="sticky top-0 flex items-center justify-between gap-3 border-b bg-card px-5 py-4">
+        <h2 id={titleId} className="font-semibold">
+          Ajouter un widget
+        </h2>
+        <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Fermer">
+          <X aria-hidden />
+        </Button>
+      </div>
+      {widgets.length === 0 ? (
+        <p className="px-5 py-6 text-sm text-muted-foreground">
+          Tous les widgets sont déjà affichés.
+        </p>
+      ) : (
+        <ul className="space-y-3 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          {widgets.map((w) => {
+            const def = WIDGETS[w.id] as WidgetDef;
+            const descriptionId = `${titleId}-${w.id}`;
+            return (
+              <li key={w.id}>
+                <button
+                  type="button"
+                  onClick={() => onAdd(w.id)}
+                  aria-label={`Ajouter ${def.label}`}
+                  aria-describedby={descriptionId}
+                  className="group flex w-full items-start gap-3 rounded-xl border px-4 py-3 text-left transition-colors hover:border-primary/40 hover:bg-highlight/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium group-hover:text-link">
+                      {def.label}
+                    </span>
+                    <span id={descriptionId} className="mt-0.5 block text-xs text-muted-foreground">
+                      {def.description}
+                    </span>
+                    {w.note && (
+                      <span className="mt-1 block text-xs text-muted-foreground italic">
+                        {w.note}
+                      </span>
+                    )}
+                  </span>
+                  <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground">
+                    <Plus className="size-4" aria-hidden />
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </dialog>
   );
 }
 
 function EditableWidget({
   item,
   entry,
+  highlight,
   first,
   last,
   onUp,
@@ -282,6 +373,7 @@ function EditableWidget({
 }: {
   item: LayoutItem;
   entry: WidgetEntry;
+  highlight: boolean;
   first: boolean;
   last: boolean;
   onUp: () => void;
@@ -304,9 +396,11 @@ function EditableWidget({
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(
-        "@container min-w-0 rounded-2xl border-2 border-dashed border-primary/30 bg-card",
+        "@container min-w-0 rounded-2xl border-2 border-dashed border-primary/30 bg-card transition-shadow",
         item.size === "full" && "lg:col-span-2",
         sortable.isDragging && "relative z-20 shadow-lg",
+        // Tout juste ajouté
+        highlight && "border-solid border-primary ring-4 ring-primary/20",
       )}
     >
       <div className="flex items-center gap-1 border-b px-2 py-1.5">

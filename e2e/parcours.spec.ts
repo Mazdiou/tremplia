@@ -245,7 +245,7 @@ test("tableau de bord personnalisé puis remis à la disposition de départ", as
 
   await page.getByRole("button", { name: "Personnaliser" }).click();
   await page.getByRole("button", { name: "Masquer Réponses des établissements" }).click();
-  await expect(page.getByRole("button", { name: "Ajouter Réponses des établissements" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Masquer Réponses des établissements" })).toHaveCount(0);
   const saved = page.waitForResponse((r) => r.url().endsWith("/api/dashboard/layout"));
   await page.getByRole("button", { name: "Enregistrer" }).click();
   expect((await saved).ok()).toBe(true);
@@ -253,6 +253,15 @@ test("tableau de bord personnalisé puis remis à la disposition de départ", as
   await page.reload();
   await expect(page.getByRole("heading", { name: "Mes tâches" })).toBeVisible();
   await expect(results).toBeHidden();
+
+  // Ajout depuis le panneau : le widget arrive en tête
+  await page.getByRole("button", { name: "Personnaliser" }).click();
+  await page.getByRole("button", { name: /Ajouter un widget/ }).click();
+  const panel = page.getByRole("dialog", { name: "Ajouter un widget" });
+  await panel.getByRole("button", { name: "Ajouter Réponses des établissements" }).click();
+  await expect(panel).toBeHidden();
+  await expect(page.getByRole("button", { name: "Monter Réponses des établissements" })).toBeDisabled();
+  await page.getByRole("button", { name: "Annuler" }).click();
 
   await page.getByRole("button", { name: "Personnaliser" }).click();
   await page.getByRole("button", { name: "Disposition de départ" }).click();
