@@ -15,6 +15,8 @@ export type WidgetDef = {
   requires?: "owner" | "payments_view";
   // Le widget n'a de sens qu'avec une seule campagne affichée, ou plusieurs
   scope?: "single" | "several";
+  // Trop large pour un téléphone : affiché sur ordinateur seulement
+  desktopOnly?: boolean;
 };
 
 export const WIDGETS = {
@@ -72,6 +74,7 @@ export const WIDGETS = {
     description: "Ce que chaque membre a fait ces derniers jours.",
     defaultSize: "full",
     requires: "owner",
+    desktopOnly: true,
   },
 } satisfies Record<string, WidgetDef>;
 

@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { arrangeRows, type LayoutItem, type WidgetId } from "../widgets";
+import { WIDGETS, arrangeRows, type LayoutItem, type WidgetDef, type WidgetId } from "../widgets";
 
 // Widget prêt à afficher : son contenu (rendu par le serveur), ou rien s'il
 // n'est pas lu (masqué) ou sans objet ici (note expliquant pourquoi)
@@ -81,7 +81,14 @@ export function DashboardWidgets({
   return (
     <div className="grid items-start gap-5 lg:grid-cols-2">
       {shown.map((item) => (
-        <div key={item.id} className={cn("@container min-w-0", item.wide && "lg:col-span-2")}>
+        <div
+          key={item.id}
+          className={cn(
+            "@container min-w-0",
+            item.wide && "lg:col-span-2",
+            (WIDGETS[item.id] as WidgetDef).desktopOnly && "max-md:hidden",
+          )}
+        >
           {byId.get(item.id)!.node}
         </div>
       ))}

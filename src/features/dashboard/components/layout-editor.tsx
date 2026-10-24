@@ -32,7 +32,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { WIDGETS, type LayoutItem, type WidgetId } from "../widgets";
+import { WIDGETS, type LayoutItem, type WidgetDef, type WidgetId } from "../widgets";
 import type { WidgetEntry } from "./dashboard-widgets";
 
 const labelOf = (id: string | number) => WIDGETS[id as WidgetId]?.label ?? String(id);
@@ -73,6 +73,9 @@ export function LayoutEditor({
   const router = useRouter();
   const instructionsId = useId();
   const allowed = new Map(widgets.map((w) => [w.id, w]));
+  // Disposition de départ, sans les widgets que le membre n'a pas le droit
+  // de voir (sinon elle paraîtrait toujours modifiée)
+  const start = fallback.filter((i) => allowed.has(i.id));
   const [items, setItems] = useState(() => layout.filter((i) => allowed.has(i.id)));
   // Sans disposition personnelle (ou remise à celle de départ) : rien à garder
   const [usesFallback, setUsesFallback] = useState(!personal);
@@ -114,7 +117,7 @@ export function LayoutEditor({
     setError(null);
     // Disposition de départ inchangée : on n'en garde pas de copie, pour
     // suivre ensuite celle que choisira le patron
-    const keepNothing = usesFallback && sameLayout(items, fallback) && !forAgency;
+    const keepNothing = usesFallback && sameLayout(items, start) && !forAgency;
     const res = await callApi("/api/dashboard/layout", {
       method: "PUT",
       body: { layout: keepNothing ? null : items, forAgency: isOwner && forAgency },
@@ -140,7 +143,7 @@ export function LayoutEditor({
         <h2 id={`${instructionsId}-title`} className="font-semibold">
           Personnaliser le tableau de bord
         </h2>
-        <p id={instructionsId} className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           Faites glisser un widget par sa poignée, ou utilisez les flèches. Au clavier :
           Espace pour saisir la poignée, les flèches pour déplacer, Espace pour déposer.
           Un widget en demi-largeur resté seul sur sa ligne prendra toute la largeur. Votre
@@ -243,22 +246,24 @@ export function LayoutEditor({
           )}
           <Button
             variant="ghost"
-            className={cn(!error && "mr-auto")}
-            disabled={busy || (usesFallback && sameLayout(items, fallback))}
+            className={cn(!error && "mr-auto", "-ml-2")}
+            disabled={busy || (usesFallback && sameLayout(items, start))}
             onClick={() => {
-              setItems(fallback.filter((i) => allowed.has(i.id)));
+              setItems(start);
               setUsesFallback(true);
               setError(null);
             }}
           >
             Disposition de départ
           </Button>
-          <Button variant="outline" disabled={busy} onClick={onClose}>
-            Annuler
-          </Button>
-          <Button disabled={busy} onClick={save}>
-            {busy ? "Enregistrement…" : "Enregistrer"}
-          </Button>
+          <div className="ml-auto flex gap-2">
+            <Button variant="outline" disabled={busy} onClick={onClose}>
+              Annuler
+            </Button>
+            <Button disabled={busy} onClick={save}>
+              {busy ? "Enregistrement…" : "Enregistrer"}
+            </Button>
+          </div>
         </div>
       </div>
     </section>
@@ -284,11 +289,15 @@ function EditableWidget({
   onSize: () => void;
   onHide: () => void;
 }) {
-  const sortable = useSortable({ id: item.id });
+  const sortable = useSortable({
+    id: item.id,
+    attributes: { roleDescription: "widget déplaçable" },
+  });
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition } =
     sortable;
   const label = WIDGETS[item.id].label;
   const half = item.size === "half";
+  const desktopOnly = (WIDGETS[item.id] as WidgetDef).desktopOnly;
 
   return (
     <li
@@ -351,9 +360,20 @@ function EditableWidget({
           <EyeOff aria-hidden />
         </Button>
       </div>
+      {desktopOnly && (
+        <p className="px-5 py-6 text-sm text-muted-foreground md:hidden">
+          Affiché seulement sur ordinateur.
+        </p>
+      )}
       {entry.node ? (
         // Aperçu du contenu, sans clic possible pendant le rangement
-        <div inert className="relative max-h-64 overflow-hidden p-2 opacity-70 select-none">
+        <div
+          inert
+          className={cn(
+            "relative max-h-64 overflow-hidden p-2 opacity-70 select-none",
+            desktopOnly && "max-md:hidden",
+          )}
+        >
           {entry.node}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card" />
         </div>
