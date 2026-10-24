@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { CampaignDate } from "../timeline";
 import type { CampaignStatus } from "../labels";
@@ -32,6 +33,15 @@ export async function listCampaigns(): Promise<CampaignSummary[]> {
     (a, b) => Number(a.status === "archived") - Number(b.status === "archived"),
   );
 }
+
+// Nom d'une campagne (titre de l'onglet), ou null si elle n'est pas de
+// l'agence. En cache pour la durée d'un affichage.
+export const campaignName = cache(async (id: string): Promise<string | null> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("campaigns").select("name").eq("id", id).maybeSingle();
+  if (error) reportError("[campaign name]", error.code);
+  return (data?.name as string | undefined) ?? null;
+});
 
 export async function listGroups(campaignIds: string[]): Promise<GroupSummary[]> {
   if (campaignIds.length === 0) return [];

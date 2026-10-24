@@ -73,7 +73,7 @@ export async function listCaseTasks(caseId: string) {
   };
 }
 
-// --- Vue d'ensemble (page Tâches, menu, tableau de bord, arbre) -------------
+// Vue d'ensemble (page Tâches, menu, tableau de bord, arbre)
 
 // Dossiers des campagnes actives seulement : comme la page Tâches par
 // défaut, la pastille et le tableau de bord ignorent les campagnes archivées
@@ -154,6 +154,9 @@ export async function listAgencyTasks(assignee: string | null, doneDays: number)
   return { open, done: (done.data ?? []) as unknown as AgencyTaskRow[] };
 }
 
+// Assez pour compter les tâches de la semaine sans tout lire
+const MAX_DASHBOARD_TASKS = 200;
+
 // Tableau de bord : mes prochaines tâches à faire (les plus urgentes d'abord)
 // et, pour le patron, le nombre de tâches en retard de toute l'équipe
 export async function loadMyTasks(userId: string, withTeam: boolean) {
@@ -185,6 +188,3 @@ export async function loadMyTasks(userId: string, withTeam: boolean) {
     teamOverdue: team?.count ?? null,
   };
 }
-
-// Assez pour compter les tâches de la semaine sans tout lire
-const MAX_DASHBOARD_TASKS = 200;

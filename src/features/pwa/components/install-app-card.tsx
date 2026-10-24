@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 
 // Invitation à installer l'application sur le téléphone (écran d'accueil,
 // plein écran). Masquée sur ordinateur, dans l'appli déjà installée, et
-// pour de bon dès qu'on la ferme.
-// - Android (Chrome, Edge, Samsung…) : bouton « Installer » (fenêtre du système)
-// - iPhone / iPad (Safari) : pas de bouton possible, les deux gestes à faire
+// pour de bon dès qu'on la ferme. Android (Chrome, Edge, Samsung…) : bouton
+// « Installer » (fenêtre du système). iPhone et iPad (Safari) : pas de bouton
+// possible, la carte montre les deux gestes à faire.
 
 type InstallPrompt = Event & {
   prompt: () => Promise<void>;

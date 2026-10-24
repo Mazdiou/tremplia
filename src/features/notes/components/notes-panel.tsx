@@ -24,10 +24,13 @@ export function NotesPanel({
   caseId,
   notes,
   truncated,
+  readOnly,
 }: {
   caseId: string;
   notes: NoteItem[];
   truncated: boolean;
+  // Abonnement expiré : les notes se lisent, rien ne s'écrit
+  readOnly: boolean;
 }) {
   const router = useRouter();
   const base = `/api/cases/${caseId}/notes`;
@@ -98,39 +101,41 @@ export function NotesPanel({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="new-note" className="text-sm font-medium">
-          Nouvelle note
-        </label>
-        <textarea
-          id="new-note"
-          value={draft}
-          maxLength={MAX_NOTE_LENGTH}
-          disabled={adding}
-          placeholder="Écrivez une note sur cette candidature. Elle sera visible par toute l'agence."
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-              e.preventDefault();
-              void addNote();
-            }
-          }}
-          className={TEXTAREA}
-        />
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-muted-foreground">
-            {draft.length} / {MAX_NOTE_LENGTH} · Ctrl + Entrée pour ajouter
-          </span>
-          <Button
-            size="sm"
-            disabled={adding || draft.trim() === ""}
-            onClick={() => void addNote()}
-          >
-            {adding && <Loader2 className="animate-spin" aria-hidden />}
-            Ajouter la note
-          </Button>
+      {!readOnly && (
+        <div className="space-y-2">
+          <label htmlFor="new-note" className="text-sm font-medium">
+            Nouvelle note
+          </label>
+          <textarea
+            id="new-note"
+            value={draft}
+            maxLength={MAX_NOTE_LENGTH}
+            disabled={adding}
+            placeholder="Écrivez une note sur cette candidature. Elle sera visible par toute l'agence."
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                void addNote();
+              }
+            }}
+            className={TEXTAREA}
+          />
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-muted-foreground">
+              {draft.length} / {MAX_NOTE_LENGTH} · Ctrl + Entrée pour ajouter
+            </span>
+            <Button
+              size="sm"
+              disabled={adding || draft.trim() === ""}
+              onClick={() => void addNote()}
+            >
+              {adding && <Loader2 className="animate-spin" aria-hidden />}
+              Ajouter la note
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       <StatusMessage message={message} />
 
@@ -158,7 +163,7 @@ export function NotesPanel({
                   </p>
                 </div>
 
-                {n.canManage && editingId !== n.id && (
+                {n.canManage && !readOnly && editingId !== n.id && (
                   <div className="flex shrink-0 items-center gap-1">
                     {confirmId === n.id ? (
                       <>

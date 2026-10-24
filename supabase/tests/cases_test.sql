@@ -51,7 +51,7 @@ select
   (select id from public.campaign_groups where campaign_id = (select b1 from camp)) as dap_b;
 grant select on grp to public;
 
--- Création complète -------------------------------------------------------
+-- Création complète
 
 select lives_ok(
   $$select public.create_case(
@@ -102,7 +102,7 @@ select lives_ok(
       null, null, null)$$,
   'un employé crée un dossier dont il est responsable');
 
--- Droits ----------------------------------------------------------------------
+-- Droits
 
 select throws_ok(
   $$select public.create_case(gen_random_uuid(), (select agency_a from ctx),
@@ -133,7 +133,7 @@ select throws_ok(
         "phone": "0555222222", "education_level": "l1"}', null, null, null)$$,
   '23503', null, 'une agence ne crée pas de dossier dans la campagne d''une autre');
 
--- Atomicité et contraintes : un échec ne laisse rien -------------------------
+-- Atomicité et contraintes : un échec ne laisse rien
 
 select throws_ok(
   $$select public.create_case('c9999999-9999-9999-9999-999999999999', (select agency_a from ctx),
@@ -223,7 +223,7 @@ select is(
                    'a8888888-8888-8888-8888-888888888888')),
   0::bigint, 'aucune création refusée n''a laissé de dossier ni de compte');
 
--- Modification ----------------------------------------------------------------
+-- Modification
 
 select lives_ok(
   $$select public.update_case('c2222222-2222-2222-2222-222222222222',
@@ -269,7 +269,7 @@ select throws_ok(
       (select agency_a from ctx), '22222222-2222-2222-2222-222222222222', 'deleted')$$,
   '23514', null, 'un statut inconnu est refusé');
 
--- Classement ------------------------------------------------------------------
+-- Classement
 
 select throws_ok(
   $$select public.set_case_groups('c2222222-2222-2222-2222-222222222222',
@@ -294,7 +294,7 @@ select ok(
                    where case_id = 'c1111111-1111-1111-1111-111111111111'),
   'supprimer un groupe garde le dossier, qui passe dans « Non classés »');
 
--- Campagne archivée et suppression ---------------------------------------------
+-- Campagne archivée et suppression
 
 select throws_ok(
   $$select public.delete_campaign((select a1 from camp), (select agency_a from ctx),
@@ -320,7 +320,7 @@ select lives_ok(
       array[(select dap from grp)])$$,
   'et peuvent encore être classés');
 
--- Comptes externes ------------------------------------------------------------
+-- Comptes externes
 
 select throws_ok(
   $$select public.save_external_account('a2222222-2222-2222-2222-222222222222',
@@ -359,7 +359,7 @@ select throws_ok(
       'to_create', null, 1::smallint)$$,
   'P0002', null, 'une autre agence n''ajoute pas de compte à ce dossier');
 
--- Lecture (RLS) et droits du serveur -----------------------------------------
+-- Lecture (RLS) et droits du serveur
 
 select set_config('request.jwt.claims',
   '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', true);

@@ -8,13 +8,13 @@ import { createClient } from "@/lib/supabase/client";
 // pastilles de l'arbre, tâches confiées par un collègue. Seuls les
 // composants serveur sont relus ; ce qui est en cours de saisie reste en place.
 //
-// - Agence (agencyId fourni) : abonnement en temps réel aux messages et aux
-//   réponses des candidats, et aux tâches de l'agence (filtrés par le RLS).
-//   Les suppressions de tâches arrivent aussi : la table est en identité
-//   complète, le filtre agency_id s'applique à l'ancienne ligne. Si la
-//   connexion tombe, une vérification toutes les 30 s prend le relais.
-// - Candidat (sans compte Supabase) : vérification toutes les minutes.
-// - Dans les deux cas : relecture au retour sur l'onglet.
+// Agence (agencyId fourni) : abonnement en temps réel aux messages et aux
+// réponses des candidats, et aux tâches de l'agence (filtrés par le RLS).
+// Les suppressions de tâches arrivent aussi : la table est en identité
+// complète, le filtre agency_id s'applique à l'ancienne ligne. Si la
+// connexion tombe, une vérification toutes les 30 s prend le relais.
+// Candidat (sans compte Supabase) : vérification toutes les minutes.
+// Dans les deux cas, la page est relue au retour sur l'onglet.
 
 const FALLBACK_MS = 30_000;
 const STUDENT_MS = 60_000;
@@ -77,17 +77,24 @@ export function LiveRefresh({ agencyId }: { agencyId?: string }) {
           { event: "*", schema: "public", table: "case_tasks", filter },
           refresh,
         );
+      // Page quittée avant la fin de setAuth : plus d'abonnement à ouvrir,
+      // sinon le canal resterait ouvert sans que personne le ferme
+      let disposed = false;
       // Le jeton de la session doit être transmis avant l'abonnement, sinon
       // le RLS ne laisse rien passer
-      void supabase.realtime.setAuth().then(() =>
+      void supabase.realtime.setAuth().then(() => {
+        if (disposed) return;
         channel.subscribe((status) => {
           const wasLive = live;
           live = status === "SUBSCRIBED";
           // Reconnexion : rattraper ce qui est arrivé pendant la coupure
           if (live && !wasLive && Date.now() - last > MIN_GAP_MS) refresh();
-        }),
-      );
-      cleanup = () => void supabase.removeChannel(channel);
+        });
+      });
+      cleanup = () => {
+        disposed = true;
+        void supabase.removeChannel(channel);
+      };
     }
 
     return () => {

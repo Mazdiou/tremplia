@@ -216,9 +216,8 @@ export function CaseForm(
         },
       });
     }
-    setLoading(false);
-
     if (!res.ok) {
+      setLoading(false);
       if (res.data?.code === "possible_duplicate" && Array.isArray(res.data.duplicates)) {
         setDuplicates(res.data.duplicates as string[]);
         return;
@@ -228,6 +227,8 @@ export function CaseForm(
       return;
     }
 
+    // Le bouton reste sur « Enregistrement… » jusqu'à l'arrivée sur le
+    // dossier : un second clic ne renvoie rien
     const id = isEdit ? props.caseId : (res.data.id as string);
     router.push(`/cases/${id}`);
     router.refresh();

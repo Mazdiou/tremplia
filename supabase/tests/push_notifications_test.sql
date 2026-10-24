@@ -63,7 +63,7 @@ returns void language sql as $$
 $$;
 
 
--- 1. Droits ----------------------------------------------------------------------
+-- 1. Droits
 
 select ok((select relrowsecurity from pg_class where oid = 'public.push_subscriptions'::regclass),
   'RLS sur les appareils');
@@ -83,7 +83,7 @@ select ok(not has_function_privilege('anon', 'public.push_targets_student(uuid, 
 select ok(not has_function_privilege('authenticated', 'public.claim_task_digests(date)', 'execute'),
   'un membre connecté ne lance pas le récapitulatif');
 
--- 2. Enregistrement -----------------------------------------------------------------
+-- 2. Enregistrement
 
 select lives_ok($$select pg_temp.save('11111111-1111-1111-1111-111111111111', null, null, 'p1')$$,
   'appareil du patron');
@@ -127,7 +127,7 @@ select is((select count(*) from public.push_subscriptions where endpoint = 'http
 delete from public.push_subscriptions
 where user_id = '11111111-1111-1111-1111-111111111111' and endpoint <> 'https://push.test/p11';
 
--- 3. Destinataires --------------------------------------------------------------------
+-- 3. Destinataires
 
 select is(
   (select array_agg(endpoint) from public.push_targets_case((select a from ctx),
@@ -186,7 +186,7 @@ select is(
   (select count(*) from public.push_targets_student((select a from ctx),
     'c1111111-1111-1111-1111-111111111111')), 0::bigint, 'nouveau code : plus rien pour l''ancien accès');
 
--- 4. Récapitulatif du matin -------------------------------------------------------------
+-- 4. Récapitulatif du matin
 
 -- Patron : une tâche du jour (dossier 2), une en retard (dossier 2), une dans
 -- la campagne archivée, une faite, une pour plus tard
@@ -223,7 +223,7 @@ select is((select count(*) from public.claim_task_digests('2026-10-24') d
   where d.user_id in (select id from mine)), 1::bigint,
   'le lendemain, de nouveau');
 
--- 5. Suppression de l'agence : appareils et choix partent avec elle -----------------------
+-- 5. Suppression de l'agence : appareils et choix partent avec elle
 
 select public.delete_agency('99999999-9999-9999-9999-999999999999', a) from ctx;
 select is((select count(*) from public.push_subscriptions where agency_id = (select a from ctx)),

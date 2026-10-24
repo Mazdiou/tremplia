@@ -2,11 +2,11 @@ import "server-only";
 import { BRAND } from "@/config/brand";
 import type { Email } from "./templates";
 
-// Envoi d'un e-mail de l'application :
-// - RESEND_API_KEY : par Resend (production) ;
-// - sinon MAILPIT_URL : dans la boîte de test du Supabase local (Mailpit,
-//   http://127.0.0.1:54324), pour le développement et les tests ;
-// - sinon, hors production, le message est seulement écrit dans la console.
+// Envoi d'un e-mail de l'application : par Resend avec RESEND_API_KEY
+// (production) ; sinon, avec MAILPIT_URL, dans la boîte de test du Supabase
+// local (Mailpit, http://127.0.0.1:54324), pour le développement et les
+// tests ; sinon, hors production, le message est seulement écrit dans la
+// console.
 // Lève une erreur si l'envoi échoue : à l'appelant de décider (signaler,
 // annuler un rappel…). Jamais le contenu dans l'erreur : il porte un lien
 // de connexion.

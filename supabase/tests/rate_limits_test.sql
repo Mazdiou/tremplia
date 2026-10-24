@@ -9,7 +9,7 @@ create function pg_temp.h(n text) returns text language sql as $$ select md5(n) 
 delete from public.student_login_failures;
 delete from public.registration_attempts;
 
--- 1. Connexion des candidats : limite globale ----------------------------
+-- 1. Connexion des candidats : limite globale
 
 -- 199 échecs récents venus de 199 adresses différentes
 insert into public.student_login_failures (ip_hash)
@@ -37,7 +37,7 @@ select throws_ok(
   $$select * from public.student_login(pg_temp.h('code-faux'), pg_temp.h('meme-adresse'))$$,
   '54000', null, 'toujours 10 échecs au plus par adresse');
 
--- 2. Inscriptions ----------------------------------------------------------
+-- 2. Inscriptions
 
 select lives_ok(
   $$select public.register_attempt(pg_temp.h('agence-1')) from generate_series(1, 3)$$,
@@ -73,7 +73,7 @@ select public.register_attempt(pg_temp.h('apres'));
 select is((select count(*) from public.registration_attempts), 1::bigint,
   'les essais de plus d''un jour sont effacés');
 
--- 3. Droits ----------------------------------------------------------------
+-- 3. Droits
 
 set local role authenticated;
 

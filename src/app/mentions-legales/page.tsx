@@ -18,7 +18,7 @@ export default function MentionsLegalesPage() {
         <LegalList
           items={[
             <>
-              <strong>{editor.name}</strong> — {editor.status}
+              <strong>{editor.name}</strong> · {editor.status}
             </>,
             `${editor.city}, ${editor.country}`,
             ...(editor.nif ? [`NIF : ${editor.nif}`] : []),
@@ -44,7 +44,7 @@ export default function MentionsLegalesPage() {
         <LegalList
           items={LEGAL.providers.map((p) => (
             <>
-              <strong>{p.name}</strong> — {p.role}. Lieu : {p.place}.{" "}
+              <strong>{p.name}</strong> : {p.role}. Lieu : {p.place}.{" "}
               <a href={p.url} className="text-link hover:underline" rel="noopener noreferrer">
                 {new URL(p.url).hostname.replace(/^www\./, "")}
               </a>

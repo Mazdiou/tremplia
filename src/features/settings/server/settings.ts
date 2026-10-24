@@ -14,6 +14,7 @@ import type {
   PasswordChangeInput,
 } from "../schemas";
 import { reportError } from "@/lib/report-error";
+import { weakPasswordError } from "@/features/auth/server/accounts";
 
 // Réglages de l'agence et du compte. Les fonctions SQL revérifient l'acteur,
 // son rôle et l'abonnement ; l'agence vient toujours de la session.
@@ -155,11 +156,8 @@ export async function changeOwnPassword(member: Member, input: PasswordChangeInp
     password: input.password,
   });
   if (updateError) {
-    if (updateError.code === "weak_password") {
-      throw new ApiError(400, "Mot de passe trop faible : choisissez-en un plus long ou plus varié", {
-        fields: [{ path: "password", message: "Mot de passe trop faible" }],
-      });
-    }
+    const weak = weakPasswordError(updateError);
+    if (weak) throw weak;
     reportError("[password update]", updateError.code ?? updateError.status);
     throw new ApiError(500, "Changement impossible");
   }

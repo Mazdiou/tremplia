@@ -49,7 +49,7 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// Notifications ----------------------------------------------------------------
+// Notifications
 
 // Contenu envoyé par le serveur : { title, body, url, tag }.
 // Chaque envoi affiche TOUJOURS une notification : Safari (iPhone) retire

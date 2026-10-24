@@ -71,7 +71,7 @@ export async function latestMessageId(agencyId: string, caseId: string) {
   return (data?.id as string | undefined) ?? null;
 }
 
-// Côté agence -----------------------------------------------------------------
+// Côté agence
 
 export async function sendAgencyMessage(auth: AuthorizedCase, caseId: string, body: string) {
   const { data, error } = await auth.admin.rpc("send_agency_message", {
@@ -124,7 +124,7 @@ export const agencyUnreadCounts = cache(async (agencyId: string): Promise<Record
   );
 });
 
-// Côté candidat -------------------------------------------------------------
+// Côté candidat
 
 export async function sendStudentMessage(session: StudentSession, body: string) {
   const admin = createAdminClient();

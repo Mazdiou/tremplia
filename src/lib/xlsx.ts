@@ -39,7 +39,7 @@ export function excelDate(iso: string): number | null {
 // Échappement XML ; les caractères de contrôle, interdits en XML, sont retirés
 export function escapeXml(value: string): string {
   return value
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F￾￿]/g, "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -124,6 +124,22 @@ const STYLES_XML =
   "</cellXfs>" +
   '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
   "</styleSheet>";
+
+// Réponse qui fait télécharger le classeur sous ce nom, jamais mise en cache.
+// Nom de repli sans accent pour les navigateurs qui ignorent filename*.
+export function xlsxDownload(workbook: Uint8Array, fileName: string): Response {
+  const ascii = fileName
+    .normalize("NFD")
+    .replace(/[^\x20-\x7E]|"/g, "")
+    .replace(/\s+/g, " ");
+  return new Response(workbook as Uint8Array<ArrayBuffer>, {
+    headers: {
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+      "Cache-Control": "no-store",
+    },
+  });
+}
 
 // Classeur complet, prêt à être envoyé (application/vnd.openxmlformats-…)
 export function buildXlsx(sheets: Sheet[]): Uint8Array {

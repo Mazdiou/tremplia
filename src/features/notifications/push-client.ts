@@ -94,11 +94,11 @@ async function ensureSubscription(publicKey: string, { replaceStale = false } = 
   );
 }
 
-// --- Appareil activé par ce compte --------------------------------------------
-// Retenu sur l'appareil (owner : membre ou dossier du candidat) : l'abonnement
-// peut disparaître sans que personne l'ait désactivé (Safari sur iPhone le
-// retire parfois, le navigateur peut le renouveler). keepPushDevice le
-// recrée et le réenregistre alors tout seul.
+// Appareil activé par ce compte, retenu sur l'appareil (owner : membre ou
+// dossier du candidat) : l'abonnement peut disparaître sans que personne
+// l'ait désactivé (Safari sur iPhone le retire parfois, le navigateur peut
+// le renouveler). keepPushDevice le recrée et le réenregistre alors tout
+// seul.
 
 const DEVICE_KEY = "tremplia.push-device";
 // Réenregistré au plus toutes les heures quand rien n'a changé (le serveur

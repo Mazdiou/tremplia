@@ -76,7 +76,7 @@ export const initialPaymentSchema = z.object({
   method: z.enum(PAYMENT_METHODS, "Choisissez le moyen de paiement"),
 });
 
-// Résumé d'un dossier ------------------------------------------------------
+// Résumé d'un dossier
 
 export type PaymentState = "unset" | "unpaid" | "partial" | "paid";
 

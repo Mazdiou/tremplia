@@ -10,16 +10,18 @@ export function isCasesIndex(pathname: string | null) {
   return pathname === "/cases";
 }
 
+// Zone principale de la page (repère <main> pour les lecteurs d'écran, comme
+// dans les autres sections)
 export function CasesContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   return (
-    <div
+    <main
       className={cn(
         "relative min-w-0 flex-1 overflow-y-auto",
         isCasesIndex(pathname) && "max-md:hidden",
       )}
     >
       {children}
-    </div>
+    </main>
   );
 }

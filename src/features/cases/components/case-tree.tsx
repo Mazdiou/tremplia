@@ -298,6 +298,10 @@ export function CaseTree({
           collapsed && "md:hidden",
         )}
       >
+        {/* Téléphone, accueil des dossiers : l'arbre est seul à l'écran, ce
+            titre de page est lu par les lecteurs d'écran (sur ordinateur,
+            celui du contenu suffit) */}
+        <h1 className="sr-only md:hidden">Dossiers</h1>
         {/* En-tête */}
         <div className="flex items-center gap-1 px-4 pt-4 pb-3">
           <Link

@@ -2,7 +2,7 @@ import { safely } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
 import { requireApiPermission } from "@/lib/auth/require-member";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { buildXlsx } from "@/lib/xlsx";
+import { buildXlsx, xlsxDownload } from "@/lib/xlsx";
 import { balancesSheet, collectionsSheet, overviewFileName } from "@/features/payments/overview";
 import { loadPaymentsOverview } from "@/features/payments/server/overview";
 
@@ -27,18 +27,6 @@ export function GET(request: Request) {
       details: { view, rows: sheet.rows.length },
     });
 
-    const fileName = overviewFileName(view, data.period.label, data.today);
-    // Nom de repli sans accent pour les navigateurs qui ignorent filename*
-    const ascii = fileName
-      .normalize("NFD")
-      .replace(/[^\x20-\x7E]|"/g, "")
-      .replace(/\s+/g, " ");
-    return new Response(workbook as Uint8Array<ArrayBuffer>, {
-      headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
-        "Cache-Control": "no-store",
-      },
-    });
+    return xlsxDownload(workbook, overviewFileName(view, data.period.label, data.today));
   });
 }

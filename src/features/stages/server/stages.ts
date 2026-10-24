@@ -28,7 +28,8 @@ export async function listAgencyStages(): Promise<CampaignStage[]> {
   return (data ?? []) as CampaignStage[];
 }
 
-// Patron seulement. Renvoie le nombre de dossiers déplacés (étapes retirées).
+// Patron ou permission « Gérer les campagnes ». Renvoie le nombre de dossiers
+// déplacés (étapes retirées).
 export async function replaceCampaignStages(
   member: Member,
   campaignId: string,

@@ -63,7 +63,7 @@ export async function copyRootLabel(chosen: FileSystemDirectoryHandle) {
   return root === chosen ? chosen.name : `${chosen.name} › ${COPY_FOLDER_NAME}`;
 }
 
-// --- Réglage mémorisé -------------------------------------------------------
+// Réglage mémorisé
 
 export type LastRun = {
   at: string;

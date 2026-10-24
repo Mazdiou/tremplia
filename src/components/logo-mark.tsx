@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 // Symbole de l'application : un cairn de quatre pierres (24 × 24), le même
-// partout — écrans, icônes (src/features/pwa/app-icon.tsx), page hors ligne.
+// partout : écrans, icônes (src/features/pwa/app-icon.tsx), page hors ligne.
 export const CAIRN_SHAPES =
   '<ellipse cx="12" cy="19.3" rx="8.4" ry="2.5"/>' +
   '<ellipse cx="11.3" cy="14.1" rx="6.4" ry="2.2"/>' +

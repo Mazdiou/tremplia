@@ -150,7 +150,7 @@ export async function deleteCampaign(member: Member, campaignId: string) {
   });
 }
 
-// Groupes (tout membre actif) -------------------------------------------------
+// Groupes (tout membre actif)
 
 const GROUP_ERRORS = {
   "23505": "Un groupe de cette campagne porte déjà ce nom",

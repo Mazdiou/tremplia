@@ -24,7 +24,7 @@ select public.add_employee((select agency_a from ctx),
   '11111111-1111-1111-1111-111111111111',
   '22222222-2222-2222-2222-222222222222', 'Employe', 'A');
 
--- Création ------------------------------------------------------------------
+-- Création
 
 create temp table camp as
 select public.create_campaign(
@@ -106,7 +106,7 @@ select is(
   (select count(*) from public.campaigns where name = 'Italie'),
   0::bigint, 'une création refusée ne laisse aucune campagne');
 
--- Modification --------------------------------------------------------------
+-- Modification
 
 select throws_ok(
   $$select public.update_campaign((select id from camp), (select agency_a from ctx),
@@ -127,7 +127,7 @@ select is(
     where campaign_id = (select id from camp)),
   array['Fin des entretiens'], 'les dates sont remplacées');
 
--- Groupes : tout membre actif -----------------------------------------------
+-- Groupes : tout membre actif
 
 create temp table grp as
 select public.create_campaign_group((select id from camp), (select agency_a from ctx),
@@ -158,7 +158,7 @@ select throws_ok(
       '33333333-3333-3333-3333-333333333333', 'Pirate')$$,
   'P0002', null, 'une autre agence ne renomme pas ce groupe');
 
--- Archivage -----------------------------------------------------------------
+-- Archivage
 
 select throws_ok(
   $$select public.set_campaign_status((select id from camp), (select agency_a from ctx),
@@ -199,7 +199,7 @@ select ok(
   (select archived_at is null from public.campaigns where id = (select id from camp)),
   'la date d''archivage est effacée à la réactivation');
 
--- Suppression ---------------------------------------------------------------
+-- Suppression
 
 select lives_ok(
   $$select public.delete_campaign_group((select id from grp), (select agency_a from ctx),
@@ -221,7 +221,7 @@ select is(
   + (select count(*) from public.campaign_dates where campaign_id = (select id from camp)),
   0::bigint, 'ses groupes et ses dates partent avec elle');
 
--- Lecture (RLS) -------------------------------------------------------------
+-- Lecture (RLS)
 
 select set_config('request.jwt.claims',
   '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', true);

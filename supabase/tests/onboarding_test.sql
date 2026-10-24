@@ -26,7 +26,7 @@ create function pg_temp.progress() returns text language sql as $$
   from public.onboarding_progress((select agency_a from ctx),
     '11111111-1111-1111-1111-111111111111') $$;
 
--- 1. Nouvelle agence : guide affiché, bienvenue à voir -------------------------
+-- 1. Nouvelle agence : guide affiché, bienvenue à voir
 
 select is(pg_temp.progress(), 'f,f,f,f,f,f,f',
   'nouvelle agence : guide affiché, aucune étape faite');
@@ -40,7 +40,7 @@ select is(
   (select welcomed_at from public.profiles where id = '11111111-1111-1111-1111-111111111111'),
   null, 'nouveau patron : le mot de bienvenue reste à voir');
 
--- 2. Les étapes se cochent d'après les données ---------------------------------
+-- 2. Les étapes se cochent d'après les données
 
 create temp table camp as
 select public.create_campaign((select agency_a from ctx),
@@ -96,7 +96,7 @@ select public.add_employee((select agency_a from ctx),
 select is(pg_temp.progress(), 'f,t,t,t,t,t,t',
   'un employé : toutes les étapes sont faites');
 
--- 3. Cloisonnement -------------------------------------------------------------
+-- 3. Cloisonnement
 
 select is(
   (select concat_ws(',', has_campaign, has_case, has_document, has_student_access, has_task,
@@ -115,7 +115,7 @@ select throws_ok(
       '11111111-1111-1111-1111-111111111111')$$,
   '42501', null, 'le patron ne lit pas l''avancement d''une autre agence');
 
--- 4. Masquer et réafficher -----------------------------------------------------
+-- 4. Masquer et réafficher
 
 select public.set_onboarding_hidden((select agency_a from ctx),
   '11111111-1111-1111-1111-111111111111', true);
@@ -151,7 +151,7 @@ select lives_ok(
       '11111111-1111-1111-1111-111111111111', true)$$,
   'abonnement expiré : le guide se masque quand même');
 
--- 5. Mot de bienvenue ----------------------------------------------------------
+-- 5. Mot de bienvenue
 
 select lives_ok(
   $$select public.mark_welcomed((select agency_a from ctx),
@@ -173,7 +173,7 @@ select throws_ok(
       '22222222-2222-2222-2222-222222222222')$$,
   '42501', null, 'pas de bienvenue marquée dans une autre agence');
 
--- 6. Droits --------------------------------------------------------------------
+-- 6. Droits
 
 select ok(
   not has_function_privilege('authenticated',

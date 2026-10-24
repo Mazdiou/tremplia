@@ -27,11 +27,12 @@ export function TemplateGallery({
     const res = await callApi<{ id: string }>("/api/campaigns/import", {
       body: { templateKey: key },
     });
-    setPending(null);
     if (!res.ok) {
+      setPending(null);
       setError(res.error);
       return;
     }
+    // Import en cours affiché jusqu'à l'arrivée sur la campagne créée
     router.push(`/campaigns/${res.data.id}`);
     router.refresh();
   }

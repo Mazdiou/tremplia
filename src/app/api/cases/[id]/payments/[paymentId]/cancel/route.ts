@@ -5,7 +5,8 @@ import { cancelPayment } from "@/features/payments/server/payments";
 
 type Ctx = { params: Promise<{ id: string; paymentId: string }> };
 
-// Annuler un paiement, avec un motif (patron seulement, revérifié par la base)
+// Annuler un paiement, avec un motif : patron ou permission « Corriger les
+// paiements », revérifié par la base
 export function POST(request: Request, { params }: Ctx) {
   return safely("payments cancel", async () => {
     const { id, paymentId } = await params;

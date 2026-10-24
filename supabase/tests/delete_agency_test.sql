@@ -79,7 +79,7 @@ update public.campaigns set status = 'archived' where id = (select a from camp);
 update public.agencies set subscription_ends_at = now() - interval '1 day'
 where id = (select agency_a from ctx);
 
--- 1. Les protections tiennent hors de la suppression ---------------------------
+-- 1. Les protections tiennent hors de la suppression
 
 select throws_ok(
   $$delete from public.documents where id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'$$,
@@ -89,7 +89,7 @@ select throws_ok(
   '42501', null, 'hors suppression, un patron ne se supprime pas');
 select is(public.is_purging(), false, 'pas de purge en cours');
 
--- 2. Refus ---------------------------------------------------------------------
+-- 2. Refus
 
 select throws_ok(
   format('select public.delete_agency(%L, %L)',
@@ -103,7 +103,7 @@ select throws_ok(
   $$select public.delete_agency('99999999-9999-9999-9999-999999999999', gen_random_uuid())$$,
   'P0002', null, 'agence introuvable');
 
--- 3. Suppression -----------------------------------------------------------------
+-- 3. Suppression
 
 create temp table deleted as
 select public.delete_agency('99999999-9999-9999-9999-999999999999', agency_a) as users from ctx;

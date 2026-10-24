@@ -52,7 +52,7 @@ from ctx,
 create function pg_temp.open_count(p_case uuid) returns bigint language sql as $$
   select count(*) from public.case_tasks where case_id = p_case and done_at is null $$;
 
--- 1. Créer ------------------------------------------------------------------
+-- 1. Créer
 
 -- t1 : créée par A1 pour lui-même
 create temp table t1 as
@@ -132,7 +132,7 @@ select throws_ok(
       '22222222-2222-2222-2222-222222222222')$$,
   'P0002', null, 'le dossier d''une autre agence est introuvable');
 
--- 2. Modifier ---------------------------------------------------------------
+-- 2. Modifier
 
 select throws_ok(
   $$select public.update_case_task((select id from t1), (select agency_a from ctx),
@@ -177,7 +177,7 @@ select throws_ok(
       '11111111-1111-1111-1111-111111111111')$$,
   'P0002', null, 'modifier une tâche inconnue est refusé');
 
--- 3. Faite / rouverte -------------------------------------------------------
+-- 3. Faite / rouverte
 
 select throws_ok(
   $$select public.set_case_task_done((select id from t1), (select agency_a from ctx),
@@ -209,7 +209,7 @@ select ok(
      from public.case_tasks where id = (select id from t1)),
   'la tâche rouverte est de nouveau à faire');
 
--- 4. Supprimer --------------------------------------------------------------
+-- 4. Supprimer
 
 -- t4 : créée par le patron, confiée à A2
 create temp table t4 as
@@ -247,7 +247,7 @@ select throws_ok(
       '11111111-1111-1111-1111-111111111111')$$,
   'P0002', null, 'supprimer une tâche inconnue est refusé');
 
--- 5. Limite de 100 tâches à faire -------------------------------------------
+-- 5. Limite de 100 tâches à faire
 
 -- Dossier D : 101 tâches, dont une faite → 100 à faire
 insert into public.case_tasks (agency_id, case_id, title, assigned_to, created_by)
@@ -278,7 +278,7 @@ select throws_ok(
       '22222222-2222-2222-2222-222222222222')$$,
   '54000', null, 'actions groupées : un dossier plein refuse l''ensemble');
 
--- 6. Clôture du dossier : tout marquer fait ---------------------------------
+-- 6. Clôture du dossier : tout marquer fait
 
 select is(
   (select count(*) from public.complete_case_tasks('dddddddd-dddd-dddd-dddd-dddddddddddd',
@@ -344,7 +344,7 @@ update public.cases set status = 'active' where id = 'cccccccc-cccc-cccc-cccc-cc
 update public.case_tasks set done_at = null, done_by = null
 where id in (select id from open_c);
 
--- 7. Même tâche pour plusieurs dossiers -------------------------------------
+-- 7. Même tâche pour plusieurs dossiers
 
 select is(
   (select count(*) from public.create_cases_task(
@@ -384,7 +384,7 @@ select throws_ok(
       '55555555-5555-5555-5555-555555555555')$$,
   '22023', null, 'actions groupées : pas de responsable désactivé');
 
--- 8. Responsable désactivé --------------------------------------------------
+-- 8. Responsable désactivé
 
 update public.profiles set is_active = false where id = '44444444-4444-4444-4444-444444444444';
 
@@ -402,7 +402,7 @@ select throws_ok(
       '44444444-4444-4444-4444-444444444444')$$,
   '22023', null, 'mais pas la confier à un membre désactivé');
 
--- 9. Contraintes directes (droits d'administrateur) -------------------------
+-- 9. Contraintes directes (droits d'administrateur)
 
 select throws_ok(
   $$update public.case_tasks set created_by = '11111111-1111-1111-1111-111111111111'
@@ -425,7 +425,7 @@ select throws_ok(
       '33333333-3333-3333-3333-333333333333', '33333333-3333-3333-3333-333333333333' from ctx$$,
   '23503', null, 'une tâche ne peut pas viser le dossier d''une autre agence');
 
--- 10. Agence expirée : lecture seule ----------------------------------------
+-- 10. Agence expirée : lecture seule
 
 update public.agencies set subscription_ends_at = now() - interval '1 minute'
 where id = (select agency_a from ctx);
@@ -441,7 +441,7 @@ select throws_ok(
       '11111111-1111-1111-1111-111111111111', true)$$,
   '25006', null, 'expirée : cocher une tâche est refusé');
 
--- 11. Accès depuis le navigateur --------------------------------------------
+-- 11. Accès depuis le navigateur
 
 -- Patron A
 select set_config('request.jwt.claims',

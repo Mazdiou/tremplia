@@ -4,8 +4,8 @@ import { CASE_FIELD_COLUMNS, type CaseFieldsRecord } from "./case-record";
 // Fonction pure, sans accès à la base.
 
 // Seuls ces champs gardent leur ancienne et nouvelle valeur dans le journal.
-// Pour tous les autres (identité, contact, parcours, projets), le journal ne
-// garde que le nom du champ, jamais la valeur.
+// Pour tous les autres (identité, contact, parcours), le journal ne garde
+// que le nom du champ, jamais la valeur.
 const LOGGABLE_VALUES = new Set<string>(["education_level"]);
 
 // Texte comparable d'une valeur JSON, quel que soit l'ordre des clés des

@@ -50,7 +50,7 @@ create function pg_temp.ends(a uuid) returns timestamptz language sql as $$
 create function pg_temp.expire(a uuid) returns void language sql as $$
   update public.agencies set subscription_ends_at = now() - interval '1 minute' where id = a $$;
 
--- 1. Essai ------------------------------------------------------------------
+-- 1. Essai
 
 select is(pg_temp.state((select agency_a from ctx)), 'trial', 'une nouvelle agence est en essai');
 select is(
@@ -68,7 +68,7 @@ select lives_ok(
       '22222222-2222-2222-2222-222222222222', 'Note pendant l''essai')$$,
   'pendant l''essai, tout est permis');
 
--- 2. Expiré : lecture seule -------------------------------------------------
+-- 2. Expiré : lecture seule
 
 select pg_temp.expire((select agency_a from ctx));
 select is(pg_temp.state((select agency_a from ctx)), 'expired', 'après la date, l''agence est expirée');
@@ -132,7 +132,7 @@ select lives_ok(
       'Campagne B', null, '{}', '[]', '[]', '{}')$$,
   'une autre agence, en essai, écrit normalement');
 
--- 3. Paiements ------------------------------------------------------------
+-- 3. Paiements
 
 select throws_ok(
   $$select public.record_platform_payment('11111111-1111-1111-1111-111111111111',
@@ -187,7 +187,7 @@ select ok(public.cancel_platform_payment('99999999-9999-9999-9999-999999999999',
     'Erreur') is not null,
   'des mois offerts s''annulent comme un paiement');
 
--- 4. Annulation -------------------------------------------------------------
+-- 4. Annulation
 
 select throws_ok(
   $$select public.cancel_platform_payment('99999999-9999-9999-9999-999999999999',
@@ -212,7 +212,7 @@ select is(public.cancel_platform_payment('99999999-9999-9999-9999-999999999999',
 select is(pg_temp.state((select agency_a from ctx)), 'expired',
   'sans paiement valable et date passée, l''agence redevient expirée');
 
--- 5. Liste et droits ------------------------------------------------------
+-- 5. Liste et droits
 
 select is((select count(*) from public.platform_agencies('99999999-9999-9999-9999-999999999999') l
            where l.id in ((select agency_a from ctx), (select agency_b from ctx))),

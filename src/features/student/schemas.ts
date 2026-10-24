@@ -12,9 +12,9 @@ export const studentAccessSchema = z.object({
 // Accès vu par l'agence : code affiché (K7P4-9XQM), ou null si jamais ouvert
 export type StudentAccess = { enabled: boolean; code: string } | null;
 
-// Réponse du candidat : une demande de modification a toujours un message
-// `fingerprint` : version du contenu affichée au candidat ; refusée si
-// l'agence l'a modifiée entre-temps
+// Réponse du candidat : une demande de modification a toujours un message.
+// `fingerprint` : version du contenu affichée au candidat ; la réponse est
+// refusée si l'agence l'a modifiée entre-temps.
 const fingerprint = z.string().max(64);
 
 export const studentReviewSchema = z.discriminatedUnion("decision", [

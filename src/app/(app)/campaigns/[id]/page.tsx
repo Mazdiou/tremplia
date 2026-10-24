@@ -25,8 +25,22 @@ import { countCases } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
 import { can } from "@/lib/permissions";
 import { amountInputValue, formatDA } from "@/lib/money";
+import { readAll } from "@/lib/supabase/read-all";
+import { reportError } from "@/lib/report-error";
 import { cn } from "@/lib/utils";
 import { isUuid } from "@/lib/validation";
+import { campaignName } from "@/features/campaigns/server/queries";
+import type { Metadata } from "next";
+
+// Titre de l'onglet : le nom de la campagne
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  return { title: (isUuid(id) && (await campaignName(id))) || "Campagne introuvable" };
+}
 
 export default async function CampaignPage({
   params,
@@ -44,7 +58,7 @@ export default async function CampaignPage({
     datesRes,
     infosRes,
     groupsRes,
-    caseGroupsRes,
+    caseGroups,
     stats,
     stagesRes,
     stageStatsRes,
@@ -58,11 +72,21 @@ export default async function CampaignPage({
     supabase.from("campaign_dates").select("label, date").eq("campaign_id", id),
     supabase.from("campaign_infos").select("label, value").eq("campaign_id", id).order("position"),
     supabase.from("campaign_groups").select("id, name").eq("campaign_id", id).order("position"),
-    supabase
-      .from("case_groups")
-      .select("group_id, cases!inner(status)")
-      .eq("campaign_id", id)
-      .eq("cases.status", "active"),
+    // Classement des dossiers actifs : lu en entier (plus de 1000 lignes
+    // possibles), compté par groupe plus bas
+    readAll<{ group_id: string }>((from, to) =>
+      supabase
+        .from("case_groups")
+        .select("group_id, cases!inner(status)")
+        .eq("campaign_id", id)
+        .eq("cases.status", "active")
+        .order("case_id")
+        .order("group_id")
+        .range(from, to),
+    ).catch(() => {
+      reportError("[campaign page] groupes", "lecture impossible");
+      return [];
+    }),
     // Dossiers de la campagne, tous et actifs : une lecture (vue case_stats)
     listCaseStats([id]),
     supabase.from("campaign_stages").select("id, name").eq("campaign_id", id).order("position"),
@@ -79,8 +103,7 @@ export default async function CampaignPage({
   const dates = (datesRes.data ?? []) as { label: string; date: string }[];
   const infos = (infosRes.data ?? []) as { label: string; value: string }[];
   const activeByGroup = new Map<string, number>();
-  for (const cg of caseGroupsRes.data ?? []) {
-    const g = cg.group_id as string;
+  for (const { group_id: g } of caseGroups) {
     activeByGroup.set(g, (activeByGroup.get(g) ?? 0) + 1);
   }
   const groups = ((groupsRes.data ?? []) as { id: string; name: string }[]).map((g) => ({
@@ -131,9 +154,8 @@ export default async function CampaignPage({
           <>
             {/* Export : aussi en archive et en lecture seule (simple lecture) */}
             {manages && <ExportCampaignButton campaignId={id} />}
-            {!archived && (
-              <NewCaseLink campaignId={id} />
-            )}
+            {/* Abonnement expiré : rien à créer (comme le tableau de bord) */}
+            {!archived && !readOnly && <NewCaseLink campaignId={id} />}
           </>
         }
       />

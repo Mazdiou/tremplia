@@ -16,7 +16,7 @@ import type { CaseStatus } from "../labels";
 import type { CreateCaseInput, UpdateCaseInput } from "../schemas";
 import { logCaseActivity, type AuthorizedCase } from "./authorize-case";
 
-// Création d'un dossier ---------------------------------------------------------
+// Création d'un dossier
 
 // Même nom, même prénom (normalisés) et même date de naissance dans la même
 // campagne. Simple avertissement : la création reste possible après accord.
@@ -138,7 +138,7 @@ export async function createCase(member: Member, input: CreateCaseInput) {
   return caseId;
 }
 
-// Modification ------------------------------------------------------------------
+// Modification
 
 export async function updateCase(auth: AuthorizedCase, caseId: string, input: UpdateCaseInput) {
   const { admin, member } = auth;

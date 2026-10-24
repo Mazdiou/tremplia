@@ -3,8 +3,8 @@ import { amountInputValue, formatDA, parseAmount } from "./money";
 
 describe("formatDA", () => {
   it("groupe les milliers et ajoute la devise", () => {
-    expect(formatDA(150000).replace(/[  ]/g, " ")).toBe("150 000 DA");
-    expect(formatDA(0).replace(/[  ]/g, " ")).toBe("0 DA");
+    expect(formatDA(150000).replace(/[\u00a0\u202f]/g, " ")).toBe("150 000 DA");
+    expect(formatDA(0).replace(/[\u00a0\u202f]/g, " ")).toBe("0 DA");
   });
 
   it("ne coupe jamais le montant", () => {
@@ -21,7 +21,7 @@ describe("parseAmount", () => {
     expect(parseAmount("150000")).toBe(150000);
     expect(parseAmount(" 150 000 ")).toBe(150000);
     expect(parseAmount("150.000")).toBe(150000);
-    expect(parseAmount("150 000")).toBe(150000);
+    expect(parseAmount("150\u202f000")).toBe(150000);
   });
 
   it("vide : aucun montant", () => {

@@ -88,6 +88,7 @@ export default async function DocumentsPage({
       docs={docs}
       folders={folders}
       isOwner={isOwner}
+      readOnly={readOnly}
     />
   );
 }

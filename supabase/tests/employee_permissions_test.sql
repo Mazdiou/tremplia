@@ -30,7 +30,7 @@ select public.add_employee(agency_a, '11111111-1111-1111-1111-111111111111',
 select public.add_employee(agency_b, '33333333-3333-3333-3333-333333333333',
   '55555555-5555-5555-5555-555555555555', 'Employe', 'B') from ctx;
 
--- Attribution : patron seulement ----------------------------------------------
+-- Attribution : patron seulement
 
 select is((select permissions from public.profiles
     where id = '22222222-2222-2222-2222-222222222222'),
@@ -86,7 +86,7 @@ select throws_ok(
     where id = '44444444-4444-4444-4444-444444444444'$$,
   '23514', null, 'la table refuse aussi une permission inconnue');
 
--- Vérification ------------------------------------------------------------------
+-- Vérification
 
 select ok((select public.has_permission('11111111-1111-1111-1111-111111111111', agency_a,
   'payments_manage') from ctx), 'le patron a toutes les permissions');
@@ -97,7 +97,7 @@ select ok((select not public.has_permission('22222222-2222-2222-2222-22222222222
 select ok((select not public.has_permission('22222222-2222-2222-2222-222222222222', agency_b,
   'payments_view') from ctx), 'ni dans une autre agence');
 
--- Campagnes ---------------------------------------------------------------------
+-- Campagnes
 
 select throws_ok(
   $$select public.create_campaign((select agency_a from ctx),
@@ -143,7 +143,7 @@ select lives_ok(
       '22222222-2222-2222-2222-222222222222')$$,
   'il supprime une campagne vide');
 
--- Paiements ---------------------------------------------------------------------
+-- Paiements
 
 create temp table camp2 as
 select public.create_campaign(agency_a, '11111111-1111-1111-1111-111111111111',
@@ -186,7 +186,7 @@ select is(
      agency_a, '44444444-4444-4444-4444-444444444444', 'Erreur') from ctx),
   60000, 'et il annule un paiement');
 
--- Un employé désactivé perd tout --------------------------------------------------
+-- Un employé désactivé perd tout
 
 select public.set_employee_active(agency_a, '11111111-1111-1111-1111-111111111111',
   '44444444-4444-4444-4444-444444444444', false) from ctx;
@@ -199,7 +199,7 @@ select throws_ok(
       (select agency_a from ctx), '44444444-4444-4444-4444-444444444444', 210000)$$,
   '42501', null, 'et ne peut plus rien modifier');
 
--- Le navigateur ne change pas les permissions ---------------------------------------
+-- Le navigateur ne change pas les permissions
 
 select set_config('request.jwt.claims',
   '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', true);

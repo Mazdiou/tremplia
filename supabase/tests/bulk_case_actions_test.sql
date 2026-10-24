@@ -76,7 +76,7 @@ from ctx, camp,
       (select agency_b from ctx), '33333333-3333-3333-3333-333333333333'::uuid)
   ) as v(id, fn, campaign, agency, actor);
 
--- Étape : tout membre actif, tout ou rien ------------------------------------
+-- Étape : tout membre actif, tout ou rien
 
 select is(
   (select count(*) from public.set_cases_stage(
@@ -141,7 +141,7 @@ select throws_ok(
       pg_temp.stage('Constitution'))$$,
   '42501', null, 'un utilisateur désactivé ne change pas l''étape');
 
--- Responsable : patron seulement ---------------------------------------------
+-- Responsable : patron seulement
 
 select throws_ok(
   $$select * from public.set_cases_assignee(

@@ -23,7 +23,7 @@ export const folderNameSchema = z
   .min(1, "Saisissez un nom pour le dossier")
   .max(80, "Le nom ne peut pas dépasser 80 caractères");
 
-// Corps des requêtes ------------------------------------------------------------
+// Corps des requêtes
 
 // Étape 1 de l'envoi : demande d'une URL signée
 export const uploadRequestSchema = z.object({

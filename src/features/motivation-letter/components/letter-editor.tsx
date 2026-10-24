@@ -18,11 +18,14 @@ export function LetterEditor({
   caseId,
   initial,
   lastEdit,
+  readOnly,
 }: {
   caseId: string;
   initial: string;
   // « par Amine Madiou, le 14 oct. 2026 à 10:32 », ou null si jamais écrite
   lastEdit: string | null;
+  // Abonnement expiré : la lettre se lit et se copie, sans modification
+  readOnly: boolean;
 }) {
   const router = useRouter();
   const [saved, setSaved] = useState(initial);
@@ -98,10 +101,12 @@ export function LetterEditor({
             {copied ? <Check /> : <Copy />}
             {copied ? "Copiée" : "Copier"}
           </Button>
-          <Button size="sm" onClick={() => void save()} disabled={!dirty || saving}>
-            {saving && <Loader2 className="animate-spin" aria-hidden />}
-            Enregistrer
-          </Button>
+          {!readOnly && (
+            <Button size="sm" onClick={() => void save()} disabled={!dirty || saving}>
+              {saving && <Loader2 className="animate-spin" aria-hidden />}
+              Enregistrer
+            </Button>
+          )}
         </div>
       </div>
 
@@ -113,9 +118,12 @@ export function LetterEditor({
         value={content}
         maxLength={MAX_LETTER_LENGTH}
         disabled={saving}
-        spellCheck
+        readOnly={readOnly}
+        spellCheck={!readOnly}
         lang="fr"
-        placeholder={"Madame, Monsieur,\n\nRédigez ici la lettre de motivation du candidat…"}
+        placeholder={
+          readOnly ? "" : "Madame, Monsieur,\n\nRédigez ici la lettre de motivation du candidat…"
+        }
         onChange={(e) => {
           setContent(e.target.value);
           setMessage(null);

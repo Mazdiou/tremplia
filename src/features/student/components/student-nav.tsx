@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { UnreadBadge } from "@/features/messages/components/unread-badge";
 import { pausePushDevice } from "@/features/notifications/push-client";
 
-// Libellé court sur téléphone : les trois onglets tiennent sur 320 px
+// Libellé court sur téléphone : les quatre onglets tiennent sur 320 px
 const TABS = [
   { href: "/student", label: "Informations", short: "Infos" },
   { href: "/student/letter", label: "Lettre de motivation", short: "Lettre" },

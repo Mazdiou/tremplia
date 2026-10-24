@@ -8,7 +8,7 @@ create function pg_temp.h(n text) returns text language sql as $$ select md5(n) 
 -- est annulé à la fin du test)
 delete from public.email_requests;
 
--- 1. Demandes d'e-mail --------------------------------------------------------
+-- 1. Demandes d'e-mail
 
 select is(public.email_request_allowed('recovery', pg_temp.h('ip-1'), pg_temp.h('mail-1')), true,
   'première demande acceptée');
@@ -49,7 +49,7 @@ select throws_ok(
   $$insert into public.email_requests (kind, ip_hash, email_hash) values ('autre', 'x', 'y')$$,
   '23514', null, 'sorte d''e-mail et empreintes contrôlées');
 
--- 2. Compte lié à une adresse --------------------------------------------------
+-- 2. Compte lié à une adresse
 
 -- Patron A (adresse confirmée), employé actif, employé désactivé, compte
 -- suspendu, compte non confirmé
@@ -87,7 +87,7 @@ select is((select confirmed from public.account_for_email('b0@test.local')), fal
 select is_empty($$select * from public.account_for_email('inconnu@test.local')$$,
   'adresse inconnue : aucune ligne');
 
--- 3. Rappels -------------------------------------------------------------------
+-- 3. Rappels
 
 create temp table ctx as
 select

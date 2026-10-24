@@ -8,6 +8,15 @@ import { reportError } from "@/lib/report-error";
 import { sendWelcomeConfirmation } from "./emails";
 import { LEGAL } from "@/config/legal";
 
+// Mot de passe refusé par Supabase Auth (trop court ou trop simple selon ses
+// réglages) : message sur le champ, sinon null
+export function weakPasswordError(error: { code?: string } | null) {
+  if (error?.code !== "weak_password") return null;
+  return new ApiError(400, "Mot de passe trop faible : choisissez-en un plus long ou plus varié", {
+    fields: [{ path: "password", message: "Mot de passe trop faible" }],
+  });
+}
+
 // Inscription d'une agence : compte du patron, agence et profil. Essais
 // limités par adresse IP (gardée seulement en empreinte). Le compte reste
 // fermé (Supabase refuse la connexion) tant que l'adresse n'est pas
@@ -31,7 +40,7 @@ export async function registerAgency(input: RegisterInput, ip: string): Promise<
     email_confirm: false,
   });
   if (authError || !created.user) {
-    throw new ApiError(400, "Impossible de créer le compte (e-mail déjà utilisé)");
+    throw weakPasswordError(authError) ?? new ApiError(400, "Impossible de créer le compte (e-mail déjà utilisé)");
   }
 
   // 2. Création de l'agence et du profil patron
@@ -83,7 +92,12 @@ export async function replaceTemporaryPassword(userId: string, password: string)
   }
 
   const { error: pwError } = await admin.auth.admin.updateUserById(userId, { password });
-  if (pwError) throw new ApiError(500, "Changement impossible");
+  if (pwError) {
+    const weak = weakPasswordError(pwError);
+    if (weak) throw weak;
+    reportError("[change-password]", pwError.code ?? pwError.status);
+    throw new ApiError(500, "Changement impossible");
+  }
 
   const { error: flagError } = await admin
     .from("profiles")
@@ -112,11 +126,8 @@ export async function resetPasswordFromLink(userId: string, password: string) {
 
   const { error: pwError } = await admin.auth.admin.updateUserById(userId, { password });
   if (pwError) {
-    if (pwError.code === "weak_password") {
-      throw new ApiError(400, "Mot de passe trop faible : choisissez-en un plus long ou plus varié", {
-        fields: [{ path: "password", message: "Mot de passe trop faible" }],
-      });
-    }
+    const weak = weakPasswordError(pwError);
+    if (weak) throw weak;
     reportError("[reset-password]", pwError.code ?? pwError.status);
     throw new ApiError(500, "Changement impossible");
   }

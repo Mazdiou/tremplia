@@ -34,7 +34,7 @@ select public.create_case('cccccccc-cccc-cccc-cccc-cccccccccccc', agency_a,
   null, null, null)
 from ctx;
 
--- Écriture par le serveur ---------------------------------------------------
+-- Écriture par le serveur
 
 set local role service_role;
 
@@ -68,7 +68,7 @@ select throws_ok(
   $$delete from public.activity_log$$,
   '42501', null, 'même le serveur ne supprime rien du journal');
 
--- Patron A ------------------------------------------------------------------
+-- Patron A
 
 reset role;
 select set_config('request.jwt.claims',
@@ -92,7 +92,7 @@ select throws_ok(
   $$delete from public.activity_log$$,
   '42501', null, 'un utilisateur connecté ne supprime rien du journal');
 
--- Employé A -----------------------------------------------------------------
+-- Employé A
 
 reset role;
 select set_config('request.jwt.claims',
@@ -102,7 +102,7 @@ set local role authenticated;
 select is((select count(*) from public.activity_log), 0::bigint,
   'un employé ne voit rien du journal');
 
--- Visiteur ------------------------------------------------------------------
+-- Visiteur
 
 reset role;
 set local role anon;

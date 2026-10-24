@@ -18,10 +18,12 @@ export async function POST(request: Request) {
   if (!target) return new Response(null, { status: 400 });
 
   try {
+    // Sentry injoignable : la fonction ne reste pas ouverte indéfiniment
     const upstream = await fetch(target, {
       method: "POST",
       headers: { "Content-Type": "application/x-sentry-envelope" },
       body,
+      signal: AbortSignal.timeout(10_000),
     });
     // Consignes de Sentry (quota atteint, attendre) : le navigateur ralentit
     // ses envois en les lisant

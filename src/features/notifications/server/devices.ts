@@ -45,7 +45,7 @@ async function saveDevice(
   }
 }
 
-// --- Membres -------------------------------------------------------------------
+// Membres
 
 export function saveMemberDevice(member: Member, sub: PushSubscriptionInput) {
   return saveDevice(
@@ -176,7 +176,7 @@ export async function savePreferences(member: Member, prefs: NotificationPrefere
   if (error) throw dbError("push preferences save", error, { "42501": "Accès refusé" });
 }
 
-// --- Candidat --------------------------------------------------------------------
+// Candidat
 
 export function saveStudentDevice(session: StudentSession, sub: PushSubscriptionInput) {
   return saveDevice(

@@ -45,7 +45,7 @@ select public.create_case('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', agency_b,
   null, null, null)
 from ctx;
 
--- Documents -----------------------------------------------------------------
+-- Documents
 
 -- Contraintes (droits d'administrateur)
 -- Le test d'insertion valide vient après les refus : une ligne déjà présente
@@ -198,7 +198,7 @@ select throws_ok(
     where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd'$$,
   '55006', null, 'un document verrouillé ne peut pas être supprimé');
 
--- Dossiers de documents ----------------------------------------------------
+-- Dossiers de documents
 
 reset role;
 
@@ -466,7 +466,7 @@ select throws_ok(
   $$select count(*) from public.document_folders$$,
   '42501', null, 'un visiteur ne peut pas lire les dossiers de documents');
 
--- Serveur : seulement les écritures prévues ----------------------------------
+-- Serveur : seulement les écritures prévues
 
 reset role;
 set local role service_role;

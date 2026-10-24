@@ -190,9 +190,12 @@ function ProgramForm({
 export function ProgramsPanel({
   caseId,
   programs,
+  readOnly,
 }: {
   caseId: string;
   programs: ProgramItem[];
+  // Abonnement expiré : la liste et les réponses se consultent seulement
+  readOnly: boolean;
 }) {
   const router = useRouter();
   const base = `/api/cases/${caseId}/programs`;
@@ -285,7 +288,7 @@ export function ProgramsPanel({
             </p>
           )}
         </div>
-        {editing !== "new" && (
+        {!readOnly && editing !== "new" && (
           <Button disabled={full} onClick={() => open("new")}
             title={full ? `${MAX_PROGRAMS} formations au maximum` : undefined}>
             <Plus /> Ajouter une formation
@@ -305,10 +308,12 @@ export function ProgramsPanel({
           <div className="rounded-xl border border-dashed px-6 py-12 text-center">
             <GraduationCap className="mx-auto size-8 text-muted-foreground" aria-hidden />
             <p className="mt-3 text-sm font-medium">Aucune formation pour ce dossier</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Ajoutez les formations visées par le candidat, de la préférée à la moins
-              souhaitée.
-            </p>
+            {!readOnly && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                Ajoutez les formations visées par le candidat, de la préférée à la moins
+                souhaitée.
+              </p>
+            )}
           </div>
         )
       ) : (
@@ -330,6 +335,13 @@ export function ProgramsPanel({
                   onCancel={() => open(null)}
                 />
               </li>
+            ) : readOnly ? (
+              <ProgramRow
+                key={p.id}
+                rank={i + 1}
+                program={p}
+                result={<ProgramResultPill result={p.result} />}
+              />
             ) : (
               <ProgramRow
                 key={p.id}

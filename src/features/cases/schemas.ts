@@ -116,7 +116,7 @@ export const caseFieldsSchema = z
 
 export type CaseFields = z.infer<typeof caseFieldsSchema>;
 
-// Comptes externes ------------------------------------------------------------
+// Comptes externes
 
 const externalAccountShape = {
   platform: requiredText(80, "Saisissez la plateforme"),
@@ -179,7 +179,7 @@ export const externalAccountUpdateSchema = z
 
 export type ExternalAccountInput = z.infer<typeof newExternalAccountSchema>;
 
-// Création et modification ----------------------------------------------------
+// Création et modification
 
 const optionalNote = z.preprocess(emptyToUndefined, noteContentSchema.optional());
 

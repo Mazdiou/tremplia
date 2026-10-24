@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { strFromU8, unzipSync } from "fflate";
-import { buildXlsx, columnLetter, escapeXml, excelDate, sheetName } from "./xlsx";
+import { buildXlsx, columnLetter, escapeXml, excelDate, sheetName, xlsxDownload } from "./xlsx";
 
 describe("columnLetter", () => {
   it("numérote comme Excel", () => {
@@ -26,6 +26,9 @@ describe("excelDate", () => {
 describe("escapeXml", () => {
   it("échappe et retire les caractères de contrôle", () => {
     expect(escapeXml(`<a & "b">\u0001`)).toBe("&lt;a &amp; &quot;b&quot;&gt;");
+  });
+  it("retire aussi les non-caractères U+FFFE et U+FFFF", () => {
+    expect(escapeXml("a\uFFFEb\uFFFFc")).toBe("abc");
   });
 });
 
@@ -84,5 +87,19 @@ describe("buildXlsx", () => {
     expect(sheet).toContain('<row r="3"><c r="A3" t="inlineStr" s="0"><is><t xml:space="preserve">Éloïse</t></is></c></row>');
     expect(sheet).toContain('state="frozen"');
     expect(sheet).toContain('<autoFilter ref="A1:C3"/>');
+  });
+});
+
+describe("xlsxDownload", () => {
+  it("fait télécharger le classeur sous son nom, accents compris, sans cache", () => {
+    const res = xlsxDownload(new Uint8Array([1, 2, 3]), "Encaissements - Février 2026.xlsx");
+    expect(res.headers.get("Content-Type")).toBe(
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+    const disposition = res.headers.get("Content-Disposition") ?? "";
+    // Repli sans accent ni guillemet, puis le vrai nom encodé
+    expect(disposition).toContain('filename="Encaissements - Fevrier 2026.xlsx"');
+    expect(disposition).toContain("filename*=UTF-8''Encaissements%20-%20F%C3%A9vrier%202026.xlsx");
   });
 });

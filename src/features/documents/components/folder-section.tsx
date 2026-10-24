@@ -32,6 +32,7 @@ export function FolderSection({
   mode,
   busy,
   isOwner,
+  readOnly,
   actions,
   children,
 }: {
@@ -45,6 +46,8 @@ export function FolderSection({
   mode: FolderMode;
   busy: boolean;
   isOwner: boolean;
+  // Abonnement expiré : ni ajout, ni renommage, ni suppression
+  readOnly: boolean;
   actions: FolderActions;
   // Les documents de la section
   children: ReactNode;
@@ -116,7 +119,7 @@ export function FolderSection({
                 Annuler
               </Button>
             </>
-          ) : (
+          ) : readOnly ? null : (
             <>
               <Button
                 variant="ghost"
@@ -157,9 +160,11 @@ export function FolderSection({
       {!collapsed &&
         (count === 0 ? (
           <p className="border-t px-3 py-3 text-xs text-muted-foreground">
-            {folder
-              ? "Dossier vide : déposez des PDF ou des photos ici."
-              : "Déposez ici un document pour le sortir de son dossier."}
+            {readOnly
+              ? "Aucun document."
+              : folder
+                ? "Dossier vide : déposez des PDF ou des photos ici."
+                : "Déposez ici un document pour le sortir de son dossier."}
           </p>
         ) : (
           <ul className="divide-y border-t">{children}</ul>

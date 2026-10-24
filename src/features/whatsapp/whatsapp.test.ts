@@ -51,7 +51,7 @@ const ctx: WhatsAppContext = {
   accessCode: "K7P4M2QX",
   remaining: 25000,
 };
-const spaces = (s: string) => s.replace(/[  ]/g, " ");
+const spaces = (s: string) => s.replace(/[\u00a0\u202f]/g, " ");
 
 describe("whatsAppMessage", () => {
   it("écrit au candidat", () => {

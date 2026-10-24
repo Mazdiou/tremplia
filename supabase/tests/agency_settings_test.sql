@@ -24,7 +24,7 @@ select public.add_employee((select agency_a from ctx),
   '11111111-1111-1111-1111-111111111111',
   '22222222-2222-2222-2222-222222222222', 'Employe', 'A');
 
--- 1. Profil de l'agence --------------------------------------------------------
+-- 1. Profil de l'agence
 
 select lives_ok(
   $$select public.update_agency_profile((select agency_a from ctx),
@@ -51,7 +51,7 @@ select throws_ok(
       '11111111-1111-1111-1111-111111111111', ' Espaces ', 'Alger', '0555000001')$$,
   '23514', null, 'un nom avec des espaces autour est refusé');
 
--- 2. Valeurs par défaut des campagnes -------------------------------------------
+-- 2. Valeurs par défaut des campagnes
 
 select is(
   (select default_stages is null and default_platforms = '{}' and default_fee is null
@@ -100,7 +100,7 @@ select throws_ok(
       '22222222-2222-2222-2222-222222222222', null, '{}', null)$$,
   '42501', null, 'un employé ne change pas les valeurs par défaut');
 
--- 3. Nom d'un membre ---------------------------------------------------------------
+-- 3. Nom d'un membre
 
 select lives_ok(
   $$select public.update_own_name((select agency_a from ctx),
@@ -117,7 +117,7 @@ select throws_ok(
       '22222222-2222-2222-2222-222222222222', 'Amina', 'Benali')$$,
   '42501', null, 'pas au nom d''une autre agence');
 
--- 4. Lecture seule ---------------------------------------------------------------
+-- 4. Lecture seule
 
 update public.agencies set subscription_ends_at = now() - interval '1 minute'
 where id = (select agency_a from ctx);
@@ -137,7 +137,7 @@ select throws_ok(
       '11111111-1111-1111-1111-111111111111', 'Nouveau', 'Nom')$$,
   '25006', null, 'expirée : le nom ne se modifie plus');
 
--- 5. Essais de mot de passe ---------------------------------------------------------
+-- 5. Essais de mot de passe
 
 select public.password_check_failed('11111111-1111-1111-1111-111111111111')
 from generate_series(1, 5);

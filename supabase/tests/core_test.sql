@@ -21,7 +21,7 @@ select
     where id = '33333333-3333-3333-3333-333333333333') as agency_b;
 grant select on ctx to public;
 
--- Ajout d'un employé : patron seulement ------------------------------------
+-- Ajout d'un employé : patron seulement
 
 select lives_ok(
   $$select public.add_employee((select agency_a from ctx),
@@ -51,7 +51,7 @@ select throws_ok(
       '44444444-4444-4444-4444-444444444444', ' Agence', 'Alger', '0555000003', 'P', 'C')$$,
   '23514', null, 'un nom avec des espaces autour est refusé');
 
--- Désactivation : patron seulement, jamais soi-même ni un patron ----------
+-- Désactivation : patron seulement, jamais soi-même ni un patron
 
 select throws_ok(
   $$select public.set_employee_active((select agency_a from ctx),
@@ -100,7 +100,7 @@ select lives_ok(
   $$delete from public.profiles where id = '22222222-2222-2222-2222-222222222222'$$,
   'un employé désactivé, sans historique, peut être supprimé');
 
--- Serveur (clé secrète) : seulement ce qui lui est accordé -----------------
+-- Serveur (clé secrète) : seulement ce qui lui est accordé
 
 set local role service_role;
 
@@ -123,7 +123,7 @@ select lives_ok(
 
 reset role;
 
--- Patron A, connecté --------------------------------------------------------
+-- Patron A, connecté
 
 select set_config('request.jwt.claims',
   '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
@@ -146,7 +146,7 @@ select throws_ok(
       gen_random_uuid(), 'Pirate', 'X', '0555000009', 'P', 'P')$$,
   '42501', null, 'create_agency_with_owner ne s''appelle pas depuis le navigateur');
 
--- Visiteur non connecté -----------------------------------------------------
+-- Visiteur non connecté
 
 reset role;
 set local role anon;
@@ -158,7 +158,7 @@ select throws_ok(
   $$select count(*) from public.profiles$$,
   '42501', null, 'un visiteur ne lit pas les profils');
 
--- Inventaire des droits, toutes migrations confondues ---------------------
+-- Inventaire des droits, toutes migrations confondues
 -- Toute nouvelle table ou fonction doit apparaître ici : un droit accordé
 -- par erreur fait échouer ce test.
 

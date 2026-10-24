@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Pencil, Phone, UserRound } from "lucide-react";
@@ -36,6 +37,17 @@ import { isUuid } from "@/lib/validation";
 import { countOpenCaseTasks, listTaskMembers } from "@/features/tasks/server/read";
 
 const STATUS_TONE = { active: "ok", closed: "off", abandoned: "bad" } as const;
+
+// Titre de l'onglet : le nom du candidat, pour retrouver un dossier parmi
+// plusieurs onglets ouverts (getCase est déjà en cache pour la requête)
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const data = await getCase((await params).id);
+  return { title: data ? displayName(data.c.first_name, data.c.last_name) : "Dossier introuvable" };
+}
 
 export default async function CaseLayout({
   children,

@@ -36,6 +36,7 @@ export function DocumentRow({
   doc: d,
   folders,
   isOwner,
+  readOnly,
   mode,
   busy,
   saving,
@@ -45,6 +46,8 @@ export function DocumentRow({
   doc: DocItem;
   folders: FolderItem[];
   isOwner: boolean;
+  // Abonnement expiré : le document s'ouvre, rien d'autre
+  readOnly: boolean;
   mode: DocRowMode;
   // Action en cours sur ce document (suppression, verrou, déplacement)
   busy: boolean;
@@ -53,7 +56,7 @@ export function DocumentRow({
   dragging: boolean;
   actions: DocRowActions;
 }) {
-  const draggable = !d.locked && mode !== "rename" && mode !== "move";
+  const draggable = !readOnly && !d.locked && mode !== "rename" && mode !== "move";
   return (
     <li
       draggable={draggable}
@@ -161,7 +164,7 @@ export function DocumentRow({
             >
               <Eye />
             </Button>
-            {folders.length > 0 && (
+            {!readOnly && folders.length > 0 && (
               <Button
                 variant="ghost"
                 size="icon-sm"
@@ -173,25 +176,29 @@ export function DocumentRow({
                 <FolderInput />
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => actions.startRename(d)}
-              aria-label={`Renommer ${d.name}`}
-              title="Renommer"
-            >
-              <Pencil />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => actions.askDelete(d)}
-              aria-label={`Supprimer ${d.name}`}
-              title="Supprimer"
-            >
-              <Trash2 />
-            </Button>
-            {isOwner && (
+            {!readOnly && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => actions.startRename(d)}
+                  aria-label={`Renommer ${d.name}`}
+                  title="Renommer"
+                >
+                  <Pencil />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => actions.askDelete(d)}
+                  aria-label={`Supprimer ${d.name}`}
+                  title="Supprimer"
+                >
+                  <Trash2 />
+                </Button>
+              </>
+            )}
+            {isOwner && !readOnly && (
               <Button
                 variant="ghost"
                 size="icon-sm"

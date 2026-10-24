@@ -53,11 +53,15 @@ export function DocumentsPanel({
   docs,
   folders,
   isOwner,
+  readOnly,
 }: {
   caseId: string;
   docs: DocItem[];
   folders: FolderItem[];
   isOwner: boolean;
+  // Abonnement expiré : les documents s'ouvrent et se téléchargent, rien
+  // ne s'ajoute ni ne se modifie
+  readOnly: boolean;
 }) {
   const router = useRouter();
   const base = `/api/cases/${caseId}/documents`;
@@ -208,7 +212,7 @@ export function DocumentsPanel({
     else sent.forEach(photos.remove);
   }
 
-  // --- Documents ---------------------------------------------------------------
+  // Documents
 
   // Un document verrouillé ne se renomme, ne se déplace ni ne se supprime
   function startOn(d: DocItem, mode: DocRowMode, verb: string) {
@@ -316,7 +320,7 @@ export function DocumentsPanel({
     },
   };
 
-  // --- Dossiers de rangement -------------------------------------------------
+  // Dossiers de rangement
 
   function toggleCollapsed(key: string) {
     setCollapsed((prev) => {
@@ -392,6 +396,7 @@ export function DocumentsPanel({
   // Zone de dépôt d'une section : accepte un document de cette page (déplacer)
   // ou des fichiers de l'ordinateur (envoyer directement dans ce dossier).
   function dropProps(key: string, folderId: string | null) {
+    if (readOnly) return {};
     return {
       onDragOver: (e: React.DragEvent) => {
         const isDoc = hasType(e, DOC_DRAG_TYPE);
@@ -435,6 +440,7 @@ export function DocumentsPanel({
         mode={folder && folderRow?.id === folder.id ? folderRow.mode : "view"}
         busy={folderBusy}
         isOwner={isOwner}
+        readOnly={readOnly}
         actions={folderActions}
       >
         {list.map((d) => (
@@ -443,6 +449,7 @@ export function DocumentsPanel({
             doc={d}
             folders={folders}
             isOwner={isOwner}
+            readOnly={readOnly}
             mode={row?.id === d.id ? row.mode : "view"}
             busy={working === d.id}
             saving={saving}
@@ -462,56 +469,58 @@ export function DocumentsPanel({
 
   return (
     <div ref={rootRef} className="space-y-3">
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragOver(false);
-          void uploadFiles(Array.from(e.dataTransfer.files), null);
-        }}
-        className={cn(
-          "flex flex-col items-center gap-2 rounded-xl border border-dashed px-6 py-6 text-center text-sm text-muted-foreground transition-colors",
-          dragOver && "border-primary bg-accent",
-        )}
-      >
-        {uploading ? (
-          <p className="flex items-center gap-2" role="status">
-            <Loader2 className="size-4 animate-spin" aria-hidden />
-            Envoi de {uploading}
-          </p>
-        ) : (
-          <>
-            <Upload className="size-5" aria-hidden />
-            <p>Glissez des PDF ou des photos ici</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => pickFilesFor(null)}
-            >
-              Choisir des fichiers
-            </Button>
-            <p className="text-xs">
-              PDF ou photos (JPG, PNG), 10 Mo maximum par document. Les photos
-              sont assemblées en PDF avant l&apos;envoi. Ajoutés sans dossier : pour
-              les ranger tout de suite, déposez-les sur un dossier ci-dessous.
+      {!readOnly && (
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            void uploadFiles(Array.from(e.dataTransfer.files), null);
+          }}
+          className={cn(
+            "flex flex-col items-center gap-2 rounded-xl border border-dashed px-6 py-6 text-center text-sm text-muted-foreground transition-colors",
+            dragOver && "border-primary bg-accent",
+          )}
+        >
+          {uploading ? (
+            <p className="flex items-center gap-2" role="status">
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+              Envoi de {uploading}
             </p>
-          </>
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="application/pdf,.pdf,image/*"
-          multiple
-          className="hidden"
-          onChange={(e) =>
-            void uploadFiles(Array.from(e.target.files ?? []), uploadTarget.current)
-          }
-        />
-      </div>
+          ) : (
+            <>
+              <Upload className="size-5" aria-hidden />
+              <p>Glissez des PDF ou des photos ici</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => pickFilesFor(null)}
+              >
+                Choisir des fichiers
+              </Button>
+              <p className="text-xs">
+                PDF ou photos (JPG, PNG), 10 Mo maximum par document. Les photos
+                sont assemblées en PDF avant l&apos;envoi. Ajoutés sans dossier : pour
+                les ranger tout de suite, déposez-les sur un dossier ci-dessous.
+              </p>
+            </>
+          )}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="application/pdf,.pdf,image/*"
+            multiple
+            className="hidden"
+            onChange={(e) =>
+              void uploadFiles(Array.from(e.target.files ?? []), uploadTarget.current)
+            }
+          />
+        </div>
+      )}
 
       {photos.pages.length > 0 && (
         <PhotoComposer
@@ -536,7 +545,7 @@ export function DocumentsPanel({
         <StatusMessage message={message} className="flex-1" />
         {docs.length > 0 && <CaseCopyButton caseId={caseId} onMessage={say} />}
         {docs.length > 0 && <DownloadArchiveButton caseId={caseId} onMessage={say} />}
-        {creatingFolder ? (
+        {readOnly ? null : creatingFolder ? (
           <input
             autoFocus
             maxLength={80}

@@ -16,8 +16,8 @@ import {
 } from "../overview";
 
 // Lectures de la page Paiements et de son export, via le RLS : seuls les
-// dossiers et paiements de l'agence de la session reviennent. Le contrôle
-// « patron seulement » est fait par la page et par la route d'export.
+// dossiers et paiements de l'agence de la session reviennent. La permission
+// « Voir la caisse » est contrôlée par la page et par la route d'export.
 
 type Person = { first_name: string; last_name: string };
 

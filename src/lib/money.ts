@@ -20,7 +20,7 @@ export function formatDA(amount: number) {
 // Saisie d'un montant : chiffres, espaces et points de milliers acceptés
 // (« 150 000 », « 150.000 »). null : champ vide ; NaN : saisie invalide.
 export function parseAmount(input: string): number | null {
-  const compact = input.replace(/[\s  .]/g, "");
+  const compact = input.replace(/[\s\u00a0\u202f.]/g, "");
   if (compact === "") return null;
   if (!/^\d{1,9}$/.test(compact)) return Number.NaN;
   return Number(compact);
@@ -28,5 +28,5 @@ export function parseAmount(input: string): number | null {
 
 // Valeur affichée dans un champ de saisie : « 150 000 »
 export function amountInputValue(amount: number | null | undefined) {
-  return amount == null ? "" : daFormat.format(amount).replace(/[  ]/g, " ");
+  return amount == null ? "" : daFormat.format(amount).replace(/[\u00a0\u202f]/g, " ");
 }

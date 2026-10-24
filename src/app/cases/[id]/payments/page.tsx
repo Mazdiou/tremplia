@@ -4,6 +4,7 @@ import { getCase } from "@/features/cases/server/get-case";
 import { PaymentsPanel } from "@/features/payments/components/payments-panel";
 import { listPayments } from "@/features/payments/server/payments";
 import { can } from "@/lib/permissions";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 
 export default async function PaymentsPage({
   params,
@@ -17,6 +18,8 @@ export default async function PaymentsPage({
     listPayments(id),
   ]);
   if (!data || !member) notFound();
+  // Abonnement expiré : consultation seulement
+  const readOnly = await isReadOnly(member.agencyId);
 
   return (
     <PaymentsPanel
@@ -26,6 +29,7 @@ export default async function PaymentsPage({
       payments={payments}
       canCorrect={can(member, "payments_manage")}
       defaultFee={data.campaign?.default_fee ?? null}
+      readOnly={readOnly}
     />
   );
 }

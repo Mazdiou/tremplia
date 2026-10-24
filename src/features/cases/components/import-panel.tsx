@@ -63,8 +63,8 @@ export function ImportPanel({
     <section className="space-y-4 rounded-2xl border bg-card p-5">
       <h2 className="text-base font-semibold">Importer depuis une autre campagne</h2>
       <p className="text-sm text-muted-foreground">
-        Reprenez l&apos;identité, le parcours, les projets et les comptes
-        externes d&apos;un candidat. Le nouveau dossier est indépendant :
+        Reprenez l&apos;identité, le parcours et les comptes externes
+        d&apos;un candidat. Le nouveau dossier est indépendant :
         l&apos;ancien n&apos;est pas modifié, et ni ses groupes, ni ses notes,
         ni ses documents ne sont repris.
       </p>

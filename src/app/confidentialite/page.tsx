@@ -100,7 +100,7 @@ export default function ConfidentialitePage() {
         <LegalList
           items={LEGAL.providers.map((p) => (
             <>
-              <strong>{p.name}</strong> — {p.role}. Lieu : {p.place}.
+              <strong>{p.name}</strong> : {p.role}. Lieu : {p.place}.
             </>
           ))}
         />

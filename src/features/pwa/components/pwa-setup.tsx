@@ -3,10 +3,10 @@
 import { useEffect } from "react";
 import { BRAND } from "@/config/brand";
 
-// Posé une fois dans le layout racine :
-// - enregistre le service worker (page « Pas de connexion »), en production ;
-// - accorde la couleur de la barre d'état du téléphone au thème choisi dans
-//   l'appli (clair / sombre), qui peut différer de celui du système.
+// Posé une fois dans le layout racine. Enregistre le service worker (page
+// « Pas de connexion »), en production, et accorde la couleur de la barre
+// d'état du téléphone au thème choisi dans l'appli (clair ou sombre), qui
+// peut différer de celui du système.
 export function PwaSetup() {
   useEffect(() => {
     if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {

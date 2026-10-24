@@ -321,6 +321,7 @@ export function PaymentsPanel({
   payments,
   canCorrect,
   defaultFee,
+  readOnly,
 }: {
   caseId: string;
   agreed: number | null;
@@ -332,6 +333,8 @@ export function PaymentsPanel({
   canCorrect: boolean;
   // Tarif de la campagne, proposé quand le montant n'est pas encore fixé
   defaultFee: number | null;
+  // Abonnement expiré : les paiements se consultent, rien ne s'enregistre
+  readOnly: boolean;
 }) {
   const router = useRouter();
   const summary = paymentSummary(agreed, paid);
@@ -363,7 +366,8 @@ export function PaymentsPanel({
     router.refresh();
   }
 
-  const canPay = summary.remaining !== null && summary.remaining > 0;
+  const canPay = !readOnly && summary.remaining !== null && summary.remaining > 0;
+  const correct = canCorrect && !readOnly;
 
   return (
     <div className="space-y-4">
@@ -393,18 +397,22 @@ export function PaymentsPanel({
             <div className="min-w-0 flex-1 space-y-4">
               <div>
                 <p className="text-sm font-medium">Montant convenu non fixé</p>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  Indiquez ce que le candidat doit à l&apos;agence pour suivre ses paiements.
-                  {!canCorrect &&
-                    " Une fois fixé, seuls le patron et les membres autorisés pourront le modifier."}
-                </p>
+                {!readOnly && (
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    Indiquez ce que le candidat doit à l&apos;agence pour suivre ses paiements.
+                    {!canCorrect &&
+                      " Une fois fixé, seuls le patron et les membres autorisés pourront le modifier."}
+                  </p>
+                )}
               </div>
-              <AgreedAmountForm
-                caseId={caseId}
-                initial={defaultFee}
-                submitLabel="Enregistrer"
-                onDone={done}
-              />
+              {!readOnly && (
+                <AgreedAmountForm
+                  caseId={caseId}
+                  initial={defaultFee}
+                  submitLabel="Enregistrer"
+                  onDone={done}
+                />
+              )}
             </div>
           </div>
         </section>
@@ -452,7 +460,7 @@ export function PaymentsPanel({
                 {summary.percent} % payé
               </span>
             </div>
-            {canCorrect && mode !== "agreed" && (
+            {correct && mode !== "agreed" && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -498,7 +506,7 @@ export function PaymentsPanel({
               <PaymentLine
                 key={p.id}
                 payment={p}
-                canCancel={canCorrect}
+                canCancel={correct}
                 onCancel={() => {
                   setMessage(null);
                   setReason("");

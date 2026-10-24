@@ -2,11 +2,11 @@ import { formatShortDate, isIsoDate } from "@/lib/dates";
 import type { Sheet } from "@/lib/xlsx";
 import { PAYMENT_METHODS, paymentMethodLabel } from "./schemas";
 
-// Page Paiements (patron) : tous les paiements de l'agence, en deux vues.
-// - Encaissements : ce qui est entré sur une période, avec les totaux par
-//   moyen de paiement (la caisse du jour, de la semaine, du mois…)
-// - Restes à payer : les candidats qui doivent encore de l'argent (dossiers
-//   non abandonnés), pour savoir qui relancer
+// Page Paiements (patron et membres autorisés) : tous les paiements de
+// l'agence, en deux vues. Encaissements : ce qui est entré sur une période,
+// avec les totaux par moyen de paiement (la caisse du jour, de la semaine,
+// du mois…). Restes à payer : les candidats qui doivent encore de l'argent
+// (dossiers non abandonnés), pour savoir qui relancer.
 // Les filtres vivent dans l'adresse de la page : un lien ou un export
 // reprend exactement ce qui est affiché.
 
@@ -103,7 +103,7 @@ export function overviewQuery(f: OverviewFilters): string {
   return q.toString();
 }
 
-// Période ---------------------------------------------------------------------
+// Période
 
 const MONTHS = [
   "janvier", "février", "mars", "avril", "mai", "juin",
@@ -158,7 +158,7 @@ export function periodRange(
   }
 }
 
-// Lignes -----------------------------------------------------------------------
+// Lignes
 
 export type CollectionRow = {
   id: string;
@@ -276,7 +276,7 @@ export function balanceTotals(rows: BalanceRow[]) {
   };
 }
 
-// Export Excel -----------------------------------------------------------------
+// Export Excel
 
 export function collectionsSheet(rows: CollectionRow[]): Sheet {
   return {

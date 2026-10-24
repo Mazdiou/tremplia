@@ -97,7 +97,7 @@ export default async function SettingsPage() {
         <FormSection
           id="notifications"
           title="Notifications"
-          description="Sur votre téléphone ou votre ordinateur, même quand Tremplia est fermé. À activer sur chaque appareil. Vos choix ne valent que pour vous."
+          description={`Sur votre téléphone ou votre ordinateur, même quand ${BRAND.name} est fermé. À activer sur chaque appareil. Vos choix ne valent que pour vous.`}
         >
           <PushDevice
             publicKey={publicKey}
@@ -118,7 +118,7 @@ export default async function SettingsPage() {
         <FormSection
           id="ordinateur"
           title="Sur cet ordinateur"
-          description="Les documents des dossiers en cours, rangés comme dans Tremplia (campagne, groupe, candidat), pour les déposer facilement sur les plateformes. Propre à cet ordinateur et à votre compte."
+          description={`Les documents des dossiers en cours, rangés comme dans ${BRAND.name} (campagne, groupe, candidat), pour les déposer facilement sur les plateformes. Propre à cet ordinateur et à votre compte.`}
         >
           <LocalCopySettings />
         </FormSection>

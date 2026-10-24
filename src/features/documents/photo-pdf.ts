@@ -105,7 +105,7 @@ export function buildPdf(pages: JpegPage[]): Uint8Array {
   return out;
 }
 
-// --- Navigateur -------------------------------------------------------------
+// Navigateur
 
 // Réglages essayés dans l'ordre : on ne réduit davantage que si le PDF
 // dépasse la limite. 2000 px sur le grand côté restent bien lisibles.

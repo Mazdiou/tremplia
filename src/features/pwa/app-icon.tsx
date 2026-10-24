@@ -7,13 +7,14 @@ import { cairnSvg } from "@/components/logo-mark";
 
 const MARK_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(cairnSvg());
 
-// - « rounded » : carré aux coins arrondis sur fond transparent (onglet)
-// - « full » : fond plein jusqu'aux bords ; le système découpe lui-même la
-//   forme (iPhone, icône « maskable » d'Android). Le dessin reste dans la
-//   zone centrale sûre (80 %).
-// - « badge » : le cairn seul, blanc sur fond transparent : petite icône
-//   des notifications dans la barre d'état d'Android, qui n'en garde que la
-//   silhouette.
+// Trois formes :
+// « rounded », carré aux coins arrondis sur fond transparent (onglet) ;
+// « full », fond plein jusqu'aux bords : le système découpe lui-même la
+// forme (iPhone, icône « maskable » d'Android), le dessin reste dans la zone
+// centrale sûre (80 %) ;
+// « badge », le cairn seul, blanc sur fond transparent : petite icône des
+// notifications dans la barre d'état d'Android, qui n'en garde que la
+// silhouette.
 export function appIcon(size: number, shape: "rounded" | "full" | "badge") {
   const full = shape === "full";
   const badge = shape === "badge";

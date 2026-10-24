@@ -74,16 +74,18 @@ export function CampaignSettingsForm({
       isEdit ? `/api/campaigns/${campaignId}` : "/api/campaigns",
       { method: isEdit ? "PATCH" : "POST", body: isEdit ? draft : { ...draft, groups, stages } },
     );
-    setSaving(false);
     if (!res.ok) {
+      setSaving(false);
       setErrors(res.fieldErrors);
       setError(res.error);
       return;
     }
     if (isEdit) {
+      setSaving(false);
       setSaved(true);
       router.refresh();
     } else {
+      // Bouton désactivé jusqu'à l'arrivée sur la campagne créée
       router.push(`/campaigns/${res.data.id}`);
       router.refresh();
     }

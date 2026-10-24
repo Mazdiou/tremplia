@@ -5,6 +5,7 @@ import { getCase } from "@/features/cases/server/get-case";
 import { dateTimeFormat } from "@/lib/dates";
 import { NotesPanel, type NoteItem } from "@/features/notes/components/notes-panel";
 import { memberNames } from "@/features/team/server/members";
+import { isReadOnly } from "@/features/subscription/server/subscription";
 
 const PAGE_SIZE = 200;
 
@@ -31,12 +32,16 @@ export default async function NotesPage({
 
   // Lecture via le RLS : seules les notes de l'agence reviennent.
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("case_notes")
-    .select("id, author_id, content, created_at, edited_at, edited_by")
-    .eq("case_id", id)
-    .order("created_at", { ascending: false })
-    .limit(PAGE_SIZE + 1);
+  const [{ data }, readOnly] = await Promise.all([
+    supabase
+      .from("case_notes")
+      .select("id, author_id, content, created_at, edited_at, edited_by")
+      .eq("case_id", id)
+      .order("created_at", { ascending: false })
+      .limit(PAGE_SIZE + 1),
+    // Abonnement expiré : consultation seulement
+    isReadOnly(caller.agencyId),
+  ]);
   const all = (data ?? []) as Row[];
   const truncated = all.length > PAGE_SIZE;
   const rows = all.slice(0, PAGE_SIZE);
@@ -70,5 +75,5 @@ export default async function NotesPage({
     };
   });
 
-  return <NotesPanel caseId={id} notes={notes} truncated={truncated} />;
+  return <NotesPanel caseId={id} notes={notes} truncated={truncated} readOnly={readOnly} />;
 }
