@@ -64,6 +64,10 @@ export const viewport: Viewport = {
 // Sans choix mémorisé, on suit le thème du système.
 const themeScript = `(function(){try{var t=localStorage.getItem("sf:theme");var d=t==="dark"||(t!=="light"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d)}catch(e){}})()`;
 
+// Taille du texte réduite (Réglages, téléphone) : posée de même avant
+// l'affichage, pour que rien ne change de taille au chargement
+const textScript = `(function(){try{if(localStorage.getItem("sf:text")==="small")document.documentElement.classList.add("text-small")}catch(e){}})()`;
+
 // Proposition d'installation (Android) : gardée dès son arrivée, avant même
 // l'affichage de la carte « Installez l'application » qui s'en sert.
 const installScript = `window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__installPrompt=e;window.dispatchEvent(new Event("sf:installable"))})`;
@@ -77,6 +81,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: textScript }} />
         <script dangerouslySetInnerHTML={{ __html: installScript }} />
       </head>
       <body className="min-h-full flex flex-col">

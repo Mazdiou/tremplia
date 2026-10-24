@@ -207,6 +207,15 @@ body {
   }
 }
 
+/* Texte réduit (Réglages → Apparence, téléphone seulement) : tailles et
+   espacements étant en rem, toute l'interface se réduit d'un dixième. Les
+   champs restent à 16 px (règle suivante) et les zones tactiles à 40 px. */
+@media (width < 48rem) {
+  html.text-small {
+    font-size: 90%;
+  }
+}
+
 /* Écran tactile : un champ en dessous de 16 px fait zoomer Safari sur iPhone
    à chaque saisie */
 @media (pointer: coarse) {

@@ -8,6 +8,7 @@ import { CampaignDefaultsForm } from "@/features/settings/components/campaign-de
 import { PasswordForm } from "@/features/settings/components/password-form";
 import { SessionActions } from "@/features/settings/components/session-actions";
 import { ThemeChoice } from "@/features/settings/components/theme-choice";
+import { TextSizeChoice } from "@/features/settings/components/text-size-choice";
 import { getAgencySettings } from "@/features/settings/server/settings";
 import { GuideSetting } from "@/features/onboarding/components/guide-setting";
 import { LocalCopySettings } from "@/features/local-copy/components/local-copy-settings";
@@ -91,7 +92,15 @@ export default async function SettingsPage() {
           title="Apparence"
           description="Retenu sur cet appareil."
         >
-          <ThemeChoice />
+          <div className="space-y-2">
+            <p className="text-sm font-medium md:hidden">Thème</p>
+            <ThemeChoice />
+          </div>
+          {/* Téléphone seulement : sur ordinateur, la taille ne change pas */}
+          <div className="space-y-2 md:hidden">
+            <p className="text-sm font-medium">Taille du texte</p>
+            <TextSizeChoice />
+          </div>
         </FormSection>
 
         <FormSection
