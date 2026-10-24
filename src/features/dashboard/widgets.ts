@@ -30,13 +30,24 @@ export const WIDGETS = {
     description: "Vos tâches en retard, du jour et à venir.",
     defaultSize: "full",
   },
+  stale: {
+    label: "Dossiers sans nouvelles",
+    description: "Dossiers actifs auxquels personne de l'agence n'a touché depuis 14 jours.",
+    defaultSize: "half",
+  },
+  teamTasks: {
+    label: "Retards de l'équipe",
+    description: "Tâches en retard de chaque membre.",
+    defaultSize: "half",
+    requires: "owner",
+  },
   stats: {
     label: "Chiffres clés",
     description: "Dossiers actifs, mes dossiers, ajouts de la semaine et candidats admis.",
     defaultSize: "full",
   },
   pipeline: {
-    label: "Avancement par étape",
+    label: "Avancement des dossiers",
     description: "Dossiers actifs à chaque étape de la campagne.",
     defaultSize: "full",
     scope: "single",
@@ -47,16 +58,16 @@ export const WIDGETS = {
     defaultSize: "full",
     scope: "several",
   },
-  stale: {
-    label: "Dossiers sans nouvelles",
-    description: "Dossiers actifs auxquels personne n'a touché depuis 14 jours.",
-    defaultSize: "half",
-  },
   deadlines: {
-    label: "Échéances",
+    label: "Prochaines échéances",
     description: "Prochaines dates de la campagne.",
     defaultSize: "half",
     scope: "single",
+  },
+  results: {
+    label: "Réponses des établissements",
+    description: "Formations acceptées, refusées ou en attente.",
+    defaultSize: "half",
   },
   payments: {
     label: "Paiements",
@@ -66,20 +77,9 @@ export const WIDGETS = {
   },
   cashflow: {
     label: "Encaissements par mois",
-    description: "Montants encaissés sur les six derniers mois.",
+    description: "Évolution des encaissements sur les six derniers mois.",
     defaultSize: "half",
     requires: "payments_view",
-  },
-  teamTasks: {
-    label: "Retards de l'équipe",
-    description: "Tâches en retard de chaque membre.",
-    defaultSize: "half",
-    requires: "owner",
-  },
-  results: {
-    label: "Réponses des établissements",
-    description: "Formations acceptées, refusées ou en attente.",
-    defaultSize: "half",
   },
   activity: {
     label: "Activité de l'équipe",

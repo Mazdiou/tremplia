@@ -156,7 +156,11 @@ export default async function DashboardPage({
   // Mes tâches : toutes les campagnes actives, quel que soit le choix du
   // sélecteur (les compteurs sont déjà lus par la coquille)
   const tasksPromise = needs("tasks")
-    ? Promise.all([loadMyTasks(u.member.userId, u.member.isOwner), myTaskCounts(u.member.userId)])
+    ? Promise.all([
+        // Retards de l'équipe : déjà dans leur propre widget s'il est affiché
+        loadMyTasks(u.member.userId, u.member.isOwner && !needs("teamTasks")),
+        myTaskCounts(u.member.userId),
+      ])
     : null;
   // Dossiers sans nouvelles, encaissements par mois, retards de l'équipe (et
   // noms des membres pour les deux listes)

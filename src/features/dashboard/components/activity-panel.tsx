@@ -5,12 +5,12 @@ import type { ActivityEntry } from "../server/dashboard";
 import { Initials, relativeWhen } from "./dashboard-ui";
 import { fullName } from "@/lib/names";
 
-// Activité récente de l'agence (patron) : qui a fait quoi, sur quel dossier
+// Activité de l'équipe (patron) : qui a fait quoi, sur quel dossier
 // ou quelle campagne ; les répétitions sont regroupées (« · 6 fois »).
 export function ActivityPanel({ entries }: { entries: ActivityEntry[] }) {
   return (
     <Panel
-      title="Activité récente de l'agence"
+      title="Activité de l'équipe"
       description="Visible par le patron seulement."
       className="max-md:hidden"
     >

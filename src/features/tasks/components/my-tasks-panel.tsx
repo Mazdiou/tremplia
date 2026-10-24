@@ -11,7 +11,8 @@ const SHOWN = 6;
 
 // Tableau de bord, sous « À traiter » : mes tâches les plus urgentes (deux
 // colonnes sur grand écran), avec un lien vers la page Tâches. Pour le
-// patron, les tâches en retard de toute l'équipe.
+// patron, les tâches en retard de toute l'équipe, sauf si le widget
+// « Retards de l'équipe » est affiché (teamOverdue vide).
 export function MyTasksPanel({
   rows,
   counts,

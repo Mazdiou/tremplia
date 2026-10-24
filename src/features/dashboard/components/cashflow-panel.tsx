@@ -14,12 +14,12 @@ const longMonth = new Intl.DateTimeFormat("fr-FR", {
 });
 
 // Encaissements des six derniers mois : une barre par mois, sur une même
-// échelle. Montant écrit sous le titre pour le mois en cours, au survol pour
-// les autres ; tableau équivalent pour les lecteurs d'écran.
+// échelle. En tête, le total et la moyenne de la période (le mois en cours
+// est déjà dans le widget Paiements) ; montant de chaque mois au survol ;
+// tableau équivalent pour les lecteurs d'écran.
 export function CashflowPanel({ months, href }: { months: CashMonth[]; href: string }) {
   const max = Math.max(...months.map((m) => m.amount));
   const total = months.reduce((n, m) => n + m.amount, 0);
-  const current = months[months.length - 1];
 
   return (
     <Panel
@@ -35,14 +35,12 @@ export function CashflowPanel({ months, href }: { months: CashMonth[]; href: str
       }
     >
       <div className="px-5 py-4">
-        <p className="text-sm text-muted-foreground first-letter:uppercase">
-          {longMonth.format(new Date(current.month))}
+        <p className="text-sm text-muted-foreground">
+          Depuis {longMonth.format(new Date(months[0].month))}
         </p>
-        <p className="text-xl font-semibold tracking-tight tabular-nums">
-          {formatDA(current.amount)}
-        </p>
+        <p className="text-xl font-semibold tracking-tight tabular-nums">{formatDA(total)}</p>
         <p className="text-xs text-muted-foreground">
-          {formatDA(total)} sur six mois
+          {formatDA(Math.round(total / months.length))} par mois en moyenne
         </p>
 
         {total === 0 ? (
