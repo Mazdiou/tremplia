@@ -339,7 +339,7 @@ export function CaseForm(
         </FormSection>
 
         <FormSection title="Identité" description="Coordonnées du candidat et d'un proche à contacter.">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 @md:grid-cols-2">
             <TextField id="lastName" label="Nom" required maxLength={100}
               value={fields.lastName} onChange={set("lastName")} error={e.lastName} />
             <TextField id="firstName" label="Prénom" required maxLength={100}
@@ -361,7 +361,7 @@ export function CaseForm(
               Contact secondaire{" "}
               <span className="font-normal text-muted-foreground">(un parent, par exemple)</span>
             </p>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 @md:grid-cols-2">
               <TextField id="secondaryContactName" label="Nom du contact" maxLength={100}
                 value={fields.secondaryContactName} onChange={set("secondaryContactName")}
                 error={e.secondaryContactName} />
@@ -373,11 +373,11 @@ export function CaseForm(
         </FormSection>
 
         <FormSection title="Parcours" description="Niveau atteint, formation actuelle, diplômes et tests de langue.">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 @md:grid-cols-2">
             <SelectField id="educationLevel" label="Niveau d'études atteint" required
               value={fields.educationLevel} onChange={set("educationLevel")}
               options={levelOptions} placeholder="Choisir…" error={e.educationLevel}
-              className="sm:col-span-2" />
+              className="@md:col-span-2" />
             <TextField id="currentField" label="Filière ou spécialité actuelle" maxLength={150}
               value={fields.currentField} onChange={set("currentField")} error={e.currentField} />
             <TextField id="currentInstitution" label="Établissement actuel" maxLength={150}
@@ -398,7 +398,7 @@ export function CaseForm(
             title="Paiement"
             description="Ce qui est convenu avec le candidat et ce qu'il règle aujourd'hui. Tout peut se faire plus tard, dans l'onglet Paiements."
           >
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 @md:grid-cols-2">
               <AmountField
                 id="agreedAmount"
                 label="Montant convenu"
@@ -413,7 +413,7 @@ export function CaseForm(
                     : "Facultatif"
                 }
                 error={e.agreedAmount}
-                className="sm:col-span-2"
+                className="@md:col-span-2"
               />
               <div className="space-y-1.5">
                 <AmountField

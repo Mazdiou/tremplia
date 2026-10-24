@@ -64,7 +64,7 @@ export function ProgramRow({
   result?: React.ReactNode;
 }) {
   return (
-    <li className="flex items-start gap-3 px-4 py-3 max-sm:flex-wrap">
+    <li className="flex items-start gap-3 px-4 py-3 @max-xl:flex-wrap">
       <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-link tabular-nums">
         {rank}
       </span>
@@ -84,8 +84,8 @@ export function ProgramRow({
         </p>
         {result && <div className="mt-1.5">{result}</div>}
       </div>
-      {/* Téléphone : boutons sous la formation, l'intitulé garde la largeur */}
-      {actions && <div className="max-sm:-mt-1 max-sm:flex max-sm:w-full max-sm:justify-end">{actions}</div>}
+      {/* Peu de place : boutons sous la formation, l'intitulé garde la largeur */}
+      {actions && <div className="@max-xl:-mt-1 @max-xl:flex @max-xl:w-full @max-xl:justify-end">{actions}</div>}
     </li>
   );
 }
@@ -158,11 +158,11 @@ function ProgramForm({
       }}
       onKeyDown={(e) => e.key === "Escape" && onCancel()}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 @md:grid-cols-2">
         <TextField id="program-title" label="Intitulé de la formation" required
           maxLength={200} value={draft.title} onChange={set("title")}
           placeholder="Ex. : Licence Informatique" error={errors.title}
-          className="sm:col-span-2" />
+          className="@md:col-span-2" />
         <SelectField id="program-level" label="Niveau" required value={draft.level}
           onChange={set("level")} options={levelOptions} placeholder="Choisir…"
           error={errors.level} />
@@ -172,7 +172,7 @@ function ProgramForm({
         <TextField id="program-institution" label="Établissement" maxLength={150}
           value={draft.institution} onChange={set("institution")}
           placeholder="Ex. : Université Lyon 1" hint="Facultatif"
-          error={errors.institution} className="sm:col-span-2" />
+          error={errors.institution} className="@md:col-span-2" />
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" disabled={saving} onClick={onCancel}>

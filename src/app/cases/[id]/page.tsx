@@ -15,7 +15,7 @@ export default async function CaseInfoPage({
   const { c, responsible, campaign } = data;
 
   return (
-    <div className="grid items-start gap-5 md:grid-cols-2">
+    <div className="grid items-start gap-5 @2xl:grid-cols-2">
       <div className="space-y-5">
         <IdentityPanel c={c} />
 

@@ -337,7 +337,7 @@ function AccountForm({
   const id = (name: string) => `${formId}-${name}`;
 
   return (
-    <form onSubmit={submit} className={cn("grid gap-3 py-3 sm:grid-cols-2", TRACK_INDENT)}>
+    <form onSubmit={submit} className={cn("grid gap-3 py-3 @xl:grid-cols-2", TRACK_INDENT)}>
       <div className="space-y-1">
         <Label htmlFor={id("platform")}>Plateforme</Label>
         <Input
@@ -388,7 +388,7 @@ function AccountForm({
         <FieldError message={fieldErrors.login} />
       </div>
       {status === "existing" && (
-        <div className="space-y-1 sm:col-span-2">
+        <div className="space-y-1 @xl:col-span-2">
           <Label htmlFor={id("password")}>Mot de passe</Label>
           <Input
             id={id("password")}
@@ -408,11 +408,11 @@ function AccountForm({
         </div>
       )}
       {error && (
-        <p className="text-sm text-destructive sm:col-span-2" role="alert">
+        <p className="text-sm text-destructive @xl:col-span-2" role="alert">
           {error}
         </p>
       )}
-      <div className="flex gap-2 sm:col-span-2">
+      <div className="flex gap-2 @xl:col-span-2">
         <Button type="submit" size="sm" disabled={saving}>
           {saving ? "Enregistrement…" : "Enregistrer"}
         </Button>

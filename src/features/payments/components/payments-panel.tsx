@@ -92,7 +92,7 @@ function AgreedAmountForm({
         autoFocus={onCancel !== undefined}
         className="w-full max-w-xs"
       />
-      <div className="flex gap-2 sm:mt-6">
+      <div className="flex gap-2 @md:mt-6">
         <Button type="submit" disabled={saving}>
           {saving && <Loader2 className="animate-spin" aria-hidden />}
           {submitLabel}
@@ -180,7 +180,7 @@ export function PaymentForm({
       onKeyDown={(e) => e.key === "Escape" && onCancel()}
       className="space-y-4 rounded-xl border bg-card p-4"
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 @md:grid-cols-2">
         <div className="space-y-1.5">
           <AmountField
             id="payment-amount"
@@ -427,7 +427,7 @@ export function PaymentsPanel({
               onCancel={() => setMode("idle")}
             />
           ) : (
-            <dl className="grid gap-4 sm:grid-cols-3">
+            <dl className="grid gap-4 @xl:grid-cols-3">
               <Figure label="Montant convenu" value={formatDA(summary.agreed ?? 0)} />
               <Figure label="Payé" value={formatDA(paid)} />
               <Figure

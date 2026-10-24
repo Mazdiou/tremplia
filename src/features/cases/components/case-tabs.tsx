@@ -34,15 +34,18 @@ export function CaseTabs({
   const pathname = usePathname();
   const base = `/cases/${id}`;
   const navRef = useRef<HTMLElement>(null);
-  // D'autres onglets à droite (téléphone) : un fondu l'indique, la barre de
-  // défilement étant masquée
-  const [moreRight, setMoreRight] = useState(false);
+  // D'autres onglets à gauche ou à droite (téléphone) : un fondu de ce côté
+  // l'indique, la barre de défilement étant masquée
+  const [more, setMore] = useState({ left: false, right: false });
 
   useEffect(() => {
     const nav = navRef.current;
     if (!nav) return;
-    const update = () =>
-      setMoreRight(nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 2);
+    const update = () => {
+      const left = nav.scrollLeft > 2;
+      const right = nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 2;
+      setMore((m) => (m.left === left && m.right === right ? m : { left, right }));
+    };
     // L'onglet ouvert reste visible
     nav.querySelector<HTMLElement>('[aria-current="page"]')?.scrollIntoView({
       block: "nearest",
@@ -64,7 +67,11 @@ export function CaseTabs({
       aria-label="Sections du dossier"
       className={cn(
         "mt-4 flex gap-6 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-        moreRight && "[mask-image:linear-gradient(to_right,black_80%,transparent)]",
+        more.left && more.right
+          ? "[mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]"
+          : more.right
+            ? "[mask-image:linear-gradient(to_right,black_80%,transparent)]"
+            : more.left && "[mask-image:linear-gradient(to_right,transparent,black_20%)]",
       )}
     >
       {TABS.filter((t) => isOwner || !t.ownerOnly).map((t) => {

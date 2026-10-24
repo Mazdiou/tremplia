@@ -21,7 +21,7 @@ export default function ConditionsPage() {
           des dossiers proposé par {editor.name} (« l&apos;éditeur ») aux agences qui accompagnent
           des candidats dans leurs démarches d&apos;études à l&apos;étranger (« l&apos;agence »).
           Créer un compte vaut acceptation de ces conditions et de la{" "}
-          <Link href="/confidentialite" className="text-link hover:underline">
+          <Link href="/confidentialite" className="text-link underline underline-offset-2">
             politique de confidentialité
           </Link>
           .

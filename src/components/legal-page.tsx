@@ -81,7 +81,7 @@ export function LegalList({ items }: { items: ReactNode[] }) {
 
 export function ContactLink() {
   return (
-    <a href={`mailto:${LEGAL.contact}`} className="font-medium text-link hover:underline">
+    <a href={`mailto:${LEGAL.contact}`} className="font-medium text-link underline underline-offset-2">
       {LEGAL.contact}
     </a>
   );

@@ -114,7 +114,7 @@ export default async function CaseLayout({
       {c.remaining_amount !== null && (
         <Link
           href={`/cases/${c.id}/payments`}
-          className="flex shrink-0 rounded-full focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-sm:hidden"
+          className="flex shrink-0 rounded-full focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none max-md:hidden @max-xl:hidden"
         >
           <StatusPill tone={c.remaining_amount > 0 ? "warn" : "ok"}>
             {c.remaining_amount > 0 ? `Reste ${formatDA(c.remaining_amount)}` : "Soldé"}
@@ -129,8 +129,11 @@ export default async function CaseLayout({
       {/* En-tête partagé par tous les onglets. Fixe sur ordinateur ; sur
           téléphone il défile avec la page : déplié, il prendrait presque
           tout l'écran et le contenu glisserait dessous */}
+      {/* Mise en page selon la place laissée par l'arbre des dossiers
+          (conteneur), et non selon l'écran. Sur téléphone, pas de conteneur :
+          le menu WhatsApp s'y affiche en bas de l'écran (position fixe). */}
       <header className="z-10 border-b bg-band/95 backdrop-blur md:sticky md:top-0">
-        <div className="mx-auto max-w-5xl px-4 pt-5 md:px-8">
+        <div className="mx-auto max-w-5xl px-4 pt-5 md:px-8 md:@container">
           <Link
             href="/cases"
             className="mb-3 inline-flex h-8 items-center rounded-lg border px-3 text-sm md:hidden"
@@ -193,7 +196,7 @@ export default async function CaseLayout({
                   )}
                 </ul>
               </div>
-              <div className="flex items-center gap-2 max-sm:w-full">
+              <div className="flex items-center gap-2 max-md:w-full @max-xl:w-full">
                 {/* Abonnement expiré : rien à modifier */}
                 {!readOnly && (
                   <>
@@ -216,7 +219,7 @@ export default async function CaseLayout({
                     />
                   </>
                 )}
-                <span className="max-sm:ml-auto">
+                <span className="max-md:ml-auto @max-xl:ml-auto">
                   <CaseHeaderToggle collapsed={false} />
                 </span>
               </div>
@@ -265,7 +268,7 @@ export default async function CaseLayout({
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl px-4 py-6 md:px-8">{children}</div>
+      <div className="@container mx-auto max-w-5xl px-4 py-6 md:px-8">{children}</div>
     </div>
   );
 }

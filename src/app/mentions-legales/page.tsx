@@ -36,7 +36,7 @@ export default function MentionsLegalesPage() {
           {BRAND.name} ({new URL(BRAND.url).hostname}) est un logiciel en ligne de suivi des
           dossiers pour les agences qui accompagnent des candidats dans leurs démarches
           d&apos;études à l&apos;étranger. Ses conditions d&apos;utilisation et de vente sont
-          décrites dans les <Link href="/conditions" className="text-link hover:underline">conditions générales</Link>.
+          décrites dans les <Link href="/conditions" className="text-link underline underline-offset-2">conditions générales</Link>.
         </p>
       </LegalSection>
 
@@ -45,7 +45,7 @@ export default function MentionsLegalesPage() {
           items={LEGAL.providers.map((p) => (
             <>
               <strong>{p.name}</strong> : {p.role}. Lieu : {p.place}.{" "}
-              <a href={p.url} className="text-link hover:underline" rel="noopener noreferrer">
+              <a href={p.url} className="text-link underline underline-offset-2" rel="noopener noreferrer">
                 {new URL(p.url).hostname.replace(/^www\./, "")}
               </a>
             </>
@@ -64,7 +64,7 @@ export default function MentionsLegalesPage() {
       <LegalSection title="Données personnelles">
         <p>
           La façon dont les données sont collectées, utilisées et protégées est décrite dans la{" "}
-          <Link href="/confidentialite" className="text-link hover:underline">
+          <Link href="/confidentialite" className="text-link underline underline-offset-2">
             politique de confidentialité
           </Link>
           .

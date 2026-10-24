@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Panel } from "@/components/page-ui";
+import { Panel, PanelLink } from "@/components/page-ui";
 import { countdownLabel, type TimelineItem } from "@/features/campaigns/timeline";
 import { formatLongDate } from "@/lib/dates";
 import { cn } from "@/lib/utils";
@@ -17,11 +16,7 @@ export function DeadlinesPanel({
   return (
     <Panel
       title="Prochaines échéances"
-      actions={
-        <Link href={`/campaigns/${campaignId}`} className="touch-target text-xs text-muted-foreground hover:text-foreground">
-          Toutes les dates
-        </Link>
-      }
+      actions={<PanelLink href={`/campaigns/${campaignId}`}>Toutes les dates</PanelLink>}
     >
       {upcoming.length === 0 ? (
         <p className="px-5 py-5 text-sm text-muted-foreground">Aucune échéance à venir.</p>

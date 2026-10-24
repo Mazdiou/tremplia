@@ -59,7 +59,7 @@ function ListTitle({ title, hint }: { title: string; hint: string }) {
   );
 }
 
-const DIPLOMA_GRID = "sm:grid-cols-[11rem_1fr_7rem_2.5rem]";
+const DIPLOMA_GRID = "@lg:grid-cols-[11rem_1fr_7rem_2.5rem]";
 
 export function DiplomasEditor({
   value,
@@ -126,7 +126,7 @@ export function DiplomasEditor({
   );
 }
 
-const TEST_GRID = "sm:grid-cols-[1fr_1fr_10rem_2.5rem]";
+const TEST_GRID = "@lg:grid-cols-[1fr_1fr_10rem_2.5rem]";
 
 export function LanguageTestsEditor({
   value,
@@ -251,7 +251,7 @@ export function AccountsEditor({
               </Button>
             </span>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 @md:grid-cols-2">
             <TextField
               id={`account-${i}-platform`}
               label="Plateforme"
@@ -312,7 +312,7 @@ export function AccountsEditor({
                     ? "Le mot de passe de l'ancien dossier n'est jamais repris : saisissez-le à nouveau."
                     : undefined
                 }
-                className="sm:col-span-2"
+                className="@md:col-span-2"
               />
             )}
           </div>

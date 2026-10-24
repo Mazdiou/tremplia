@@ -45,7 +45,7 @@ export function NotificationPreferencesForm({
   return (
     <fieldset className="space-y-2" disabled={readOnly}>
       <legend className="mb-2 text-sm font-medium">Me prévenir pour</legend>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-2 @md:grid-cols-2">
         {PREFERENCE_KEYS.map((key) => (
           <label
             key={key}

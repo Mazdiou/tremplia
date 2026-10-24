@@ -38,14 +38,21 @@ export function ResultsPanel({ results }: { results: Results }) {
               ) : null,
             )}
           </div>
-          <dl className="grid gap-y-1.5 text-sm">
+          {/* Pleine largeur : une case par réponse, côte à côte, au lieu
+              d'une liste étirée d'un bord à l'autre */}
+          <dl className="grid gap-y-1.5 text-sm @3xl:grid-cols-5 @3xl:gap-x-6">
             {ORDER.map(({ result, color }) => (
-              <div key={result} className="flex items-center gap-2">
-                <span className={`size-2.5 shrink-0 rounded-full ${color}`} aria-hidden />
-                <dt className="min-w-0 truncate text-muted-foreground">
-                  {PROGRAM_RESULT_LABELS[result]}
+              <div
+                key={result}
+                className="flex items-center gap-2 @3xl:flex-col @3xl:items-start @3xl:gap-0.5"
+              >
+                <dt className="flex min-w-0 items-center gap-2 text-muted-foreground">
+                  <span className={`size-2.5 shrink-0 rounded-full ${color}`} aria-hidden />
+                  <span className="truncate">{PROGRAM_RESULT_LABELS[result]}</span>
                 </dt>
-                <dd className="ml-auto font-medium tabular-nums">{counts[result]}</dd>
+                <dd className="ml-auto font-medium tabular-nums @3xl:ml-0 @3xl:text-2xl @3xl:font-semibold @3xl:tracking-tight">
+                  {counts[result]}
+                </dd>
               </div>
             ))}
           </dl>

@@ -10,6 +10,7 @@ import {
   PageContainer,
   PageHeader,
   Panel,
+  PanelLink,
   StatCard,
   StatusPill,
 } from "@/components/page-ui";
@@ -226,6 +227,13 @@ export default async function DashboardPage({
     const query = q.toString();
     return query ? `/cases?${query}` : "/cases";
   };
+  // Liens vers la page Paiements (même campagne)
+  const paymentsLink = (params: Record<string, string> = {}) => {
+    const q = new URLSearchParams(params);
+    if (selected) q.set("campagne", selected.id);
+    const query = q.toString();
+    return query ? `/payments?${query}` : "/payments";
+  };
 
   // Contenu de chaque widget affiché
   const render: Record<WidgetId, () => React.ReactNode> = {
@@ -283,7 +291,13 @@ export default async function DashboardPage({
 
     // Plusieurs campagnes : une carte chacune, avec sa prochaine échéance
     campaigns: () => (
-      <ul className="grid gap-4 @xl:grid-cols-2 @4xl:grid-cols-3">
+      // Pas de colonne vide : deux campagnes, deux colonnes
+      <ul
+        className={cn(
+          "grid gap-4 @xl:grid-cols-2",
+          campaigns.length > 2 && "@4xl:grid-cols-3",
+        )}
+      >
         {campaigns.map((c) => {
           const activeCount = countCases(stats, { campaignId: c.id, status: "active" });
           const next = nextDeadline(
@@ -335,18 +349,11 @@ export default async function DashboardPage({
       return (
         <Panel
           title="Paiements"
-          description={
-            campaigns.length > 1
-              ? "Toutes les campagnes actives · visible par le patron et les membres autorisés."
-              : "Visible par le patron et les membres autorisés."
-          }
+          description={campaigns.length > 1 ? "Toutes les campagnes actives." : undefined}
           actions={
-            <Link
-              href={selected ? `/payments?campagne=${selected.id}` : "/payments"}
-              className="touch-target inline-flex items-center gap-1.5 text-xs font-medium text-link underline-offset-2 hover:underline"
-            >
-              <Wallet className="size-3.5" aria-hidden /> Tous les paiements
-            </Link>
+            <PanelLink href={paymentsLink()} icon={Wallet}>
+              Tous les paiements
+            </PanelLink>
           }
         >
           <div className="grid gap-5 px-5 py-4 @3xl:grid-cols-[1fr_1fr]">
@@ -355,19 +362,13 @@ export default async function DashboardPage({
                 label={`Encaissé en ${monthName.format(new Date())}`}
                 value={formatDA(collected)}
                 hint={plural(collectedCount, "paiement")}
-                href={selected ? `/payments?campagne=${selected.id}` : "/payments"}
+                href={paymentsLink()}
               />
               <PaymentFigure
                 label="Reste à encaisser"
                 value={formatDA(sumStat(stats, "remaining"))}
                 hint={plural(owing, "dossier")}
-                href={
-                  owing > 0
-                    ? selected
-                      ? `/payments?vue=restes&campagne=${selected.id}`
-                      : "/payments?vue=restes"
-                    : undefined
-                }
+                href={owing > 0 ? paymentsLink({ vue: "restes" }) : undefined}
               />
               <PaymentFigure
                 label="Montant à fixer"
@@ -427,11 +428,12 @@ export default async function DashboardPage({
     cashflow: () => (
       <CashflowPanel
         months={cashflow!}
-        href={selected ? `/payments?campagne=${selected.id}` : "/payments"}
+        href={paymentsLink()}
+        monthHref={(from, to) => paymentsLink({ periode: "dates", du: from, au: to })}
       />
     ),
 
-    teamTasks: () => <TeamOverduePanel rows={teamOverdue!} memberNames={memberNames} />,
+    teamTasks: () => <TeamOverduePanel rows={teamOverdue!} memberNames={memberNames} today={today} />,
 
     activity: () => <ActivityPanel entries={activity} />,
   };

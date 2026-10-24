@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronRight, ListTodo } from "lucide-react";
-import { Panel, StatusPill } from "@/components/page-ui";
+import { Panel, PanelLink, StatusPill } from "@/components/page-ui";
 import { displayName } from "@/lib/names";
 import { plural } from "@/lib/plural";
 import { dueLabel, dueState } from "@/features/tasks/due";
@@ -49,11 +49,7 @@ export function MyTasksPanel({
           </span>
         ) : undefined
       }
-      actions={
-        <Link href="/tasks" className="touch-target text-xs whitespace-nowrap text-muted-foreground hover:text-foreground">
-          Tout voir
-        </Link>
-      }
+      actions={<PanelLink href="/tasks">Tout voir</PanelLink>}
     >
       {rows.length === 0 ? (
         <div className="flex items-center gap-3 px-5 py-5 text-sm text-muted-foreground">

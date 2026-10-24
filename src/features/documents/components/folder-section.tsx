@@ -93,10 +93,10 @@ export function FolderSection({
             className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           />
         ) : (
-          <h3 className="min-w-0 flex-1 truncate text-sm font-medium">
+          <h2 className="min-w-0 flex-1 truncate text-sm font-medium">
             {title}
             <span className="ml-2 text-xs font-normal text-muted-foreground">{count}</span>
-          </h3>
+          </h2>
         )}
 
         <div className="flex shrink-0 items-center gap-1">

@@ -236,11 +236,11 @@ export function CampaignStages({
                 >
                   {i + 1}
                 </span>
-                {/* Téléphone : nom en entier (sur deux lignes au besoin), barre courte */}
-                <span className="min-w-0 flex-1 font-medium break-words sm:w-60 sm:flex-none sm:truncate">
+                {/* Peu de place : nom en entier (sur deux lignes au besoin), barre courte */}
+                <span className="min-w-0 flex-1 font-medium break-words @lg:w-60 @lg:flex-none @lg:truncate">
                   {s.name}
                 </span>
-                <span aria-hidden className="h-1.5 w-14 shrink-0 overflow-hidden rounded-full bg-muted sm:w-auto sm:min-w-0 sm:flex-1">
+                <span aria-hidden className="h-1.5 w-14 shrink-0 overflow-hidden rounded-full bg-muted @lg:w-auto @lg:min-w-0 @lg:flex-1">
                   <span
                     className="block h-full rounded-full bg-primary"
                     style={{ width: `${(s.activeCases / maxActive) * 100}%` }}

@@ -96,9 +96,9 @@ export function PhotoComposer({
       className="space-y-3 rounded-xl border bg-muted/30 p-3"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-sm font-medium">
+        <h2 className="text-sm font-medium">
           {plural(pages.length, "photo", "photos")} à transformer en PDF
-        </h3>
+        </h2>
         <p className="text-xs text-muted-foreground">
           Rangement : {folderName ? `« ${folderName} »` : "sans dossier"}
         </p>

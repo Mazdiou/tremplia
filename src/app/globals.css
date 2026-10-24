@@ -53,7 +53,7 @@
   /* Lien écrit dans le texte : contraste d'au moins 4,5:1 sur le fond */
   --link: oklch(0.546 0.245 263);
   --muted: oklch(0.96 0.005 255);
-  --muted-foreground: oklch(0.554 0.041 257);
+  --muted-foreground: oklch(0.53 0.041 257);
   --accent: oklch(0.95 0.025 265);
   --accent-foreground: oklch(0.45 0.2 264);
   --destructive: oklch(0.577 0.245 27.325);
@@ -61,7 +61,7 @@
   --input: oklch(0.928 0.006 265);
   --ring: oklch(0.546 0.245 263);
   --highlight: oklch(0.965 0.02 265);
-  --success: oklch(0.527 0.154 150);
+  --success: oklch(0.51 0.154 150);
   --success-bg: oklch(0.962 0.044 157);
   --sidebar: oklch(0.984 0.003 248);
   /* Bandeau d'en-tête (dossier) : se détache du fond de la page ; ses

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireMember, type Member } from "@/lib/auth/require-member";
-import { initialsOf } from "@/lib/names";
+import { fullName, initialsOf } from "@/lib/names";
 import { effectivePermissions } from "@/lib/permissions";
 import { SubscriptionBanner } from "@/features/subscription/components/subscription-banner";
 import { isPlatformAdmin } from "@/features/admin/server/admin";
@@ -58,6 +58,7 @@ export async function ShellFrame({
           isOwner={member.isOwner}
           permissions={effectivePermissions(member)}
           initials={initials}
+          name={fullName(member.firstName, member.lastName)}
           isPlatformAdmin={isPlatformAdmin}
           taskBadge={{ count: tasks.overdue + tasks.today, overdue: tasks.overdue > 0 }}
         />

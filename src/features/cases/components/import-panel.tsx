@@ -85,7 +85,7 @@ export function ImportPanel({
       />
       {source && (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 @xl:grid-cols-3">
             <TextField id="import-last" label="Nom" value={lastName} onChange={setLastName} />
             <TextField id="import-first" label="Prénom" value={firstName} onChange={setFirstName} />
             <TextField

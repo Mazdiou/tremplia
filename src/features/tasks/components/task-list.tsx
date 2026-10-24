@@ -92,7 +92,7 @@ export function TaskList({
 
   return (
     <>
-      <ul className={cn("divide-y rounded-xl border bg-card", className)}>
+      <ul className={cn("@container divide-y rounded-xl border bg-card", className)}>
         {tasks.map((t) =>
           editingId === t.id ? (
             <li key={t.id} className="p-4">
@@ -227,9 +227,9 @@ function TaskRow({
           <p className="mt-0.5 whitespace-pre-wrap break-words text-muted-foreground">{task.details}</p>
         )}
         {meta && <p className="mt-1 text-xs text-muted-foreground">{meta}</p>}
-        {/* Téléphone : l'échéance sous le titre, qui garde toute la largeur */}
+        {/* Liste étroite : l'échéance sous le titre, qui garde toute la largeur */}
         {!isDoneTask && !done && task.dueDate && (
-          <div className="mt-1.5 sm:hidden">
+          <div className="mt-1.5 @xl:hidden">
             <DueBadge dueDate={task.dueDate} today={today} />
           </div>
         )}
@@ -237,7 +237,7 @@ function TaskRow({
 
       <div className="flex shrink-0 items-center gap-1">
         {!isDoneTask && !done && (
-          <span className="max-sm:hidden">
+          <span className="@max-xl:hidden">
             <DueBadge dueDate={task.dueDate} today={today} />
           </span>
         )}

@@ -134,7 +134,7 @@ export function OverviewFiltersBar({
             onChange={(e) => go({ responsible: e.target.value })}
             className={selectClass}
           >
-            <option value="">Tous les responsables</option>
+            <option value="">Toute l&apos;équipe</option>
             <option value="aucun">Sans responsable</option>
             {memberOptions(members, filters.responsible)}
           </select>

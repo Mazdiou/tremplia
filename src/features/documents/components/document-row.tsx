@@ -67,7 +67,7 @@ export function DocumentRow({
       }}
       onDragEnd={actions.dragEnd}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 text-sm max-sm:flex-wrap",
+        "flex items-center gap-3 px-3 py-2.5 text-sm @max-xl:flex-wrap",
         dragging && "opacity-50",
       )}
     >
@@ -114,8 +114,8 @@ export function DocumentRow({
         </div>
       )}
 
-      {/* Téléphone : boutons sous le nom, qui garde toute la largeur */}
-      <div className="flex shrink-0 items-center gap-1 max-sm:-mt-1 max-sm:w-full max-sm:justify-end">
+      {/* Peu de place : boutons sous le nom, qui garde toute la largeur */}
+      <div className="flex shrink-0 items-center gap-1 @max-xl:-mt-1 @max-xl:w-full @max-xl:justify-end">
         {mode === "move" ? (
           <select
             autoFocus

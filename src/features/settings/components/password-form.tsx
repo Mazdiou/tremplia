@@ -86,7 +86,7 @@ export function PasswordForm({ email }: { email: string }) {
         error={errors.currentPassword}
         required
       />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 @md:grid-cols-2">
         <PasswordField
           label="Nouveau mot de passe"
           name="password"

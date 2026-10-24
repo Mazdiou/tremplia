@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Panel, StatusPill } from "@/components/page-ui";
-import { dayFormat } from "@/lib/dates";
+import { dueLabel } from "@/features/tasks/due";
 import { plural } from "@/lib/plural";
 import type { MemberOverdue } from "@/features/tasks/server/read";
 
@@ -10,9 +10,11 @@ import type { MemberOverdue } from "@/features/tasks/server/read";
 export function TeamOverduePanel({
   rows,
   memberNames,
+  today,
 }: {
   rows: MemberOverdue[];
   memberNames: Map<string, string>;
+  today: string;
 }) {
   return (
     <Panel title="Retards de l'équipe" description="Tâches en retard, campagnes actives.">
@@ -34,7 +36,7 @@ export function TeamOverduePanel({
                     {memberNames.get(r.userId) ?? "Ancien membre"}
                   </span>
                   <span className="block text-xs text-muted-foreground">
-                    La plus ancienne : {dayFormat.format(new Date(r.oldest))}
+                    La plus ancienne : {dueLabel(r.oldest, today)}
                   </span>
                 </span>
                 <StatusPill tone="bad">{plural(r.count, "tâche")}</StatusPill>

@@ -81,7 +81,7 @@ export function TrackPanel({ children }: { children: React.ReactNode }) {
 
 // Retrait des lignes secondaires d'une section, pour commencer sous son
 // contenu (largeur du libellé + écarts)
-export const TRACK_INDENT = "px-4 sm:pl-[11.75rem]";
+export const TRACK_INDENT = "px-4 @xl:pl-[11.75rem]";
 
 export function TrackRow({
   icon: Icon,
@@ -94,29 +94,30 @@ export function TrackRow({
   label: string;
   children?: React.ReactNode;
   actions?: React.ReactNode;
-  // Contenu qui ne fait que résumer les lignes suivantes : masqué sur
-  // téléphone, où il prendrait une ligne de plus
+  // Contenu qui ne fait que résumer les lignes suivantes : masqué quand la
+  // place manque, où il prendrait une ligne de plus
   summary?: boolean;
 }) {
-  // Téléphone : libellé et actions en haut, contenu sur toute la largeur
-  // dessous. Le libellé garde sa largeur ; faute de place, ce sont les
-  // actions qui passent à la ligne. Ordinateur : tout sur une ligne.
+  // Peu de place (téléphone, ou à côté d'un arbre large) : libellé et
+  // actions en haut, contenu sur toute la largeur dessous. Le libellé garde
+  // sa largeur ; faute de place, ce sont les actions qui passent à la ligne.
+  // Sinon : tout sur une ligne.
   return (
-    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5 px-4 py-2.5 sm:flex sm:flex-wrap">
-      <span className="col-start-1 row-start-1 flex min-h-6 items-center gap-2 whitespace-nowrap text-muted-foreground sm:w-40 sm:shrink-0">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5 px-4 py-2.5 @xl:flex @xl:flex-wrap">
+      <span className="col-start-1 row-start-1 flex min-h-6 items-center gap-2 whitespace-nowrap text-muted-foreground @xl:w-40 @xl:shrink-0">
         <Icon className="size-4 shrink-0" aria-hidden />
         {label}
       </span>
       <div
         className={cn(
-          "col-span-2 row-start-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 empty:hidden sm:flex-1",
-          summary && "max-sm:hidden",
+          "col-span-2 row-start-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 empty:hidden @xl:flex-1",
+          summary && "max-md:hidden @max-xl:hidden",
         )}
       >
         {children}
       </div>
       {actions && (
-        <div className="col-start-2 row-start-1 flex flex-wrap items-center justify-end gap-1 sm:ml-auto">
+        <div className="col-start-2 row-start-1 flex flex-wrap items-center justify-end gap-1 @xl:ml-auto">
           {actions}
         </div>
       )}

@@ -16,12 +16,12 @@ export function CollectionList({ days }: { days: ReturnType<typeof groupByDay> }
     <div className="space-y-4">
       {days.map((d) => (
         <section key={d.day} aria-label={formatLongDate(d.day)} className="space-y-1.5">
-          <h3 className="flex items-baseline justify-between gap-3 px-1 text-sm">
+          <h2 className="flex items-baseline justify-between gap-3 px-1 text-sm">
             <span className="font-medium first-letter:uppercase">
               {weekday(d.day)} {formatLongDate(d.day)}
             </span>
             <span className="text-muted-foreground tabular-nums">{formatDA(d.total)}</span>
-          </h3>
+          </h2>
           <ul className="divide-y overflow-hidden rounded-xl border bg-card">
             {d.rows.map((r) => {
               const cancelled = r.cancelReason !== null;

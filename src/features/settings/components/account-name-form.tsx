@@ -30,7 +30,7 @@ export function AccountNameForm({
       }}
       className="space-y-5"
     >
-      <fieldset disabled={readOnly} className="grid gap-4 sm:grid-cols-2">
+      <fieldset disabled={readOnly} className="grid gap-4 @md:grid-cols-2">
         <TextField
           id="account-first-name"
           label="Prénom"

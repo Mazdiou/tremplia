@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, type LucideIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { NEW_CASE_LINK_PROPS, NEW_CASE_TITLE } from "@/features/cases/new-case-link";
@@ -93,8 +93,32 @@ export function Panel({
   );
 }
 
-// Section de formulaire : titre et explication à gauche, champs à droite
-// (empilés sur téléphone).
+// Lien de l'en-tête d'un panneau (« Tout voir », « Voir la campagne »…) :
+// même aspect partout
+export function PanelLink({
+  href,
+  icon: Icon,
+  children,
+}: {
+  href: string;
+  icon?: LucideIcon;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="touch-target inline-flex items-center gap-1.5 text-xs font-medium text-link underline-offset-2 hover:underline"
+    >
+      {Icon && <Icon className="size-3.5" aria-hidden />}
+      {children}
+    </Link>
+  );
+}
+
+// Section de formulaire : titre et explication à gauche, champs à droite,
+// empilés quand la place manque (téléphone, ou section Dossiers à côté de
+// l'arbre). La largeur de la section et celle de la carte décident, pas
+// celle de l'écran : les champs de la carte s'y règlent (@md:, @lg:).
 // `id` : ancre du lien vers la section ; `bare` : le contenu a déjà sa carte.
 export function FormSection({
   id,
@@ -110,18 +134,17 @@ export function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <section
-      id={id}
-      className="grid scroll-mt-6 gap-4 border-b pb-8 last:border-b-0 md:grid-cols-[14rem_1fr] md:gap-8"
-    >
-      <div>
-        <h2 className="text-base font-semibold">{title}</h2>
-        {description && (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        )}
-      </div>
-      <div className={cn("min-w-0", !bare && "space-y-5 rounded-2xl border bg-card p-5")}>
-        {children}
+    <section id={id} className="@container scroll-mt-6 border-b pb-8 last:border-b-0">
+      <div className="grid gap-4 @min-[40rem]:grid-cols-[14rem_1fr] @min-[40rem]:gap-8">
+        <div>
+          <h2 className="text-base font-semibold">{title}</h2>
+          {description && (
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          )}
+        </div>
+        <div className={cn("@container min-w-0", !bare && "space-y-5 rounded-2xl border bg-card p-5")}>
+          {children}
+        </div>
       </div>
     </section>
   );

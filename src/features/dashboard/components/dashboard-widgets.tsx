@@ -78,13 +78,15 @@ export function DashboardWidgets({
       </p>
     );
   }
+  // Deux widgets côte à côte prennent la même hauteur (le plus court
+  // s'allonge) : pas de trou sous le plus court
   return (
-    <div className="grid items-start gap-5 lg:grid-cols-2">
+    <div className="grid gap-5 lg:grid-cols-2">
       {shown.map((item) => (
         <div
           key={item.id}
           className={cn(
-            "@container min-w-0",
+            "@container min-w-0 *:h-full",
             item.wide && "lg:col-span-2",
             (WIDGETS[item.id] as WidgetDef).desktopOnly && "max-md:hidden",
           )}

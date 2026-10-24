@@ -26,6 +26,16 @@ describe("groupActivity", () => {
     expect(groups).toHaveLength(3);
   });
 
+  it("regroupe la même action sur des objets différents d'un même dossier", () => {
+    const doc = (id: string, target: string, caseId = "k1") =>
+      row(id, { action: "document.added", target_type: "document", target_id: target, case_id: caseId });
+    const groups = groupActivity([doc("4", "d4"), doc("3", "d3"), doc("2", "d2"), doc("1", "d1", "k2")], 6);
+    expect(groups.map((g) => [g.id, g.count])).toEqual([
+      ["4", 3],
+      ["1", 1],
+    ]);
+  });
+
   it("ne regroupe pas des lignes séparées par une autre", () => {
     const groups = groupActivity([row("3"), row("2", { action: "case.updated" }), row("1")], 6);
     expect(groups.map((g) => g.count)).toEqual([1, 1, 1]);

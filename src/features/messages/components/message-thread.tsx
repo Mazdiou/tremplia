@@ -105,7 +105,7 @@ export function MessageThread({
                 </span>
                 <div
                   className={cn(
-                    "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap break-words sm:max-w-[75%]",
+                    "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap break-words @xl:max-w-[75%]",
                     mine
                       ? "rounded-br-md bg-primary text-primary-foreground"
                       : "rounded-bl-md border bg-card",

@@ -35,7 +35,7 @@ function FieldLabel({
   hidden?: boolean;
 }) {
   return (
-    <Label htmlFor={htmlFor} className={cn("gap-0.5", hidden && "sm:sr-only")}>
+    <Label htmlFor={htmlFor} className={cn("gap-0.5", hidden && "@lg:sr-only")}>
       {label}
       {required && (
         <span aria-hidden className="text-destructive">
@@ -253,7 +253,7 @@ export function ListHeader({
     <div
       aria-hidden
       className={cn(
-        "hidden gap-3 px-1 text-xs font-medium text-muted-foreground sm:grid",
+        "hidden gap-3 px-1 text-xs font-medium text-muted-foreground @lg:grid",
         className,
       )}
     >
@@ -274,7 +274,7 @@ export function RemoveButton({ label, onClick }: { label: string; onClick: () =>
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="text-muted-foreground hover:text-destructive max-sm:mt-6"
+      className="text-muted-foreground hover:text-destructive @max-lg:mt-6"
     >
       <Trash2 />
     </Button>

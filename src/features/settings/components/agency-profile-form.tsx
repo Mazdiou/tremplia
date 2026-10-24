@@ -42,7 +42,7 @@ export function AgencyProfileForm({
           onChange={(name) => patch({ name })}
           error={errors.name}
         />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 @md:grid-cols-2">
           <TextField
             id="agency-city"
             label="Ville"

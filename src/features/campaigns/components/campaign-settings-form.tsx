@@ -28,14 +28,14 @@ type CampaignSettingsDraft = {
   defaultFee: string;
 };
 
-const DATE_GRID = "sm:grid-cols-[1fr_11rem_2.5rem]";
-const INFO_GRID = "sm:grid-cols-[1fr_2fr_2.5rem]";
-// Téléphone : le libellé et la corbeille sur une ligne, l'autre champ dessous,
-// un trait entre deux lignes de la liste
+const DATE_GRID = "@lg:grid-cols-[1fr_11rem_2.5rem]";
+const INFO_GRID = "@lg:grid-cols-[1fr_2fr_2.5rem]";
+// Peu de place (téléphone) : le libellé et la corbeille sur une ligne,
+// l'autre champ dessous, un trait entre deux lignes de la liste
 const PHONE_ROW =
-  "max-sm:grid-cols-[minmax(0,1fr)_2.5rem] max-sm:border-b max-sm:pb-4 max-sm:last:border-b-0 max-sm:last:pb-0";
-const PHONE_SECOND = "max-sm:col-start-1 max-sm:row-start-2";
-const PHONE_REMOVE = "max-sm:col-start-2 max-sm:row-start-1";
+  "@max-lg:grid-cols-[minmax(0,1fr)_2.5rem] @max-lg:border-b @max-lg:pb-4 @max-lg:last:border-b-0 @max-lg:last:pb-0";
+const PHONE_SECOND = "@max-lg:col-start-1 @max-lg:row-start-2";
+const PHONE_REMOVE = "@max-lg:col-start-2 @max-lg:row-start-1";
 
 // Création (avec les groupes de départ) ou modification des réglages d'une
 // campagne. Patron, ou permission « Gérer les campagnes » ; la base le revérifie.

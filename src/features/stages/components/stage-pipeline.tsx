@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { Panel } from "@/components/page-ui";
+import { Panel, PanelLink } from "@/components/page-ui";
 
 // Avancement des dossiers actifs d'une campagne, étape par étape (tableau de
 // bord). Chaque étape mène à l'arbre des dossiers filtré sur elle.
@@ -17,18 +17,11 @@ export function StagePipeline({
     <Panel
       title="Avancement des dossiers"
       description="Dossiers actifs à chaque étape."
-      actions={
-        <Link
-          href={`/campaigns/${campaignId}`}
-          className="touch-target text-xs text-muted-foreground hover:text-foreground"
-        >
-          Voir la campagne
-        </Link>
-      }
+      actions={<PanelLink href={`/campaigns/${campaignId}`}>Voir la campagne</PanelLink>}
     >
-      {/* Téléphone : une ligne par étape (nom, barre, nombre), bien moins
-          haut qu'une grille de cases */}
-      <ol className="divide-y sm:hidden">
+      {/* Widget étroit (téléphone, demi-largeur) : une ligne par étape (nom,
+          barre, nombre), bien moins haut qu'une grille de cases */}
+      <ol className="divide-y @lg:hidden">
         {stages.map((s, i) => (
           <li key={s.id}>
             <Link
@@ -58,7 +51,7 @@ export function StagePipeline({
       </ol>
       {/* Bordures à droite et en bas de chaque case ; celles du bord sont
           masquées par le panneau (marges négatives) */}
-      <ol className="-mr-px -mb-px grid grid-cols-2 max-sm:hidden sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]">
+      <ol className="-mr-px -mb-px grid grid-cols-2 @max-lg:hidden @lg:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]">
         {stages.map((s, i) => (
           <li key={s.id} className="border-r border-b">
             <Link
@@ -68,7 +61,7 @@ export function StagePipeline({
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <span className="tabular-nums">Étape {i + 1}</span>
                 {i < stages.length - 1 && (
-                  <ChevronRight className="size-3 max-sm:hidden" aria-hidden />
+                  <ChevronRight className="size-3" aria-hidden />
                 )}
               </span>
               <span className="mt-0.5 text-2xl font-semibold tracking-tight tabular-nums group-hover:text-link">
