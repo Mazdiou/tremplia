@@ -1,5 +1,5 @@
 import { callApi } from "@/lib/api-client";
-import { createClient } from "@/lib/supabase/client";
+import { loadClient } from "@/lib/supabase/lazy-client";
 import { DOCUMENTS_BUCKET, MAX_DOCUMENT_BYTES } from "./schemas";
 
 // Envoi d'un PDF depuis le navigateur, en trois temps : le serveur contrôle
@@ -42,7 +42,8 @@ export async function uploadDocument(
   );
   if (!step1.ok) return step1.error;
 
-  const { error: uploadError } = await createClient()
+  const supabase = await loadClient();
+  const { error: uploadError } = await supabase
     .storage.from(DOCUMENTS_BUCKET)
     .uploadToSignedUrl(step1.data.path, step1.data.token, file, {
       contentType: "application/pdf",

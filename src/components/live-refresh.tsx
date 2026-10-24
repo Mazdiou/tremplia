@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { loadClient } from "@/lib/supabase/lazy-client";
 
 // Garde la page à jour sans rechargement : messages non lus, « À traiter »,
 // pastilles de l'arbre, tâches confiées par un collègue. Seuls les
@@ -55,45 +55,53 @@ export function LiveRefresh({ agencyId }: { agencyId?: string }) {
 
     let cleanup = () => {};
     if (agencyId) {
-      const supabase = createClient();
-      const filter = `agency_id=eq.${agencyId}`;
-      const channel = supabase
-        .channel(`agency-live:${agencyId}`)
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "case_messages", filter },
-          (payload) => {
-            // Les messages de l'agence elle-même se rafraîchissent à l'envoi
-            if ((payload.new as { sender?: string }).sender === "student") refresh();
-          },
-        )
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "case_student_reviews", filter },
-          refresh,
-        )
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "case_tasks", filter },
-          refresh,
-        );
-      // Page quittée avant la fin de setAuth : plus d'abonnement à ouvrir,
-      // sinon le canal resterait ouvert sans que personne le ferme
+      // Page quittée avant la fin du chargement ou de setAuth : plus
+      // d'abonnement à ouvrir, sinon le canal resterait ouvert sans que
+      // personne le ferme
       let disposed = false;
-      // Le jeton de la session doit être transmis avant l'abonnement, sinon
-      // le RLS ne laisse rien passer
-      void supabase.realtime.setAuth().then(() => {
-        if (disposed) return;
-        channel.subscribe((status) => {
-          const wasLive = live;
-          live = status === "SUBSCRIBED";
-          // Reconnexion : rattraper ce qui est arrivé pendant la coupure
-          if (live && !wasLive && Date.now() - last > MIN_GAP_MS) refresh();
-        });
-      });
+      let removeChannel = () => {};
+      // Client chargé après l'affichage de la page (voir lazy-client.ts).
+      // Chargement en échec (hors ligne) : la vérification périodique suffit.
+      void loadClient()
+        .then(async (supabase) => {
+          if (disposed) return;
+          const filter = `agency_id=eq.${agencyId}`;
+          const channel = supabase
+            .channel(`agency-live:${agencyId}`)
+            .on(
+              "postgres_changes",
+              { event: "INSERT", schema: "public", table: "case_messages", filter },
+              (payload) => {
+                // Les messages de l'agence elle-même se rafraîchissent à l'envoi
+                if ((payload.new as { sender?: string }).sender === "student") refresh();
+              },
+            )
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "case_student_reviews", filter },
+              refresh,
+            )
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "case_tasks", filter },
+              refresh,
+            );
+          removeChannel = () => void supabase.removeChannel(channel);
+          // Le jeton de la session doit être transmis avant l'abonnement,
+          // sinon le RLS ne laisse rien passer
+          await supabase.realtime.setAuth();
+          if (disposed) return;
+          channel.subscribe((status) => {
+            const wasLive = live;
+            live = status === "SUBSCRIBED";
+            // Reconnexion : rattraper ce qui est arrivé pendant la coupure
+            if (live && !wasLive && Date.now() - last > MIN_GAP_MS) refresh();
+          });
+        })
+        .catch(() => {});
       cleanup = () => {
         disposed = true;
-        void supabase.removeChannel(channel);
+        removeChannel();
       };
     }
 

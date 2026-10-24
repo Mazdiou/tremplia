@@ -6,7 +6,7 @@ import { CheckCircle2 } from "lucide-react";
 import { PasswordField } from "@/components/auth/auth-field";
 import { Button } from "@/components/ui/button";
 import { callApi } from "@/lib/api-client";
-import { createClient } from "@/lib/supabase/client";
+import { loadClient } from "@/lib/supabase/lazy-client";
 import { forgetOtherPushDevices } from "@/features/notifications/push-client";
 import {
   MAX_PASSWORD_LENGTH,
@@ -58,7 +58,7 @@ export function PasswordForm({ email }: { email: string }) {
 
     // Le changement peut fermer les sessions du compte : on rouvre aussitôt
     // celle-ci avec le nouveau mot de passe, puis on ferme les autres
-    const supabase = createClient();
+    const supabase = await loadClient();
     const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
     if (loginError) {
       router.replace("/login");

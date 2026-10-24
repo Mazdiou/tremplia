@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { loadClient } from "@/lib/supabase/lazy-client";
 import { fetchCampaignCases, type CampaignCases } from "./fetch-campaign-cases";
 
 // Dossiers de l'arbre : ceux que le serveur a déjà chargés (campagne ouverte
@@ -23,7 +23,7 @@ export function useCampaignCases(
     if (inflight.current.has(id)) return;
     inflight.current.add(id);
     try {
-      const data = await fetchCampaignCases(createClient(), id);
+      const data = await fetchCampaignCases(await loadClient(), id);
       loaded.current.add(id);
       setExtra((e) => ({ ...e, [id]: data }));
       setErrors((e) => (e[id] ? { ...e, [id]: false } : e));
@@ -54,7 +54,8 @@ export function useCampaignCases(
     if (lookedUp.current.has(selectedId)) return;
     lookedUp.current.add(selectedId);
     void (async () => {
-      const { data } = await createClient()
+      const supabase = await loadClient();
+      const { data } = await supabase
         .from("cases")
         .select("campaign_id")
         .eq("id", selectedId)

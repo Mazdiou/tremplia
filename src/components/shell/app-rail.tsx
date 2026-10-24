@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Search } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { createClient } from "@/lib/supabase/client";
+import { loadClient } from "@/lib/supabase/lazy-client";
 import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
 import type { Permission } from "@/lib/permissions";
@@ -39,7 +39,8 @@ export function AppRail({
     // Déconnexion de toutes les sessions du compte : plus aucun appareil ne
     // reçoit ses notifications avant la reconnexion
     await forgetOtherPushDevices({ keepThisDevice: false });
-    await createClient().auth.signOut();
+    const supabase = await loadClient();
+    await supabase.auth.signOut();
     router.replace("/login");
     router.refresh();
   }
