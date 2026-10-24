@@ -50,7 +50,7 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 | **Messages** | Une conversation par dossier avec le candidat, en temps réel, avec pastilles de non-lus (dossier, arbre, tableau de bord). |
 | **WhatsApp** | Ouvre une conversation WhatsApp avec le candidat (ou son parent), avec des messages préparés : lien de l'espace candidat, nouveau message, reste à payer, passage à l'agence. |
 | **Historique** | Journal de tout ce qui a été fait sur le dossier, et par qui. |
-| **Tableau de bord** | Widgets : « À traiter », mes tâches, chiffres clés, avancement par étape, campagnes, paiements, échéances, réponses des formations, ajoutés récemment, activité de l'équipe ; toutes les campagnes actives ou une seule. « Personnaliser » : chaque membre choisit ses widgets, leur ordre (glisser-déposer ou flèches) et leur taille (demi ou pleine largeur) ; le patron peut proposer sa disposition à toute l'équipe. Paiements et activité restent soumis aux droits. |
+| **Tableau de bord** | Widgets : « À traiter », mes tâches, chiffres clés, avancement par étape, campagnes, dossiers sans nouvelles (aucune action de l'agence depuis 14 jours), échéances, paiements, encaissements par mois, retards de l'équipe, réponses des formations, activité de l'équipe ; toutes les campagnes actives ou une seule. « Personnaliser » : chaque membre choisit ses widgets, leur ordre (glisser-déposer ou flèches) et leur taille (demi ou pleine largeur) ; le patron peut proposer sa disposition à toute l'équipe. Paiements et encaissements : patron ou droit « Voir la caisse » ; retards et activité de l'équipe : patron. |
 | **Export Excel** | Classeur complet d'une campagne (patron). |
 | **Copie sur l'ordinateur** | Chrome et Edge sur ordinateur : chaque membre choisit un dossier (Réglages › Sur cet ordinateur) où Tremplia recopie les PDF des dossiers en cours, rangés comme l'arbre (campagne / groupe ou « Non classés » / NOM Prénom / dossier de documents), pour les déposer facilement sur les plateformes. Mise à jour à l'ouverture de Tremplia, dès qu'un document change dans un dossier ouvert, ou avec un bouton (Réglages, onglet Documents). Tremplia ne touche qu'aux fichiers qu'il a copiés (liste cachée `.tremplia-copie.json`). |
 | **Notifications** | Sur le téléphone ou l'ordinateur, même Tremplia fermé : chaque membre les active sur chacun de ses appareils et choisit pour lui-même (Réglages › Notifications) : messages des candidats et réponses sur la lettre et les formations (dossiers dont il est responsable ; patron : aussi ceux sans responsable actif), tâche confiée par un collègue, tâches du jour chaque matin. Voir [Notifications](#notifications). |
@@ -459,6 +459,7 @@ Les migrations (`supabase/migrations/`) sont découpées par domaine :
 | `delete_agency` | suppression d'une agence par l'administrateur, exception `is_purging()` des règles de protection |
 | `push_notifications` | appareils abonnés aux notifications, choix de chaque membre, destinataires de chaque événement, récapitulatif du matin |
 | `dashboard_layouts` | disposition du tableau de bord de chaque membre et celle de l'agence |
+| `case_last_activity` | date de la dernière action de l'agence sur chaque dossier (« Dossiers sans nouvelles ») |
 
 Chaque domaine a son fichier de tests pgTAP dans `supabase/tests/`.
 

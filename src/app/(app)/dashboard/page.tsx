@@ -18,18 +18,25 @@ import { countdownLabel, nextDeadline, timeline } from "@/features/campaigns/tim
 import { listCampaignDates, listCampaigns } from "@/features/campaigns/server/queries";
 import { CampaignSelect } from "@/features/dashboard/components/campaign-select";
 import { ActivityPanel } from "@/features/dashboard/components/activity-panel";
-import { Initials, relativeDay } from "@/features/dashboard/components/dashboard-ui";
+import { CashflowPanel } from "@/features/dashboard/components/cashflow-panel";
+import { StalePanel } from "@/features/dashboard/components/stale-panel";
+import { TeamOverduePanel } from "@/features/dashboard/components/team-overdue-panel";
 import { DeadlinesPanel } from "@/features/dashboard/components/deadlines-panel";
 import { ResultsPanel } from "@/features/dashboard/components/results-panel";
 import { TodoPanel } from "@/features/dashboard/components/todo-panel";
-import { loadActivity, loadResults, loadTodo } from "@/features/dashboard/server/dashboard";
+import {
+  loadActivity,
+  loadCashflow,
+  loadResults,
+  loadStale,
+  loadTodo,
+} from "@/features/dashboard/server/dashboard";
 import { CustomizeButton, DashboardWidgets, type WidgetEntry } from "@/features/dashboard/components/dashboard-widgets";
 import { getDashboardLayouts } from "@/features/dashboard/server/layout";
 import { WIDGETS, WIDGET_IDS, allowedWidget, applicableWidget, type WidgetDef, type WidgetId } from "@/features/dashboard/widgets";
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
 import { countCases, countCreatedLastWeek, sumStat } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
-import { EDUCATION_LEVEL_LABELS, labelOf } from "@/features/cases/labels";
 import { APP_TIMEZONE, todayInAppTimezone } from "@/lib/dates";
 import { displayName } from "@/lib/names";
 import { formatDA } from "@/lib/money";
@@ -38,7 +45,12 @@ import { BRAND } from "@/config/brand";
 import { InstallAppCard } from "@/features/pwa/components/install-app-card";
 import { StagePipeline } from "@/features/stages/components/stage-pipeline";
 import { MyTasksPanel } from "@/features/tasks/components/my-tasks-panel";
-import { loadMyTasks, myTaskCounts } from "@/features/tasks/server/read";
+import {
+  listTaskMembers,
+  loadMyTasks,
+  loadTeamOverdue,
+  myTaskCounts,
+} from "@/features/tasks/server/read";
 import { OnboardingChecklist } from "@/features/onboarding/components/onboarding-checklist";
 import { WelcomeDialog } from "@/features/onboarding/components/welcome-dialog";
 import { loadOnboarding, needsWelcome } from "@/features/onboarding/server/onboarding";
@@ -60,8 +72,9 @@ const longToday = new Intl.DateTimeFormat("fr-FR", {
 // Tableau de bord : le bonjour et le guide de démarrage, puis les widgets
 // dans la disposition du membre (voir features/dashboard/widgets.ts). Par
 // défaut : ce qui attend l'agence (« À traiter »), mes tâches, les chiffres
-// clés (cliquables vers la liste filtrée), les campagnes, les paiements, les
-// échéances, les réponses des établissements, puis l'activité de l'agence.
+// clés (cliquables vers la liste filtrée), l'avancement ou les campagnes, les
+// dossiers sans nouvelles, les échéances, les paiements et les encaissements,
+// les retards de l'équipe, les réponses des établissements, puis l'activité.
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -145,23 +158,23 @@ export default async function DashboardPage({
   const tasksPromise = needs("tasks")
     ? Promise.all([loadMyTasks(u.member.userId, u.member.isOwner), myTaskCounts(u.member.userId)])
     : null;
+  // Dossiers sans nouvelles, encaissements par mois, retards de l'équipe (et
+  // noms des membres pour les deux listes)
+  const morePromise = Promise.all([
+    needs("stale") ? loadStale(supabase, ids) : null,
+    needs("cashflow") ? loadCashflow(supabase, ids, today) : null,
+    needs("teamTasks") ? loadTeamOverdue() : null,
+    needs("stale", "teamTasks") ? listTaskMembers() : [],
+  ]);
   const none = Promise.resolve(null);
   const noRows = Promise.resolve({ data: null });
-  const [readOnly, stats, todo, recentRes, dates, monthRes, owingRes, results, activity, stagesRes, stageStatsRes] =
+  const [readOnly, stats, todo, dates, monthRes, owingRes, results, activity, stagesRes, stageStatsRes] =
     await Promise.all([
       readOnlyPromise,
       needs("stats", "campaigns", "payments") ? listCaseStats(ids) : Promise.resolve([]),
       needs("todo")
         ? loadTodo(supabase, ids, agencyUnreadCounts(u.member.agencyId))
         : none,
-      needs("recent")
-        ? supabase
-            .from("cases")
-            .select("id, first_name, last_name, education_level, created_at")
-            .in("campaign_id", ids)
-            .order("created_at", { ascending: false })
-            .limit(5)
-        : noRows,
       needs("campaigns", "deadlines") ? listCampaignDates(campaigns) : Promise.resolve([]),
       needs("payments")
         ? supabase
@@ -194,7 +207,12 @@ export default async function DashboardPage({
             .eq("status", "active")
         : noRows,
     ]);
-  const [myTasks, guide] = await Promise.all([tasksPromise, guidePromise]);
+  const [myTasks, guide, [stale, cashflow, teamOverdue, members]] = await Promise.all([
+    tasksPromise,
+    guidePromise,
+    morePromise,
+  ]);
+  const memberNames = new Map(members.map((m) => [m.id, m.name]));
 
   // Liens vers l'arbre des dossiers, filtré (et limité à la campagne choisie)
   const casesLink = (filtre?: string) => {
@@ -398,48 +416,18 @@ export default async function DashboardPage({
 
     results: () => <ResultsPanel results={results!} />,
 
-    recent: () => {
-      const recent = (recentRes.data ?? []) as {
-        id: string;
-        first_name: string;
-        last_name: string;
-        education_level: string;
-        created_at: string;
-      }[];
-      return (
-        <Panel title="Ajoutés récemment">
-          {recent.length === 0 ? (
-            <p className="px-5 py-5 text-sm text-muted-foreground">
-              Aucun dossier pour le moment.
-            </p>
-          ) : (
-            <ul>
-              {recent.map((c) => (
-                <li key={c.id} className="border-b last:border-b-0">
-                  <Link
-                    href={`/cases/${c.id}`}
-                    className="flex items-center gap-3 px-5 py-2.5 text-sm hover:bg-muted/50"
-                  >
-                    <Initials first={c.first_name} last={c.last_name} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">
-                        {displayName(c.first_name, c.last_name)}
-                      </span>
-                      <span className="block text-xs text-muted-foreground">
-                        {labelOf(EDUCATION_LEVEL_LABELS, c.education_level)}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {relativeDay(c.created_at)}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
-      );
-    },
+    stale: () => (
+      <StalePanel stale={stale!} memberNames={memberNames} currentUserId={u.member.userId} />
+    ),
+
+    cashflow: () => (
+      <CashflowPanel
+        months={cashflow!}
+        href={selected ? `/payments?campagne=${selected.id}` : "/payments"}
+      />
+    ),
+
+    teamTasks: () => <TeamOverduePanel rows={teamOverdue!} memberNames={memberNames} />,
 
     activity: () => <ActivityPanel entries={activity} />,
   };

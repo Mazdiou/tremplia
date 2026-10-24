@@ -188,3 +188,27 @@ export async function loadMyTasks(userId: string, withTeam: boolean) {
     teamOverdue: team?.count ?? null,
   };
 }
+
+export type MemberOverdue = { userId: string; count: number; oldest: string };
+
+// Patron : tâches en retard de chaque membre (campagnes actives), les membres
+// les plus en retard d'abord
+export async function loadTeamOverdue(): Promise<MemberOverdue[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("case_tasks")
+    .select(`assigned_to, due_date, ${ACTIVE_CAMPAIGN}`)
+    .eq("case.campaign.status", "active")
+    .is("done_at", null)
+    .lt("due_date", todayInAppTimezone())
+    .order("due_date")
+    .limit(MAX_DASHBOARD_TASKS * 5);
+  if (error) reportError("[tasks team overdue]", error.code);
+  const byMember = new Map<string, MemberOverdue>();
+  for (const t of (data ?? []) as { assigned_to: string; due_date: string }[]) {
+    const row = byMember.get(t.assigned_to);
+    if (row) row.count += 1;
+    else byMember.set(t.assigned_to, { userId: t.assigned_to, count: 1, oldest: t.due_date });
+  }
+  return [...byMember.values()].sort((a, b) => b.count - a.count || a.oldest.localeCompare(b.oldest));
+}

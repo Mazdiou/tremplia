@@ -62,6 +62,11 @@ describe("droits et campagnes", () => {
     expect(allowedWidget("activity", { isOwner: false, seesPayments: true })).toBe(false);
     expect(allowedWidget("activity", { isOwner: true, seesPayments: true })).toBe(true);
     expect(allowedWidget("todo", employee)).toBe(true);
+    expect(allowedWidget("stale", employee)).toBe(true);
+    expect(allowedWidget("cashflow", employee)).toBe(false);
+    expect(allowedWidget("cashflow", { ...employee, seesPayments: true })).toBe(true);
+    expect(allowedWidget("teamTasks", { isOwner: false, seesPayments: true })).toBe(false);
+    expect(allowedWidget("teamTasks", { isOwner: true, seesPayments: true })).toBe(true);
   });
 
   it("Avancement et Échéances : une campagne ; Campagnes : plusieurs", () => {

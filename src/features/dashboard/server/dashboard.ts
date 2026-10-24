@@ -6,6 +6,7 @@ import { groupActivity, type ActivityGroup, type ActivityRow } from "../activity
 import { plural } from "@/lib/plural";
 import { displayName, fullName } from "@/lib/names";
 import { reportError } from "@/lib/report-error";
+import { lastMonths } from "../months";
 
 // Lectures du tableau de bord, via le RLS (dossiers de l'agence seulement).
 
@@ -204,5 +205,55 @@ export async function loadActivity(
         ? { first_name: "Un", last_name: "membre" }
         : (profileById.get(g.actor_id) ?? null);
     return { ...g, actor, object };
+  });
+}
+
+// « Dossiers sans nouvelles » : seuil et nombre de dossiers listés
+export const STALE_DAYS = 14;
+const STALE_SHOWN = 6;
+
+export type StaleCase = Named & { assigned_to: string | null; last_activity_at: string };
+export type Stale = { rows: StaleCase[]; total: number };
+
+// Dossiers actifs auxquels personne de l'agence n'a touché depuis STALE_DAYS
+// jours (vue case_activity), les plus anciens d'abord
+export async function loadStale(supabase: SupabaseClient, campaignIds: string[]): Promise<Stale> {
+  const cutoff = new Date(Date.now() - STALE_DAYS * 86_400_000).toISOString();
+  const { data, count, error } = await supabase
+    .from("case_activity")
+    .select("id, first_name, last_name, assigned_to, last_activity_at", { count: "exact" })
+    .in("campaign_id", campaignIds)
+    .eq("status", "active")
+    .lt("last_activity_at", cutoff)
+    .order("last_activity_at", { ascending: true })
+    .limit(STALE_SHOWN);
+  if (error) reportError("[dashboard stale]", error.code);
+  return { rows: (data ?? []) as StaleCase[], total: count ?? 0 };
+}
+
+export type CashMonth = { month: string; amount: number; payments: number };
+
+// Encaissements des six derniers mois, mois en cours compris ; un mois sans
+// paiement vaut zéro
+export async function loadCashflow(
+  supabase: SupabaseClient,
+  campaignIds: string[],
+  today: string,
+): Promise<CashMonth[]> {
+  const months = lastMonths(today, 6);
+  const { data, error } = await supabase
+    .from("payment_months")
+    .select("month, amount, payments")
+    .in("campaign_id", campaignIds)
+    .gte("month", months[0]);
+  if (error) reportError("[dashboard cashflow]", error.code);
+  const rows = (data ?? []) as { month: string; amount: number | string; payments: number }[];
+  return months.map((month) => {
+    const inMonth = rows.filter((r) => r.month === month);
+    return {
+      month,
+      amount: inMonth.reduce((n, r) => n + Number(r.amount), 0),
+      payments: inMonth.reduce((n, r) => n + r.payments, 0),
+    };
   });
 }

@@ -47,11 +47,10 @@ export const WIDGETS = {
     defaultSize: "full",
     scope: "several",
   },
-  payments: {
-    label: "Paiements",
-    description: "Encaissé ce mois, reste à encaisser et plus gros restes à payer.",
-    defaultSize: "full",
-    requires: "payments_view",
+  stale: {
+    label: "Dossiers sans nouvelles",
+    description: "Dossiers actifs auxquels personne n'a touché depuis 14 jours.",
+    defaultSize: "half",
   },
   deadlines: {
     label: "Échéances",
@@ -59,14 +58,27 @@ export const WIDGETS = {
     defaultSize: "half",
     scope: "single",
   },
+  payments: {
+    label: "Paiements",
+    description: "Encaissé ce mois, reste à encaisser et plus gros restes à payer.",
+    defaultSize: "full",
+    requires: "payments_view",
+  },
+  cashflow: {
+    label: "Encaissements par mois",
+    description: "Montants encaissés sur les six derniers mois.",
+    defaultSize: "half",
+    requires: "payments_view",
+  },
+  teamTasks: {
+    label: "Retards de l'équipe",
+    description: "Tâches en retard de chaque membre.",
+    defaultSize: "half",
+    requires: "owner",
+  },
   results: {
     label: "Réponses des établissements",
     description: "Formations acceptées, refusées ou en attente.",
-    defaultSize: "half",
-  },
-  recent: {
-    label: "Ajoutés récemment",
-    description: "Les cinq derniers dossiers créés.",
     defaultSize: "half",
   },
   activity: {
