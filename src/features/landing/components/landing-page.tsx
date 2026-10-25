@@ -304,7 +304,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
         {/* Le problème */}
         <div className="border-b px-5 py-14 text-center sm:px-8">
           <p className="mx-auto max-w-3xl text-xl font-medium text-balance sm:text-2xl">
-            Un passeport sur WhatsApp, un relevé de notes dans Excel, un reçu au fond d&apos;un classeur…{" "}
+            Un passeport sur WhatsApp, un relevé de notes perdu dans une boîte mail, un reçu au fond d&apos;un classeur…{" "}
             <span className="text-muted-foreground">
               Avec {BRAND.name}, chaque pièce, chaque échéance et chaque paiement retrouve sa
               place dans le dossier du candidat.
@@ -316,7 +316,6 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
           id="fonctionnalites"
           eyebrow="Fonctionnalités"
           title="Tout le suivi d'un dossier, dans un seul outil"
-          intro="Conçu pour les agences qui accompagnent les étudiants vers les études à l'étranger, Campus France compris."
         >
           <div className="grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, text }) => (
