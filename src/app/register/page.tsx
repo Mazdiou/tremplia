@@ -161,7 +161,7 @@ export default function RegisterPage() {
               <>
                 Votre agence est créée. Un e-mail vient de partir à{" "}
                 <span className="font-medium text-foreground">{done.email}</span> : cliquez
-                sur le lien qu&apos;il contient pour ouvrir votre compte. Le lien est valable
+                sur le lien qu&apos;il contient pour activer votre compte. Le lien est valable
                 1 heure.
               </>
             ) : (
@@ -207,10 +207,10 @@ export default function RegisterPage() {
 
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Inscrire mon agence
+          Créez votre agence
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Deux étapes rapides pour démarrer.
+          7 jours d&apos;essai gratuit, sans carte bancaire. Deux étapes suffisent.
         </p>
       </div>
 
@@ -348,7 +348,7 @@ export default function RegisterPage() {
                   Création…
                 </>
               ) : (
-                "Créer mon compte"
+                "Démarrer mon essai gratuit"
               )}
             </Button>
           </div>

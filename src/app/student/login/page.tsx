@@ -36,7 +36,7 @@ export default function StudentLoginPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight">Espace candidat</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Saisissez le code transmis par votre agence pour consulter votre dossier.
+          Entrez le code transmis par votre agence pour suivre votre dossier et échanger avec votre conseiller.
         </p>
       </div>
 

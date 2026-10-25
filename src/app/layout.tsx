@@ -24,7 +24,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const DESCRIPTION = "CRM pour agences de démarches d'études à l'étranger";
+const DESCRIPTION = `${BRAND.tagline} : dossiers, documents, paiements et équipe réunis dans un seul outil.`;
 
 export const metadata: Metadata = {
   // Adresse de base des liens absolus (aperçus de liens, plan du site)

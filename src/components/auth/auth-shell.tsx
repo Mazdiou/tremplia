@@ -136,11 +136,11 @@ export function AuthShell({
 
         <div className="relative my-auto py-8 [@media(max-height:800px)]:py-4">
           <h2 className="max-w-md text-4xl leading-[1.1] font-semibold tracking-tight text-balance">
-            Le CRM des agences d&apos;études à l&apos;étranger.
+            Gérez votre agence, pas vos classeurs.
           </h2>
           <p className="mt-4 max-w-md text-base text-decor-muted">
-            Candidats, pièces, lettres et échéances au même endroit, pour toute
-            l&apos;équipe.
+            Pièces, lettres, formations, paiements et échéances réunis dans un seul
+            outil, pour toute l&apos;équipe.
           </p>
           {/* Fenêtre peu haute (portable) : l'aperçu est réduit pour tenir sans
               barre de défilement ; masqué seulement sur une très petite fenêtre */}
@@ -155,7 +155,7 @@ export function AuthShell({
               <ShieldCheck className="size-3.5" /> Données isolées par agence
             </span>
             <span className="flex items-center gap-1.5">
-              <LockKeyhole className="size-3.5" /> Mots de passe chiffrés
+              <LockKeyhole className="size-3.5" /> Identifiants chiffrés
             </span>
           </span>
           <span>© {new Date().getFullYear()} {BRAND.name}</span>

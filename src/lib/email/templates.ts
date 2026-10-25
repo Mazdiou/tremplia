@@ -147,8 +147,8 @@ export function subscriptionReminderEmail(input: {
         `L'${what} de l'agence « ${input.agencyName} » se termine le ${formatReminderDate(input.endsAt)}.`,
         "Ensuite, vos dossiers restent consultables, mais en lecture seule : plus aucun ajout ni aucune modification.",
         input.trial
-          ? `Pour continuer avec ${BRAND.name}, ${contact}. Paiement en espèces ou par CCP / BaridiMob.`
-          : `Pour renouveler, ${contact}. Paiement en espèces ou par CCP / BaridiMob.`,
+          ? `Pour continuer avec ${BRAND.name}, ${contact}. Paiement en espèces, par CCP ou par BaridiMob.`
+          : `Pour renouveler, ${contact}. Paiement en espèces, par CCP ou par BaridiMob.`,
       ],
       action: { label: `Ouvrir ${BRAND.name}`, url: input.appUrl },
     },

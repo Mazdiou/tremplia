@@ -56,7 +56,7 @@ export default function LoginPage() {
           Bon retour parmi nous
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Connectez-vous pour retrouver vos dossiers.
+          Connectez-vous pour retrouver les dossiers de votre agence.
         </p>
       </div>
 
@@ -119,12 +119,12 @@ export default function LoginPage() {
       </form>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        Pas encore de compte ?{" "}
+        Nouvelle agence ?{" "}
         <Link
           href="/register"
           className="font-medium text-link hover:underline"
         >
-          Inscrire mon agence
+          Démarrer l&apos;essai gratuit
         </Link>
       </p>
     </AuthShell>

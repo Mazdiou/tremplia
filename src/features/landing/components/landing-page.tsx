@@ -84,7 +84,7 @@ const FAQ = [
   },
   {
     q: "Comment régler l'abonnement ?",
-    a: "En espèces, par CCP ou par BaridiMob, au mois ou à l'année. Contactez-nous : nous vous proposons un tarif adapté à la taille de votre agence.",
+    a: "En espèces, par CCP ou par BaridiMob, pour 1, 3 ou 12 mois. Contactez-nous : nous vous proposons un tarif adapté à la taille de votre agence.",
   },
   {
     q: "Fonctionne-t-il sur téléphone ?",
@@ -272,7 +272,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "h-12 sm:h-11")}>
-                Commencer l&apos;essai gratuit <ArrowRight />
+                Démarrer l&apos;essai gratuit <ArrowRight />
               </Link>
               <Link
                 href="/login"
@@ -400,7 +400,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
           id="tarifs"
           eyebrow="Tarifs"
           title="Essayez d'abord, payez ensuite"
-          intro="Un abonnement unique pour toute l'agence, au mois ou à l'année."
+          intro="Un abonnement unique pour toute l'agence, pour 1, 3 ou 12 mois."
         >
           <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
             <div className="rounded-2xl border bg-card p-8">
@@ -415,18 +415,18 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
                 ]}
               />
               <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "mt-8 w-full")}>
-                Démarrer l&apos;essai
+                Démarrer l&apos;essai gratuit
               </Link>
             </div>
             <div className="relative rounded-2xl border-2 border-primary bg-card p-8 shadow-xl shadow-primary/10">
               <p className="font-semibold">Abonnement</p>
               <p className="mt-3 text-4xl font-semibold tracking-tight">Sur devis</p>
-              <p className="mt-1 text-sm text-muted-foreground">Au mois ou à l&apos;année, selon la taille de votre agence.</p>
+              <p className="mt-1 text-sm text-muted-foreground">1, 3 ou 12 mois, au tarif adapté à votre agence.</p>
               <CheckList
                 items={[
                   "Paiement en espèces, par CCP ou BaridiMob",
                   "Toutes les fonctionnalités, pour toute l'équipe",
-                  "Renouvellement libre, sans prélèvement automatique",
+                  "Aucun renouvellement automatique",
                 ]}
               />
               <div className="mt-8">
@@ -434,7 +434,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
                   <ContactButtons contact={contact} />
                 ) : (
                   <Link href="/register" className={cn(buttonVariants({ size: "lg", variant: "outline" }), "w-full")}>
-                    Commencer par l&apos;essai
+                    Démarrer l&apos;essai gratuit
                   </Link>
                 )}
               </div>
@@ -513,7 +513,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
           </span>
           <nav aria-label="Pied de page" className="flex flex-wrap gap-x-6">
             <Link href="/login" className="py-2 hover:text-foreground">Se connecter</Link>
-            <Link href="/register" className="py-2 hover:text-foreground">Créer une agence</Link>
+            <Link href="/register" className="py-2 hover:text-foreground">Créer mon agence</Link>
             <Link href="/student/login" className="py-2 hover:text-foreground">Espace candidat</Link>
             <SectionLink href="#faq" className="py-2 hover:text-foreground">FAQ</SectionLink>
             {LEGAL_LINKS.map((l) => (

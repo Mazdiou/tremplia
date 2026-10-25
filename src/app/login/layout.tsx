@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 // interactive, ne peut pas les déclarer elle-même
 export const metadata: Metadata = {
   title: "Connexion",
-  description: "Connexion à l'espace de votre agence.",
+  description: "Connectez-vous à l'espace de votre agence : dossiers, équipe et candidats.",
 };
 
 export default function LoginLayout({ children }: { children: React.ReactNode }) {

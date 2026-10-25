@@ -62,7 +62,7 @@ export default function ResetPasswordPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight">Nouveau mot de passe</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Choisissez le mot de passe de votre compte.
+          Choisissez un nouveau mot de passe pour votre compte.
         </p>
       </div>
 
