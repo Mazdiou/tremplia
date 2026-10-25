@@ -23,6 +23,7 @@ import { LogoMark } from "@/components/logo-mark";
 import { cn } from "@/lib/utils";
 import { DecorLayers } from "@/components/decor";
 import { LandingHeader } from "./landing-header";
+import { SectionLink } from "./section-link";
 import { telHref } from "@/lib/phone";
 
 // Page d'accueil publique. Aucune affirmation inventée : pas de témoignage,
@@ -37,65 +38,65 @@ const FEATURES = [
   {
     icon: Milestone,
     title: "Campagnes et étapes",
-    text: "Chaque candidat dans sa campagne, à son étape : vous voyez d'un coup d'œil où en est chaque dossier.",
+    text: "Regroupez vos candidats par campagne et suivez l'étape de chaque dossier. Échéances proches et tâches en retard remontent d'elles-mêmes.",
   },
   {
     icon: FileText,
-    title: "Documents rangés",
-    text: "Les pièces classées par dossier, verrouillables par le patron, téléchargeables en un seul ZIP.",
+    title: "Documents en ordre",
+    text: "Chaque pièce classée dans son dossier, verrouillable par le patron. Vos photos deviennent des PDF, le dossier complet part en un ZIP.",
   },
   {
     icon: GraduationCap,
     title: "Formations et réponses",
-    text: "Les formations visées par ordre de préférence, et la réponse de chaque établissement.",
+    text: "Les vœux du candidat classés par ordre de préférence, et la réponse de chaque établissement dès qu'elle arrive.",
   },
   {
     icon: NotebookPen,
     title: "Lettres de motivation",
-    text: "Rédigées dans le dossier, relues et validées par le candidat depuis son espace.",
+    text: "Rédigées dans le dossier, puis relues et validées par le candidat depuis son espace, sans aller-retour par e-mail.",
   },
   {
     icon: Wallet,
-    title: "Paiements suivis",
-    text: "Montant convenu, paiements reçus, reste à payer : vous savez qui vous doit quoi.",
+    title: "Paiements à jour",
+    text: "Montant convenu, sommes encaissées, reste à payer : vous savez à tout moment qui vous doit quoi.",
   },
   {
     icon: MessageCircle,
     title: "Candidats joignables",
-    text: "Messagerie intégrée, et WhatsApp en un clic avec un message déjà rédigé.",
+    text: "Une messagerie par dossier, des notifications sur téléphone, et WhatsApp en un clic avec le message déjà rédigé.",
   },
 ];
 
 const STEPS = [
-  { title: "Créez votre agence", text: "Inscription en deux minutes, sans carte bancaire." },
-  { title: "Ajoutez vos campagnes", text: "Partez d'un modèle prêt à l'emploi, puis créez vos dossiers." },
-  { title: "Invitez l'équipe", text: "Chaque employé a son compte ; chaque candidat, son code d'accès." },
+  { title: "Créez votre agence", text: "Deux minutes suffisent, sans carte bancaire ni engagement." },
+  { title: "Lancez vos campagnes", text: "Partez d'un modèle prêt à l'emploi, ajustez les étapes, puis ajoutez vos candidats." },
+  { title: "Invitez votre équipe", text: "Un compte pour chaque employé, un code d'accès pour chaque candidat." },
 ];
 
 const FAQ = [
   {
-    q: "Comment se passe l'essai gratuit ?",
-    a: "Vous créez votre agence et utilisez toutes les fonctionnalités pendant 7 jours, sans carte bancaire et sans engagement.",
+    q: "Comment fonctionne l'essai gratuit ?",
+    a: "Créez votre agence et utilisez toutes les fonctionnalités pendant 7 jours, avec toute votre équipe. Aucune carte bancaire, aucun engagement.",
   },
   {
     q: "Que se passe-t-il à la fin de l'essai ?",
-    a: "Rien n'est supprimé. Sans abonnement, votre agence passe en lecture seule : vos dossiers restent consultables, mais plus rien ne peut être ajouté ni modifié tant que l'abonnement n'est pas réglé.",
+    a: "Rien n'est perdu. Sans abonnement, votre agence passe en lecture seule : vos dossiers restent consultables, et vous reprenez le travail là où vous l'aviez laissé dès que l'abonnement est réglé.",
   },
   {
-    q: "Comment payer l'abonnement ?",
-    a: "En espèces, par CCP ou par BaridiMob, au mois ou à l'année. Contactez-nous pour connaître le tarif adapté à votre agence.",
+    q: "Comment régler l'abonnement ?",
+    a: "En espèces, par CCP ou par BaridiMob, au mois ou à l'année. Contactez-nous : nous vous proposons un tarif adapté à la taille de votre agence.",
   },
   {
-    q: "Peut-on l'utiliser sur téléphone ?",
-    a: "Oui : elle s'utilise dans le navigateur, sur ordinateur comme sur téléphone, et s'installe sur l'écran d'accueil du téléphone comme une application.",
+    q: "Fonctionne-t-il sur téléphone ?",
+    a: `Oui. ${BRAND.name} s'ouvre dans le navigateur, sur ordinateur, tablette ou téléphone, et s'installe sur l'écran d'accueil comme une application, notifications comprises.`,
   },
   {
     q: "Mes candidats doivent-ils créer un compte ?",
-    a: "Non. Vous ouvrez leur accès depuis leur dossier : ils se connectent avec un simple code, que vous pouvez leur envoyer par WhatsApp.",
+    a: "Non. Vous activez leur accès depuis leur dossier et leur envoyez un code, par WhatsApp par exemple. Ce code suffit pour se connecter.",
   },
   {
     q: "Mes données sont-elles protégées ?",
-    a: "Les données de chaque agence sont isolées des autres, et les mots de passe des comptes externes de vos candidats sont chiffrés. Le patron décide de qui fait partie de l'équipe.",
+    a: "Les données de chaque agence sont isolées des autres, les mots de passe des comptes externes de vos candidats sont chiffrés, et seul le patron décide de qui rejoint l'équipe.",
   },
 ];
 
@@ -263,15 +264,15 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
               {BRAND.tagline}
             </p>
             <h1 className="mt-6 text-4xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Tous vos dossiers étudiants, au même endroit.
+              Gérez votre agence, pas vos classeurs.
             </h1>
             <p className="mt-6 max-w-xl text-lg text-pretty text-decor-muted">
-              Candidats, pièces, lettres, formations, paiements et échéances : toute
-              l&apos;équipe travaille sur les mêmes dossiers, et chaque candidat suit le sien.
+              Pièces, lettres de motivation, formations, paiements et échéances réunis dans
+              un seul outil. Votre équipe avance sur les mêmes dossiers, et chaque candidat suit le sien.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "h-12 sm:h-11")}>
-                Essayer gratuitement 7 jours <ArrowRight />
+                Commencer l&apos;essai gratuit <ArrowRight />
               </Link>
               <Link
                 href="/login"
@@ -284,7 +285,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
               </Link>
             </div>
             <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-decor-muted">
-              {["Sans carte bancaire", "Prêt en 2 minutes", "Sur ordinateur et téléphone"].map((t) => (
+              {["7 jours gratuits", "Sans carte bancaire", "Sur ordinateur et téléphone"].map((t) => (
                 <li key={t} className="flex items-center gap-1.5">
                   <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} aria-hidden />
                   {t}
@@ -303,10 +304,10 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
         {/* Le problème */}
         <div className="border-b px-5 py-14 text-center sm:px-8">
           <p className="mx-auto max-w-3xl text-xl font-medium text-balance sm:text-2xl">
-            Fini les dossiers éparpillés entre WhatsApp, Excel et les classeurs.{" "}
+            Un passeport sur WhatsApp, un relevé de notes dans Excel, un reçu au fond d&apos;un classeur…{" "}
             <span className="text-muted-foreground">
-              Une seule application pour suivre chaque candidat, du premier rendez-vous à
-              la réponse des établissements.
+              Avec {BRAND.name}, chaque pièce, chaque échéance et chaque paiement retrouve sa
+              place dans le dossier du candidat.
             </span>
           </p>
         </div>
@@ -314,8 +315,8 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
         <Section
           id="fonctionnalites"
           eyebrow="Fonctionnalités"
-          title="Tout ce qu'il faut pour suivre vos candidats"
-          intro="Pensé pour les agences qui accompagnent des étudiants vers les études à l'étranger, Campus France compris."
+          title="Tout le suivi d'un dossier, dans un seul outil"
+          intro="Conçu pour les agences qui accompagnent les étudiants vers les études à l'étranger, Campus France compris."
         >
           <div className="grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, text }) => (
@@ -339,15 +340,15 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
         <section className="border-y bg-muted/40 px-5 py-16 sm:px-8 md:py-28">
           <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-2">
             <div>
-              <p className="text-sm font-semibold tracking-wide text-link uppercase">Pour toute l&apos;équipe</p>
+              <p className="text-sm font-semibold tracking-wide text-link uppercase">Travail d&apos;équipe</p>
               <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-                Chacun ses dossiers, le patron voit tout.
+                Chacun gère ses dossiers, le patron garde la vue d&apos;ensemble.
               </h2>
               <CheckList
                 items={[
-                  "Le patron ajoute ses employés, attribue les dossiers et garde la main sur l'équipe.",
-                  "Le tableau de bord rassemble ce qui attend l'agence : messages, demandes des candidats, échéances.",
-                  "L'historique garde la trace de chaque action, et chaque campagne s'exporte en Excel.",
+                  "Le patron invite ses employés, règle leurs permissions et répartit les dossiers.",
+                  "Chacun retrouve sur son tableau de bord ses tâches, ses messages et les échéances à venir.",
+                  "Chaque action est tracée dans l'historique, et chaque campagne s'exporte en Excel en un clic.",
                 ]}
               />
             </div>
@@ -365,9 +366,9 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
               </h2>
               <CheckList
                 items={[
-                  "Un code d'accès suffit : pas de compte à créer pour le candidat.",
+                  "Un simple code d'accès, envoyé par WhatsApp : aucun compte à créer.",
                   "Il relit sa lettre et ses formations, puis valide en un clic ou demande une modification.",
-                  "Il voit la réponse de chaque établissement et vous écrit depuis son espace.",
+                  "Il voit la réponse de chaque établissement, vous écrit depuis son espace et peut activer les notifications sur son téléphone.",
                 ]}
               />
             </div>
@@ -378,7 +379,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
         </section>
 
         {/* Démarrer */}
-        <Section eyebrow="Démarrer" title="Opérationnel en trois étapes" className="border-t bg-muted/40">
+        <Section eyebrow="Démarrer" title="Prêt à l'emploi en trois étapes" className="border-t bg-muted/40">
           <ol className="grid gap-3 md:grid-cols-3 md:gap-5">
             {STEPS.map((s, i) => (
               <li key={s.title} className="flex gap-4 rounded-2xl border bg-card p-5 md:block md:p-6">
@@ -399,7 +400,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
           id="tarifs"
           eyebrow="Tarifs"
           title="Essayez d'abord, payez ensuite"
-          intro="Un abonnement simple pour toute l'agence, au mois ou à l'année."
+          intro="Un abonnement unique pour toute l'agence, au mois ou à l'année."
         >
           <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
             <div className="rounded-2xl border bg-card p-8">
@@ -409,23 +410,23 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
               <CheckList
                 items={[
                   "Sans carte bancaire",
-                  "Équipe et espace candidat compris",
-                  "Vos données restent consultables après l'essai",
+                  "Équipe et espace candidat inclus",
+                  "Vos données conservées à la fin de l'essai",
                 ]}
               />
               <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "mt-8 w-full")}>
-                Créer mon agence
+                Démarrer l&apos;essai
               </Link>
             </div>
             <div className="relative rounded-2xl border-2 border-primary bg-card p-8 shadow-xl shadow-primary/10">
               <p className="font-semibold">Abonnement</p>
               <p className="mt-3 text-4xl font-semibold tracking-tight">Sur devis</p>
-              <p className="mt-1 text-sm text-muted-foreground">Au mois ou à l&apos;année, selon votre agence.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Au mois ou à l&apos;année, selon la taille de votre agence.</p>
               <CheckList
                 items={[
                   "Paiement en espèces, par CCP ou BaridiMob",
-                  "Toutes les fonctionnalités, pour toute l'agence",
-                  "Renouvellement simple, sans prélèvement automatique",
+                  "Toutes les fonctionnalités, pour toute l'équipe",
+                  "Renouvellement libre, sans prélèvement automatique",
                 ]}
               />
               <div className="mt-8">
@@ -445,9 +446,9 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
         <section className="border-y bg-muted/40 px-5 py-16 sm:px-8">
           <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-3">
             {[
-              { icon: ShieldCheck, title: "Données isolées", text: "Chaque agence ne voit que ses propres dossiers, jamais ceux des autres." },
-              { icon: LockKeyhole, title: "Mots de passe chiffrés", text: "Les identifiants des comptes externes de vos candidats sont chiffrés." },
-              { icon: KeyRound, title: "Accès maîtrisés", text: "Vous ouvrez, fermez ou renouvelez l'accès de chaque candidat à tout moment." },
+              { icon: ShieldCheck, title: "Données isolées", text: "Chaque agence n'accède qu'à ses propres dossiers, jamais à ceux des autres." },
+              { icon: LockKeyhole, title: "Identifiants chiffrés", text: "Les mots de passe des comptes externes de vos candidats (Campus France…) sont stockés chiffrés." },
+              { icon: KeyRound, title: "Accès maîtrisés", text: "Vous ouvrez, coupez ou renouvelez l'accès de chaque candidat à tout moment." },
             ].map(({ icon: Icon, title, text }) => (
               <div key={title} className="flex gap-4">
                 <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-card text-primary ring-1 ring-border">
@@ -483,19 +484,19 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
             <DecorLayers glowClassName="-bottom-64 size-[52rem]" />
             <div className="relative">
               <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-                Prêt à mettre de l&apos;ordre dans vos dossiers ?
+                Votre prochaine campagne mérite mieux qu&apos;un tableur.
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-decor-muted">
-                Créez votre agence et essayez {BRAND.name} gratuitement pendant 7 jours.
+                Créez votre agence en deux minutes et essayez {BRAND.name} gratuitement pendant 7 jours, sans carte bancaire.
               </p>
               <div className="mt-8 grid gap-3 sm:flex sm:justify-center">
                 <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "h-12 sm:h-11")}>
-                  Créer mon agence <ArrowRight />
+                  Démarrer l&apos;essai gratuit <ArrowRight />
                 </Link>
               </div>
               {contact && (
                 <div className="mt-6">
-                  <p className="mb-3 text-sm text-decor-subtle">Une question ? Parlons-en.</p>
+                  <p className="mb-3 text-sm text-decor-subtle">Une question ? Écrivez-nous ou appelez-nous.</p>
                   <ContactButtons contact={contact} onDecor />
                 </div>
               )}
@@ -514,7 +515,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
             <Link href="/login" className="py-2 hover:text-foreground">Se connecter</Link>
             <Link href="/register" className="py-2 hover:text-foreground">Créer une agence</Link>
             <Link href="/student/login" className="py-2 hover:text-foreground">Espace candidat</Link>
-            <Link href="#faq" className="py-2 hover:text-foreground">FAQ</Link>
+            <SectionLink href="#faq" className="py-2 hover:text-foreground">FAQ</SectionLink>
             {LEGAL_LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="py-2 hover:text-foreground">
                 {l.label}

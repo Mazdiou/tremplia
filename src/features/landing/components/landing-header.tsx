@@ -7,13 +7,14 @@ import { buttonVariants } from "@/components/ui/button";
 import { BRAND } from "@/config/brand";
 import { LogoMark } from "@/components/logo-mark";
 import { cn } from "@/lib/utils";
+import { SectionLink, scrollToSection } from "./section-link";
 
 const SECTIONS = [
   { href: "#fonctionnalites", label: "Fonctionnalités" },
   { href: "#candidats", label: "Espace candidat" },
   { href: "#tarifs", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },
-];
+] as const;
 
 // En-tête fixe de la page d'accueil. Tant que l'accroche (`heroId`) passe
 // dessous, il reste transparent (texte blanc sur fond bleu) ; ensuite, il
@@ -25,6 +26,11 @@ export function LandingHeader({ heroId }: { heroId: string }) {
     const hero = document.getElementById(heroId);
     const header = document.getElementById("landing-header");
     if (!hero || !header) return;
+    // Arrivée sur /#section (lien direct, retour arrière) : même placement
+    // qu'au clic dans le menu, après le défilement du routeur
+    const arrival = location.hash
+      ? requestAnimationFrame(() => scrollToSection(location.hash.slice(1), "auto"))
+      : 0;
     let frame = 0;
     function update() {
       frame = 0;
@@ -40,6 +46,7 @@ export function LandingHeader({ heroId }: { heroId: string }) {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       cancelAnimationFrame(frame);
+      cancelAnimationFrame(arrival);
     };
   }, [heroId]);
 
@@ -62,13 +69,11 @@ export function LandingHeader({ heroId }: { heroId: string }) {
           <LogoMark className="shadow-none" />
           <span className="font-brand text-lg font-bold tracking-tight">{BRAND.name}</span>
         </Link>
-        {/* Liens par le routeur (Link) : avec un simple <a href="#…">, le retour
-            arrière depuis une autre page changerait l'adresse sans la page */}
         <nav aria-label="Sections" className="hidden items-center gap-1 text-sm md:flex">
           {SECTIONS.map((s) => (
-            <Link key={s.href} href={s.href} className={cn("rounded-lg px-3 py-2.5 transition-colors", link)}>
+            <SectionLink key={s.href} href={s.href} className={cn("rounded-lg px-3 py-2.5 transition-colors", link)}>
               {s.label}
-            </Link>
+            </SectionLink>
           ))}
         </nav>
         <div className="flex items-center gap-2">

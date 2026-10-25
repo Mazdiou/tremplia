@@ -2,7 +2,7 @@
 // accueil, tableau de bord, e-mails).
 export const BRAND = {
   name: "Tremplia",
-  tagline: "Le CRM des agences d'études à l'étranger",
+  tagline: "Le logiciel des agences d'études à l'étranger",
   // Adresse publique du site (réglage SITE_URL pour une autre, en local par
   // exemple : voir src/lib/site-url.ts)
   url: "https://www.tremplia.com",

@@ -5,7 +5,7 @@ import { supportPhone } from "@/features/subscription/server/subscription";
 import { toWhatsAppNumber, whatsAppUrl } from "@/features/whatsapp/whatsapp";
 
 const DESCRIPTION =
-  "Candidats, étapes, documents, lettres de motivation, formations, paiements et échéances : le suivi des dossiers étudiants pour toute l'agence. Essai gratuit de 7 jours.";
+  "Suivez chaque dossier étudiant, du premier rendez-vous au visa : documents, lettres, formations, paiements et équipe réunis. Essai gratuit de 7 jours.";
 
 export const metadata: Metadata = {
   // Titre complet : sans le modèle « … · nom » du layout racine
