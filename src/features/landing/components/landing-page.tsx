@@ -250,57 +250,57 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
   return (
     <div className="min-h-dvh bg-background">
       <LandingHeader heroId={HERO_ID} />
-      {/* En-tête et accroche, sur le même fond que la page de connexion */}
-      <div
-        id={HERO_ID}
-        className="relative overflow-hidden border-b bg-decor pt-16 text-decor-foreground dark:border-transparent"
-      >
-        <DecorLayers glowClassName="-top-80 size-[74rem]" />
-
-        <section className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-10 pb-20 sm:px-8 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-32">
-          <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
-            <p className="inline-flex items-center gap-2 rounded-full border border-decor-foreground/15 bg-decor-foreground/5 px-3 py-1 text-xs font-medium text-decor-muted">
-              <span className="size-1.5 rounded-full bg-emerald-400" />
-              {BRAND.tagline}
-            </p>
-            <h1 className="mt-6 text-4xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Gérez votre agence, pas vos classeurs.
-            </h1>
-            <p className="mt-6 max-w-xl text-lg text-pretty text-decor-muted">
-              Pièces, lettres de motivation, formations, paiements et échéances réunis dans
-              un seul outil. Votre équipe avance sur les mêmes dossiers, et chaque candidat suit le sien.
-            </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "h-12 sm:h-11")}>
-                Démarrer l&apos;essai gratuit <ArrowRight />
-              </Link>
-              <Link
-                href="/login"
-                className={cn(
-                  buttonVariants({ size: "lg", variant: "outline" }),
-                  "h-12 border-decor-foreground/15 bg-card/80 text-decor-foreground hover:bg-card hover:text-decor-foreground dark:bg-decor-foreground/5 dark:hover:bg-decor-foreground/10 sm:h-11",
-                )}
-              >
-                Se connecter
-              </Link>
-            </div>
-            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-decor-muted">
-              {["7 jours gratuits", "Sans carte bancaire", "Sur ordinateur et téléphone"].map((t) => (
-                <li key={t} className="flex items-center gap-1.5">
-                  <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} aria-hidden />
-                  {t}
-                </li>
-              ))}
-            </ul>
-          </div>
-          {/* Trop étroit sur téléphone : masqué, comme sur la page de connexion */}
-          <div className="mx-auto hidden w-full max-w-md sm:block lg:max-w-none">
-            <AppPreview />
-          </div>
-        </section>
-      </div>
-
       <main>
+        {/* Accroche, sur le même fond que la page de connexion */}
+        <div
+          id={HERO_ID}
+          className="relative overflow-hidden border-b bg-decor pt-16 text-decor-foreground dark:border-transparent"
+        >
+          <DecorLayers glowClassName="-top-80 size-[74rem]" />
+
+          <section className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-10 pb-20 sm:px-8 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-32">
+            <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
+              <p className="inline-flex items-center gap-2 rounded-full border border-decor-foreground/15 bg-decor-foreground/5 px-3 py-1 text-xs font-medium text-decor-muted">
+                <span className="size-1.5 rounded-full bg-emerald-400" />
+                {BRAND.tagline}
+              </p>
+              <h1 className="mt-6 text-4xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+                Gérez votre agence, pas vos classeurs.
+              </h1>
+              <p className="mt-6 max-w-xl text-lg text-pretty text-decor-muted">
+                Pièces, lettres de motivation, formations, paiements et échéances réunis dans
+                un seul outil. Votre équipe avance sur les mêmes dossiers, et chaque candidat suit le sien.
+              </p>
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "h-12 sm:h-11")}>
+                  Démarrer l&apos;essai gratuit <ArrowRight />
+                </Link>
+                <Link
+                  href="/login"
+                  className={cn(
+                    buttonVariants({ size: "lg", variant: "outline" }),
+                    "h-12 border-decor-foreground/15 bg-card/80 text-decor-foreground hover:bg-card hover:text-decor-foreground dark:bg-decor-foreground/5 dark:hover:bg-decor-foreground/10 sm:h-11",
+                  )}
+                >
+                  Se connecter
+                </Link>
+              </div>
+              <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-decor-muted">
+                {["7 jours gratuits", "Sans carte bancaire", "Sur ordinateur et téléphone"].map((t) => (
+                  <li key={t} className="flex items-center gap-1.5">
+                    <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} aria-hidden />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Trop étroit sur téléphone : masqué, comme sur la page de connexion */}
+            <div className="mx-auto hidden w-full max-w-md sm:block lg:max-w-none">
+              <AppPreview />
+            </div>
+          </section>
+        </div>
+
         {/* Le problème */}
         <div className="border-b px-5 py-14 text-center sm:px-8">
           <p className="mx-auto max-w-3xl text-xl font-medium text-balance sm:text-2xl">

@@ -15,6 +15,8 @@ export type DashboardLayouts = {
   personal: boolean;
   // Disposition de départ du membre (bouton « Disposition de départ »)
   fallback: LayoutItem[];
+  // Le patron en a proposé une à l'équipe (il peut la retirer)
+  agencyLayout: boolean;
 };
 
 export async function getDashboardLayouts(member: Member): Promise<DashboardLayouts> {
@@ -26,13 +28,18 @@ export async function getDashboardLayouts(member: Member): Promise<DashboardLayo
   // Jamais d'erreur : le tableau de bord s'affiche dans sa disposition par défaut
   if (error) {
     reportError("[dashboard layout read]", error.code);
-    return { layout: DEFAULT_LAYOUT, personal: false, fallback: DEFAULT_LAYOUT };
+    return { layout: DEFAULT_LAYOUT, personal: false, fallback: DEFAULT_LAYOUT, agencyLayout: false };
   }
   const rows = (data ?? []) as { user_id: string | null; layout: unknown }[];
   const personal = parseLayout(rows.find((r) => r.user_id === member.userId)?.layout);
   const agency = parseLayout(rows.find((r) => r.user_id === null)?.layout);
   const fallback = agency ?? DEFAULT_LAYOUT;
-  return { layout: personal ?? fallback, personal: personal !== null, fallback };
+  return {
+    layout: personal ?? fallback,
+    personal: personal !== null,
+    fallback,
+    agencyLayout: agency !== null,
+  };
 }
 
 // Disposition du membre (vide : retour à celle de départ). Patron avec
@@ -61,4 +68,16 @@ export async function saveDashboardLayout(
       });
     }
   }
+}
+
+// Patron : retire la disposition proposée à l'équipe. Les membres qui n'ont
+// pas la leur retrouvent celle de l'application ; celle du patron ne change pas.
+export async function removeAgencyLayout(member: Member) {
+  const { error } = await createAdminClient().rpc("save_dashboard_layout", {
+    p_agency_id: member.agencyId,
+    p_user_id: member.userId,
+    p_layout: null,
+    p_for_agency: true,
+  });
+  if (error) throw dbError("dashboard layout remove agency", error, { "42501": "Réservé au patron" });
 }

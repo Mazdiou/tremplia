@@ -482,6 +482,7 @@ export default async function DashboardPage({
         widgets={widgets}
         personal={layouts.personal}
         fallback={layouts.fallback}
+        agencyLayout={layouts.agencyLayout}
         isOwner={u.member.isOwner}
       />
     </PageContainer>

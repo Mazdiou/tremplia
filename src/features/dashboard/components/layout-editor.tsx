@@ -31,6 +31,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useModalDialog } from "@/hooks/use-modal-dialog";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
@@ -51,9 +52,6 @@ const announcements: Announcements = {
   onDragCancel: ({ active }) => `Déplacement de ${labelOf(active.id)} annulé.`,
 };
 
-const sameLayout = (a: LayoutItem[], b: LayoutItem[]) =>
-  a.length === b.length && a.every((item, i) => item.id === b[i].id && item.size === b[i].size);
-
 // Mode « Personnaliser » : l'ordre se change en faisant glisser la poignée
 // (souris, doigt ou clavier) ou avec les flèches. Rien n'est enregistré
 // avant « Enregistrer ».
@@ -62,6 +60,7 @@ export function LayoutEditor({
   widgets,
   personal,
   fallback,
+  agencyLayout,
   isOwner,
   onClose,
 }: {
@@ -69,6 +68,8 @@ export function LayoutEditor({
   widgets: WidgetEntry[];
   personal: boolean;
   fallback: LayoutItem[];
+  // Une disposition est proposée à l'équipe (le patron peut la retirer)
+  agencyLayout: boolean;
   isOwner: boolean;
   onClose: () => void;
 }) {
@@ -78,13 +79,18 @@ export function LayoutEditor({
   // Disposition de départ, sans les widgets que le membre n'a pas le droit
   // de voir (sinon elle paraîtrait toujours modifiée)
   const start = fallback.filter((i) => allowed.has(i.id));
-  const [items, setItems] = useState(() => layout.filter((i) => allowed.has(i.id)));
+  const [edited, setEdited] = useState(() => layout.filter((i) => allowed.has(i.id)));
   // Sans disposition personnelle (ou remise à celle de départ) : rien à garder
   const [usesFallback, setUsesFallback] = useState(!personal);
+  // Disposition affichée : celle de départ tant qu'elle n'est pas modifiée
+  // (elle suit le retrait de celle de l'équipe), sinon celle du membre
+  const items = usesFallback ? start : edited;
   const [forAgency, setForAgency] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, startTransition] = useTransition();
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [adding, setAdding] = useState(false);
   // Widget tout juste ajouté : mis en évidence un instant
   const [added, setAdded] = useState<WidgetId | null>(null);
@@ -107,7 +113,7 @@ export function LayoutEditor({
   );
 
   const update = (next: LayoutItem[]) => {
-    setItems(next);
+    setEdited(next);
     setUsesFallback(false);
     setError(null);
   };
@@ -128,15 +134,14 @@ export function LayoutEditor({
   };
 
   const hidden = widgets.filter((w) => !items.some((i) => i.id === w.id));
-  const busy = saving || refreshing;
-  const atStart = usesFallback && sameLayout(items, start);
+  const busy = saving || refreshing || removing;
 
   async function save() {
     setSaving(true);
     setError(null);
     // Disposition de départ inchangée : on n'en garde pas de copie, pour
     // suivre ensuite celle que choisira le patron
-    const keepNothing = atStart && !forAgency;
+    const keepNothing = usesFallback && !forAgency;
     const res = await callApi("/api/dashboard/layout", {
       method: "PUT",
       body: { layout: keepNothing ? null : items, forAgency: isOwner && forAgency },
@@ -150,6 +155,22 @@ export function LayoutEditor({
       router.refresh();
       onClose();
     });
+  }
+
+  // Patron : retire la disposition proposée à l'équipe. L'éditeur reste
+  // ouvert : les changements en cours restent à enregistrer, et la
+  // disposition de départ devient celle de l'application.
+  async function removeAgency() {
+    setRemoving(true);
+    setError(null);
+    const res = await callApi("/api/dashboard/layout/agency", { method: "DELETE" });
+    setRemoving(false);
+    setConfirmRemove(false);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    startTransition(() => router.refresh());
   }
 
   return (
@@ -178,9 +199,8 @@ export function LayoutEditor({
             <Button
               variant="ghost"
               className="-ml-2 mr-auto sm:ml-0"
-              disabled={busy || atStart}
+              disabled={busy || usesFallback}
               onClick={() => {
-                setItems(start);
                 setUsesFallback(true);
                 setError(null);
               }}
@@ -210,6 +230,17 @@ export function LayoutEditor({
                   (membres qui n&apos;ont pas personnalisé leur tableau de bord)
                 </span>
               </label>
+            )}
+            {isOwner && agencyLayout && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="-ml-3 text-muted-foreground"
+                disabled={busy}
+                onClick={() => setConfirmRemove(true)}
+              >
+                Retirer celle proposée à l&apos;équipe
+              </Button>
             )}
             {error && (
               <p className="text-sm font-medium text-destructive" role="alert">
@@ -280,6 +311,16 @@ export function LayoutEditor({
         widgets={hidden}
         onAdd={add}
         onClose={() => setAdding(false)}
+      />
+
+      <ConfirmDialog
+        open={confirmRemove}
+        title="Retirer la disposition de l'équipe ?"
+        body="Les membres qui n'ont pas personnalisé leur tableau de bord retrouveront la disposition de l'application. La vôtre ne change pas."
+        confirmLabel="Retirer"
+        loading={removing}
+        onConfirm={removeAgency}
+        onCancel={() => setConfirmRemove(false)}
       />
     </section>
   );

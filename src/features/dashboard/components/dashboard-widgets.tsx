@@ -39,6 +39,7 @@ export function DashboardWidgets({
   widgets,
   personal,
   fallback,
+  agencyLayout,
   isOwner,
 }: {
   layout: LayoutItem[];
@@ -46,6 +47,7 @@ export function DashboardWidgets({
   widgets: WidgetEntry[];
   personal: boolean;
   fallback: LayoutItem[];
+  agencyLayout: boolean;
   isOwner: boolean;
 }) {
   const [editing, setEditing] = useState(false);
@@ -63,6 +65,7 @@ export function DashboardWidgets({
         widgets={widgets}
         personal={personal}
         fallback={fallback}
+        agencyLayout={agencyLayout}
         isOwner={isOwner}
         onClose={() => setEditing(false)}
       />
@@ -71,29 +74,43 @@ export function DashboardWidgets({
 
   const byId = new Map(widgets.map((w) => [w.id, w]));
   const shown = arrangeRows(layout.filter((item) => byId.get(item.id)?.node));
-  if (shown.length === 0) {
-    return (
-      <p className="rounded-2xl border border-dashed px-5 py-10 text-center text-sm text-muted-foreground">
-        Aucun widget affiché. « Personnaliser » permet d&apos;en ajouter.
-      </p>
-    );
-  }
+  const desktopOnly = (id: WidgetId) => (WIDGETS[id] as WidgetDef).desktopOnly === true;
+  if (shown.length === 0) return <NoWidget />;
   // Deux widgets côte à côte prennent la même hauteur (le plus court
   // s'allonge) : pas de trou sous le plus court
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
-      {shown.map((item) => (
-        <div
-          key={item.id}
-          className={cn(
-            "@container min-w-0 *:h-full",
-            item.wide && "lg:col-span-2",
-            (WIDGETS[item.id] as WidgetDef).desktopOnly && "max-md:hidden",
-          )}
-        >
-          {byId.get(item.id)!.node}
-        </div>
-      ))}
-    </div>
+    <>
+      {/* Téléphone : rien à afficher si tous sont réservés à l'ordinateur */}
+      {shown.every((item) => desktopOnly(item.id)) && (
+        <NoWidget className="md:hidden" text="Aucun widget affiché sur téléphone." />
+      )}
+      <div className="grid gap-5 lg:grid-cols-2">
+        {shown.map((item) => (
+          <div
+            key={item.id}
+            className={cn(
+              "@container min-w-0 *:h-full",
+              item.wide && "lg:col-span-2",
+              desktopOnly(item.id) && "max-md:hidden",
+            )}
+          >
+            {byId.get(item.id)!.node}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function NoWidget({ text = "Aucun widget affiché.", className }: { text?: string; className?: string }) {
+  return (
+    <p
+      className={cn(
+        "rounded-2xl border border-dashed px-5 py-10 text-center text-sm text-muted-foreground",
+        className,
+      )}
+    >
+      {text} « Personnaliser » permet d&apos;en ajouter.
+    </p>
   );
 }

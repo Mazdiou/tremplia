@@ -270,6 +270,33 @@ test("tableau de bord personnalisé puis remis à la disposition de départ", as
   await expect(results).toBeVisible();
 });
 
+test("disposition proposée à l'équipe puis retirée par le patron", async () => {
+  await page.goto("/dashboard");
+  const results = page.getByRole("heading", { name: "Réponses des établissements" });
+  // Éditeur fermé (pendant l'envoi, « Enregistrer » devient « Enregistrement… »)
+  const editor = page.getByRole("heading", { name: "Personnaliser" });
+  await page.getByRole("button", { name: "Personnaliser" }).click();
+  await page.getByRole("button", { name: "Masquer Réponses des établissements" }).click();
+  await page.getByLabel(/Proposer aussi à toute l'équipe/).check();
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(editor).toBeHidden();
+  await expect(results).toBeHidden();
+
+  // Retrait après « Disposition de départ » : l'éditeur reste ouvert et la
+  // disposition de départ devient celle de l'application
+  await page.getByRole("button", { name: "Personnaliser" }).click();
+  await page.getByRole("button", { name: "Disposition de départ" }).click();
+  await page.getByRole("button", { name: "Retirer celle proposée à l'équipe" }).click();
+  const removed = page.waitForResponse((r) => r.url().endsWith("/api/dashboard/layout/agency"));
+  await page.getByRole("button", { name: "Retirer", exact: true }).click();
+  expect((await removed).ok()).toBe(true);
+  await expect(page.getByRole("button", { name: "Retirer celle proposée à l'équipe" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Masquer Réponses des établissements" })).toBeVisible();
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(editor).toBeHidden();
+  await expect(results).toBeVisible();
+});
+
 test("le candidat se connecte et écrit à l'agence", async ({ browser }) => {
   const student = await browser.newPage();
   await student.goto("/student/login");

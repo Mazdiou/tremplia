@@ -1,5 +1,5 @@
 begin;
-select plan(17);
+select plan(19);
 
 -- Agence A : patron P, employé E, employé D (désactivé). Agence B : patron Q.
 insert into auth.users (id, email) values
@@ -97,6 +97,15 @@ select public.save_dashboard_layout((select a from ctx), '22222222-2222-2222-222
 select is(pg_temp.layouts('22222222-2222-2222-2222-222222222222'), 0::bigint,
   'sans disposition : retour au défaut');
 select is(pg_temp.layouts(null), 1::bigint, 'celle de l''agence reste');
+
+-- Le patron retire celle de l'agence : la sienne ne bouge pas
+select public.save_dashboard_layout((select a from ctx), '11111111-1111-1111-1111-111111111111',
+  '[{"id": "todo", "size": "full"}]', false);
+select public.save_dashboard_layout((select a from ctx), '11111111-1111-1111-1111-111111111111',
+  null, true);
+select is(pg_temp.layouts(null), 0::bigint, 'le patron retire celle de l''agence');
+select is(pg_temp.layouts('11111111-1111-1111-1111-111111111111'), 1::bigint,
+  'en gardant la sienne');
 
 -- Employé supprimé : sa disposition part avec lui
 select public.save_dashboard_layout((select a from ctx), '22222222-2222-2222-2222-222222222222',
