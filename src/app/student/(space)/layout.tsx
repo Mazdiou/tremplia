@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LegalLinks } from "@/components/legal-page";
 import { LogoMark } from "@/components/logo-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { displayName } from "@/lib/names";
@@ -107,6 +108,9 @@ export default async function StudentLayout({ children }: { children: React.Reac
         <InstallAppCard appName="votre espace candidat" />
         <div>{children}</div>
       </main>
+      <footer className="mx-auto w-full max-w-4xl px-4 pb-4 md:px-8">
+        <LegalLinks />
+      </footer>
     </div>
   );
 }

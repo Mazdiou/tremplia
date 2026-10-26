@@ -28,7 +28,7 @@ export default function ConfidentialitePage() {
       <LegalSection title="Qui est responsable de vos données">
         <p>
           <strong>Comptes des agences et de leurs membres</strong> (patron, employés) :
-          l&apos;éditeur de {BRAND.name}, {editor.name} ({editor.city}, {editor.country}), est
+          l&apos;éditeur de {BRAND.name}, {editor.name} (<ContactLink />), est
           responsable du traitement, au sens de la loi n° 18-07 du 10 juin 2018 relative à la
           protection des personnes physiques dans le traitement des données à caractère personnel.
         </p>
@@ -44,23 +44,29 @@ export default function ConfidentialitePage() {
         <LegalList
           items={[
             <>
-              <strong>Agence</strong> : nom, ville, téléphone, réglages.
+              <strong>Agence</strong> : nom, ville, téléphone, réglages, abonnement et paiements
+              faits à l&apos;éditeur.
             </>,
             <>
               <strong>Membres de l&apos;agence</strong> : prénom, nom, adresse e-mail, mot de passe
-              (jamais gardé en clair), rôle et permissions, historique des actions effectuées.
+              (jamais gardé en clair), rôle et permissions, préférences (notifications, tableau
+              de bord), historique des actions effectuées.
             </>,
             <>
-              <strong>Candidats</strong> : identité, date de naissance, coordonnées (et celles
-              d&apos;un parent si l&apos;agence les saisit), niveau d&apos;études, diplômes, tests de
+              <strong>Candidats</strong> : identité, date de naissance, nationalité, ville,
+              coordonnées (et celles d&apos;un proche, un parent par exemple, si l&apos;agence les
+              saisit), niveau d&apos;études, filière et établissement actuels, diplômes, tests de
               langue, formations visées et réponses des établissements, documents (PDF), lettre de
-              motivation, identifiants de plateformes (chiffrés), notes et tâches de l&apos;agence,
+              motivation et avis du candidat, identifiants de plateformes (chiffrés), code
+              d&apos;accès à l&apos;espace candidat (chiffré), notes et tâches de l&apos;agence,
               paiements, messages échangés avec l&apos;agence.
             </>,
             <>
-              <strong>Données techniques</strong> : adresse IP et adresse e-mail, gardées
-              seulement sous forme d&apos;empreinte illisible pour limiter les essais de connexion,
-              d&apos;inscription et les demandes d&apos;e-mail ; journaux techniques de
+              <strong>Données techniques</strong> : pour limiter les essais de connexion,
+              d&apos;inscription et les demandes d&apos;e-mail, adresse IP et adresse e-mail gardées
+              seulement sous forme d&apos;empreinte illisible ; pour la sécurité des comptes des
+              agences, le service de connexion (Supabase) enregistre l&apos;adresse IP et le
+              navigateur de chaque session et un journal des connexions ; journaux techniques de
               l&apos;hébergeur ; rapports d&apos;erreurs, dont les données personnelles sont
               masquées avant l&apos;envoi ; pour les appareils où les notifications sont
               activées, l&apos;adresse d&apos;envoi donnée par le navigateur et ses clés de
@@ -91,6 +97,11 @@ export default function ConfidentialitePage() {
             "Les prestataires techniques ci-dessous, pour la seule partie du service qu'ils assurent.",
           ]}
         />
+        <p>
+          Le bouton WhatsApp d&apos;un dossier ouvre WhatsApp sur l&apos;appareil du membre, avec
+          un message préparé : c&apos;est lui qui choisit de l&apos;envoyer. {BRAND.name} ne
+          transmet rien à WhatsApp.
+        </p>
       </LegalSection>
 
       <LegalSection title="Hébergement">
@@ -107,7 +118,7 @@ export default function ConfidentialitePage() {
         <p>Toutes les connexions sont chiffrées (HTTPS).</p>
         <p>
           Les notifications, si vous les activez, passent par le service de notification de
-          votre navigateur (Google, Apple ou Mozilla selon l&apos;appareil). Leur contenu est
+          votre navigateur (Google, Apple, Microsoft ou Mozilla selon l&apos;appareil). Leur contenu est
           chiffré pour votre appareil : ce service ne peut pas le lire.
         </p>
       </LegalSection>
@@ -119,6 +130,7 @@ export default function ConfidentialitePage() {
             "Sur demande du patron de l'agence, toutes les données de l'agence sont supprimées dans un délai de 30 jours ; elles disparaissent ensuite des sauvegardes à mesure que celles-ci expirent (12 mois au plus).",
             `Inscription jamais confirmée : supprimée après ${UNCONFIRMED_DAYS} jours.`,
             "Empreintes d'adresses IP et d'adresses e-mail (limites d'essais) : 1 jour.",
+            "Sessions de connexion : jusqu'à la déconnexion ou leur expiration ; journal des connexions : tant que le compte existe.",
             "Appareils abonnés aux notifications : jusqu'à leur désactivation ou la déconnexion, ou dès que le navigateur ne les accepte plus.",
             "Sauvegardes chiffrées : 30 jours pour les quotidiennes, 12 mois pour les mensuelles.",
           ]}
@@ -140,8 +152,16 @@ export default function ConfidentialitePage() {
         <p>
           {BRAND.name} n&apos;utilise que des cookies nécessaires à son fonctionnement : la session
           de connexion de l&apos;agence et celle de l&apos;espace candidat. Le navigateur garde
-          aussi quelques préférences d&apos;affichage (thème clair ou sombre, filtres). Aucun cookie
-          publicitaire ni de mesure d&apos;audience : aucun consentement n&apos;est donc demandé.
+          aussi, sur l&apos;appareil seulement, quelques préférences (thème clair ou sombre,
+          taille du texte, filtres, conseils masqués), l&apos;appareil activé pour les
+          notifications et la page « Pas de connexion ». Aucun cookie publicitaire ni de mesure
+          d&apos;audience : aucun consentement n&apos;est donc demandé.
+        </p>
+        <p>
+          Sur ordinateur, un membre peut choisir un dossier où {BRAND.name} recopie les documents
+          des dossiers en cours (Réglages › Sur cet ordinateur). Ces copies restent sur cet
+          ordinateur, sous la responsabilité de l&apos;agence ; {BRAND.name} ne les envoie nulle
+          part.
         </p>
       </LegalSection>
 

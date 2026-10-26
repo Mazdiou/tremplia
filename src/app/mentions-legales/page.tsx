@@ -11,24 +11,13 @@ export const metadata: Metadata = {
 };
 
 export default function MentionsLegalesPage() {
-  const { editor } = LEGAL;
   return (
     <LegalPage title="Mentions légales">
       <LegalSection title="Éditeur">
-        <LegalList
-          items={[
-            <>
-              <strong>{editor.name}</strong> · {editor.status}
-            </>,
-            `${editor.city}, ${editor.country}`,
-            ...(editor.nif ? [`NIF : ${editor.nif}`] : []),
-            ...(editor.registration ? [`Immatriculation : ${editor.registration}`] : []),
-            <>
-              Contact : <ContactLink />
-            </>,
-          ]}
-        />
-        <p>Directeur de la publication : {editor.name}.</p>
+        <p>
+          {BRAND.name} est édité par <strong>{LEGAL.editor.name}</strong>, joignable à{" "}
+          <ContactLink />.
+        </p>
       </LegalSection>
 
       <LegalSection title="Service">
@@ -68,12 +57,6 @@ export default function MentionsLegalesPage() {
             politique de confidentialité
           </Link>
           .
-        </p>
-      </LegalSection>
-
-      <LegalSection title="Contact">
-        <p>
-          Pour toute question, signalement ou demande : <ContactLink />.
         </p>
       </LegalSection>
     </LegalPage>

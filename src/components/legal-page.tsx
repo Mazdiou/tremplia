@@ -6,6 +6,7 @@ import { LEGAL, LEGAL_LINKS } from "@/config/legal";
 import { LogoMark } from "@/components/logo-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { formatLongDate } from "@/lib/dates";
+import { cn } from "@/lib/utils";
 
 // Mise en page des pages légales : texte long, lisible, ouvert à tous (avec
 // ou sans connexion).
@@ -76,6 +77,23 @@ export function LegalList({ items }: { items: ReactNode[] }) {
         <li key={i}>{item}</li>
       ))}
     </ul>
+  );
+}
+
+// Liens discrets vers les pages légales, en bas des pages connectées
+// (Réglages, espace candidat)
+export function LegalLinks({ className }: { className?: string }) {
+  return (
+    <nav
+      aria-label="Pages légales"
+      className={cn("flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground", className)}
+    >
+      {LEGAL_LINKS.map((l) => (
+        <Link key={l.href} href={l.href} className="touch-target hover:text-foreground">
+          {l.label}
+        </Link>
+      ))}
+    </nav>
   );
 }
 

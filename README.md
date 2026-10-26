@@ -38,31 +38,39 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 
 | Domaine | Ce qu'on y fait |
 |---|---|
-| **Campagnes** | Une campagne par procédure et par année (ex. Campus France 2026-2027), créée de zéro ou importée d'un modèle. Elle porte ses groupes (DAP, Hors-DAP, École…), ses étapes (parcours propre à la campagne), ses dates clés, ses informations utiles et ses plateformes suggérées. Archivable, réactivable. |
+| **Campagnes** | Une campagne par procédure et par année (ex. Campus France 2026-2027), créée de zéro ou importée d'un modèle. Elle porte ses groupes (DAP, Hors-DAP, École…), ses étapes (parcours propre à la campagne), ses dates clés, ses informations utiles et ses plateformes suggérées. Archivable, réactivable ; supprimable tant qu'elle ne contient aucun dossier. |
 | **Dossiers** | Un dossier par candidat : identité, contact, niveau, diplômes, tests de langue, groupes, étape, statut (actif, clos, abandonné). Rangés dans un arbre par campagne et par groupe, avec recherche (Ctrl+K). Shift+N (hors saisie) ouvre un nouveau dossier dans la campagne en cours. Un nouveau dossier peut être prérempli à partir d'un candidat déjà suivi dans une autre campagne. Mode sélection de l'arbre : même étape, même responsable (patron) ou même tâche pour plusieurs dossiers d'un coup. |
-| **Documents** | PDF (10 Mo au plus) classés en dossiers, déplaçables par glisser-déposer, verrouillables par le patron, téléchargeables en une archive ZIP. |
+| **Documents** | PDF (10 Mo au plus) classés en dossiers, déplaçables par glisser-déposer, verrouillables par le patron, téléchargeables en une archive ZIP. Des photos (téléphone, scanner) s'assemblent en PDF dans le navigateur avant l'envoi : ordre des pages, pages retirées, un seul PDF ou un par photo (30 photos au plus). |
 | **Comptes externes** | Identifiants du candidat sur les plateformes (Études en France, etc.). Mots de passe chiffrés, chaque affichage est journalisé. |
 | **Lettre de motivation** | Rédigée dans le dossier, soumise à l'avis du candidat. |
 | **Formations** | Formations visées, ordonnées, avec la réponse de l'établissement (sans réponse, envoyée, acceptée, liste d'attente, refusée). Soumises à l'avis du candidat. |
 | **Notes** | Notes internes de l'équipe sur le dossier. |
 | **Tâches** | Ce qu'il reste à faire pour un candidat : intitulé, échéance facultative, membre chargé de la tâche. Onglet dans le dossier (ajout aussi depuis le menu ⋯ de l'en-tête), page « Tâches » (les miennes, celles de l'équipe ou d'un membre, rangées par échéance), pastille dans le menu, bloc du tableau de bord, horloge et filtre dans l'arbre. Créer : tout membre ; modifier ou cocher : l'auteur, le responsable ou le patron ; supprimer : l'auteur ou le patron. À la clôture du dossier, ses tâches peuvent être marquées faites. Jamais visibles du candidat. |
-| **Paiements** | Montant convenu et paiements du candidat à l'agence, en dinars (espèces, CCP / BaridiMob, carte CIB / Edahabia). Un paiement s'annule, il ne se supprime pas. |
+| **Paiements** | Montant convenu et paiements du candidat à l'agence, en dinars (espèces, CCP / BaridiMob, carte CIB / Edahabia), saisis dans l'onglet du dossier. Un paiement s'annule (avec un motif), il ne se supprime pas ; l'annuler ou modifier un montant convenu déjà fixé : patron ou droit « Corriger les paiements ». Page « Paiements » (`/payments`, patron ou droit « Voir la caisse ») : encaissements de l'agence par jour et par moyen de paiement, restes à payer, filtres (campagne, période, moyen de paiement, membre qui a encaissé, responsable du dossier) gardés dans l'adresse, export Excel. |
 | **Messages** | Une conversation par dossier avec le candidat, en temps réel, avec pastilles de non-lus (dossier, arbre, tableau de bord). |
 | **WhatsApp** | Ouvre une conversation WhatsApp avec le candidat (ou son parent), avec des messages préparés : lien de l'espace candidat, nouveau message, reste à payer, passage à l'agence. |
 | **Historique** | Journal de tout ce qui a été fait sur le dossier, et par qui. |
-| **Tableau de bord** | Widgets, dans l'ordre par défaut : « À traiter », mes tâches, dossiers sans nouvelles (aucune action de l'agence depuis 14 jours), retards de l'équipe, chiffres clés, avancement des dossiers ou campagnes, prochaines échéances, réponses des formations, paiements, encaissements par mois, activité de l'équipe ; toutes les campagnes actives ou une seule. « Personnaliser » : chaque membre choisit ses widgets, leur ordre (glisser-déposer ou flèches) et leur taille (demi ou pleine largeur) ; le patron peut proposer sa disposition à toute l'équipe, puis la retirer. Paiements et encaissements : patron ou droit « Voir la caisse » ; retards et activité de l'équipe : patron. |
-| **Export Excel** | Classeur complet d'une campagne (patron). |
+| **Tableau de bord** | Widgets, dans l'ordre par défaut : « À traiter », mes tâches, dossiers sans nouvelles (aucune action de l'agence depuis 14 jours), retards de l'équipe, chiffres clés, avancement des dossiers (une campagne) ou cartes des campagnes (plusieurs), prochaines échéances, réponses des établissements, paiements, encaissements par mois, activité de l'équipe (sur ordinateur seulement) ; toutes les campagnes actives ou une seule. Liste et règles : `src/features/dashboard/widgets.ts`. « Personnaliser » : chaque membre choisit ses widgets, leur ordre (glisser-déposer ou flèches) et leur taille (demi ou pleine largeur) ; le patron peut proposer sa disposition à toute l'équipe, puis la retirer. Paiements et encaissements : patron ou droit « Voir la caisse » ; retards et activité de l'équipe : patron. |
+| **Export Excel** | Classeur complet d'une campagne (patron ou droit « Gérer les campagnes ») ; paiements de l'agence depuis la page « Paiements ». |
 | **Copie sur l'ordinateur** | Chrome et Edge sur ordinateur : chaque membre choisit un dossier (Réglages › Sur cet ordinateur) où Tremplia recopie les PDF des dossiers en cours, rangés comme l'arbre (campagne / groupe ou « Non classés » / NOM Prénom / dossier de documents), pour les déposer facilement sur les plateformes. Mise à jour à l'ouverture de Tremplia, dès qu'un document change dans un dossier ouvert, ou avec un bouton (Réglages, onglet Documents). Tremplia ne touche qu'aux fichiers qu'il a copiés (liste cachée `.tremplia-copie.json`). |
 | **Notifications** | Sur le téléphone ou l'ordinateur, même Tremplia fermé : chaque membre les active sur chacun de ses appareils et choisit pour lui-même (Réglages › Notifications) : messages des candidats et réponses sur la lettre et les formations (dossiers dont il est responsable ; patron : aussi ceux sans responsable actif), tâche confiée par un collègue, tâches du jour chaque matin. Voir [Notifications](#notifications). |
 | **Réglages** | Mon compte, mot de passe, apparence (thème clair ou sombre, retenu sur l'appareil ; c'est là qu'il se change sur téléphone), notifications, copie sur l'ordinateur ; pour le patron, l'agence, les valeurs des nouvelles campagnes, le guide de démarrage et l'abonnement. |
 | **Guide de démarrage** | Mot de bienvenue à la première connexion de chaque membre, puis, pour le patron d'une nouvelle agence, la liste « Bien démarrer » en haut du tableau de bord : six étapes (campagne, dossier, document, espace candidat, tâche, employé) qui se cochent d'après les vraies données et mènent chacune au bon écran. Masquable (pour toute l'agence), réaffichable dans les réglages. Les agences déjà inscrites ne le voient pas. |
-| **Équipe** | Le patron ajoute ses employés (mot de passe temporaire à remplacer à la première connexion), leur donne un nouveau mot de passe temporaire s'ils ont oublié le leur (l'ancien cesse de marcher, leurs sessions sont fermées), les désactive ou les supprime. |
+| **Équipe** | Le patron ajoute ses employés (mot de passe temporaire à remplacer à la première connexion), leur donne un nouveau mot de passe temporaire s'ils ont oublié le leur (l'ancien cesse de marcher, leurs sessions sont fermées), leur accorde des permissions (voir ci-dessous), les désactive ou les supprime (seulement s'ils n'ont rien créé : sinon ils sont désactivés). Les membres désactivés sont rangés dans « Anciens membres », replié. |
 | **Compte** | Inscription d'une agence confirmée par e-mail (compte fermé avant le clic sur le lien), mot de passe oublié (lien reçu par e-mail), rappels de fin d'essai ou d'abonnement 7 jours et 1 jour avant. Voir [E-mails](#e-mails). |
+| **Accueil** | Page publique de présentation (`/`), avec l'inscription, la connexion, le contact et les pages légales. Un membre connecté qui l'ouvre arrive sur le tableau de bord. |
 
 **Patron / employé.** Les employés travaillent sur les dossiers. Sont réservés
-au patron : créer, régler, archiver et exporter une campagne ; gérer l'équipe ;
-verrouiller un document ; les actions sensibles vérifiées par les fonctions
-SQL.
+au patron : gérer l'équipe, verrouiller un document, les retards et
+l'activité de l'équipe au tableau de bord, et les actions sensibles vérifiées
+par les fonctions SQL. Le patron peut accorder à un employé de confiance trois
+permissions (page Équipe, `src/lib/permissions.ts`, revérifiées par la base) :
+
+| Permission | Ce qu'elle ouvre |
+|---|---|
+| Voir la caisse (`payments_view`) | Page Paiements, son export, chiffres de paiement du tableau de bord |
+| Corriger les paiements (`payments_manage`) | Annuler un paiement, modifier un montant convenu déjà fixé |
+| Gérer les campagnes (`campaigns_manage`) | Créer, modifier, archiver ou supprimer une campagne vide, ses étapes, importer un modèle, exporter en Excel |
 
 ### Pour le candidat (`/student`)
 
@@ -74,8 +82,9 @@ ses messages).
 
 ### Pour l'administrateur de la plateforme (`/admin`)
 
-Liste des agences, enregistrement des paiements d'abonnement, annulation
-d'un paiement saisi par erreur, et suppression définitive d'une agence.
+Liste des agences, enregistrement des paiements d'abonnement, mois offerts,
+annulation d'un paiement saisi par erreur, et suppression définitive d'une
+agence. Voir [Abonnements et administration](#abonnements-et-administration).
 
 ---
 
@@ -89,7 +98,8 @@ d'un paiement saisi par erreur, et suppression définitive d'une agence.
 | Données | Supabase : PostgreSQL, Auth, Storage, Realtime, RLS |
 | Fichiers | fflate (archives ZIP et classeurs Excel construits à la main) |
 | Tests | Vitest (unitaires), pgTAP (base), Playwright (bout en bout) |
-| Hébergement | Vercel (région `arn1`) + Supabase (`eu-north-1`) |
+| Services | Sentry (erreurs), Resend (e-mails), Web Push avec `web-push` (notifications), Backblaze B2 (sauvegardes) |
+| Hébergement | Vercel (région `arn1`) + Supabase (`eu-north-1`) ; tâches planifiées par GitHub Actions |
 
 ---
 
@@ -132,7 +142,7 @@ Modèle : `.env.example`. Aucune vraie valeur ne doit être commitée
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clé publique : le navigateur ne lit qu'à travers le RLS |
 | `SUPABASE_SECRET_KEY` | Clé secrète, utilisée par le serveur uniquement |
 | `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY` | 32 octets en base64. Chiffre les mots de passe des comptes externes et les codes candidats, signe les sessions candidat. **À sauvegarder hors du dépôt** : la perdre rend ces données illisibles |
-| `SUPPORT_PHONE` | Facultatif. Numéro affiché aux agences pour renouveler leur abonnement ; sans lui, « contactez-nous » |
+| `SUPPORT_PHONE` | Facultatif. Numéro de contact public : accueil (appel et WhatsApp), et pour renouveler l'abonnement (bandeaux, Réglages › Abonnement, e-mails de rappel) ; sans lui, « contactez-nous ». Jamais dans les pages légales. L'accueil étant figé au build, redéployer après un changement |
 | `NEXT_PUBLIC_SENTRY_DSN` | Facultatif. Adresse d'envoi du suivi des erreurs (Sentry). À définir **seulement en production**, avant le build (elle est intégrée au code du navigateur) ; sans elle, rien n'est envoyé. Pas secrète. Lue dans `src/lib/sentry.ts` |
 | `SITE_URL` | Facultatif. Adresse publique du site, pour les liens des e-mails, les aperçus de liens et le plan du site. Par défaut `https://www.tremplia.com` (`src/config/brand.ts`) ; en local `http://127.0.0.1:3000`. Jamais déduite de la requête |
 | `RESEND_API_KEY` | Production. Clé Resend (« Sending access », domaine `tremplia.com`) : envoi des e-mails de l'application. Secrète. Sans elle, en production, aucun e-mail ne part (erreur signalée à Sentry) |
@@ -179,13 +189,26 @@ La CI a trois tâches :
 ### Tests de bout en bout (`e2e/`)
 
 `e2e/parcours.spec.ts` rejoue le parcours principal, chaque étape partant
-de la précédente : redirection d'un visiteur vers la connexion, inscription
-d'une agence, connexion refusée tant que l'adresse n'est pas confirmée, lien
-de confirmation reçu par e-mail (Mailpit, `e2e/mailpit.ts`), import du modèle Campus France, création
-d'un dossier avec un premier paiement, envoi d'un PDF, ouverture de l'espace
-candidat, connexion du candidat et message reçu par l'agence, refus d'un
-mauvais code, et pour finir mot de passe oublié (lien reçu, nouveau mot de
-passe, lien inutilisable une seconde fois).
+de la précédente :
+
+- redirection d'un visiteur vers la connexion ; inscription d'une agence,
+  connexion refusée tant que l'adresse n'est pas confirmée, lien de
+  confirmation reçu par e-mail (Mailpit, `e2e/mailpit.ts`) ;
+- mot de bienvenue et guide de démarrage, qui coche ensuite les étapes faites ;
+- import du modèle Campus France, création d'un dossier avec un premier
+  paiement, envoi d'un PDF, copie des documents sur l'ordinateur, photos
+  assemblées en un PDF de plusieurs pages ;
+- tableau de bord personnalisé puis remis à la disposition de départ ;
+  disposition proposée à l'équipe puis retirée ;
+- ouverture de l'espace candidat, connexion du candidat et message reçu par
+  l'agence, refus d'un mauvais code ;
+- réglages (profil de l'agence, valeurs des nouvelles campagnes, choix des
+  notifications, changement du mot de passe) ;
+- page Paiements (encaissements, restes à payer, export) ; permissions d'un
+  employé (caisse, campagnes) ; étape retirée visible dans l'historique ;
+  employé qui a un historique impossible à supprimer ;
+- pour finir, mot de passe oublié (lien reçu, nouveau mot de passe, lien
+  inutilisable une seconde fois).
 
 En local : Supabase local démarré, `.env.local` pointé dessus (avec
 `MAILPIT_URL=http://127.0.0.1:54324`), puis
@@ -212,7 +235,8 @@ Navigateur
    │     requireMember() → lectures dans features/*/server
    │
    ├─ Composants client
-   │     lectures directes via le RLS (clé publique)
+   │     quelques lectures directes via le RLS (clé publique,
+   │     client chargé à la demande : loadClient())
    │     écritures → callApi() → routes API
    │
    └─ Routes API (app/api/**/route.ts, minces)
@@ -224,8 +248,11 @@ Navigateur
 
 - `src/lib/auth/require-member.ts` : `requireMember()` renvoie le membre
   **actif** connecté (agence, rôle, nom), mis en cache pour la durée d'un
-  affichage. `requireOwner()`, `requireApiMember()` et `requireApiOwner()` en
-  dérivent. L'agence vient toujours de la session, jamais de la requête.
+  affichage. `requireOwner()`, `requirePermission()`, `requireApiMember()`,
+  `requireApiOwner()` et `requireApiPermission()` en dérivent. L'agence vient
+  toujours de la session, jamais de la requête.
+- `src/lib/permissions.ts` : les permissions qu'un patron accorde à un
+  employé ; `can(member, permission)` décide de ce que l'interface affiche.
 - `src/features/cases/server/authorize-case.ts` : `authorizeCase(id)` vérifie
   qu'un dossier appartient à l'agence du membre avant toute action dessus.
 - `src/features/student/server/session.ts` : session du candidat (cookie
@@ -294,15 +321,17 @@ src/
   proxy.ts              session et redirections (ex-middleware)
   app/
     (app)/              pages de l'agence avec la coquille : dashboard,
-                        tasks, campaigns, team, settings, admin
+                        tasks, payments, campaigns, team, settings, admin
     cases/              arbre des dossiers et pages d'un dossier (un onglet
                         par page : infos, documents, lettre, formations,
                         notes, tâches, paiements, messages, historique)
     student/            espace candidat (login, puis (space)/…)
     api/                routes API, minces (une action par fichier)
     auth/confirm        lien reçu par e-mail (confirmation, mot de passe)
+    page.tsx            accueil public
     login, register, forgot-password, reset-password, change-password,
-    offline, manifest, icônes, robots, sitemap, opengraph-image…
+    mentions-legales, conditions, confidentialite, offline, not-found,
+    error, manifest, icônes, robots, sitemap, opengraph-image…
   components/
     ui/                 composants shadcn (button, input, label)
     shell/              coquille de l'application (rail, en-tête)
@@ -323,13 +352,13 @@ src/
     labels.ts           listes métier et libellés français
     *.ts                logique pure, testée par Vitest (*.test.ts à côté)
   lib/
-    supabase/           clients (server, client, admin) et readAll
+    supabase/           clients (server, client, lazy-client, admin) et readAll
     auth/               requireMember et dérivés
     audit/              journal d'activité
     crypto/             chiffrement et signatures
     email/              envoi (Resend, Mailpit) et modèles des e-mails
     api-errors, api-client, env, env-server, client-ip, site-url,
-    cron-auth, validation,
+    cron-auth, validation, permissions, report-error, sentry, sentry-tunnel,
     dates, money, names, plural, phone, save-file, ui-prefs, xlsx, utils
 supabase/
   migrations/           une migration par domaine, dans l'ordre
@@ -343,7 +372,7 @@ scripts/backup/         sauvegarde chiffrée et restauration
 
 Domaines de `features/` : `admin`, `agency`, `auth`, `campaigns`, `cases`,
 `dashboard`, `documents`, `export`, `history`, `landing`, `local-copy`, `messages`,
-`motivation-letter`, `notes`, `notifications`, `payments`, `programs`, `pwa`, `settings`,
+`motivation-letter`, `notes`, `notifications`, `onboarding`, `payments`, `programs`, `pwa`, `settings`,
 `stages`, `student`, `subscription`, `tasks`, `team`, `whatsapp`.
 
 ---
@@ -384,6 +413,8 @@ Domaines de `features/` : `admin`, `agency`, `auth`, `campaigns`, `cases`,
   | Dates, montants | `lib/dates`, `lib/money` |
   | Lien `tel:` | `telHref` (`lib/phone`) |
   | Lire plus de 1000 lignes | `readAll` (`lib/supabase/read-all`) |
+  | Client Supabase dans un composant client | `loadClient` (`lib/supabase/lazy-client`), sauf pages de connexion |
+  | Droit d'un membre | `can` (`lib/permissions`) ; `requirePermission`, `requireApiPermission` (`lib/auth`) |
   | Enregistrer un fichier généré | `saveFile` (`lib/save-file`) |
   | Fermer un menu (Échap, clic dehors) | `useDismiss` (`hooks/`) |
   | Fenêtre modale native | `useModalDialog` (`hooks/`) |
@@ -421,7 +452,8 @@ Domaines de `features/` : `admin`, `agency`, `auth`, `campaigns`, `cases`,
   Toute modification de la lettre ou des formations par l'agence redemande
   l'avis du candidat.
 - **Limites d'essais** (en base, par adresse IP) : connexion candidat
-  (10 échecs sur 15 minutes), inscription d'agence, messages du candidat.
+  (10 échecs sur 15 minutes), inscription d'agence (3 par heure), messages
+  du candidat, e-mails demandés (voir [E-mails](#e-mails)).
 - **Abonnement expiré** : la base refuse toute écriture de l'agence (lecture
   seule).
 
@@ -461,7 +493,9 @@ Les migrations (`supabase/migrations/`) sont découpées par domaine :
 | `dashboard_layouts` | disposition du tableau de bord de chaque membre et celle de l'agence |
 | `case_last_activity` | date de la dernière action de l'agence sur chaque dossier (« Dossiers sans nouvelles ») |
 
-Chaque domaine a son fichier de tests pgTAP dans `supabase/tests/`.
+Chaque domaine a son fichier de tests pgTAP dans `supabase/tests/` ; les
+migrations qui complètent un domaine (`case_payment_totals`,
+`case_close_tasks`…) sont testées avec lui.
 
 **Ajouter une migration** : `npx supabase migration new <nom>`, l'écrire,
 la tester avec `npx supabase db reset` puis `npx supabase test db`, ajouter
@@ -643,7 +677,8 @@ jamais un administrateur. L'adresse e-mail redevient libre.
    Puis redéployer.
 3. **GitHub** (Settings › Secrets and variables › Actions) : `CRON_SECRET`,
    la même valeur. Sans ce secret, la tâche « Tâches quotidiennes » ne fait
-   rien.
+   rien. Facultatif : `APP_URL`, adresse du site appelée par la tâche
+   (par défaut `https://www.tremplia.com`).
 4. **Supabase en ligne** : SMTP personnalisé (Authentication › Emails ›
    SMTP Settings : `smtp.resend.com`, port 465, utilisateur `resend`, mot de
    passe = une clé Resend, expéditeur `noreply@tremplia.com`, nom
@@ -723,9 +758,12 @@ le lisent pas. Code : `src/features/notifications`, affichage par
 
 `/mentions-legales`, `/conditions` (conditions générales d'utilisation et de
 vente) et `/confidentialite`, ouvertes avec ou sans connexion, liées depuis le
-pied de page de l'accueil et des écrans de connexion. Toutes leurs
-informations variables (éditeur, statut, NIF, immatriculation, contact,
-prestataires, tribunal, date de mise à jour) sont dans `src/config/legal.ts`.
+pied de page de l'accueil et des écrans de connexion, le bas des Réglages et
+celui de l'espace candidat (`LegalLinks`). Toutes leurs
+informations variables (éditeur, contact, prestataires, date de mise à jour)
+sont dans `src/config/legal.ts`. L'éditeur n'y paraît que sous son pseudonyme
+et la seule façon de le joindre est l'adresse de contact : ni nom, ni ville,
+ni téléphone.
 L'inscription demande d'accepter les conditions ; la date de la version
 acceptée est gardée dans le journal (`agency.created`, détail `terms`).
 Après une modification des conditions, changer `updatedAt`.
@@ -785,6 +823,10 @@ Créez un fichier dans `src/config/campaign-templates/` (sur le modèle de
 | Groupe (DAP, Hors-DAP, École…) | `campaign_group` |
 | Étape (Constitution du dossier, Entretien…) | `campaign_stage` / `cases.stage_id` |
 | Dossier (candidat) | `case` |
+| Tâche | `case_task` |
+| Permission (Voir la caisse…) | `permissions` (`payments_view`…) |
+| Disposition du tableau de bord | `dashboard_layout` |
+| Guide de démarrage | `onboarding` |
 | Dossier de documents | `document_folder` |
 | Compte externe | `external_account` |
 | Modèle de campagne | `campaign_template` (configuration, pas une table) |

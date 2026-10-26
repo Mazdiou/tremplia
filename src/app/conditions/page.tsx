@@ -51,7 +51,7 @@ export default function ConditionsPage() {
           items={[
             "Après l'essai, l'utilisation continue avec un abonnement d'un, trois ou douze mois.",
             "Le prix est communiqué à l'agence avant tout paiement, sur demande.",
-            "Le paiement se fait en espèces, par CCP ou par BaridiMob. L'abonnement prend effet dès que l'éditeur enregistre le paiement ; une période payée pendant un abonnement en cours s'ajoute à sa fin.",
+            "Le paiement se fait en espèces, par CCP ou par BaridiMob. L'abonnement prend effet dès que l'éditeur enregistre le paiement ; une période payée pendant l'essai ou un abonnement en cours s'ajoute à sa fin.",
             "Il n'y a aucun renouvellement automatique : sans nouveau paiement, l'abonnement s'arrête à sa date de fin. Des rappels sont envoyés 7 jours puis 1 jour avant.",
             "Sauf accord contraire, une période commencée n'est pas remboursée.",
           ]}
@@ -69,8 +69,9 @@ export default function ConditionsPage() {
       <LegalSection title="6. Données de l'agence et de ses candidats">
         <LegalList
           items={[
-            "Les données saisies restent la propriété de l'agence. Le patron peut les exporter (classeur Excel d'une campagne, documents d'un dossier) et demander leur suppression.",
-            "L'agence est responsable des données de ses candidats : elle les collecte de façon licite, informe ses candidats, et ne saisit que ce qui est utile à leur dossier.",
+            "Les données saisies restent la propriété de l'agence. Le patron peut les exporter (classeurs Excel des campagnes et des paiements, documents d'un dossier) et demander leur suppression.",
+            "L'agence est responsable des données de ses candidats : elle les collecte de façon licite, informe ses candidats, ne saisit que ce qui est utile à leur dossier et, pour un candidat mineur, recueille l'accord de son représentant légal.",
+            "Les fichiers que l'agence sort du service (exports, documents téléchargés, copie sur l'ordinateur, messages envoyés par WhatsApp) sont sous sa seule responsabilité.",
             "L'éditeur traite ces données pour le seul compte de l'agence, selon la politique de confidentialité, et en assure la sécurité et la sauvegarde.",
           ]}
         />
@@ -106,7 +107,11 @@ export default function ConditionsPage() {
         <p>
           L&apos;agence peut cesser d&apos;utiliser {BRAND.name} à tout moment, simplement en ne
           renouvelant pas son abonnement, et demander la suppression de ses données à{" "}
-          <ContactLink />.
+          <ContactLink /> : elles sont supprimées dans un délai de 30 jours, comme le décrit la{" "}
+          <Link href="/confidentialite" className="text-link underline underline-offset-2">
+            politique de confidentialité
+          </Link>
+          .
         </p>
       </LegalSection>
 
@@ -121,7 +126,7 @@ export default function ConditionsPage() {
         <p>
           Ces conditions sont soumises au droit algérien. En cas de désaccord, une solution
           amiable est recherchée d&apos;abord, en écrivant à <ContactLink />. À défaut, le litige
-          est porté devant les juridictions compétentes de {LEGAL.court}.
+          est porté devant les juridictions algériennes compétentes.
         </p>
       </LegalSection>
     </LegalPage>

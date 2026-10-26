@@ -1,26 +1,15 @@
 import { BRAND } from "./brand";
 
 // Informations légales affichées par les pages /mentions-legales,
-// /confidentialite et /conditions. Seul endroit à modifier quand le statut
-// de l'éditeur change (auto-entrepreneur, société…) : une valeur à null
-// n'est pas affichée.
+// /confidentialite et /conditions. L'éditeur n'y figure que sous son
+// pseudonyme, joignable seulement par l'adresse de contact : ni nom, ni
+// ville, ni téléphone.
 export const LEGAL = {
-  editor: {
-    name: "Madiou Amine",
-    // « Personne physique », puis par exemple « Auto-entrepreneur »
-    status: "Personne physique",
-    city: "Tizi Ouzou",
-    country: "Algérie",
-    // Numéros d'immatriculation, à renseigner une fois le statut créé
-    nif: null as string | null,
-    registration: null as string | null,
-  },
+  editor: { name: "Mazdiou" },
   contact: BRAND.email.contact,
   // Date de la dernière modification des pages légales (AAAA-MM-JJ). La
   // changer à chaque modification des conditions.
-  updatedAt: "2026-10-23",
-  // Tribunal compétent en cas de litige
-  court: "Tizi Ouzou",
+  updatedAt: "2026-10-26",
   // Prestataires techniques : hébergement et services utilisés
   providers: [
     {
@@ -38,7 +27,7 @@ export const LEGAL = {
     {
       name: "Resend",
       role: "envoi des e-mails de l'application",
-      place: "États-Unis",
+      place: "États-Unis ; envoi depuis l'Irlande (région Europe)",
       url: "https://resend.com",
     },
     {

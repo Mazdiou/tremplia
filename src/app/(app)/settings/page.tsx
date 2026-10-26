@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Lock } from "lucide-react";
+import { LegalLinks } from "@/components/legal-page";
 import { FormSection, PageContainer, PageHeader } from "@/components/page-ui";
 import { ScrollToHash } from "@/components/scroll-to-hash";
 import { AccountNameForm } from "@/features/settings/components/account-name-form";
@@ -200,6 +201,8 @@ export default async function SettingsPage() {
           <SessionActions />
         </FormSection>
       </div>
+
+      <LegalLinks className="mt-8" />
     </PageContainer>
   );
 }
