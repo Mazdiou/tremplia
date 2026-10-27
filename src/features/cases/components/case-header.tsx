@@ -70,10 +70,11 @@ export function CaseHeaderDetails({
 
 // Panneau de suivi sous l'identité : une ligne par sujet (étape, comptes
 // externes, espace candidat), alignées sur la même grille : libellé à
-// gauche, contenu, actions à droite.
+// gauche, contenu, actions à droite. Pas de overflow-hidden : les menus des
+// lignes en dépassent ; ce sont les lignes extrêmes qui suivent les coins.
 export function TrackPanel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-4 divide-y overflow-hidden rounded-xl border bg-band-panel text-sm">
+    <div className="mt-4 divide-y rounded-xl border bg-band-panel text-sm [&>:first-child]:rounded-t-xl [&>:last-child]:rounded-b-xl">
       {children}
     </div>
   );
@@ -88,32 +89,32 @@ export function TrackRow({
   label,
   children,
   actions,
-  summary = false,
+  multiline = false,
 }: {
   icon: LucideIcon;
   label: string;
   children?: React.ReactNode;
   actions?: React.ReactNode;
-  // Contenu qui ne fait que résumer les lignes suivantes : masqué quand la
-  // place manque, où il prendrait une ligne de plus
-  summary?: boolean;
+  // Contenu sur plusieurs lignes (un compte par ligne) : le libellé reste
+  // en face de la première
+  multiline?: boolean;
 }) {
   // Peu de place (téléphone, ou à côté d'un arbre large) : libellé et
   // actions en haut, contenu sur toute la largeur dessous. Le libellé garde
   // sa largeur ; faute de place, ce sont les actions qui passent à la ligne.
   // Sinon : tout sur une ligne.
   return (
-    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5 px-4 py-2.5 @xl:flex @xl:flex-wrap">
+    <div
+      className={cn(
+        "grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 px-4 py-2.5 @xl:flex @xl:flex-wrap",
+        multiline ? "items-start" : "items-center",
+      )}
+    >
       <span className="col-start-1 row-start-1 flex min-h-6 items-center gap-2 whitespace-nowrap text-muted-foreground @xl:w-40 @xl:shrink-0">
         <Icon className="size-4 shrink-0" aria-hidden />
         {label}
       </span>
-      <div
-        className={cn(
-          "col-span-2 row-start-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 empty:hidden @xl:flex-1",
-          summary && "max-md:hidden @max-xl:hidden",
-        )}
-      >
+      <div className="col-span-2 row-start-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 empty:hidden @xl:flex-1">
         {children}
       </div>
       {actions && (

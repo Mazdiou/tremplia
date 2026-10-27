@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Eye, EyeOff, KeyRound, Pencil, Plus } from "lucide-react";
+import { Check, Copy, Eye, EyeOff, KeyRound, Loader2, Pencil, Plus } from "lucide-react";
 import { FieldError } from "@/components/form-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,8 @@ import {
   type ExternalAccountStatus,
 } from "@/features/cases/labels";
 import { callApi } from "@/lib/api-client";
-import { TRACK_INDENT, TrackRow } from "./case-header";
+import { TrackRow } from "./case-header";
 import { cn } from "@/lib/utils";
-import { plural } from "@/lib/plural";
 
 type PinnedAccount = {
   id: string;
@@ -52,10 +51,10 @@ export function ExternalAccountsPinned({
 
   const canAdd = !readOnly && !adding && accounts.length < MAX_EXTERNAL_ACCOUNTS;
 
-  // Section du panneau de suivi : une ligne d'en-tête, puis un compte par
-  // ligne, alignés sous le contenu de l'en-tête
+  // Ligne du panneau de suivi : un compte par ligne, le premier en face du
+  // libellé
   return (
-    <div className="divide-y">
+    <>
       <datalist id={listId}>
         {free.map((s) => (
           <option key={s} value={s} />
@@ -65,7 +64,7 @@ export function ExternalAccountsPinned({
       <TrackRow
         icon={KeyRound}
         label="Comptes externes"
-        summary={accounts.length > 0}
+        multiline
         actions={
           canAdd && (
             <Button variant="ghost" size="xs" onClick={() => setAdding(true)}>
@@ -74,31 +73,24 @@ export function ExternalAccountsPinned({
           )
         }
       >
-        {accounts.length === 0 ? (
-          <span className="text-muted-foreground">{adding ? "Nouveau compte" : "Aucun"}</span>
+        {accounts.length === 0 && !adding ? (
+          <span className="flex min-h-6 items-center text-muted-foreground">Aucun</span>
         ) : (
-          <span className="text-muted-foreground tabular-nums">
-            {plural(accounts.length, "compte")}
-          </span>
+          <div className="w-full">
+            {accounts.length > 0 && (
+              <ul className="space-y-1">
+                {accounts.map((a) => (
+                  <AccountRow key={a.id} caseId={caseId} account={a} listId={listId} readOnly={readOnly} />
+                ))}
+              </ul>
+            )}
+            {adding && (
+              <AccountForm caseId={caseId} listId={listId} onDone={() => setAdding(false)} />
+            )}
+          </div>
         )}
       </TrackRow>
-
-      {accounts.length > 0 && (
-        <ul className="divide-y">
-          {accounts.map((a) => (
-            <AccountRow key={a.id} caseId={caseId} account={a} listId={listId} readOnly={readOnly} />
-          ))}
-        </ul>
-      )}
-
-      {adding && (
-        <AccountForm
-          caseId={caseId}
-          listId={listId}
-          onDone={() => setAdding(false)}
-        />
-      )}
-    </div>
+    </>
   );
 }
 
@@ -188,89 +180,101 @@ function AccountRow({
 
   return (
     <li>
-      <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2", TRACK_INDENT)}>
-        <span className="flex items-center gap-1.5 font-medium">
-          {account.url ? (
-            <a
-              href={account.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline-offset-2 hover:underline"
-            >
-              {account.platform}
-            </a>
-          ) : (
-            account.platform
-          )}
-        </span>
-
-        {account.login && (
-          <span className="flex min-w-0 items-center gap-1">
-            <span className="truncate">{account.login}</span>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => copy(account.login!, "login")}
-              aria-label={`Copier l'identifiant ${account.platform}`}
-              title="Copier l'identifiant"
-            >
-              {copied === "login" ? <Check /> : <Copy />}
-            </Button>
+      {/* Crayon dans sa colonne : il reste au bout de la première ligne
+          même quand le compte passe sur deux */}
+      <div className="flex items-start gap-2">
+        <div className="flex min-h-6 min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="flex items-center gap-1.5 font-medium">
+            {account.url ? (
+              <a
+                href={account.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline-offset-2 hover:underline"
+              >
+                {account.platform}
+              </a>
+            ) : (
+              account.platform
+            )}
           </span>
-        )}
 
-        {isExisting ? (
-          password === null ? (
-            <Button variant="outline" size="xs" onClick={reveal} disabled={revealing}>
-              <Eye /> {revealing ? "Chargement…" : "Afficher le mot de passe"}
-            </Button>
-          ) : (
-            <span className="flex flex-wrap items-center gap-2">
-              <code className="rounded-md bg-background px-2 py-0.5 break-all">
-                {password}
-              </code>
-              <Button variant="outline" size="xs" onClick={() => copy(password, "password")}>
-                {copied === "password" ? <Check /> : <Copy />}
-                {copied === "password" ? "Copié" : "Copier"}
+          {account.login && (
+            <span className="flex min-w-0 items-center gap-1">
+              <span className="truncate">{account.login}</span>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => copy(account.login!, "login")}
+                aria-label={`Copier l'identifiant ${account.platform}`}
+                title="Copier l'identifiant"
+              >
+                {copied === "login" ? <Check /> : <Copy />}
               </Button>
-              <Button variant="ghost" size="xs" onClick={() => setPassword(null)}>
-                <EyeOff /> Masquer
-              </Button>
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {secondsLeft} s
-              </span>
             </span>
-          )
-        ) : (
-          <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-            {EXTERNAL_ACCOUNT_STATUS_LABELS.to_create}
-          </span>
-        )}
+          )}
+
+          {isExisting ? (
+            password === null ? (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={reveal}
+                disabled={revealing}
+                aria-label={`Afficher le mot de passe ${account.platform}`}
+                title="Afficher le mot de passe"
+              >
+                {revealing ? <Loader2 className="animate-spin" /> : <Eye />}
+              </Button>
+            ) : (
+              <span className="flex flex-wrap items-center gap-2">
+                <code className="rounded-md bg-background px-2 py-0.5 break-all">
+                  {password}
+                </code>
+                <Button variant="outline" size="xs" onClick={() => copy(password, "password")}>
+                  {copied === "password" ? <Check /> : <Copy />}
+                  {copied === "password" ? "Copié" : "Copier"}
+                </Button>
+                <Button variant="ghost" size="xs" onClick={() => setPassword(null)}>
+                  <EyeOff /> Masquer
+                </Button>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {secondsLeft} s
+                </span>
+              </span>
+            )
+          ) : (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+              {EXTERNAL_ACCOUNT_STATUS_LABELS.to_create}
+            </span>
+          )}
+        </div>
 
         {!readOnly && (
           <Button
             variant="ghost"
-            size="xs"
-            className="ml-auto"
+            size="icon-xs"
+            className="shrink-0 text-muted-foreground"
             onClick={() => {
               setPassword(null);
               setError(null);
               setEditing(true);
             }}
             aria-label={`Modifier le compte ${account.platform}`}
+            title="Modifier"
           >
-            <Pencil /> Modifier
+            <Pencil />
           </Button>
         )}
       </div>
 
       {password !== null && (
-        <p className={cn("pb-2 text-xs text-muted-foreground", TRACK_INDENT)}>
+        <p className="pb-1 text-xs text-muted-foreground">
           Cet affichage est enregistré dans le journal de l&apos;agence.
         </p>
       )}
       {error && (
-        <p className={cn("pb-2 text-sm text-destructive", TRACK_INDENT)} role="alert">
+        <p className="pb-1 text-sm text-destructive" role="alert">
           {error}
         </p>
       )}
@@ -337,7 +341,7 @@ function AccountForm({
   const id = (name: string) => `${formId}-${name}`;
 
   return (
-    <form onSubmit={submit} className={cn("grid gap-3 py-3 @xl:grid-cols-2", TRACK_INDENT)}>
+    <form onSubmit={submit} className="grid gap-3 py-2 @xl:grid-cols-2">
       <div className="space-y-1">
         <Label htmlFor={id("platform")}>Plateforme</Label>
         <Input

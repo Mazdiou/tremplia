@@ -5,17 +5,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Check,
+  ChevronDown,
   CircleCheck,
   Copy,
   Hourglass,
   Link2,
   Loader2,
+  Lock,
   MessageSquareText,
+  MoreHorizontal,
   RefreshCw,
+  Send,
   UserRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { MENU_ITEM_CLASS, StatusPill } from "@/components/page-ui";
+import { useDismiss } from "@/hooks/use-dismiss";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import {
@@ -24,15 +30,19 @@ import {
   useHeaderTarget,
 } from "@/features/cases/components/case-header";
 import {
-  WhatsAppAccessButton,
+  WhatsAppAccessItem,
   type WhatsAppMenuContext,
 } from "@/features/whatsapp/components/whatsapp-menu";
 import type { ReviewStatus, StudentAccess } from "@/features/student/schemas";
 
 type Action = "enable" | "disable" | "regenerate";
 
+// Avis du candidat sur la lettre et les formations (dates déjà formatées)
+type Review = { status: ReviewStatus; respondedLabel: string | null; lastRequest: string | null };
+
 // Accès du candidat à son espace, dans l'en-tête du dossier : ouvrir ou
-// fermer l'accès, copier le code ou le lien, créer un nouveau code.
+// fermer l'accès, transmettre le code (menu Partager), créer un nouveau code
+// (menu « … »).
 export function StudentAccessBar({
   caseId,
   access,
@@ -49,8 +59,7 @@ export function StudentAccessBar({
   access: StudentAccess;
   // Accès ouvert mais sans effet (dossier abandonné, campagne archivée)
   blockedReason: string | null;
-  // Avis du candidat sur la lettre et les formations (dates déjà formatées)
-  review: { status: ReviewStatus; respondedLabel: string | null; lastRequest: string | null };
+  review: Review;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<Action | null>(null);
@@ -113,97 +122,135 @@ export function StudentAccessBar({
         icon={UserRound}
         label="Espace candidat"
         actions={
-          !readOnly &&
-          (enabled ? (
+          enabled ? (
             <>
-              <Button variant="ghost" size="xs" disabled={busy !== null}
-                onClick={() => setConfirm("regenerate")}>
-                <RefreshCw /> Nouveau code
-              </Button>
-              <Button variant="ghost" size="xs" disabled={busy !== null}
-                onClick={() => setConfirm("disable")}>
-                Fermer l&apos;accès
-              </Button>
+              <RowMenu
+                label="Transmettre le code au candidat"
+                size="xs"
+                trigger={
+                  copied === "link" ? (
+                    <>
+                      <Check /> Message copié
+                    </>
+                  ) : (
+                    <>
+                      <Send /> Partager <ChevronDown />
+                    </>
+                  )
+                }
+              >
+                {(close) => (
+                  <>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={cn(MENU_ITEM_CLASS, "flex items-center gap-2")}
+                      onClick={() => {
+                        close();
+                        void copy("link");
+                      }}
+                    >
+                      <Link2 className="size-4 text-muted-foreground" aria-hidden />
+                      Copier le message avec le lien
+                    </button>
+                    {whatsapp.context.accessCode && (
+                      <WhatsAppAccessItem
+                        phone={whatsapp.phone}
+                        context={whatsapp.context}
+                        onSelect={close}
+                      />
+                    )}
+                  </>
+                )}
+              </RowMenu>
+              {!readOnly && (
+                <RowMenu
+                  label="Autres actions sur l'accès"
+                  size="icon-xs"
+                  trigger={<MoreHorizontal />}
+                >
+                  {(close) => (
+                    <>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={busy !== null}
+                        className={cn(MENU_ITEM_CLASS, "flex items-center gap-2")}
+                        onClick={() => {
+                          close();
+                          setConfirm("regenerate");
+                        }}
+                      >
+                        <RefreshCw className="size-4 text-muted-foreground" aria-hidden />
+                        Nouveau code
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={busy !== null}
+                        className={cn(MENU_ITEM_CLASS, "flex items-center gap-2 text-destructive")}
+                        onClick={() => {
+                          close();
+                          setConfirm("disable");
+                        }}
+                      >
+                        <Lock className="size-4" aria-hidden />
+                        Fermer l&apos;accès
+                      </button>
+                    </>
+                  )}
+                </RowMenu>
+              )}
             </>
           ) : (
-            <Button variant="outline" size="xs" disabled={busy !== null}
-              onClick={() => void run("enable")}>
-              {busy === "enable" && <Loader2 className="animate-spin" aria-hidden />}
-              {access ? "Rouvrir l'accès" : "Ouvrir l'accès"}
-            </Button>
-          ))
+            !readOnly && (
+              <Button variant="outline" size="xs" disabled={busy !== null}
+                onClick={() => void run("enable")}>
+                {busy === "enable" && <Loader2 className="animate-spin" aria-hidden />}
+                {access ? "Rouvrir l'accès" : "Ouvrir l'accès"}
+              </Button>
+            )
+          )
         }
       >
         {enabled ? (
           <>
-            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-              Ouvert
-            </span>
-            <code className="rounded-md bg-muted px-2 py-0.5 font-mono font-semibold tracking-wider">
-              {access.code}
-            </code>
-            <span className="flex flex-wrap items-center gap-1">
-              <Button variant="ghost" size="xs" onClick={() => void copy("code")}>
-                {copied === "code" ? <Check /> : <Copy />} Copier le code
+            <StatusPill tone="ok">Ouvert</StatusPill>
+            <span className="flex items-center gap-0.5">
+              <code className="rounded-md bg-muted px-2 py-0.5 font-mono font-semibold tracking-wider">
+                {access.code}
+              </code>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => void copy("code")}
+                aria-label="Copier le code"
+                title="Copier le code"
+              >
+                {copied === "code" ? <Check /> : <Copy />}
               </Button>
-              <Button variant="ghost" size="xs" onClick={() => void copy("link")}>
-                {copied === "link" ? <Check /> : <Link2 />} Copier le message
-              </Button>
-              {whatsapp.context.accessCode && (
-                <WhatsAppAccessButton phone={whatsapp.phone} context={whatsapp.context} />
-              )}
             </span>
           </>
         ) : (
-          <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-            Fermé
-          </span>
+          <StatusPill tone="off">Fermé</StatusPill>
         )}
+        {access && <ReviewPill review={review} />}
       </TrackRow>
 
-      {access && (
-        <div className={cn("flex gap-2 pb-2.5 text-sm", TRACK_INDENT)}>
-          {review.status === "approved" ? (
-            <>
-              <CircleCheck className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
-              <span>
-                <span className="font-medium">Validé par le candidat</span>
-                {review.respondedLabel && (
-                  <span className="text-muted-foreground"> · le {review.respondedLabel}</span>
-                )}
-              </span>
-            </>
-          ) : review.status === "changes_requested" ? (
-            <>
-              <MessageSquareText className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-              <div className="min-w-0">
-                <p>
-                  <span className="font-medium">Modification demandée</span>
-                  {review.respondedLabel && (
-                    <span className="text-muted-foreground"> · le {review.respondedLabel}</span>
-                  )}
-                </p>
-                {review.lastRequest && (
-                  <p className="mt-1 border-l-2 border-amber-500/50 pl-2 whitespace-pre-wrap break-words text-muted-foreground">
-                    {review.lastRequest}
-                  </p>
-                )}
-                <Link
-                  href={`/cases/${caseId}/messages`}
-                  className="mt-1 inline-block text-sm font-medium text-link hover:underline"
-                >
-                  Répondre au candidat →
-                </Link>
-              </div>
-            </>
-          ) : (
-            <>
-              <Hourglass className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-              <span className="text-muted-foreground">
-                En attente de l&apos;avis du candidat sur la lettre et les formations
-              </span>
-            </>
+      {/* Demande du candidat : à lire et à traiter, donc affichée en entier */}
+      {access && review.status === "changes_requested" && (
+        <div className={cn("pb-2.5 text-sm", TRACK_INDENT)}>
+          {review.lastRequest && (
+            <p className="border-l-2 border-amber-500/50 pl-2 whitespace-pre-wrap break-words text-muted-foreground">
+              {review.lastRequest}
+            </p>
           )}
+          <Link
+            href={`/cases/${caseId}/messages`}
+            className="mt-1 inline-block text-sm font-medium text-link hover:underline"
+          >
+            Répondre au candidat →
+          </Link>
         </div>
       )}
 
@@ -238,6 +285,76 @@ export function StudentAccessBar({
         onConfirm={() => void run("disable")}
         onCancel={() => setConfirm(null)}
       />
+    </div>
+  );
+}
+
+// Avis du candidat sur la lettre et les formations, en une pastille
+function ReviewPill({ review }: { review: Review }) {
+  const on = review.respondedLabel ? ` le ${review.respondedLabel}` : "";
+  if (review.status === "approved") {
+    return (
+      <StatusPill tone="ok">
+        <CircleCheck className="size-3.5" aria-hidden /> Validé par le candidat{on}
+      </StatusPill>
+    );
+  }
+  if (review.status === "changes_requested") {
+    return (
+      <StatusPill tone="warn">
+        <MessageSquareText className="size-3.5" aria-hidden /> Modification demandée{on}
+      </StatusPill>
+    );
+  }
+  return (
+    <span
+      className="flex items-center gap-1 text-xs text-muted-foreground"
+      title="Le candidat n'a pas encore donné son avis sur la lettre et les formations"
+    >
+      <Hourglass className="size-3.5" aria-hidden /> En attente de son avis
+    </span>
+  );
+}
+
+// Menu déroulant d'une action de la ligne, ouvert sous son bouton, à droite
+function RowMenu({
+  label,
+  size,
+  trigger,
+  children,
+}: {
+  // Nom du bouton pour les lecteurs d'écran
+  label: string;
+  size: "xs" | "icon-xs";
+  trigger: React.ReactNode;
+  children: (close: () => void) => React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useDismiss(ref, open, setOpen);
+  return (
+    <div ref={ref} className="relative">
+      <Button
+        variant="ghost"
+        size={size}
+        // Bouton avec texte (« Partager ») : c'est son nom ; icône seule :
+        // le libellé la nomme
+        aria-label={size === "icon-xs" ? label : undefined}
+        title={label}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {trigger}
+      </Button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute top-8 right-0 z-30 w-64 rounded-xl border bg-popover p-1 text-popover-foreground shadow-lg"
+        >
+          {children(() => setOpen(false))}
+        </div>
+      )}
     </div>
   );
 }

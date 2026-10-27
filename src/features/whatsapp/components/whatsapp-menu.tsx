@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { ChevronDown, MessageCircle } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { formatDA } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import {
@@ -110,19 +110,23 @@ export function WhatsAppMenu({
   );
 }
 
-// Bouton « WhatsApp » de la barre Espace candidat : envoie le code d'accès
-export function WhatsAppAccessButton({
+// Entrée « Envoyer par WhatsApp » du menu Partager de l'espace candidat :
+// envoie le code d'accès
+export function WhatsAppAccessItem({
   phone,
   context,
+  onSelect,
 }: {
   phone: string | null;
   context: WhatsAppMenuContext;
+  onSelect: () => void;
 }) {
   const number = toWhatsAppNumber(phone);
   const studentLink = useStudentLink();
   if (!number) return null;
   return (
     <a
+      role="menuitem"
       href={
         studentLink
           ? whatsAppUrl(number, whatsAppMessage("access", { ...context, studentLink }))
@@ -130,14 +134,11 @@ export function WhatsAppAccessButton({
       }
       target="_blank"
       rel="noopener noreferrer"
-      title="Envoyer le code au candidat par WhatsApp"
-      aria-label="Envoyer le code au candidat par WhatsApp"
-      className={cn(
-        buttonVariants({ variant: "ghost", size: "xs" }),
-        "text-emerald-700 dark:text-emerald-400",
-      )}
+      onClick={onSelect}
+      className={cn(MENU_ITEM_CLASS, "flex items-center gap-2")}
     >
-      <MessageCircle aria-hidden /> WhatsApp
+      <MessageCircle className="size-4 text-emerald-700 dark:text-emerald-400" aria-hidden />
+      Envoyer par WhatsApp
     </a>
   );
 }

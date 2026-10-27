@@ -24,7 +24,7 @@ import { CaseStageControl } from "@/features/stages/components/case-stage-contro
 import { getStudentAccess } from "@/features/student/server/access";
 import { readReview } from "@/features/student/server/review";
 import { agencyUnreadCounts } from "@/features/messages/server/messages";
-import { dateTimeFormat, todayInAppTimezone } from "@/lib/dates";
+import { shortDateFormat, todayInAppTimezone } from "@/lib/dates";
 import { formatDA } from "@/lib/money";
 import { StudentAccessBar } from "@/features/student/components/student-access-bar";
 import {
@@ -247,7 +247,7 @@ export default async function CaseLayout({
                 review={{
                   status: review?.status ?? "pending",
                   respondedLabel: review?.respondedAt
-                    ? dateTimeFormat.format(new Date(review.respondedAt))
+                    ? shortDateFormat.format(new Date(review.respondedAt))
                     : null,
                   lastRequest:
                     review?.status === "changes_requested" ? (review.lastRequest?.body ?? null) : null,
