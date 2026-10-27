@@ -68,3 +68,6 @@ cle-privee*
 
 # supports marketing (vidéo Remotion…), gardés hors du dépôt
 /marketing/
+
+# documentation locale (schéma d'architecture…), gardée hors du dépôt
+/docs/
