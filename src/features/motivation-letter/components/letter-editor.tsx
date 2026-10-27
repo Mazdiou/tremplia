@@ -134,7 +134,7 @@ export function LetterEditor({
             void save();
           }
         }}
-        className="min-h-[24rem] w-full resize-y rounded-xl border border-input bg-card px-4 py-3 text-[15px] leading-relaxed outline-none transition-colors placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 dark:bg-input/30"
+        className="min-h-[24rem] w-full resize-y rounded-xl border border-input bg-card px-4 py-3 text-[0.9375rem] leading-relaxed outline-none transition-colors placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 dark:bg-input/30"
       />
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">

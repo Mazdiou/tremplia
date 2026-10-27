@@ -68,6 +68,11 @@ const themeScript = `(function(){try{var t=localStorage.getItem("sf:theme");var 
 // l'affichage, pour que rien ne change de taille au chargement
 const textScript = `(function(){try{if(localStorage.getItem("sf:text")==="small")document.documentElement.classList.add("text-small")}catch(e){}})()`;
 
+// iPhone et iPad : Safari zoome sur tout champ écrit sous 16 px dès qu'on le
+// touche. maximum-scale=1 l'en empêche, et iOS laisse quand même zoomer avec
+// deux doigts. Réservé à iOS : ailleurs (Android), il bloquerait ce zoom.
+const zoomScript = `(function(){var n=navigator;if(/iP(hone|ad|od)/.test(n.userAgent)||(n.platform==="MacIntel"&&n.maxTouchPoints>1)){var m=document.querySelector('meta[name="viewport"]');if(m&&m.content.indexOf("maximum-scale")<0)m.content+=", maximum-scale=1"}})()`;
+
 // Proposition d'installation (Android) : gardée dès son arrivée, avant même
 // l'affichage de la carte « Installez l'application » qui s'en sert.
 const installScript = `window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__installPrompt=e;window.dispatchEvent(new Event("sf:installable"))})`;
@@ -82,6 +87,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: textScript }} />
+        <script dangerouslySetInnerHTML={{ __html: zoomScript }} />
         <script dangerouslySetInnerHTML={{ __html: installScript }} />
       </head>
       <body className="min-h-full flex flex-col">

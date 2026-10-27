@@ -78,7 +78,7 @@ export function TreeSearchBox({
           className="h-10 w-full rounded-lg border bg-card pr-16 pl-9 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
         />
         {!query && (
-          <kbd className="pointer-events-none absolute top-2.5 right-2.5 rounded-md border px-1.5 text-[11px] text-muted-foreground max-md:hidden">
+          <kbd className="pointer-events-none absolute top-2.5 right-2.5 rounded-md border px-1.5 text-[0.6875rem] text-muted-foreground max-md:hidden">
             Ctrl K
           </kbd>
         )}
@@ -167,7 +167,7 @@ export function TreeFilters({
         >
           <ListFilter className="size-4" aria-hidden />
           {activeCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 grid size-4 place-items-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground tabular-nums">
+            <span className="absolute -top-1.5 -right-1.5 grid size-4 place-items-center rounded-full bg-primary text-[0.625rem] font-medium text-primary-foreground tabular-nums">
               {activeCount}
             </span>
           )}

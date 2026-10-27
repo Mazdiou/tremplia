@@ -37,7 +37,7 @@ export function StageListEditor({
             <li key={i} className="flex max-w-md items-start gap-2">
               <span
                 aria-hidden
-                className="mt-2 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-medium text-muted-foreground tabular-nums"
+                className="mt-2 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-[0.6875rem] font-medium text-muted-foreground tabular-nums"
               >
                 {i + 1}
               </span>

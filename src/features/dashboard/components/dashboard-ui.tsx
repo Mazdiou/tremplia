@@ -31,7 +31,7 @@ export function Initials({ first, last }: { first: string; last: string }) {
   return (
     <span
       aria-hidden
-      className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-semibold text-accent-foreground"
+      className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-[0.6875rem] font-semibold text-accent-foreground"
     >
       {initialsOf(first, last)}
     </span>

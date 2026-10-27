@@ -63,7 +63,7 @@ export function LegalPage({ title, children }: { title: string; children: ReactN
 
 export function LegalSection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="space-y-3 text-[15px] leading-7 text-foreground/90">
+    <section className="space-y-3 text-[0.9375rem] leading-7 text-foreground/90">
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
       {children}
     </section>

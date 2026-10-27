@@ -43,7 +43,7 @@ export function AppPreview() {
           <div className="min-w-0 flex-1 pr-24">
             <p className="flex items-center gap-2 font-semibold text-decor-foreground">
               <span className="truncate">MADIOU Amine</span>
-              <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
+              <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[0.6875rem] font-medium text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
                 Actif
               </span>
             </p>
@@ -51,7 +51,7 @@ export function AppPreview() {
           </div>
         </div>
         {/* Étape du dossier */}
-        <div className="mt-4 flex items-center gap-2.5 text-[13px]">
+        <div className="mt-4 flex items-center gap-2.5 text-[0.8125rem]">
           <span className="flex w-16 shrink-0 gap-0.5">
             {[0, 1, 2, 3, 4].map((i) => (
               <span
@@ -64,7 +64,7 @@ export function AppPreview() {
             3/5 · <span className="font-medium text-decor-foreground/85">Entretien</span>
           </span>
         </div>
-        <div className="mt-3 space-y-1.5 text-[13px]">
+        <div className="mt-3 space-y-1.5 text-[0.8125rem]">
           {[
             { name: "Candidature", count: 3 },
             { name: "Visa", count: 1 },
@@ -99,13 +99,13 @@ export function AppPreview() {
 
       {/* Activité */}
       <Glass className="absolute right-0 bottom-0 left-10 flex items-center gap-3 py-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700 motion-safe:delay-300 motion-safe:fill-mode-backwards">
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-decor-foreground/10 text-[11px] font-semibold text-decor-foreground/85">
+        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-decor-foreground/10 text-[0.6875rem] font-semibold text-decor-foreground/85">
           YK
         </span>
-        <p className="min-w-0 flex-1 truncate text-[13px] text-decor-muted">
+        <p className="min-w-0 flex-1 truncate text-[0.8125rem] text-decor-muted">
           <span className="font-medium text-decor-foreground">Yasmine</span> a ajouté un document
         </p>
-        <span className="shrink-0 text-[11px] text-decor-subtle">il y a 2 min</span>
+        <span className="shrink-0 text-[0.6875rem] text-decor-subtle">il y a 2 min</span>
       </Glass>
     </div>
   );

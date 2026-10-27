@@ -105,7 +105,7 @@ export default async function CaseLayout({
 
   const title = (
     <div className="flex min-w-0 items-center gap-2">
-      <h1 className="truncate text-[22px] font-semibold tracking-tight">
+      <h1 className="truncate text-[1.375rem] font-semibold tracking-tight">
         {displayName(c.first_name, c.last_name)}
       </h1>
       <StatusPill tone={STATUS_TONE[c.status] ?? "off"}>

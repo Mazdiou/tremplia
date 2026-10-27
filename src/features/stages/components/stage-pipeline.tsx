@@ -30,7 +30,7 @@ export function StagePipeline({
             >
               <span
                 aria-hidden
-                className="grid size-5 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-medium text-muted-foreground tabular-nums"
+                className="grid size-5 shrink-0 place-items-center rounded-full bg-muted text-[0.6875rem] font-medium text-muted-foreground tabular-nums"
               >
                 {i + 1}
               </span>

@@ -78,7 +78,7 @@ export function AddEmployeeForm() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <code className="rounded-lg border bg-card px-3 py-2 font-mono text-[13px]">
+            <code className="rounded-lg border bg-card px-3 py-2 font-mono text-[0.8125rem]">
               {created.password}
             </code>
             <CopyButton value={created.password} />

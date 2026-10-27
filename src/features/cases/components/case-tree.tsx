@@ -310,7 +310,7 @@ export function CaseTree({
           >
             {BRAND.name}
           </Link>
-          <kbd className="ml-auto mr-1 whitespace-nowrap text-[11px] text-muted-foreground max-md:hidden @max-[16rem]:hidden">
+          <kbd className="ml-auto mr-1 whitespace-nowrap text-[0.6875rem] text-muted-foreground max-md:hidden @max-[16rem]:hidden">
             Ctrl B
           </kbd>
           {!readOnly && (

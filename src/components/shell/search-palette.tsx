@@ -207,7 +207,7 @@ function PaletteDialog({
           autoComplete="off"
           className="h-12 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
-        <kbd className="rounded-md border px-1.5 text-[11px] text-muted-foreground max-md:hidden">
+        <kbd className="rounded-md border px-1.5 text-[0.6875rem] text-muted-foreground max-md:hidden">
           Échap
         </kbd>
       </div>
@@ -215,13 +215,13 @@ function PaletteDialog({
       <div className="max-h-[min(60vh,28rem)] overflow-y-auto py-2" aria-busy={search.pending}>
         <ul id={listId} role="listbox" aria-label="Résultats">
           {pages.length > 0 && (
-            <li role="presentation" className="px-5 pt-1 pb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            <li role="presentation" className="px-5 pt-1 pb-1.5 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
               Pages
             </li>
           )}
           {pages.map((p, i) => renderEntry(p, i))}
           {!search.tooShort && (
-            <li role="presentation" className="px-5 pt-3 pb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            <li role="presentation" className="px-5 pt-3 pb-1.5 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
               Dossiers
             </li>
           )}
@@ -234,7 +234,7 @@ function PaletteDialog({
         </p>
       </div>
 
-      <div className="flex gap-4 border-t px-4 py-2 text-[11px] text-muted-foreground max-md:hidden">
+      <div className="flex gap-4 border-t px-4 py-2 text-[0.6875rem] text-muted-foreground max-md:hidden">
         <span>↑ ↓ pour choisir</span>
         <span>Entrée pour ouvrir</span>
       </div>

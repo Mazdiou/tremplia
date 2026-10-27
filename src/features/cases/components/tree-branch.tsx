@@ -33,7 +33,7 @@ export function CampaignHeader({
         type="button"
         aria-expanded={open}
         onClick={onToggle}
-        className="flex min-w-0 flex-1 items-center gap-1 px-3 py-2 text-left text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+        className="flex min-w-0 flex-1 items-center gap-1 px-3 py-2 text-left text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase"
       >
         {open ? (
           <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
@@ -200,7 +200,7 @@ function TreeCaseRow({
         {show.payments && remaining > 0 && (
           <span
             className={cn(
-              "rounded-full px-1.5 py-px text-[11px] font-medium tabular-nums",
+              "rounded-full px-1.5 py-px text-[0.6875rem] font-medium tabular-nums",
               PILL_TONE_CLASSES.warn,
             )}
           >

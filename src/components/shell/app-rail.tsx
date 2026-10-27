@@ -79,7 +79,7 @@ export function AppRail({
               {badge && (
                 <span
                   className={cn(
-                    "absolute top-0.5 right-0.5 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] leading-none font-semibold tabular-nums max-md:right-[calc(50%-1.25rem)]",
+                    "absolute top-0.5 right-0.5 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[0.625rem] leading-none font-semibold tabular-nums max-md:right-[calc(50%-1.25rem)]",
                     // Mêmes couleurs dans les deux thèmes : chiffre lisible (4,5:1)
                     badge.overdue ? "bg-red-600 text-white" : "bg-amber-400 text-amber-950",
                   )}
@@ -140,7 +140,7 @@ function AccountMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         title={name}
-        className="grid size-8 place-items-center rounded-full bg-accent text-[11px] font-semibold text-accent-foreground transition-shadow hover:ring-2 hover:ring-primary/30 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="grid size-8 place-items-center rounded-full bg-accent text-[0.6875rem] font-semibold text-accent-foreground transition-shadow hover:ring-2 hover:ring-primary/30 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {initials}
         <span className="sr-only"> : mon compte</span>

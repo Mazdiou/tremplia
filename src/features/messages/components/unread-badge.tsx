@@ -6,7 +6,7 @@ export function UnreadBadge({ count, className }: { count: number; className?: s
   return (
     <span
       className={cn(
-        "inline-grid h-[18px] min-w-[18px] place-items-center rounded-full bg-primary px-1 text-[11px] leading-none font-semibold text-primary-foreground tabular-nums",
+        "inline-grid h-[18px] min-w-[18px] place-items-center rounded-full bg-primary px-1 text-[0.6875rem] leading-none font-semibold text-primary-foreground tabular-nums",
         className,
       )}
     >

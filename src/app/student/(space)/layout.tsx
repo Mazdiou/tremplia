@@ -70,7 +70,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
             </div>
           </div>
           <div className="pt-3">
-            <h1 className="text-[22px] font-semibold tracking-tight">
+            <h1 className="text-[1.375rem] font-semibold tracking-tight">
               {displayName(c.first_name, c.last_name)}
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
