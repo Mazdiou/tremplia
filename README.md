@@ -23,12 +23,13 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 12. [Sauvegardes](#sauvegardes)
 13. [Abonnements et administration](#abonnements-et-administration)
 14. [E-mails](#e-mails)
-15. [Notifications](#notifications)
-16. [Pages légales](#pages-légales)
-17. [Application installable (PWA)](#application-installable-pwa)
-18. [Nom et couleurs](#nom-et-couleurs)
-19. [Ajouter un modèle de campagne](#ajouter-un-modèle-de-campagne)
-20. [Glossaire](#glossaire)
+15. [Connexion avec Google](#connexion-avec-google)
+16. [Notifications](#notifications)
+17. [Pages légales](#pages-légales)
+18. [Application installable (PWA)](#application-installable-pwa)
+19. [Nom et couleurs](#nom-et-couleurs)
+20. [Ajouter un modèle de campagne](#ajouter-un-modèle-de-campagne)
+21. [Glossaire](#glossaire)
 
 ---
 
@@ -57,7 +58,7 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 | **Réglages** | Mon compte, mot de passe, apparence (thème clair ou sombre, retenu sur l'appareil ; c'est là qu'il se change sur téléphone), notifications, copie sur l'ordinateur ; pour le patron, l'agence, les valeurs des nouvelles campagnes, le guide de démarrage et l'abonnement. |
 | **Guide de démarrage** | Mot de bienvenue à la première connexion de chaque membre, puis, pour le patron d'une nouvelle agence, la liste « Bien démarrer » en haut du tableau de bord : six étapes (campagne, dossier, document, espace candidat, tâche, employé) qui se cochent d'après les vraies données et mènent chacune au bon écran. Masquable (pour toute l'agence), réaffichable dans les réglages. Les agences déjà inscrites ne le voient pas. |
 | **Équipe** | Le patron ajoute ses employés (mot de passe temporaire à remplacer à la première connexion), leur donne un nouveau mot de passe temporaire s'ils ont oublié le leur (l'ancien cesse de marcher, leurs sessions sont fermées), leur accorde des permissions (voir ci-dessous), les désactive ou les supprime (seulement s'ils n'ont rien créé : sinon ils sont désactivés). Les membres désactivés sont rangés dans « Anciens membres », replié. |
-| **Compte** | Inscription d'une agence confirmée par e-mail (compte fermé avant le clic sur le lien), mot de passe oublié (lien reçu par e-mail), rappels de fin d'essai ou d'abonnement 7 jours et 1 jour avant. Voir [E-mails](#e-mails). |
+| **Compte** | Inscription d'une agence confirmée par e-mail (compte fermé avant le clic sur le lien), connexion avec Google pour les comptes existants (voir [Connexion avec Google](#connexion-avec-google)), mot de passe oublié (lien reçu par e-mail), rappels de fin d'essai ou d'abonnement 7 jours et 1 jour avant. Voir [E-mails](#e-mails). |
 | **Accueil** | Page publique de présentation (`/`), avec l'inscription, la connexion, le contact et les pages légales. Un membre connecté qui l'ouvre arrive sur le tableau de bord. |
 
 **Patron / employé.** Les employés travaillent sur les dossiers. Sont réservés
@@ -144,6 +145,7 @@ Modèle : `.env.example`. Aucune vraie valeur ne doit être commitée
 | `EXTERNAL_ACCOUNTS_ENCRYPTION_KEY` | 32 octets en base64. Chiffre les mots de passe des comptes externes et les codes candidats, signe les sessions candidat. **À sauvegarder hors du dépôt** : la perdre rend ces données illisibles |
 | `SUPPORT_PHONE` | Facultatif. Numéro de contact public : accueil (appel et WhatsApp), et pour renouveler l'abonnement (bandeaux, Réglages › Abonnement, e-mails de rappel) ; sans lui, « contactez-nous ». Jamais dans les pages légales. L'accueil étant figé au build, redéployer après un changement |
 | `NEXT_PUBLIC_SENTRY_DSN` | Facultatif. Adresse d'envoi du suivi des erreurs (Sentry). À définir **seulement en production**, avant le build (elle est intégrée au code du navigateur) ; sans elle, rien n'est envoyé. Pas secrète. Lue dans `src/lib/sentry.ts` |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Facultatif. Identifiant client OAuth de Google : bouton « Continuer avec Google » de `/login`. Pas secret ; à définir avant le build (intégré au code du navigateur). Sans lui, pas de bouton. Voir [Connexion avec Google](#connexion-avec-google) |
 | `SITE_URL` | Facultatif. Adresse publique du site, pour les liens des e-mails, les aperçus de liens et le plan du site. Par défaut `https://www.tremplia.com` (`src/config/brand.ts`) ; en local `http://127.0.0.1:3000`. Jamais déduite de la requête |
 | `RESEND_API_KEY` | Production. Clé Resend (« Sending access », domaine `tremplia.com`) : envoi des e-mails de l'application. Secrète. Sans elle, en production, aucun e-mail ne part (erreur signalée à Sentry) |
 | `MAILPIT_URL` | Local et CI. Boîte de test du Supabase local (`http://127.0.0.1:54324`) : sans clé Resend, les e-mails y arrivent. Sans l'une ni l'autre, hors production, ils sont écrits dans la console |
@@ -207,8 +209,13 @@ de la précédente :
 - page Paiements (encaissements, restes à payer, export) ; permissions d'un
   employé (caisse, campagnes) ; étape retirée visible dans l'historique ;
   employé qui a un historique impossible à supprimer ;
-- pour finir, mot de passe oublié (lien reçu, nouveau mot de passe, lien
-  inutilisable une seconde fois).
+- mot de passe oublié (lien reçu, nouveau mot de passe, lien inutilisable
+  une seconde fois) ;
+- pour finir, connexion avec Google, où Google et la réponse de Supabase
+  sont simulés (le build doit avoir `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, une
+  valeur factice suffit ; sinon ce test est sauté) : jeton et nonce transmis,
+  patron sur le tableau de bord, employé à mot de passe temporaire envoyé le
+  changer, adresse sans compte et compte désactivé refusés avec un message.
 
 En local : Supabase local démarré, `.env.local` pointé dessus (avec
 `MAILPIT_URL=http://127.0.0.1:54324`), puis
@@ -689,6 +696,66 @@ jamais un administrateur. L'adresse e-mail redevient libre.
    signup »), avec les sujets de `supabase/config.toml`. Ces fichiers sont
    produits par `templates.ts` ; après une modification :
    `WRITE_SUPABASE_TEMPLATES=1 npx vitest run templates`.
+
+---
+
+## Connexion avec Google
+
+Bouton « Continuer avec Google » sous le formulaire de `/login`
+(`src/features/auth/components/google-login.tsx`), **pour les comptes qui
+existent déjà** : patron ou employé dont le compte Tremplia a la même adresse
+que le compte Google (Gmail ou Google Workspace). L'inscription d'une agence
+reste le formulaire de `/register`. L'espace candidat n'est pas concerné.
+
+**Fonctionnement.** Le bouton est celui de Google Identity Services, chargé
+seulement sur `/login` ; Google renvoie un jeton d'identité, que le navigateur
+donne à Supabase (`signInWithIdToken`, avec un nonce). Supabase vérifie le
+jeton et ouvre la session du compte qui a cette adresse ; à la première
+connexion, le compte Google lui est rattaché (le mot de passe continue de
+marcher). Le popup Google affiche le nom de l'application, jamais l'adresse
+`supabase.co`. Le reste ne change pas : le proxy écarte un compte sans profil
+actif, et un employé au mot de passe temporaire doit d'abord le remplacer.
+
+- **Adresse Google sans compte** : refusée (« Aucun compte n'utilise cette
+  adresse Google »), car les inscriptions sont fermées dans Supabase
+  (« Allow new users to sign up » désactivé). **Ce réglage doit rester
+  désactivé** : sinon une adresse inconnue créerait un compte Supabase sans
+  agence (la page le déconnecte aussitôt, mais le compte resterait).
+- **Employé désactivé** : refusé (compte bloqué par Supabase).
+- **Inscription jamais confirmée** : se connecter avec Google confirme
+  l'adresse ; par sécurité, Supabase efface alors le mot de passe choisi à
+  l'inscription (on en choisit un nouveau par « Mot de passe oublié »).
+
+### Mise en place en production (une fois)
+
+1. **Google Cloud** (<https://console.cloud.google.com>), un projet
+   « Tremplia » :
+   - APIs & Services › OAuth consent screen (Google Auth Platform) : type
+     « External », nom « Tremplia », e-mail d'assistance et de contact
+     `contact@tremplia.com`, logo facultatif, domaine `tremplia.com`, liens
+     `https://www.tremplia.com/confidentialite` et
+     `https://www.tremplia.com/conditions`. Accès demandés : seulement
+     `openid`, `email`, `profile` (aucune vérification Google n'est exigée
+     pour ceux-là). Puis « Publish app » (en mode « Testing », seuls les
+     comptes de test peuvent se connecter).
+   - Credentials › Create credentials › OAuth client ID › « Web
+     application ». Authorized JavaScript origins :
+     `https://www.tremplia.com`, `https://tremplia.com` et, pour essayer en
+     local, `http://localhost:3000` et `http://localhost`. Pas d'adresse de
+     redirection : le bouton fonctionne en popup.
+2. **Supabase en ligne** : Authentication › Sign In / Providers › Google :
+   activer, coller l'identifiant client (« Client IDs ») et le secret
+   (« Client Secret »). Laisser « Skip nonce checks » désactivé. Vérifier
+   que « Allow new users to sign up » est toujours désactivé.
+3. **Vercel** (Production) : `NEXT_PUBLIC_GOOGLE_CLIENT_ID` = l'identifiant
+   client, puis redéployer (la valeur est intégrée au build).
+
+**En local** : ajouter l'identifiant dans `.env.local`, et dans
+`supabase/config.toml`, section `[auth.external.google]` : `enabled = true`
+et `client_id` = l'identifiant (secret dans
+`SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`), puis `npx supabase stop` et
+`npx supabase start`. Ouvrir le site sur `http://localhost:3000` (Google
+refuse `127.0.0.1`).
 
 ---
 

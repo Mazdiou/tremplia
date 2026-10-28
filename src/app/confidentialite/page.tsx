@@ -50,7 +50,9 @@ export default function ConfidentialitePage() {
             <>
               <strong>Membres de l&apos;agence</strong> : prénom, nom, adresse e-mail, mot de passe
               (jamais gardé en clair), rôle et permissions, préférences (notifications, tableau
-              de bord), historique des actions effectuées.
+              de bord), historique des actions effectuées ; pour ceux qui se connectent avec
+              Google, ce que Google transmet (identifiant du compte Google, nom, adresse e-mail,
+              photo de profil).
             </>,
             <>
               <strong>Candidats</strong> : identité, date de naissance, nationalité, ville,
@@ -101,6 +103,13 @@ export default function ConfidentialitePage() {
           Le bouton WhatsApp d&apos;un dossier ouvre WhatsApp sur l&apos;appareil du membre, avec
           un message préparé : c&apos;est lui qui choisit de l&apos;envoyer. {BRAND.name} ne
           transmet rien à WhatsApp.
+        </p>
+        <p>
+          La connexion avec Google est facultative. La page de connexion des agences affiche le
+          bouton de Google, chargé depuis ses serveurs : Google reçoit alors l&apos;adresse IP et
+          le navigateur du visiteur. Le membre qui l&apos;utilise est identifié par Google, qui
+          sait ainsi qu&apos;il se connecte à {BRAND.name}, selon sa propre politique de
+          confidentialité. {BRAND.name} ne transmet rien à Google.
         </p>
       </LegalSection>
 

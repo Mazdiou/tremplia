@@ -9,7 +9,7 @@ export const LEGAL = {
   contact: BRAND.email.contact,
   // Date de la dernière modification des pages légales (AAAA-MM-JJ). La
   // changer à chaque modification des conditions.
-  updatedAt: "2026-10-26",
+  updatedAt: "2026-10-28",
   // Prestataires techniques : hébergement et services utilisés
   providers: [
     {

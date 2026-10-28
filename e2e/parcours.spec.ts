@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { createHash } from "node:crypto";
+import { expect, test, type BrowserContext, type Page, type Route } from "@playwright/test";
 import { emailLink } from "./mailpit";
 
 // Parcours principal d'une agence, de l'inscription à l'échange avec le
@@ -625,4 +626,123 @@ test("mot de passe oublié : lien reçu par e-mail puis nouveau mot de passe", a
   await visitor.getByRole("button", { name: "Continuer" }).click();
   await expect(visitor.getByRole("heading", { name: "Lien expiré ou déjà utilisé" })).toBeVisible();
   await visitor.close();
+  owner.password = newPassword;
+});
+
+// Bouton de Google remplacé par un bouton qui renvoie un faux jeton
+const GOOGLE_STUB = `window.google = { accounts: { id: {
+  initialize(config) { window.__gsi = config; },
+  renderButton(parent) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Continuer avec Google";
+    button.onclick = () => window.__gsi.callback({ credential: "jeton-google-simule" });
+    parent.replaceChildren(button);
+  },
+} } };`;
+
+test("connexion avec Google (Google et Supabase simulés)", async ({ browser }) => {
+  // Réponse de Supabase au jeton Google, choisie par chaque essai
+  let answer: (route: Route) => Promise<void> = (route) => route.abort();
+  const sent: { provider?: string; id_token?: string; nonce?: string }[] = [];
+
+  async function openLogin(context: BrowserContext) {
+    await context.route("https://accounts.google.com/gsi/client", (route) =>
+      route.fulfill({ contentType: "text/javascript", body: GOOGLE_STUB }),
+    );
+    await context.route(
+      (url) => url.pathname.endsWith("/auth/v1/token") && url.searchParams.get("grant_type") === "id_token",
+      (route) => {
+        sent.push(route.request().postDataJSON());
+        return answer(route);
+      },
+    );
+    const visitor = await context.newPage();
+    await visitor.goto("/login");
+    return visitor;
+  }
+
+  // Supabase refuse le jeton avec ce code
+  const refuse = (status: number, code: string) => (route: Route) =>
+    route.fulfill({
+      status,
+      // Supabase est sur une autre origine que la page
+      headers: {
+        "access-control-allow-origin": "*",
+        "access-control-expose-headers": "x-supabase-api-version",
+        "x-supabase-api-version": "2024-01-01",
+      },
+      json: { code, message: code },
+    });
+  // Supabase accepte le jeton pour ce compte : vraie session, ouverte ici
+  // avec son mot de passe
+  const accept = (email: string, password: string) => async (route: Route) => {
+    const response = await route.fetch({
+      url: route.request().url().replace("grant_type=id_token", "grant_type=password"),
+      postData: JSON.stringify({ email, password }),
+    });
+    await route.fulfill({ response });
+  };
+
+  const context = await browser.newContext();
+  const visitor = await openLogin(context);
+  // Build sans identifiant Google : pas de bouton, rien à essayer
+  const google = visitor.getByRole("button", { name: "Continuer avec Google" });
+  if ((await visitor.getByText("ou", { exact: true }).count()) === 0) {
+    await context.close();
+    test.skip(true, "build sans NEXT_PUBLIC_GOOGLE_CLIENT_ID");
+  }
+
+  // Adresse Google sans compte : inscriptions fermées
+  answer = refuse(422, "signup_disabled");
+  await google.click();
+  await expect(visitor.getByText(/Aucun compte n'utilise cette adresse Google/)).toBeVisible();
+
+  // Employé désactivé
+  answer = refuse(403, "user_banned");
+  await google.click();
+  await expect(visitor.getByText(/Ce compte est désactivé/)).toBeVisible();
+
+  // Le patron : jeton et nonce transmis, nouveau nonce à chaque essai
+  answer = accept(owner.email, owner.password);
+  await google.click();
+  await expect(visitor).toHaveURL(/\/dashboard$/);
+  const last = sent.at(-1)!;
+  expect(last.provider).toBe("google");
+  expect(last.id_token).toBe("jeton-google-simule");
+  expect(last.nonce).toBeTruthy();
+  expect(new Set(sent.map((s) => s.nonce)).size).toBe(sent.length);
+  // Google a reçu l'empreinte du nonce que Supabase vérifie
+  const hashed = await visitor.evaluate(() => (window as unknown as { __gsi: { nonce: string } }).__gsi.nonce);
+  expect(hashed).toBe(createHash("sha256").update(last.nonce!).digest("hex"));
+
+  // Employé au mot de passe temporaire : il doit d'abord le changer
+  const email = `employe-google-${run}@e2e.test`;
+  const res = await visitor.request.post("/api/team/employees", {
+    data: { firstName: "Nadia", lastName: `Google${run}`, email },
+  });
+  expect(res.status()).toBe(201);
+  const { temporaryPassword } = (await res.json()) as { temporaryPassword: string };
+  const employeeContext = await browser.newContext();
+  const employee = await openLogin(employeeContext);
+  answer = accept(email, temporaryPassword);
+  await employee.getByRole("button", { name: "Continuer avec Google" }).click();
+  await expect(employee).toHaveURL(/\/change-password$/);
+  await employeeContext.close();
+
+  // Session ouverte mais aucun profil lisible : déconnecté, avec un message
+  const orphanContext = await browser.newContext();
+  const orphan = await openLogin(orphanContext);
+  await orphanContext.route(
+    (url) => url.pathname.endsWith("/rest/v1/profiles"),
+    (route) => route.fulfill({ json: [] }),
+  );
+  answer = accept(owner.email, owner.password);
+  await orphan.getByRole("button", { name: "Continuer avec Google" }).click();
+  await expect(orphan.getByText(/Aucun compte n'utilise cette adresse Google/)).toBeVisible();
+  await orphan.goto("/dashboard");
+  await expect(orphan).toHaveURL(/\/login$/);
+  await orphanContext.close();
+
+  await context.close();
 });

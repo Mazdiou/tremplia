@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { LoginSwitch } from "@/components/auth/login-switch";
 import { ResendConfirmation } from "@/components/auth/resend-confirmation";
+import { GoogleLogin } from "@/features/auth/components/google-login";
 import {
   AuthField,
   FormError,
@@ -117,6 +118,8 @@ export default function LoginPage() {
           )}
         </Button>
       </form>
+
+      <GoogleLogin />
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
         Nouvelle agence ?{" "}
