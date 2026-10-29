@@ -22,12 +22,15 @@ export function CaseTabs({
   id,
   isOwner,
   unreadMessages,
+  documentsToCheck,
   openTasks,
 }: {
   id: string;
   isOwner: boolean;
   // Messages du candidat non lus par l'agence
   unreadMessages: number;
+  // Pièces envoyées par le candidat, pas encore acceptées
+  documentsToCheck: number;
   // Tâches à faire du dossier
   openTasks: number;
 }) {
@@ -93,6 +96,12 @@ export function CaseTabs({
             {t.label}
             {t.suffix === "/messages" && unreadMessages > 0 && !active && (
               <UnreadBadge count={unreadMessages} />
+            )}
+            {t.suffix === "/documents" && documentsToCheck > 0 && (
+              <UnreadBadge
+                count={documentsToCheck}
+                what={["pièce à vérifier", "pièces à vérifier"]}
+              />
             )}
             {t.suffix === "/tasks" && openTasks > 0 && (
               <span className="rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground tabular-nums">

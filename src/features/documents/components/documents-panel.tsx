@@ -14,6 +14,7 @@ import {
   photosToPdf,
 } from "@/features/documents/photo-pdf";
 import { callApi } from "@/lib/api-client";
+import { openDocument } from "@/features/documents/open-document";
 import { DownloadArchiveButton } from "./download-archive-button";
 import { PhotoComposer, usePhotoPages, type ComposeMode } from "./photo-composer";
 import { CaseCopyButton, useAutoCaseCopy } from "@/features/local-copy/components/case-copy-button";
@@ -248,21 +249,8 @@ export function DocumentsPanel({
   const rowActions: DocRowActions = {
     async open(d) {
       setMessage(null);
-      // Fenêtre ouverte tout de suite (clic de l'utilisateur) pour éviter le
-      // blocage des fenêtres, puis dirigée vers le lien signé d'une minute.
-      const win = window.open("about:blank", "_blank");
-      const res = await callApi<{ url?: unknown }>(`${base}/${d.id}/open`);
-      if (!res.ok || typeof res.data.url !== "string") {
-        win?.close();
-        say(res.ok ? "Impossible d'ouvrir le document" : res.error, true);
-        return;
-      }
-      if (!win) {
-        say("Le navigateur a bloqué l'ouverture. Autorisez les fenêtres pour ce site.", true);
-        return;
-      }
-      win.opener = null;
-      win.location.href = res.data.url;
+      const error = await openDocument(caseId, d.id);
+      if (error) say(error, true);
     },
     startRename: (d) => startOn(d, "rename", "renommé"),
     async rename(d, value) {

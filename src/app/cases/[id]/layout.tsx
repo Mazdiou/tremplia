@@ -35,6 +35,7 @@ import {
 import { telHref } from "@/lib/phone";
 import { isUuid } from "@/lib/validation";
 import { countOpenCaseTasks, listTaskMembers } from "@/features/tasks/server/read";
+import { countRequestsToCheck } from "@/features/document-requests/server/read";
 
 const STATUS_TONE = { active: "ok", closed: "off", abandoned: "bad" } as const;
 
@@ -62,7 +63,7 @@ export default async function CaseLayout({
   // Tout est lu en même temps. Les lectures avec la clé secrète sont filtrées
   // sur l'agence de la session : un dossier d'une autre agence n'y renvoie
   // rien, et getCase (via le RLS) le déclare introuvable.
-  const [data, usedPlatforms, studentAccess, review, unread, agency, readOnly, openTasks, members] = await Promise.all([
+  const [data, usedPlatforms, studentAccess, review, unread, agency, readOnly, openTasks, members, documentsToCheck] = await Promise.all([
     getCase(id),
     listUsedPlatforms(),
     isUuid(id) ? getStudentAccess(member.agencyId, id) : null,
@@ -72,6 +73,7 @@ export default async function CaseLayout({
     isReadOnly(member.agencyId),
     isUuid(id) ? countOpenCaseTasks(id) : 0,
     listTaskMembers(),
+    isUuid(id) ? countRequestsToCheck(id) : 0,
   ]);
   if (!data) notFound();
   const { c, responsible, campaign, groups, stages, externalAccounts } = data;
@@ -263,6 +265,7 @@ export default async function CaseLayout({
             id={c.id}
             isOwner={member.isOwner}
             unreadMessages={unread[c.id] ?? 0}
+            documentsToCheck={documentsToCheck}
             openTasks={openTasks}
           />
         </div>

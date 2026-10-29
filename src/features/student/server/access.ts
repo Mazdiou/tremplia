@@ -38,6 +38,18 @@ export async function getStudentAccess(agencyId: string, caseId: string): Promis
   }
 }
 
+// Accès activé par l'agence (sans lire le code)
+export async function isStudentAccessEnabled(agencyId: string, caseId: string) {
+  const { data, error } = await createAdminClient()
+    .from("case_student_access")
+    .select("enabled")
+    .eq("case_id", caseId)
+    .eq("agency_id", agencyId)
+    .maybeSingle();
+  if (error) reportError("[student access read]", error.code);
+  return data?.enabled === true;
+}
+
 function newCode(auth: AuthorizedCase, caseId: string) {
   const code = generateCode();
   const encrypted = encryptSecret(code, codeAad(auth.agencyId, caseId));

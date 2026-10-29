@@ -8,8 +8,9 @@ import { loadClient } from "@/lib/supabase/lazy-client";
 // pastilles de l'arbre, tâches confiées par un collègue. Seuls les
 // composants serveur sont relus ; ce qui est en cours de saisie reste en place.
 //
-// Agence (agencyId fourni) : abonnement en temps réel aux messages et aux
-// réponses des candidats, et aux tâches de l'agence (filtrés par le RLS).
+// Agence (agencyId fourni) : abonnement en temps réel aux messages, aux
+// réponses et aux pièces des candidats, et aux tâches de l'agence (filtrés
+// par le RLS).
 // Les suppressions de tâches arrivent aussi : la table est en identité
 // complète, le filtre agency_id s'applique à l'ancienne ligne. Si la
 // connexion tombe, une vérification toutes les 30 s prend le relais.
@@ -84,6 +85,13 @@ export function LiveRefresh({ agencyId }: { agencyId?: string }) {
             .on(
               "postgres_changes",
               { event: "*", schema: "public", table: "case_tasks", filter },
+              refresh,
+            )
+            // Pièce envoyée, remplacée ou retirée par le candidat (mise à
+            // jour de la pièce demandée)
+            .on(
+              "postgres_changes",
+              { event: "UPDATE", schema: "public", table: "case_document_requests", filter },
               refresh,
             );
           removeChannel = () => void supabase.removeChannel(channel);

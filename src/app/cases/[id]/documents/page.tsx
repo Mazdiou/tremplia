@@ -11,6 +11,9 @@ import {
   type DocItem,
   type FolderItem,
 } from "@/features/documents/components/documents-panel";
+import { RequestsPanel } from "@/features/document-requests/components/requests-panel";
+import { listCaseRequests } from "@/features/document-requests/server/read";
+import { isStudentAccessEnabled } from "@/features/student/server/access";
 import { reportError } from "@/lib/report-error";
 
 type Row = {
@@ -57,7 +60,7 @@ export default async function DocumentsPage({
 
   // Documents (avec le prénom de leur auteur, par leur lien) et dossiers de
   // rangement, lus ensemble via le RLS : seuls ceux de l'agence reviennent
-  const [{ data }, { data: folderRows }] = await Promise.all([
+  const [{ data }, { data: folderRows }, requests, accessEnabled] = await Promise.all([
     supabase
       .from("documents")
       .select(
@@ -70,6 +73,8 @@ export default async function DocumentsPage({
       .select("id, name")
       .eq("case_id", id)
       .order("created_at", { ascending: true }),
+    listCaseRequests(id),
+    caller ? isStudentAccessEnabled(caller.agencyId, id) : false,
   ]);
   const rows = (data ?? []) as unknown as Row[];
   const folders = (folderRows ?? []) as FolderItem[];
@@ -84,13 +89,32 @@ export default async function DocumentsPage({
     folderId: r.folder_id,
   }));
 
+  // Pourquoi le candidat ne voit pas encore les pièces demandées
+  const accessNote =
+    found.c.status === "abandoned"
+      ? "Dossier abandonné : le candidat ne peut plus se connecter à son espace."
+      : found.campaign?.status === "archived"
+        ? "Campagne archivée : le candidat ne peut plus se connecter à son espace."
+        : !accessEnabled
+          ? "L'accès du candidat est fermé : il verra ces pièces dès que vous ouvrirez son espace (en haut du dossier)."
+          : null;
+
   return (
-    <DocumentsPanel
-      caseId={id}
-      docs={docs}
-      folders={folders}
-      isOwner={isOwner}
-      readOnly={readOnly}
-    />
+    <div className="space-y-6">
+      <RequestsPanel
+        caseId={id}
+        requests={requests}
+        folders={folders}
+        accessNote={accessNote}
+        readOnly={readOnly}
+      />
+      <DocumentsPanel
+        caseId={id}
+        docs={docs}
+        folders={folders}
+        isOwner={isOwner}
+        readOnly={readOnly}
+      />
+    </div>
   );
 }
