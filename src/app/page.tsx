@@ -3,6 +3,8 @@ import { BRAND } from "@/config/brand";
 import { LandingPage, type LandingContact } from "@/features/landing/components/landing-page";
 import { supportPhone } from "@/features/subscription/server/subscription";
 import { toWhatsAppNumber, whatsAppUrl } from "@/features/whatsapp/whatsapp";
+import { jsonLd, landingStructuredData } from "@/features/landing/structured-data";
+import { siteUrl } from "@/lib/site-url";
 
 const DESCRIPTION =
   "Suivez chaque dossier étudiant, du premier rendez-vous au visa : documents, lettres, formations, paiements et équipe réunis. Essai gratuit de 7 jours.";
@@ -36,5 +38,15 @@ export default function Home() {
           : null,
       }
     : null;
-  return <LandingPage contact={contact} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(landingStructuredData({ site: siteUrl(), description: DESCRIPTION, phone: number })),
+        }}
+      />
+      <LandingPage contact={contact} />
+    </>
+  );
 }

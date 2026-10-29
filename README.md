@@ -240,7 +240,8 @@ Première fois : `npx playwright install chromium`.
 Navigateur
    │
    ├─ proxy.ts ─────────── session Supabase renouvelée ; redirections
-   │                       (non connecté → /login, connecté → /dashboard,
+   │                       (non connecté sur une page de l'agence → /login,
+   │                        adresse inconnue → 404, connecté → /dashboard,
    │                        mot de passe temporaire → /change-password)
    │
    ├─ Pages (composants serveur)

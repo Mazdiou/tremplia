@@ -37,6 +37,13 @@ test("un visiteur non connecté est renvoyé vers la connexion", async () => {
   await expect(page).toHaveURL(/\/login$/);
 });
 
+test("une adresse inconnue répond « Page introuvable » (404), sans renvoyer vers la connexion", async () => {
+  const response = await page.goto("/page-qui-n-existe-pas");
+  expect(response?.status()).toBe(404);
+  await expect(page).toHaveURL(/\/page-qui-n-existe-pas$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Page introuvable");
+});
+
 test("inscription d'une agence puis connexion du patron", async () => {
   await page.goto("/register");
   await page.getByLabel("Nom de l'agence").fill(`Agence E2E ${run}`);

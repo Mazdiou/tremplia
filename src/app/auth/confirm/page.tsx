@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { ConfirmLink, type LinkType } from "@/features/auth/components/confirm-link";
 
-export const metadata: Metadata = { title: "Lien reçu par e-mail" };
+// Lien à usage unique : jamais dans les résultats des moteurs de recherche
+export const metadata: Metadata = { title: "Lien reçu par e-mail", robots: { index: false } };
 
 // Lien reçu par e-mail (mot de passe oublié, confirmation de l'adresse). Le
 // jeton n'est utilisé qu'au clic sur le bouton : les messageries qui

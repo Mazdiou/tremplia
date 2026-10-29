@@ -12,6 +12,27 @@ const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password"];
 // pages légales
 const OPEN_PATHS = ["/auth/confirm", "/mentions-legales", "/conditions", "/confidentialite"];
 
+// Pages de l'agence : un visiteur non connecté est envoyé sur la connexion.
+// Elles revérifient elles-mêmes le membre (requireMember) : une section
+// oubliée ici resterait protégée, elle afficherait seulement la connexion
+// plus tard.
+const PRIVATE_SECTIONS = [
+  "/dashboard",
+  "/cases",
+  "/campaigns",
+  "/tasks",
+  "/payments",
+  "/team",
+  "/settings",
+  "/admin",
+  "/change-password",
+  "/reset-password",
+];
+
+function isPrivatePath(path: string) {
+  return PRIVATE_SECTIONS.some((s) => path === s || path.startsWith(`${s}/`));
+}
+
 // Espace candidat : sa propre session (cookie signé), vérifiée par ses pages
 // et ses routes. La session des employés n'y est pas consultée.
 function isStudentPath(path: string) {
@@ -73,7 +94,9 @@ export async function proxy(request: NextRequest) {
     if (path === "/dashboard" && hasStudentSessionHint(request.cookies.get(STUDENT_COOKIE)?.value)) {
       return redirectTo("/student");
     }
-    if (!isPublic && !isApi) return redirectTo("/login");
+    if (isPrivatePath(path)) return redirectTo("/login");
+    // Adresse inconnue : « Page introuvable » (404), pas la connexion. Les
+    // moteurs de recherche voient ainsi les liens cassés comme tels.
     return response;
   }
 

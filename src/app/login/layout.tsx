@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Connexion",
   description: "Connectez-vous à l'espace de votre agence : dossiers, équipe et candidats.",
+  alternates: { canonical: "/login" },
 };
 
 export default function LoginLayout({ children }: { children: React.ReactNode }) {

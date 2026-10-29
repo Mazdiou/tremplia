@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Créer mon agence",
   description: "Créez votre agence en deux minutes : 7 jours d'essai gratuit, sans carte bancaire ni engagement.",
+  alternates: { canonical: "/register" },
 };
 
 export default function RegisterLayout({ children }: { children: React.ReactNode }) {
