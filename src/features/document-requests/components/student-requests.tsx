@@ -263,8 +263,8 @@ export function StudentRequests({
                     </p>
                     {r.document && (
                       <p className="mt-0.5 text-xs break-all text-muted-foreground">
-                        {r.status === "accepted" ? "Acceptée par votre agence · " : ""}
-                        Envoyée le {r.document.dateLabel} · {r.document.fileName}
+                        {r.status === "accepted" ? "Acceptée par votre agence. " : ""}
+                        Envoyée le {r.document.dateLabel} : {r.document.fileName}
                       </p>
                     )}
                   </div>

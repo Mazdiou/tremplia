@@ -97,11 +97,12 @@ export function MessageThread({
                   : studentName
                 : viewer === "agency"
                   ? (m.authorName ?? agencyName)
-                  : `${m.authorName ?? "Votre conseiller"} · ${agencyName}`;
+                  : `${m.authorName ?? "Votre conseiller"} (${agencyName})`;
             return (
               <li key={m.id} className={cn("flex flex-col", mine ? "items-end" : "items-start")}>
                 <span className="mb-1 px-1 text-xs text-muted-foreground">
-                  {who} · {m.timeLabel}
+                  {who}
+                  <span className="ml-2 opacity-80">{m.timeLabel}</span>
                 </span>
                 <div
                   className={cn(

@@ -261,6 +261,49 @@ export function StatusPill({
   );
 }
 
+// Nombre d'éléments à côté d'un titre ou d'un onglet (« En cours 3 »)
+export function CountBadge({ count, className }: { count: number; className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-grid h-5 min-w-5 place-items-center rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground tabular-nums",
+        className,
+      )}
+    >
+      {count}
+    </span>
+  );
+}
+
+// Courtes informations à la suite (campagne, niveau, responsable…) :
+// séparées par un fin trait vertical dessiné, sans caractère de
+// ponctuation. Les éléments vides sont ignorés. Chaque élément porte son
+// trait à gauche ; la liste est décalée de la largeur d'un trait et le
+// débordement masqué : en début de ligne (premier élément, ou retour à la
+// ligne sur téléphone), le trait est hors de vue.
+export function MetaList({
+  items,
+  className,
+}: {
+  items: React.ReactNode[];
+  className?: string;
+}) {
+  const shown = items.filter((x) => x !== null && x !== undefined && x !== false && x !== "");
+  return (
+    <span className={cn("inline-flex max-w-full overflow-hidden align-bottom", className)}>
+      <span className="-ml-[17px] inline-flex min-w-0 flex-wrap items-center gap-y-0.5">
+        {shown.map((item, i) => (
+          <span key={i} className="inline-flex min-w-0 items-center">
+            <span aria-hidden className="mx-2 h-3 w-px shrink-0 bg-current opacity-30" />
+            {i > 0 && <span className="sr-only">, </span>}
+            {item}
+          </span>
+        ))}
+      </span>
+    </span>
+  );
+}
+
 // Résultat de la dernière action d'un panneau (« Note ajoutée », erreur…)
 export type ActionMessage = { text: string; error: boolean } | null;
 

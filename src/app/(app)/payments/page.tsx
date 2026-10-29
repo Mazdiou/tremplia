@@ -132,8 +132,8 @@ export default async function PaymentsPage({
         title="Paiements"
         subtitle={
           member.isOwner
-            ? "Tous les paiements de l'agence · visible par vous et les membres autorisés"
-            : "Tous les paiements de l'agence · accès accordé par le patron"
+            ? "Tous les paiements de l'agence, visibles par vous et les membres autorisés."
+            : "Tous les paiements de l'agence, accès accordé par le patron."
         }
         actions={
           rowCount > 0 && (
@@ -191,7 +191,7 @@ function Collections({
       <section aria-label="Totaux" className="space-y-2">
         <div className={cn("grid gap-3", !method && "md:grid-cols-[1fr_3fr]")}>
           <Figure
-            label={`Encaissé · ${periodLabel}`}
+            label={`Encaissé (${periodLabel.charAt(0).toLowerCase()}${periodLabel.slice(1)})`}
             value={formatDA(totals.total)}
             hint={plural(totals.count, "paiement")}
             className="border-primary/40 bg-highlight"

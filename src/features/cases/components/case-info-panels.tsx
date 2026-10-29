@@ -23,9 +23,14 @@ export function IdentityPanel({ c }: { c: CaseFieldsRecord }) {
         <Row label="Ville ou wilaya">{dash(c.city)}</Row>
         <Row label="Nationalité">{dash(c.nationality)}</Row>
         <Row label="Contact secondaire">
-          {c.secondary_contact_name
-            ? `${c.secondary_contact_name} · ${c.secondary_contact_phone}`
-            : "—"}
+          {c.secondary_contact_name ? (
+            <>
+              {c.secondary_contact_name},{" "}
+              <span className="whitespace-nowrap">{c.secondary_contact_phone}</span>
+            </>
+          ) : (
+            "—"
+          )}
         </Row>
       </dl>
     </Panel>
@@ -42,30 +47,34 @@ export function ParcoursPanel({ c }: { c: CaseFieldsRecord }) {
         <Row label="Filière ou spécialité">{dash(c.current_field)}</Row>
         <Row label="Établissement actuel">{dash(c.current_institution)}</Row>
         <Row label="Diplômes">
-          {c.diplomas.length === 0
-            ? "Aucun"
-            : c.diplomas
-                .map((d) =>
-                  [labelOf(DIPLOMA_TYPE_LABELS, d.type), d.title, d.year]
-                    .filter(Boolean)
-                    .join(" · "),
-                )
-                .join(", ")}
+          {c.diplomas.length === 0 ? (
+            "Aucun"
+          ) : (
+            <ul className="space-y-0.5">
+              {c.diplomas.map((d, i) => (
+                <li key={i}>
+                  {[labelOf(DIPLOMA_TYPE_LABELS, d.type), d.title].filter(Boolean).join(", ")}
+                  {d.year && ` (${d.year})`}
+                </li>
+              ))}
+            </ul>
+          )}
         </Row>
         <Row label="Tests de langue">
-          {c.language_tests.length === 0
-            ? "Aucun"
-            : c.language_tests
-                .map((t) =>
-                  [
-                    t.test === "other" ? t.other_name : labelOf(LANGUAGE_TEST_LABELS, t.test),
-                    t.result,
-                    t.date && formatShortDate(t.date),
-                  ]
+          {c.language_tests.length === 0 ? (
+            "Aucun"
+          ) : (
+            <ul className="space-y-0.5">
+              {c.language_tests.map((t, i) => (
+                <li key={i}>
+                  {[t.test === "other" ? t.other_name : labelOf(LANGUAGE_TEST_LABELS, t.test), t.result]
                     .filter(Boolean)
-                    .join(" · "),
-                )
-                .join(", ")}
+                    .join(", ")}
+                  {t.date && ` (${formatShortDate(t.date)})`}
+                </li>
+              ))}
+            </ul>
+          )}
         </Row>
       </dl>
     </Panel>

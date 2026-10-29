@@ -24,7 +24,7 @@ export function documentNameOf(fileName: string) {
 export function uploadSummary(added: number, lastError: string | null) {
   const addedText = added > 1 ? `${added} documents ajoutés` : "Document ajouté";
   if (!lastError) return { text: addedText, error: false };
-  return { text: added > 0 ? `${addedText} · ${lastError}` : lastError, error: true };
+  return { text: added > 0 ? `${addedText}. ${lastError}` : lastError, error: true };
 }
 
 // Envoie un fichier déjà accepté par pdfProblem. Renvoie l'erreur, sinon null.

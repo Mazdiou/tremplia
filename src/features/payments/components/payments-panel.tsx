@@ -193,7 +193,7 @@ export function PaymentForm({
           />
           {!errors.amount && (
             <p className="text-xs text-muted-foreground">
-              Reste à payer : {formatDA(remaining)} ·{" "}
+              Reste à payer : {formatDA(remaining)}.{" "}
               <button
                 type="button"
                 className="font-medium text-link underline-offset-2 hover:underline"
@@ -288,7 +288,7 @@ function PaymentLine({
           {cancelled && <StatusPill tone="bad">Annulé</StatusPill>}
         </p>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          {formatLongDate(payment.paidOn)} · enregistré par {payment.createdBy}
+          {formatLongDate(payment.paidOn)}, enregistré par {payment.createdBy}
         </p>
         {payment.note && <p className="mt-1 text-sm break-words">{payment.note}</p>}
         {cancelled && (

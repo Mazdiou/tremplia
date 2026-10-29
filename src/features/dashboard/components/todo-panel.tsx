@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import type { Todo, TodoItem } from "../server/dashboard";
 import { Initials, relativeDay } from "./dashboard-ui";
 import { plural } from "@/lib/plural";
+import { CountBadge } from "@/components/page-ui";
 
 // « À traiter » : ce qui attend l'agence, avec un accès direct au bon onglet
 // du dossier. Rien n'est à cocher : une ligne disparaît d'elle-même quand la
@@ -94,7 +95,7 @@ export function TodoPanel({ todo }: { todo: Todo }) {
               <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 <Icon className={cn("size-4", tone)} aria-hidden />
                 {title}
-                <span className="tabular-nums">· {items.length}</span>
+                <CountBadge count={items.length} />
               </h3>
               <ul className="mt-2">
                 {items.slice(0, SHOWN).map((item) => (

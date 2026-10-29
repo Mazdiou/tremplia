@@ -44,7 +44,7 @@ export function studentManifest(): MetadataRoute.Manifest {
   return {
     ...base(),
     id: "/student",
-    name: `${BRAND.name} · Espace candidat`,
+    name: `${BRAND.name} – Espace candidat`,
     short_name: "Mon dossier",
     description: "Votre dossier, votre lettre de motivation, vos formations et vos messages.",
     start_url: "/student",

@@ -60,7 +60,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
             <div className="flex min-w-0 items-center gap-2.5">
               <LogoMark className="size-8" />
               <span className="truncate text-sm font-medium text-muted-foreground">
-                Espace candidat · {agency.name}
+                Espace candidat
               </span>
             </div>
             <div className="flex items-center gap-1">
@@ -80,7 +80,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
               {displayName(c.first_name, c.last_name)}
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              Dossier suivi par {agency.name} ·{" "}
+              Dossier suivi par {agency.name}, joignable au{" "}
               <a href={telHref(agency.phone)} className="whitespace-nowrap hover:underline">
                 {agency.phone}
               </a>

@@ -78,7 +78,7 @@ export default async function TasksPage({
             name: displayName(c.first_name, c.last_name),
             detail: [campaignLabel(c.campaign_id), suffix && `dossier ${suffix}`]
               .filter(Boolean)
-              .join(" · "),
+              .join(", "),
           },
         };
       });
@@ -103,7 +103,7 @@ export default async function TasksPage({
     <PageContainer>
       <PageHeader
         title="Tâches"
-        subtitle={tasks ? `${whoLabel} · ${plural(open.length, "tâche")} à faire` : whoLabel}
+        subtitle={tasks ? `${whoLabel}, ${plural(open.length, "tâche")} à faire` : whoLabel}
         actions={
           <TasksFilters
             who={who}

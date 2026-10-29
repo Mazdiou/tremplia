@@ -12,6 +12,7 @@ import { callApi } from "@/lib/api-client";
 import { displayName } from "@/lib/names";
 import { SelectField, TextField } from "@/components/form-fields";
 import { plural } from "@/lib/plural";
+import { MetaList } from "@/components/page-ui";
 
 export type SourceCampaign = { id: string; name: string; caseCount: number };
 
@@ -132,11 +133,13 @@ export function ImportPanel({
               key={m.id}
               className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm"
             >
-              <span>
-                {displayName(m.fields.firstName, m.fields.lastName)} ·{" "}
-                {labelOf(EDUCATION_LEVEL_LABELS, m.fields.educationLevel)} ·{" "}
-                {labelOf(STATUS_LABELS, m.status)}
-              </span>
+              <MetaList
+                items={[
+                  displayName(m.fields.firstName, m.fields.lastName),
+                  labelOf(EDUCATION_LEVEL_LABELS, m.fields.educationLevel),
+                  labelOf(STATUS_LABELS, m.status),
+                ]}
+              />
               <Button
                 type="button"
                 size="sm"

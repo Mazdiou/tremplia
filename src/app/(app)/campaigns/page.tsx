@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CalendarClock, CalendarRange, FolderOpen, Layers } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
-import { PageContainer, PageHeader, StatusPill } from "@/components/page-ui";
+import { CountBadge, PageContainer, PageHeader, StatusPill } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { CAMPAIGN_TEMPLATES } from "@/config/campaign-templates";
 import { CAMPAIGN_STATUS_LABELS } from "@/features/campaigns/labels";
@@ -144,7 +144,7 @@ export default async function CampaignsPage() {
           {active.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-sm font-semibold text-muted-foreground">
-                En cours · {active.length}
+                En cours <CountBadge count={active.length} className="ml-1" />
               </h2>
               <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {active.map((c) => (
@@ -158,7 +158,7 @@ export default async function CampaignsPage() {
           {archived.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-sm font-semibold text-muted-foreground">
-                Archivées · {archived.length}
+                Archivées <CountBadge count={archived.length} className="ml-1" />
               </h2>
               <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {archived.map((c) => (

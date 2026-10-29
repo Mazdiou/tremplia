@@ -29,8 +29,8 @@ const DESCRIPTION = `${BRAND.tagline} : dossiers, documents, paiements et équip
 export const metadata: Metadata = {
   // Adresse de base des liens absolus (aperçus de liens, plan du site)
   metadataBase: new URL(siteUrl()),
-  // Titre de chaque page suivi du nom de l'application : « Page introuvable · <nom> »
-  title: { default: BRAND.name, template: `%s · ${BRAND.name}` },
+  // Titre de chaque page suivi du nom de l'application : « Page introuvable – <nom> »
+  title: { default: BRAND.name, template: `%s – ${BRAND.name}` },
   description: DESCRIPTION,
   // Aperçu d'un lien partagé (WhatsApp, Facebook, LinkedIn…) : l'image vient
   // de opengraph-image.tsx
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: BRAND.name,
     locale: "fr_FR",
-    title: `${BRAND.name} · ${BRAND.tagline}`,
+    title: `${BRAND.name} – ${BRAND.tagline}`,
     description: DESCRIPTION,
   },
   twitter: { card: "summary_large_image" },

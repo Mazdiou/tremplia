@@ -92,7 +92,7 @@ export function CashflowPanel({
                     >
                       <span className="block font-medium first-letter:uppercase">{label}</span>
                       <span className="tabular-nums">{formatDA(m.amount)}</span>
-                      <span className="text-muted-foreground"> · {plural(m.payments, "paiement")}</span>
+                      <span className="text-muted-foreground"> ({plural(m.payments, "paiement")})</span>
                     </span>
                   </Link>
                 </li>

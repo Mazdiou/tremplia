@@ -10,8 +10,8 @@ const DESCRIPTION =
   "Suivez chaque dossier étudiant, du premier rendez-vous au visa : documents, lettres, formations, paiements et équipe réunis. Essai gratuit de 7 jours.";
 
 export const metadata: Metadata = {
-  // Titre complet : sans le modèle « … · nom » du layout racine
-  title: { absolute: `${BRAND.name} · ${BRAND.tagline}` },
+  // Titre complet : sans le modèle « … – nom » du layout racine
+  title: { absolute: `${BRAND.name} – ${BRAND.tagline}` },
   description: DESCRIPTION,
   alternates: { canonical: "/" },
   // Remplace celui du layout (pas de fusion champ par champ)
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     siteName: BRAND.name,
     locale: "fr_FR",
     url: "/",
-    title: `${BRAND.name} · ${BRAND.tagline}`,
+    title: `${BRAND.name} – ${BRAND.tagline}`,
     description: DESCRIPTION,
   },
 };

@@ -57,7 +57,7 @@ export function renderEmail(subject: string, content: Content): Email {
     note +
     `</td></tr>` +
     `<tr><td style="padding:20px 4px 0;font-family:${FONT};font-size:12px;line-height:1.6;color:#64748b">` +
-    `${escapeHtml(`${BRAND.name} · ${BRAND.tagline}`)}<br>` +
+    `${escapeHtml(`${BRAND.name} – ${BRAND.tagline}`)}<br>` +
     `Message envoyé automatiquement. Pour nous écrire : ` +
     `<a href="mailto:${BRAND.email.contact}" style="color:#64748b">${BRAND.email.contact}</a>` +
     `</td></tr></table></td></tr></table></body></html>`;
@@ -67,7 +67,7 @@ export function renderEmail(subject: string, content: Content): Email {
     ...content.paragraphs,
     content.action ? `${content.action.label} : ${content.action.url}` : null,
     content.note ?? null,
-    `--\n${BRAND.name} · ${BRAND.tagline}\nPour nous écrire : ${BRAND.email.contact}`,
+    `--\n${BRAND.name} – ${BRAND.tagline}\nPour nous écrire : ${BRAND.email.contact}`,
   ]
     .filter((part): part is string => part !== null)
     .join("\n\n");

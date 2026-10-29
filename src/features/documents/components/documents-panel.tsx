@@ -180,7 +180,7 @@ export function DocumentsPanel({
     const sent: string[] = [];
     for (const [g, group] of groups.entries()) {
       const files = group.pages.map((p) => p.file);
-      const prefix = groups.length > 1 ? `Document ${g + 1} sur ${groups.length} · ` : "";
+      const prefix = groups.length > 1 ? `Document ${g + 1} sur ${groups.length} : ` : "";
       try {
         const bytes = await photosToPdf(files, (n) =>
           setComposing(

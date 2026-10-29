@@ -4,7 +4,7 @@ import { cairnSvg } from "@/components/logo-mark";
 
 // Image d'aperçu d'un lien partagé (WhatsApp, Facebook, LinkedIn…), créée
 // au build. Pas de police externe : celle de next/og suffit.
-export const alt = `${BRAND.name} · ${BRAND.tagline}`;
+export const alt = `${BRAND.name} – ${BRAND.tagline}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

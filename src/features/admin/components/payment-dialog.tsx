@@ -84,7 +84,8 @@ function PaymentDialog({
         className="space-y-4"
       >
         <h2 id={`${idPrefix}-title`} className="text-base font-semibold">
-          {gift ? "Offrir des mois" : "Paiement reçu"} · {agency.name}
+          {gift ? "Offrir des mois" : "Paiement reçu"}
+          <span className="block text-sm font-normal text-muted-foreground">{agency.name}</span>
         </h2>
         {gift && (
           <p className="text-sm text-muted-foreground">

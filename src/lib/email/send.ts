@@ -34,7 +34,7 @@ export async function sendEmail(message: Message): Promise<void> {
   if (mailpit) return sendToMailpit(mailpit, message);
 
   if (process.env.NODE_ENV === "production") throw new EmailError("non-configure");
-  console.info(`[e-mail non envoyé] À : ${message.to} · ${message.subject}\n${message.text}`);
+  console.info(`[e-mail non envoyé] À : ${message.to} – ${message.subject}\n${message.text}`);
 }
 
 async function sendWithResend(key: string, message: Message) {

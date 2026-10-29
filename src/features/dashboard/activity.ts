@@ -1,8 +1,8 @@
 // Activité récente du tableau de bord : les lignes identiques qui se suivent
 // (même auteur, même action, même objet) sont regroupées en une seule,
-// « a exporté une campagne en Excel · 6 fois », au lieu de remplir la liste.
+// « a exporté une campagne en Excel », 6 fois, au lieu de remplir la liste.
 // Dans un dossier, l'objet affiché est le dossier : quatre documents ajoutés
-// au même dossier donnent « a ajouté un document · Malak KACI · 4 fois ».
+// au même dossier donnent « a ajouté un document : Malak KACI », 4 fois.
 
 export type ActivityRow = {
   id: string;

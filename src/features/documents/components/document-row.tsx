@@ -109,7 +109,7 @@ export function DocumentRow({
             )}
           </p>
           <p className="text-xs text-muted-foreground">
-            {d.sizeLabel} · ajouté par {d.uploadedBy}, le {d.dateLabel}
+            Ajouté par {d.uploadedBy} le {d.dateLabel} ({d.sizeLabel})
           </p>
         </div>
       )}

@@ -14,7 +14,7 @@ const html = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Pas de connexion · ${BRAND.name}</title>
+<title>Pas de connexion – ${BRAND.name}</title>
 <style>
   :root { color-scheme: light dark; --bg: ${background}; --fg: #1e293b; --muted: #64748b; --card: #fff; --border: #e2e8f0; }
   @media (prefers-color-scheme: dark) {

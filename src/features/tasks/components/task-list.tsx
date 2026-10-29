@@ -144,7 +144,7 @@ function DueBadge({ dueDate, today }: { dueDate: string | null; today: string })
   if (!dueDate) return null;
   const label = dueLabel(dueDate, today);
   const state = dueState(dueDate, today);
-  if (state === "overdue") return <StatusPill tone="bad">En retard · {label}</StatusPill>;
+  if (state === "overdue") return <StatusPill tone="bad">En retard ({label})</StatusPill>;
   if (state === "today") return <StatusPill tone="warn">Aujourd&apos;hui</StatusPill>;
   return <span className="text-xs whitespace-nowrap text-muted-foreground">{label}</span>;
 }
@@ -185,7 +185,7 @@ function TaskRow({
     ? task.doneLabel
     : [showAssignee ? (mine ? "Moi" : task.assigneeName) : null, task.creatorName && `créée par ${task.creatorName}`]
         .filter(Boolean)
-        .join(" · ");
+        .join(", ");
 
   return (
     <li className="flex items-start gap-3 px-4 py-3 text-sm">
@@ -220,7 +220,7 @@ function TaskRow({
             >
               {task.caseLabel.name}
             </Link>
-            <span className="text-muted-foreground"> · {task.caseLabel.detail}</span>
+            {task.caseLabel.detail && <span className="text-muted-foreground">, {task.caseLabel.detail}</span>}
           </p>
         )}
         {task.details && (

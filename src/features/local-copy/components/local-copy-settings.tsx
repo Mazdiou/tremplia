@@ -95,8 +95,8 @@ export function LocalCopySettings() {
                 {dateTimeFormat.format(new Date(last.at))}
                 <span className="font-normal text-muted-foreground">
                   {" "}
-                  · {plural(last.copied + last.unchanged, "fichier", "fichiers")}
-                  {last.failed > 0 && `, ${plural(last.failed, "échec", "échecs")}`}
+                  ({plural(last.copied + last.unchanged, "fichier", "fichiers")}
+                  {last.failed > 0 && `, ${plural(last.failed, "échec", "échecs")}`})
                 </span>
               </>
             ) : (

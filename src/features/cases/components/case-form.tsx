@@ -425,10 +425,10 @@ export function CaseForm(
                 />
                 {!e["initialPayment.amount"] && (
                   <p className="text-xs text-muted-foreground">
-                    Vide si rien n&apos;est payé
+                    Vide si rien n&apos;est payé.
                     {agreedValue !== null && agreedValue > 0 && (
                       <>
-                        {" · "}
+                        {" "}
                         <button
                           type="button"
                           className="font-medium text-link underline-offset-2 hover:underline"

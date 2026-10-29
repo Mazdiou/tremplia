@@ -85,7 +85,7 @@ export function assignedTaskPush(
 ): PushPayload {
   return {
     title: `Tâche confiée par ${by}`,
-    body: preview(`${task.title} · ${studentName}`),
+    body: preview(`${task.title} (${studentName})`),
     url: `/cases/${caseId}/tasks`,
     tag: `task-${task.id}`,
   };
@@ -96,7 +96,7 @@ export function assignedTaskPush(
 export function assignedTasksPush(title: string, by: string, count: number): PushPayload {
   return {
     title: `Tâche confiée par ${by}`,
-    body: preview(`${title} · ${plural(count, "dossier")}`),
+    body: preview(`${title} (${plural(count, "dossier")})`),
     url: "/tasks",
     tag: `tasks-${Date.now()}`,
   };

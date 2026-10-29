@@ -90,7 +90,7 @@ describe("notifications de l'agence", () => {
       assignedTaskPush(CASE, { id: "t1", title: "Relevé de notes" }, "Amine Madiou", "BENALI Karim"),
     ).toEqual({
       title: "Tâche confiée par Amine Madiou",
-      body: "Relevé de notes · BENALI Karim",
+      body: "Relevé de notes (BENALI Karim)",
       url: `/cases/${CASE}/tasks`,
       tag: "task-t1",
     });
@@ -99,7 +99,7 @@ describe("notifications de l'agence", () => {
   it("même tâche pour plusieurs dossiers : une notification vers la page Tâches", () => {
     expect(assignedTasksPush("Relevé de notes", "Amine Madiou", 4)).toMatchObject({
       title: "Tâche confiée par Amine Madiou",
-      body: "Relevé de notes · 4 dossiers",
+      body: "Relevé de notes (4 dossiers)",
       url: "/tasks",
     });
   });

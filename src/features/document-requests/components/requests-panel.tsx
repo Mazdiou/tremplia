@@ -253,7 +253,7 @@ export function RequestsPanel({
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
                     {r.document
-                      ? `Reçue le ${r.document.dateLabel} · ${r.document.fileName} · ${r.document.sizeLabel}`
+                      ? `Reçue le ${r.document.dateLabel} : ${r.document.fileName} (${r.document.sizeLabel})`
                       : folderName(r.folderId)
                         ? `Sera rangée dans « ${folderName(r.folderId)} »`
                         : "Sera rangée sans dossier"}

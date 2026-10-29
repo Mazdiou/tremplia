@@ -47,7 +47,7 @@ export function AppPreview() {
                 Actif
               </span>
             </p>
-            <p className="truncate text-xs text-decor-muted">Campus France 2026/2027 · L3</p>
+            <p className="truncate text-xs text-decor-muted">Campus France 2026/2027, L3</p>
           </div>
         </div>
         {/* Étape du dossier */}
@@ -61,7 +61,7 @@ export function AppPreview() {
             ))}
           </span>
           <span className="truncate text-decor-muted">
-            3/5 · <span className="font-medium text-decor-foreground/85">Entretien</span>
+            Étape 3/5 : <span className="font-medium text-decor-foreground/85">Entretien</span>
           </span>
         </div>
         <div className="mt-3 space-y-1.5 text-[0.8125rem]">
@@ -94,7 +94,7 @@ export function AppPreview() {
         <p className="mt-2 text-3xl font-semibold tracking-tight text-decor-accent tabular-nums">
           J-47
         </p>
-        <p className="mt-0.5 text-xs text-decor-muted">Date limite DAP · 15 déc.</p>
+        <p className="mt-0.5 text-xs text-decor-muted">Date limite DAP : 15 déc.</p>
       </Glass>
 
       {/* Activité */}

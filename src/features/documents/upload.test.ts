@@ -22,7 +22,7 @@ describe("envoi des documents", () => {
     expect(uploadSummary(1, null)).toEqual({ text: "Document ajouté", error: false });
     expect(uploadSummary(3, null)).toEqual({ text: "3 documents ajoutés", error: false });
     expect(uploadSummary(2, "c.pdf : refusé")).toEqual({
-      text: "2 documents ajoutés · c.pdf : refusé",
+      text: "2 documents ajoutés. c.pdf : refusé",
       error: true,
     });
     expect(uploadSummary(0, "c.pdf : refusé")).toEqual({ text: "c.pdf : refusé", error: true });

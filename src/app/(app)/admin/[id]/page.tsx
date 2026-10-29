@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PageContainer, PageHeader, Panel, StatusPill } from "@/components/page-ui";
+import { MetaList, PageContainer, PageHeader, Panel, StatusPill } from "@/components/page-ui";
 import { GiftButton, PaymentButton } from "@/features/admin/components/payment-dialog";
 import { DeleteAgencyButton } from "@/features/admin/components/delete-agency-button";
 import { PaymentsHistory } from "@/features/admin/components/payments-history";
@@ -20,7 +20,7 @@ import { dayFormat } from "@/lib/dates";
 import { plural } from "@/lib/plural";
 import { isUuid } from "@/lib/validation";
 
-export const metadata: Metadata = { title: "Agence · Administration" };
+export const metadata: Metadata = { title: "Fiche de l'agence" };
 
 // Fiche d'une agence pour l'administrateur : abonnement, paiements et suppression
 export default async function AdminAgencyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -47,9 +47,11 @@ export default async function AdminAgencyPage({ params }: { params: Promise<{ id
           </Link>
         }
         title={agency.name}
-        subtitle={[agency.city, agency.ownerName && `patron : ${agency.ownerName}`, agency.phone]
-          .filter(Boolean)
-          .join(" · ")}
+        subtitle={
+          <MetaList
+            items={[agency.city, agency.ownerName && `Patron : ${agency.ownerName}`, agency.phone]}
+          />
+        }
         actions={
           exempt ? undefined : (
             <div className="flex flex-wrap gap-2">
@@ -74,7 +76,7 @@ export default async function AdminAgencyPage({ params }: { params: Promise<{ id
               {agency.state !== "expired" && !exempt && (
                 <span className="font-normal text-muted-foreground">
                   {" "}
-                  · {plural(n, "jour")}
+                  ({plural(n, "jour")})
                 </span>
               )}
             </dd>
@@ -86,7 +88,7 @@ export default async function AdminAgencyPage({ params }: { params: Promise<{ id
           <div>
             <dt className="text-muted-foreground">Activité</dt>
             <dd className="font-medium">
-              {plural(agency.cases, "dossier")} ·{" "}
+              {plural(agency.cases, "dossier")},{" "}
               {plural(agency.members, "membre actif", "membres actifs")}
             </dd>
           </div>

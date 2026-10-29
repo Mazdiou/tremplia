@@ -219,7 +219,7 @@ for (const file of routeFiles.sort(sortFr)) {
     ...(r.desc ? { desc: r.desc } : {}),
   };
   if (r.calls.length) {
-    node.details = r.calls.map((c) => `Appelle ${c.name}() · ${c.module.replace(/^src\//, "")}`);
+    node.details = r.calls.map((c) => `Appelle ${c.name}() dans ${c.module.replace(/^src\//, "")}`);
     node.module = modules.map((m) => m.replace(/^src\/features\//, "")).join(", ");
   }
   routeNodes.push(node);
@@ -515,7 +515,7 @@ for (const n of depsView.nodes.filter((x) => x.id.startsWith("pkg:"))) {
   const name = n.id.slice(4);
   const p = join(ROOT, "node_modules", name, "package.json");
   const installed = existsSync(p) ? JSON.parse(readFileSync(p, "utf8")).version : "?";
-  const sub = `${deps[name] ?? "?"} · installée ${installed}`;
+  const sub = `${deps[name] ?? "?"}, installée ${installed}`;
   if (n.sub !== sub) note(changes, `${name} : ${n.sub} → ${sub}`);
   n.sub = sub;
   if (!deps[name]) note(todo, `dépendance retirée de package.json : ${name}`);
@@ -553,6 +553,9 @@ for (const [k, v] of Object.entries(counts)) if (old[k] !== v) note(changes, `co
 data.meta.counts = counts;
 data.meta.commit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
 data.meta.generatedOn = new Date().toISOString().slice(0, 10);
+// Slogan de l'application (src/config/brand.ts)
+const tagline = read("src/config/brand.ts").match(/tagline: "([^"]+)"/)?.[1];
+if (tagline) data.meta.subtitle = tagline;
 const overview = view("overview");
 for (const n of overview.nodes) {
   n.label = n.label

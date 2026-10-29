@@ -79,7 +79,7 @@ export function ProgramRow({
           <MapPin className="mt-[3px] size-3.5 shrink-0" aria-hidden />
           <span className="min-w-0 break-words">
             {program.city}
-            {program.institution && ` · ${program.institution}`}
+            {program.institution && `, ${program.institution}`}
           </span>
         </p>
         {result && <div className="mt-1.5">{result}</div>}
@@ -280,7 +280,7 @@ export function ProgramsPanel({
         <div>
           <h2 className="text-base font-semibold">Formations visées</h2>
           <p className="text-sm text-muted-foreground">
-            Par ordre de préférence · {programs.length} / {MAX_PROGRAMS}
+            Par ordre de préférence ({programs.length} / {MAX_PROGRAMS})
           </p>
           {programs.length > 0 && (
             <p className="text-sm text-muted-foreground">

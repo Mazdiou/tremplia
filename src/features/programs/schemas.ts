@@ -92,7 +92,7 @@ export function programResult(value: string | null | undefined): ProgramResult {
     : "none";
 }
 
-// « 2 acceptées · 1 refusée · 1 sans réponse » (réponses présentes seulement)
+// « 2 acceptées, 1 refusée, 1 sans réponse » (réponses présentes seulement)
 export function programResultsSummary(results: string[]): string {
   const plural: Record<ProgramResult, [string, string]> = {
     accepted: ["acceptée", "acceptées"],
@@ -108,7 +108,7 @@ export function programResultsSummary(results: string[]): string {
       return n > 0 ? `${n} ${plural[r][n > 1 ? 1 : 0]}` : null;
     })
     .filter(Boolean)
-    .join(" · ");
+    .join(", ");
 }
 
 export const programResultSchema = z.object({

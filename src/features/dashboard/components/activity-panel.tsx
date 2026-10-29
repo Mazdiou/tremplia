@@ -6,7 +6,7 @@ import { Initials, relativeWhen } from "./dashboard-ui";
 import { fullName } from "@/lib/names";
 
 // Activité de l'équipe (patron) : qui a fait quoi, sur quel dossier
-// ou quelle campagne ; les répétitions sont regroupées (« · 6 fois »).
+// ou quelle campagne ; les répétitions sont regroupées (« 6 fois »).
 export function ActivityPanel({ entries }: { entries: ActivityEntry[] }) {
   return (
     <Panel
@@ -28,7 +28,7 @@ export function ActivityPanel({ entries }: { entries: ActivityEntry[] }) {
                 <span className="text-muted-foreground">{activityLabel(a.action, "agency")}</span>
                 {a.object && (
                   <>
-                    <span className="text-muted-foreground"> · </span>
+                    <span className="text-muted-foreground"> : </span>
                     {a.object.href ? (
                       <Link href={a.object.href} className="font-medium hover:text-link hover:underline">
                         {a.object.label}

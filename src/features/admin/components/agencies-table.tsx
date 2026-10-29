@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
-import { StatusPill } from "@/components/page-ui";
+import { MetaList, StatusPill } from "@/components/page-ui";
 import { Input } from "@/components/ui/input";
 import {
   STATE_LABELS,
@@ -82,8 +82,7 @@ export function AgenciesTable({ agencies }: { agencies: AgencyRow[] }) {
                   {a.name}
                 </Link>
                 <p className="truncate text-sm text-muted-foreground">
-                  {a.city}
-                  {a.ownerName && ` · ${a.ownerName}`} · {plural(a.cases, "dossier")}
+                  <MetaList items={[a.city, a.ownerName, plural(a.cases, "dossier")]} />
                 </p>
               </div>
               <StatusPill tone={STATE_TONES[a.state]}>{STATE_LABELS[a.state]}</StatusPill>

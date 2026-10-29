@@ -5,7 +5,7 @@ import { Pencil, Phone, UserRound } from "lucide-react";
 import { getAgency } from "@/features/agency/server/get-agency";
 import { isReadOnly } from "@/features/subscription/server/subscription";
 import { WhatsAppMenu } from "@/features/whatsapp/components/whatsapp-menu";
-import { StatusPill } from "@/components/page-ui";
+import { MetaList, StatusPill } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { requireMember } from "@/lib/auth/require-member";
 import {
@@ -101,9 +101,7 @@ export default async function CaseLayout({
     campaign?.name,
     labelOf(EDUCATION_LEVEL_LABELS, c.education_level),
     responsible ? `Responsable : ${responsible}` : "Sans responsable",
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  ];
 
   const title = (
     <div className="flex min-w-0 items-center gap-2">
@@ -156,7 +154,7 @@ export default async function CaseLayout({
               <div className="min-w-0">
                 {title}
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                  <span>{summary}</span>
+                  <MetaList items={summary} />
                   {groups.length > 0 && (
                     <ul className="flex flex-wrap gap-1.5" aria-label="Groupes">
                       {groups.map((g) => (
@@ -185,7 +183,7 @@ export default async function CaseLayout({
                   {c.secondary_contact_name && c.secondary_contact_phone && (
                     <li className="flex items-center gap-1">
                       <UserRound className="size-3.5 text-muted-foreground" aria-hidden />
-                      <span className="text-muted-foreground">{c.secondary_contact_name} ·</span>
+                      <span className="text-muted-foreground">{c.secondary_contact_name} :</span>
                       <a href={telHref(c.secondary_contact_phone)} className="hover:underline">
                         {c.secondary_contact_phone}
                       </a>

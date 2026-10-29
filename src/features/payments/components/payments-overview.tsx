@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StatusMessage, StatusPill, type ActionMessage } from "@/components/page-ui";
+import { MetaList, StatusMessage, StatusPill, type ActionMessage } from "@/components/page-ui";
 import { WhatsAppMenu, type WhatsAppMenuContext } from "@/features/whatsapp/components/whatsapp-menu";
 import {
   BALANCE_SORTS,
@@ -212,7 +212,7 @@ export function BalanceList({
                     {r.candidate}
                   </Link>
                   <p className="text-sm text-muted-foreground">
-                    {[r.campaign, r.responsible ?? "Sans responsable"].filter(Boolean).join(" · ")}
+                    <MetaList items={[r.campaign, r.responsible ?? "Sans responsable"]} />
                   </p>
                 </div>
                 <div className="w-44 max-sm:order-last max-sm:w-full">

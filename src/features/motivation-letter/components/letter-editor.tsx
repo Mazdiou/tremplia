@@ -146,7 +146,7 @@ export function LetterEditor({
             !message && dirty && "font-medium text-foreground",
           )}
         >
-          {message?.text ?? (dirty ? "Modifications non enregistrées · Ctrl + S pour enregistrer" : "")}
+          {message?.text ?? (dirty ? "Modifications non enregistrées. Ctrl + S pour enregistrer." : "")}
         </p>
         <span className="ml-auto text-muted-foreground tabular-nums">
           {content.length.toLocaleString("fr-FR")} / {MAX_LETTER_LENGTH.toLocaleString("fr-FR")}

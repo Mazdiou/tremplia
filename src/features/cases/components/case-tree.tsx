@@ -362,7 +362,7 @@ export function CaseTree({
         {filtersActive && !searching && (
           <div className="flex items-center justify-between border-y bg-muted/50 px-3 py-1.5 text-xs">
             <span aria-live="polite">
-              {plural(resultCount, "dossier actif", "dossiers actifs")} · filtres actifs
+              {plural(resultCount, "dossier actif", "dossiers actifs")} avec les filtres
             </span>
             <button
               type="button"

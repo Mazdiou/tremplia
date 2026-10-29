@@ -1,4 +1,4 @@
-import { Panel, StatusPill } from "@/components/page-ui";
+import { MetaList, Panel, StatusPill } from "@/components/page-ui";
 import { dayFormat } from "@/lib/dates";
 import {
   STATE_LABELS,
@@ -58,7 +58,7 @@ export async function SubscriptionPanel({
               <span className="font-medium">{formatEndDate(sub.endsAt)}</span>
               <span className="text-muted-foreground">
                 {" "}
-                · {plural(n, "jour restant", "jours restants")}
+                ({plural(n, "jour restant", "jours restants")})
               </span>
             </>
           )}
@@ -79,10 +79,9 @@ export async function SubscriptionPanel({
                   <span className={p.cancelled_at ? "line-through" : "font-medium"}>
                     {platformPaymentAmountLabel(p)}
                   </span>
-                  <span>
-                    {p.months} mois
-                    {p.method !== "gift" && ` · ${platformPaymentMethodLabel(p.method)}`}
-                  </span>
+                  <MetaList
+                    items={[`${p.months} mois`, p.method !== "gift" && platformPaymentMethodLabel(p.method)]}
+                  />
                   {p.cancelled_at && (
                     <span className="text-xs">Annulé{p.cancel_reason ? ` : ${p.cancel_reason}` : ""}</span>
                   )}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronRight, ListTodo } from "lucide-react";
-import { Panel, PanelLink, StatusPill } from "@/components/page-ui";
+import { MetaList, Panel, PanelLink, StatusPill } from "@/components/page-ui";
 import { displayName } from "@/lib/names";
 import { plural } from "@/lib/plural";
 import { dueLabel, dueState } from "@/features/tasks/due";
@@ -39,14 +39,14 @@ export function MyTasksPanel({
       title="Mes tâches"
       description={
         summary.length > 0 ? (
-          <span className="text-sm">
-            {summary.map((s, i) => (
-              <span key={s.text}>
-                {i > 0 && " · "}
-                <span className={s.className}>{s.text}</span>
+          <MetaList
+            className="text-sm"
+            items={summary.map((s) => (
+              <span key={s.text} className={s.className}>
+                {s.text}
               </span>
             ))}
-          </span>
+          />
         ) : undefined
       }
       actions={<PanelLink href="/tasks">Tout voir</PanelLink>}

@@ -12,6 +12,7 @@ import {
   platformPaymentMethodLabel,
 } from "@/features/subscription/subscription";
 import { TextField } from "@/components/form-fields";
+import { MetaList } from "@/components/page-ui";
 
 type HistoryPayment = {
   id: string;
@@ -74,9 +75,13 @@ export function PaymentsHistory({ payments }: { payments: HistoryPayment[] }) {
               {platformPaymentAmountLabel(p)}
             </span>
             <span className="min-w-0 flex-1">
-              {p.months} mois
-              {p.method !== "gift" && ` · ${platformPaymentMethodLabel(p.method)}`}
-              {p.note && <span className="text-muted-foreground"> · {p.note}</span>}
+              <MetaList
+                items={[
+                  `${p.months} mois`,
+                  p.method !== "gift" && platformPaymentMethodLabel(p.method),
+                  p.note && <span className="text-muted-foreground">{p.note}</span>,
+                ]}
+              />
               {p.cancelledAt ? (
                 <span className="block text-xs">Annulé : {p.cancelReason}</span>
               ) : (

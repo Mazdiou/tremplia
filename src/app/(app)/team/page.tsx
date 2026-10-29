@@ -128,7 +128,7 @@ export default async function TeamPage() {
     <PageContainer>
       <PageHeader
         title="Équipe"
-        subtitle={`${plural(active.length, "membre actif", "membres actifs")} · seul le patron gère l'équipe et les permissions`}
+        subtitle={`${plural(active.length, "membre actif", "membres actifs")}. Seul le patron gère l'équipe et les permissions.`}
       />
 
       <div className="space-y-5">

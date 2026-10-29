@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { StatusMessage, type ActionMessage } from "@/components/page-ui";
+import { CountBadge, StatusMessage, type ActionMessage } from "@/components/page-ui";
 import { cn } from "@/lib/utils";
 import { TaskList } from "@/features/tasks/components/task-list";
 import type { TaskItem, TaskMember } from "@/features/tasks/types";
@@ -61,7 +61,8 @@ export function TasksOverview({
                     className={cn("size-4 transition-transform", expanded && "rotate-90")}
                     aria-hidden
                   />
-                  {s.title} · {s.tasks.length}
+                  {s.title}
+                  <CountBadge count={s.tasks.length} className="ml-1" />
                 </button>
               </h2>
               {expanded && (

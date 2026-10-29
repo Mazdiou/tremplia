@@ -93,7 +93,7 @@ describe("campaignWorkbook", () => {
     expect(col("Niveau")).toBe("L3");
     expect(col("Étape")).toBe("2. Entretien");
     expect(col("Formations")).toBe(2);
-    expect(col("Réponses")).toBe("1 acceptée · 1 sans réponse");
+    expect(col("Réponses")).toBe("1 acceptée, 1 sans réponse");
     expect([col("Montant convenu"), col("Payé"), col("Reste à payer")]).toEqual([100000, 40000, 60000]);
   });
 

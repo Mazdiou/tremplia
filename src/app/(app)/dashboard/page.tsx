@@ -6,6 +6,7 @@ import { getSubscription, isReadOnly } from "@/features/subscription/server/subs
 import { daysLeft } from "@/features/subscription/subscription";
 import { EmptyState } from "@/components/empty-state";
 import {
+  MetaList,
   NewCaseLink,
   PageContainer,
   PageHeader,
@@ -453,14 +454,18 @@ export default async function DashboardPage({
       <PageHeader
         title={`Bonjour ${u.member.firstName}`}
         subtitle={
-          <span className="first-letter:uppercase">
-            {todayLabel} ·{" "}
-            {selected
-              ? selected.name
-              : campaigns.length > 1
-                ? `${campaigns.length} campagnes actives`
-                : campaigns[0].name}
-          </span>
+          <MetaList
+            items={[
+              <span key="day" className="inline-block first-letter:uppercase">
+                {todayLabel}
+              </span>,
+              selected
+                ? selected.name
+                : campaigns.length > 1
+                  ? `${campaigns.length} campagnes actives`
+                  : campaigns[0].name,
+            ]}
+          />
         }
         actions={
           <>

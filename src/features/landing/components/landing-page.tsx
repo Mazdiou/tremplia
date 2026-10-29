@@ -169,7 +169,7 @@ function TeamMock() {
       ))}
       <div className="mt-1 flex items-center gap-2 border-t px-3 pt-3 pb-1 text-xs text-muted-foreground">
         <span className="size-1.5 rounded-full bg-emerald-500" />
-        Yasmine a ajouté un document · il y a 2 min
+        Yasmine a ajouté un document il y a 2 min
       </div>
     </div>
   );

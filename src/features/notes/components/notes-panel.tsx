@@ -123,7 +123,7 @@ export function NotesPanel({
           />
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs text-muted-foreground">
-              {draft.length} / {MAX_NOTE_LENGTH} · Ctrl + Entrée pour ajouter
+              {draft.length} / {MAX_NOTE_LENGTH}. Ctrl + Entrée pour ajouter.
             </span>
             <Button
               size="sm"
@@ -159,7 +159,7 @@ export function NotesPanel({
                   <p className="font-medium">{n.authorName}</p>
                   <p className="text-xs text-muted-foreground">
                     {n.dateLabel}
-                    {n.editedLabel && ` · ${n.editedLabel}`}
+                    {n.editedLabel && `, ${n.editedLabel}`}
                   </p>
                 </div>
 

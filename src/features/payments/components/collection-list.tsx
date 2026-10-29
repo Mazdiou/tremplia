@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { StatusPill } from "@/components/page-ui";
+import { MetaList, StatusPill } from "@/components/page-ui";
 import type { groupByDay } from "@/features/payments/overview";
 import { paymentMethodLabel } from "@/features/payments/schemas";
 import { formatLongDate } from "@/lib/dates";
@@ -38,8 +38,9 @@ export function CollectionList({ days }: { days: ReturnType<typeof groupByDay> }
                       {r.candidate}
                     </Link>
                     <p className="text-sm text-muted-foreground">
-                      {paymentMethodLabel(r.method)} · enregistré par {r.recordedBy}
-                      {r.campaign && <> · {r.campaign}</>}
+                      <MetaList
+                        items={[paymentMethodLabel(r.method), `Enregistré par ${r.recordedBy}`, r.campaign]}
+                      />
                     </p>
                     {r.note && <p className="mt-0.5 text-sm break-words">{r.note}</p>}
                     {cancelled && (

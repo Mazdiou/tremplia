@@ -44,7 +44,7 @@ describe("réponses des établissements", () => {
   it("compte chaque réponse, au singulier ou au pluriel", () => {
     expect(
       programResultsSummary(["accepted", "accepted", "rejected", "none", "waitlisted", "sent"]),
-    ).toBe("2 acceptées · 1 en liste d'attente · 1 refusée · 1 envoyée · 1 sans réponse");
+    ).toBe("2 acceptées, 1 en liste d'attente, 1 refusée, 1 envoyée, 1 sans réponse");
     expect(programResultsSummary(["none", "none"])).toBe("2 sans réponse");
     expect(programResultsSummary([])).toBe("");
   });
