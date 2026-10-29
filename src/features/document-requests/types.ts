@@ -1,3 +1,13 @@
+// Pièce demandée telle que la voit le candidat dans son espace. Acceptée :
+// par un membre, ou document verrouillé par le patron (il ne peut plus la
+// changer dans les deux cas).
+export type StudentRequestItem = {
+  id: string;
+  label: string;
+  status: "pending" | "sent" | "accepted";
+  document: { fileName: string; sizeLabel: string; dateLabel: string } | null;
+};
+
 // Pièce demandée telle que l'affiche l'onglet Documents de l'agence
 
 export type RequestStatus = "pending" | "received" | "accepted";

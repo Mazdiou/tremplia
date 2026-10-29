@@ -59,10 +59,12 @@ export function usePhotoPages() {
 export type ComposeMode = "single" | "each";
 
 // Assemblage des photos avant l'envoi : ordre des pages, pages retirées,
-// un seul PDF ou un PDF par photo, nom du document
+// un seul PDF ou un PDF par photo, nom du document. Pour une pièce
+// demandée au candidat (`piece`) : toujours un seul PDF, au nom de la pièce.
 export function PhotoComposer({
   pages,
-  folderName,
+  folderName = null,
+  piece,
   busy,
   progress,
   onAdd,
@@ -73,7 +75,9 @@ export function PhotoComposer({
 }: {
   pages: PhotoPage[];
   // Dossier de rangement qui recevra les documents (null : « Sans dossier »)
-  folderName: string | null;
+  folderName?: string | null;
+  // Nom de la pièce que ces photos composent (espace du candidat)
+  piece?: string;
   busy: boolean;
   // Étape en cours, affichée pendant la préparation et l'envoi
   progress: string | null;
@@ -87,7 +91,7 @@ export function PhotoComposer({
   const [name, setName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const several = pages.length > 1;
-  const effectiveMode = several ? mode : "single";
+  const effectiveMode = several && !piece ? mode : "single";
   const full = pages.length >= MAX_PHOTOS_PER_PDF;
 
   return (
@@ -100,7 +104,9 @@ export function PhotoComposer({
           {plural(pages.length, "photo", "photos")} à transformer en PDF
         </h2>
         <p className="text-xs text-muted-foreground">
-          Rangement : {folderName ? `« ${folderName} »` : "sans dossier"}
+          {piece
+            ? `Une page par photo, dans l'ordre ci-dessous`
+            : `Rangement : ${folderName ? `« ${folderName} »` : "sans dossier"}`}
         </p>
       </div>
 
@@ -174,7 +180,7 @@ export function PhotoComposer({
         }}
       />
 
-      {several && (
+      {several && !piece && (
         <fieldset className="flex flex-wrap gap-2" disabled={busy}>
           <legend className="sr-only">Nombre de documents</legend>
           {(
@@ -211,7 +217,11 @@ export function PhotoComposer({
           onSubmit(effectiveMode, name);
         }}
       >
-        {effectiveMode === "single" ? (
+        {piece ? (
+          <p className="flex-1 basis-56 text-xs text-muted-foreground">
+            Les photos deviennent un seul PDF «&nbsp;{piece}&nbsp;».
+          </p>
+        ) : effectiveMode === "single" ? (
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -231,7 +241,7 @@ export function PhotoComposer({
         </Button>
         <Button type="submit" size="sm" disabled={busy || pages.length === 0}>
           {busy && <Loader2 className="animate-spin" aria-hidden />}
-          {effectiveMode === "single" ? "Créer le PDF" : "Créer les PDF"}
+          {piece ? "Envoyer" : effectiveMode === "single" ? "Créer le PDF" : "Créer les PDF"}
         </Button>
       </form>
 

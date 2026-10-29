@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import type { z } from "zod";
 import { ApiError, dbError, rateLimited } from "@/lib/api-errors";
 import { logActivity } from "@/lib/audit/log-activity";
@@ -10,7 +11,10 @@ import { checkReceivedPdf } from "@/features/documents/server/received-file";
 import { notifyStudentDocument } from "@/features/notifications/server/events";
 import type { StudentSession } from "@/features/student/server/session";
 import { reportError } from "@/lib/report-error";
+import { shortDateFormat } from "@/lib/dates";
+import { formatSize } from "@/features/documents/format";
 import type { studentAddDocumentSchema, studentUploadSchema } from "../schemas";
+import type { StudentRequestItem } from "../types";
 
 // Pièces envoyées par le candidat depuis son espace. Les fonctions SQL
 // revérifient sa session (accès ouvert, même génération) au moment
@@ -39,6 +43,75 @@ async function removeFiles(
   if (paths.length === 0) return;
   const { error } = await storageOf(admin).remove(paths);
   if (error) reportError(`[${label}] fichier`, error.name);
+}
+
+type StudentRow = {
+  id: string;
+  label: string;
+  accepted_at: string | null;
+  document: {
+    original_file_name: string;
+    size_bytes: number;
+    created_at: string;
+    locked_at: string | null;
+  } | null;
+};
+
+// Pièces demandées au candidat, dans l'ordre de la demande. Mis en cache
+// pour un affichage : l'en-tête (onglet, pastille) et la page les partagent.
+export const listStudentRequests = cache(
+  async (agencyId: string, caseId: string): Promise<StudentRequestItem[]> => {
+    const { data, error } = await createAdminClient()
+      .from("case_document_requests")
+      .select(
+        "id, label, accepted_at, document:documents!case_document_requests_document_fk(original_file_name, size_bytes, created_at, locked_at)",
+      )
+      .eq("case_id", caseId)
+      .eq("agency_id", agencyId)
+      .order("created_at", { ascending: true });
+    if (error) reportError("[student document requests]", error.code);
+
+    return ((data ?? []) as unknown as StudentRow[]).map((r) => ({
+      id: r.id,
+      label: r.label,
+      status: !r.document
+        ? "pending"
+        : r.accepted_at || r.document.locked_at
+          ? "accepted"
+          : "sent",
+      document: r.document && {
+        fileName: r.document.original_file_name,
+        sizeLabel: formatSize(r.document.size_bytes),
+        dateLabel: shortDateFormat.format(new Date(r.document.created_at)),
+      },
+    }));
+  },
+);
+
+// Lien signé (une minute) vers le document envoyé pour une pièce : le
+// candidat ne voit que ce qu'il a envoyé lui-même
+export async function studentDocumentUrl(session: StudentSession, requestId: string) {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("case_document_requests")
+    .select("document:documents!case_document_requests_document_fk(storage_path, sent_by_student)")
+    .eq("id", requestId)
+    .eq("case_id", session.caseId)
+    .eq("agency_id", session.agencyId)
+    .maybeSingle();
+  if (error) throw dbError("student documents open", error);
+  const doc = data?.document as unknown as { storage_path: string; sent_by_student: boolean } | null;
+  if (!doc?.sent_by_student) throw new ApiError(404, "Aucun document envoyé pour cette pièce");
+
+  const { data: signed, error: signError } = await storageOf(admin).createSignedUrl(
+    doc.storage_path,
+    60,
+  );
+  if (signError || !signed) {
+    reportError("[student documents open]", signError?.name ?? "erreur");
+    throw new ApiError(500, "Impossible d'ouvrir le document");
+  }
+  return signed.signedUrl;
 }
 
 // Étape 1 de l'envoi : URL signée vers le stockage pour une pièce demandée

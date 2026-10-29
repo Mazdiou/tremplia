@@ -21,6 +21,7 @@ import { PushKeeper } from "@/features/notifications/components/push-keeper";
 import { pushPublicKey } from "@/features/notifications/server/push";
 import { StudentNotificationsButton } from "@/features/notifications/components/student-notifications-button";
 import { telHref } from "@/lib/phone";
+import { listStudentRequests } from "@/features/document-requests/server/student";
 
 export const metadata: Metadata = {
   title: "Mon dossier",
@@ -30,19 +31,24 @@ export const metadata: Metadata = {
 };
 
 // Espace du candidat : lecture seule de ses informations, de sa lettre de
-// motivation et de ses formations.
+// motivation et de ses formations ; envoi des pièces demandées par l'agence.
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const session = await requireStudent();
   const publicKey = pushPublicKey();
   const owner = `case:${session.caseId}`;
-  const [{ c, agency }, review, hasContent, fingerprint, unread, readOnly] = await Promise.all([
+  const [{ c, agency }, review, hasContent, fingerprint, unread, readOnly, requests] = await Promise.all([
     getStudentCase(),
     readReview(session.agencyId, session.caseId),
     hasContentToReview(session.agencyId, session.caseId),
     contentFingerprint(session.agencyId, session.caseId),
     studentUnreadCount(session),
     isReadOnly(session.agencyId),
+    listStudentRequests(session.agencyId, session.caseId),
   ]);
+  const pieces =
+    requests.length > 0
+      ? { toSend: readOnly ? 0 : requests.filter((r) => r.status === "pending").length }
+      : null;
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -81,7 +87,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
             </p>
           </div>
           <div className="mt-3">
-            <StudentTabs unreadMessages={unread} />
+            <StudentTabs unreadMessages={unread} pieces={pieces} />
           </div>
         </div>
       </header>
