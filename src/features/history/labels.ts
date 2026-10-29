@@ -45,6 +45,11 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "document_folder.created": "a créé un dossier de documents",
   "document_folder.renamed": "a renommé un dossier de documents",
   "document_folder.deleted": "a supprimé un dossier de documents",
+  "document_request.created": "a demandé une pièce à un candidat",
+  "document_request.updated": "a modifié une pièce demandée",
+  "document_request.deleted": "a retiré une pièce demandée",
+  "document_request.accepted": "a accepté une pièce envoyée par un candidat",
+  "document_request.unaccepted": "a annulé l'acceptation d'une pièce",
   "note.created": "a ajouté une note",
   "note.updated": "a modifié une note",
   "note.deleted": "a supprimé une note",
@@ -73,6 +78,9 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "student.approved": "a validé sa lettre et ses formations",
   "student.changes_requested": "a demandé une modification",
   "student.message_sent": "a envoyé un message",
+  "student.document_sent": "a envoyé une pièce demandée",
+  "student.document_replaced": "a remplacé une pièce envoyée",
+  "student.document_removed": "a retiré une pièce envoyée",
 };
 
 const CASE_LABELS: Record<ActivityAction, string> = {
@@ -88,6 +96,8 @@ const CASE_LABELS: Record<ActivityAction, string> = {
   "student_access.disabled": "a fermé l'accès du candidat",
   "student_access.regenerated": "a créé un nouveau code candidat",
   "message.sent": "a écrit au candidat",
+  "document_request.created": "a demandé une pièce au candidat",
+  "document_request.accepted": "a accepté une pièce du candidat",
   "payment.agreed_amount_set": "a fixé le montant convenu",
   "document.archive_downloaded": "a téléchargé tous les documents (ZIP)",
   "document.copied_locally": "a copié les documents sur son ordinateur",

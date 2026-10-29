@@ -8,6 +8,7 @@ import {
   agencyMessagePush,
   assignedTaskPush,
   assignedTasksPush,
+  studentDocumentPush,
   studentMessagePush,
   studentReviewPush,
   taskDigestPush,
@@ -67,6 +68,29 @@ export function notifyStudentReview(
     });
     if (to.length === 0) return;
     await sendPush(to, studentReviewPush(caseId, await studentName(admin, agencyId, caseId), review));
+  });
+}
+
+// Pièce envoyée ou remplacée par un candidat (mêmes destinataires que ses
+// messages)
+export function notifyStudentDocument(
+  agencyId: string,
+  caseId: string,
+  label: string,
+  replaced: boolean,
+) {
+  pushInBackground("push student document", async () => {
+    const admin = createAdminClient();
+    const to = await targets(admin, "push_targets_case", {
+      p_agency_id: agencyId,
+      p_case_id: caseId,
+      p_kind: "student_document",
+    });
+    if (to.length === 0) return;
+    await sendPush(
+      to,
+      studentDocumentPush(caseId, await studentName(admin, agencyId, caseId), label, replaced),
+    );
   });
 }
 

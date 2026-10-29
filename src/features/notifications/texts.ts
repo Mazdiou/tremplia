@@ -61,6 +61,22 @@ export function studentReviewPush(
       };
 }
 
+// Pièce envoyée (ou remplacée) par le candidat : son nom, la pièce, vers
+// l'onglet Documents
+export function studentDocumentPush(
+  caseId: string,
+  studentName: string,
+  label: string,
+  replaced: boolean,
+): PushPayload {
+  return {
+    title: `${studentName} ${replaced ? "a remplacé une pièce" : "a envoyé une pièce"}`,
+    body: preview(label),
+    url: `/cases/${caseId}/documents`,
+    tag: `document-${caseId}`,
+  };
+}
+
 export function assignedTaskPush(
   caseId: string,
   task: { id: string; title: string },

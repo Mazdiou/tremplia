@@ -20,7 +20,9 @@ type Row = {
   folder_id: string | null;
   locked_at: string | null;
   created_at: string;
-  // Auteur, par le lien du document (vide : compte supprimé)
+  // Envoyé par le candidat depuis son espace (sans auteur parmi les membres)
+  sent_by_student: boolean;
+  // Auteur, par le lien du document (vide : envoyé par le candidat)
   uploader: { first_name: string } | null;
 };
 
@@ -59,7 +61,7 @@ export default async function DocumentsPage({
     supabase
       .from("documents")
       .select(
-        "id, name, size_bytes, folder_id, locked_at, created_at, uploader:profiles!documents_uploaded_by_fk(first_name)",
+        "id, name, size_bytes, folder_id, locked_at, created_at, sent_by_student, uploader:profiles!documents_uploaded_by_fk(first_name)",
       )
       .eq("case_id", id)
       .order("created_at", { ascending: false }),
@@ -76,7 +78,7 @@ export default async function DocumentsPage({
     id: r.id,
     name: r.name,
     sizeLabel: formatSize(r.size_bytes),
-    uploadedBy: r.uploader?.first_name ?? "un ancien membre",
+    uploadedBy: r.sent_by_student ? "le candidat" : (r.uploader?.first_name ?? "un ancien membre"),
     dateLabel: shortDateFormat.format(new Date(r.created_at)),
     locked: r.locked_at !== null,
     folderId: r.folder_id,

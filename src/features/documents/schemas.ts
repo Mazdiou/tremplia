@@ -23,22 +23,28 @@ export const folderNameSchema = z
   .min(1, "Saisissez un nom pour le dossier")
   .max(80, "Le nom ne peut pas dépasser 80 caractères");
 
+// Nom et taille du fichier annoncés avant l'envoi (le fichier reçu est
+// revérifié par le serveur)
+export const pdfFileNameSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(255)
+  .refine((n) => /\.pdf$/i.test(n), "Seuls les fichiers PDF sont acceptés");
+
+export const fileSizeSchema = z
+  .number()
+  .int()
+  .min(1, "Ce fichier est vide")
+  .max(MAX_DOCUMENT_BYTES, "Le fichier dépasse 10 Mo");
+
 // Corps des requêtes
 
 // Étape 1 de l'envoi : demande d'une URL signée
 export const uploadRequestSchema = z.object({
   name: documentNameSchema,
-  originalFileName: z
-    .string()
-    .trim()
-    .min(1)
-    .max(255)
-    .refine((n) => /\.pdf$/i.test(n), "Seuls les fichiers PDF sont acceptés"),
-  sizeBytes: z
-    .number()
-    .int()
-    .min(1, "Ce fichier est vide")
-    .max(MAX_DOCUMENT_BYTES, "Le fichier dépasse 10 Mo"),
+  originalFileName: pdfFileNameSchema,
+  sizeBytes: fileSizeSchema,
 });
 
 // Étape 2 de l'envoi : enregistrement du fichier reçu

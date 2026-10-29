@@ -41,6 +41,11 @@ export const ACTIVITY_ACTIONS = [
   "document_folder.created",
   "document_folder.renamed",
   "document_folder.deleted",
+  "document_request.created",
+  "document_request.updated",
+  "document_request.deleted",
+  "document_request.accepted",
+  "document_request.unaccepted",
   "note.created",
   "note.updated",
   "note.deleted",
@@ -70,6 +75,9 @@ export const ACTIVITY_ACTIONS = [
   "student.approved",
   "student.changes_requested",
   "student.message_sent",
+  "student.document_sent",
+  "student.document_replaced",
+  "student.document_removed",
 ] as const;
 
 export type ActivityAction = (typeof ACTIVITY_ACTIONS)[number];
@@ -83,6 +91,7 @@ export type ActivityTarget =
   | "external_account"
   | "document"
   | "document_folder"
+  | "document_request"
   | "case_note"
   | "motivation_letter"
   | "case_program"

@@ -6,6 +6,7 @@ import {
   messageFrom,
   ofName,
   preview,
+  studentDocumentPush,
   studentMessagePush,
   studentReviewPush,
   taskDigestPush,
@@ -71,6 +72,18 @@ describe("notifications de l'agence", () => {
     });
   });
 
+  it("pièce du candidat : envoyée ou remplacée, vers l'onglet Documents", () => {
+    expect(studentDocumentPush(CASE, "BENALI Karim", "Passeport", false)).toEqual({
+      title: "BENALI Karim a envoyé une pièce",
+      body: "Passeport",
+      url: `/cases/${CASE}/documents`,
+      tag: `document-${CASE}`,
+    });
+    expect(studentDocumentPush(CASE, "BENALI Karim", "Passeport", true).title).toBe(
+      "BENALI Karim a remplacé une pièce",
+    );
+  });
+
   it("tâche confiée : qui, quoi, pour quel candidat", () => {
     expect(
       assignedTaskPush(CASE, { id: "t1", title: "Relevé de notes" }, "Amine Madiou", "BENALI Karim"),
@@ -119,6 +132,7 @@ describe("adresses ouvertes au toucher", () => {
     for (const p of [
       studentMessagePush(CASE, "X", "y"),
       studentReviewPush(CASE, "X", { decision: "approved" }),
+      studentDocumentPush(CASE, "X", "y", false),
       assignedTaskPush(CASE, { id: "t", title: "y" }, "Z", "X"),
       taskDigestPush(1, 1),
       agencyMessagePush("A", "y"),
