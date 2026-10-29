@@ -123,7 +123,10 @@ export function NotesPanel({
           />
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs text-muted-foreground">
-              {draft.length} / {MAX_NOTE_LENGTH}. Ctrl + Entrée pour ajouter.
+              <span className="tabular-nums">
+                {draft.length} / {MAX_NOTE_LENGTH}
+              </span>
+              <span className="ml-3 max-sm:hidden">Ctrl + Entrée pour ajouter</span>
             </span>
             <Button
               size="sm"
