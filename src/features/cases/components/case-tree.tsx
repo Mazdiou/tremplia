@@ -320,7 +320,7 @@ export function CaseTree({
               onClick={() => (selecting ? exitSelection() : setSelecting(true))}
               aria-pressed={selecting}
               aria-label="Sélectionner des dossiers"
-              title="Sélectionner des dossiers (étape, responsable, tâche)"
+              title="Sélectionner des dossiers"
               className={cn(selecting && "bg-accent text-accent-foreground")}
             >
               <CheckSquare />

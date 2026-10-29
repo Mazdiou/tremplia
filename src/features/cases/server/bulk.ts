@@ -54,7 +54,7 @@ export async function applyBulkAction(member: Member, input: BulkCasesInput): Pr
     if (error) {
       throw dbError("cases bulk task", error, {
         P0002: "Un des dossiers est introuvable",
-        "22023": "Ce membre ne peut pas recevoir de tâche (compte désactivé ?)",
+        "22023": "Ce membre est désactivé. Choisissez quelqu'un d'autre.",
         "23514": "Tâche invalide",
         "54000": `Un des dossiers a déjà ${MAX_OPEN_TASKS} tâches à faire`,
       });
@@ -83,7 +83,7 @@ export async function applyBulkAction(member: Member, input: BulkCasesInput): Pr
     if (error) {
       throw dbError("cases bulk assign", error, {
         P0002: "Un des dossiers est introuvable",
-        "22023": "Responsable invalide (compte inactif ou d'une autre agence)",
+        "22023": "Ce responsable n'est plus actif. Choisissez-en un autre.",
       });
     }
     const rows = (data ?? []) as { changed_id: string; previous_assignee: string | null }[];

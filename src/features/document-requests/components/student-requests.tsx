@@ -113,7 +113,7 @@ export function StudentRequests({
     const skipped = photos.add(images);
     setComposing(r.id);
     if (skipped > 0) {
-      say(r.id, `${MAX_PHOTOS_PER_PDF} photos au plus par pièce : ${skipped} laissée(s) de côté.`, true);
+      say(r.id, `${MAX_PHOTOS_PER_PDF} photos au plus par pièce : ${plural(skipped, "photo laissée", "photos laissées")} de côté.`, true);
     }
   }
 
@@ -179,18 +179,7 @@ export function StudentRequests({
     <div className="space-y-4">
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">
-          {agencyName} vous demande {plural(requests.length, "pièce")}. Envoyez chacune en PDF ou en
-          photos (10&nbsp;Mo maximum par pièce).{" "}
-          {!readOnly && !allAccepted && (
-            <>
-              <span className="sm:hidden">
-                «&nbsp;Envoyer&nbsp;» vous propose aussi de la prendre en photo.
-              </span>
-              <span className="max-sm:hidden">
-                Vous pouvez aussi glisser un fichier sur la pièce.
-              </span>
-            </>
-          )}
+          {agencyName} vous demande {plural(requests.length, "pièce")}, en PDF ou en photo.
         </p>
         <div className="flex items-center gap-3">
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" aria-hidden>
@@ -354,7 +343,7 @@ export function StudentRequests({
                   onAdd={(files) => {
                     const skipped = photos.add(files.filter(isImageFile));
                     if (skipped > 0) {
-                      say(r.id, `${MAX_PHOTOS_PER_PDF} photos au plus par pièce : ${skipped} laissée(s) de côté.`, true);
+                      say(r.id, `${MAX_PHOTOS_PER_PDF} photos au plus par pièce : ${plural(skipped, "photo laissée", "photos laissées")} de côté.`, true);
                     }
                   }}
                   onRemove={(id) => {

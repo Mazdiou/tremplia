@@ -3,7 +3,7 @@ import { authorizeCase } from "@/features/cases/server/authorize-case";
 import { moveDocumentSchema } from "@/features/documents/schemas";
 import { moveDocument } from "@/features/documents/server/documents";
 
-// Déplacer un document vers un dossier, ou vers « Sans dossier » (folderId
+// Déplacer un document vers un dossier, ou vers « Sans catégorie » (folderId
 // null). Tout membre actif ; un document verrouillé ne bouge pas.
 export function POST(
   request: Request,

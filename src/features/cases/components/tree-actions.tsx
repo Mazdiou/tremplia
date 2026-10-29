@@ -161,7 +161,7 @@ export function GroupActions({
         title={`Supprimer le groupe « ${groupName} » ?`}
         body={
           error ??
-          "Les dossiers de ce groupe ne sont pas supprimés : ils perdent seulement ce classement."
+          "Les dossiers ne sont pas supprimés, seulement retirés de ce groupe."
         }
         confirmLabel="Supprimer le groupe"
         danger

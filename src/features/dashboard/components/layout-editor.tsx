@@ -252,10 +252,7 @@ export function LayoutEditor({
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Faites glisser un widget par sa poignée ou utilisez les flèches (au clavier : Espace
-        pour saisir, flèches pour déplacer, Espace pour déposer). Un widget en demi-largeur
-        resté seul sur sa ligne prendra toute la largeur. Votre disposition ne change que
-        pour vous.
+        Faites glisser les widgets pour les réorganiser. Cette disposition ne change que pour vous.
       </p>
 
       {items.length === 0 && (

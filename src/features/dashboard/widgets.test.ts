@@ -55,7 +55,7 @@ describe("layoutSchema", () => {
 });
 
 describe("droits et campagnes", () => {
-  it("Paiements : patron ou droit « Voir la caisse » ; Activité : patron", () => {
+  it("Paiements : patron ou droit « Voir les paiements » ; Activité : patron", () => {
     const employee = { isOwner: false, seesPayments: false };
     expect(allowedWidget("payments", employee)).toBe(false);
     expect(allowedWidget("payments", { ...employee, seesPayments: true })).toBe(true);

@@ -12,7 +12,7 @@ type Action = "archive" | "unarchive" | "delete";
 const DIALOGS: Record<Action, { title: string; body: string; confirm: string }> = {
   archive: {
     title: "Archiver cette campagne ?",
-    body: "Elle disparaît de l'arbre (sauf réglage contraire), ne reçoit plus de dossier ni de groupe, et ses réglages sont figés. Ses dossiers restent consultables et modifiables. Vous pourrez la réactiver.",
+    body: "Elle disparaît de la liste et ses réglages sont figés. Ses dossiers restent modifiables, et vous pourrez la réactiver.",
     confirm: "Archiver",
   },
   unarchive: {

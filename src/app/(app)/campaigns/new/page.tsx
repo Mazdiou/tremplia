@@ -35,8 +35,7 @@ export default async function NewCampaignPage() {
         title="Nouvelle campagne"
         subtitle={
           <>
-            Vous pourrez tout modifier ensuite. Le tarif, les plateformes et les étapes
-            proposés viennent des{" "}
+            Le tarif, les plateformes et les étapes sont repris des{" "}
             <Link href="/settings#campagnes" className="underline hover:text-foreground">
               réglages de l&apos;agence
             </Link>

@@ -36,7 +36,7 @@ export default function StudentLoginPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight">Espace candidat</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Entrez le code transmis par votre agence pour suivre votre dossier et échanger avec votre conseiller.
+          Entrez le code transmis par votre agence.
         </p>
       </div>
 
@@ -72,7 +72,7 @@ export default function StudentLoginPage() {
       </form>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        Vous n&apos;avez pas de code ? Demandez-le à votre conseiller.
+        Pas de code ? Demandez-le à votre agence.
       </p>
     </AuthShell>
   );

@@ -309,7 +309,7 @@ export function AccountsEditor({
                 error={errors[`externalAccounts.${i}.password`]}
                 hint={
                   passwordHint && !a.password
-                    ? "Le mot de passe de l'ancien dossier n'est jamais repris : saisissez-le à nouveau."
+                    ? "Le mot de passe n'est pas repris : saisissez-le à nouveau."
                     : undefined
                 }
                 className="@md:col-span-2"
@@ -330,8 +330,7 @@ export function AccountsEditor({
         />
       )}
       <p className="text-xs text-muted-foreground">
-        Les mots de passe sont chiffrés avant d&apos;être enregistrés et
-        n&apos;apparaissent jamais dans les listes ni dans le journal.
+        Les mots de passe sont chiffrés et ne s&apos;affichent jamais dans les listes.
       </p>
     </fieldset>
   );

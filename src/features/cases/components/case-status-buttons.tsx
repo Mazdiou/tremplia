@@ -23,7 +23,7 @@ type Action = {
 };
 
 const HIDDEN_FROM_TREE =
-  "Le dossier disparaît de l'arbre. Vous pourrez le rouvrir à tout moment.";
+  "Il disparaît de la liste. Vous pourrez le rouvrir à tout moment.";
 
 const ACTIONS: Record<CaseStatus, Action[]> = {
   active: [

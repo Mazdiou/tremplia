@@ -11,7 +11,7 @@ import { notifyAssignedTask } from "@/features/notifications/server/events";
 // le journal ni dans les logs du serveur. Les droits (auteur, responsable,
 // patron) sont appliqués par les fonctions SQL ; voir la migration case_tasks.
 
-const ASSIGNEE_ERROR = "Ce membre ne peut pas recevoir de tâche (compte désactivé ?)";
+const ASSIGNEE_ERROR = "Ce membre est désactivé. Choisissez quelqu'un d'autre.";
 const LIMIT_ERROR = `Ce dossier a déjà ${MAX_OPEN_TASKS} tâches à faire`;
 
 // La tâche doit appartenir à ce dossier
@@ -90,7 +90,7 @@ export async function updateTask(
   });
   if (error) {
     throw dbError("tasks update", error, {
-      "42501": "Seuls l'auteur, le responsable ou le patron modifient cette tâche",
+      "42501": "Seuls son auteur, la personne à qui elle est confiée et le patron peuvent modifier cette tâche",
       P0002: "Tâche introuvable",
       "22023": ASSIGNEE_ERROR,
       "23514": "Tâche invalide",
@@ -141,7 +141,7 @@ export async function setTaskDone(
   });
   if (error) {
     throw dbError("tasks done", error, {
-      "42501": "Seuls l'auteur, le responsable ou le patron cochent cette tâche",
+      "42501": "Seuls son auteur, la personne à qui elle est confiée et le patron peuvent cocher cette tâche",
       P0002: "Tâche introuvable",
       "54000": LIMIT_ERROR,
     });
@@ -166,7 +166,7 @@ export async function deleteTask(auth: AuthorizedCase, caseId: string, taskId: s
   });
   if (error) {
     throw dbError("tasks delete", error, {
-      "42501": "Seuls l'auteur ou le patron suppriment cette tâche",
+      "42501": "Seuls son auteur et le patron peuvent supprimer cette tâche",
       P0002: "Tâche introuvable",
     });
   }

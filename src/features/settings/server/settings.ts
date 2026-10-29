@@ -121,7 +121,7 @@ export async function changeOwnPassword(member: Member, input: PasswordChangeInp
 
   const { data: account, error: readError } = await admin.auth.admin.getUserById(member.userId);
   const email = account.user?.email;
-  if (readError || !email) throw new ApiError(500, "Changement impossible");
+  if (readError || !email) throw new ApiError(500, "Le mot de passe n'a pas pu être changé. Réessayez.");
 
   // Vérification sur un client à part, sans session gardée : celle de la
   // requête n'est pas touchée
@@ -147,7 +147,7 @@ export async function changeOwnPassword(member: Member, input: PasswordChangeInp
       throw new ApiError(429, "Trop d'essais. Réessayez dans quelques minutes.");
     }
     reportError("[password check]", checkError.code ?? checkError.status);
-    throw new ApiError(500, "Changement impossible");
+    throw new ApiError(500, "Le mot de passe n'a pas pu être changé. Réessayez.");
   }
   // La session ouverte pour la vérification ne sert plus
   await checker.auth.signOut({ scope: "local" });
@@ -159,7 +159,7 @@ export async function changeOwnPassword(member: Member, input: PasswordChangeInp
     const weak = weakPasswordError(updateError);
     if (weak) throw weak;
     reportError("[password update]", updateError.code ?? updateError.status);
-    throw new ApiError(500, "Changement impossible");
+    throw new ApiError(500, "Le mot de passe n'a pas pu être changé. Réessayez.");
   }
 
   await logActivity(admin, {

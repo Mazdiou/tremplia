@@ -32,7 +32,7 @@ export const WIDGETS = {
   },
   stale: {
     label: "Dossiers sans nouvelles",
-    description: "Dossiers actifs auxquels personne de l'agence n'a touché depuis 14 jours.",
+    description: "Dossiers actifs sans activité depuis 14 jours.",
     defaultSize: "half",
   },
   teamTasks: {

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, ListTodo, Plus } from "lucide-react";
 import { StatusMessage, type ActionMessage } from "@/components/page-ui";
 import { Button } from "@/components/ui/button";
+import { BRAND } from "@/config/brand";
 import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 import { TaskForm } from "@/features/tasks/components/task-form";
@@ -82,8 +83,7 @@ export function TasksPanel({
           <ListTodo className="mx-auto size-8 text-muted-foreground" aria-hidden />
           <p className="mt-3 text-sm font-medium">Aucune tâche à faire</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Notez ici ce qu&apos;il reste à faire pour ce candidat, avec une date et la personne
-            qui s&apos;en charge.
+            Notez ce qu&apos;il reste à faire : {BRAND.name} vous le rappelle le jour venu.
           </p>
         </div>
       ) : (

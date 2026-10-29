@@ -33,11 +33,9 @@ export default function ForgotPasswordPage() {
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-success-bg text-success">
             <MailCheck className="size-7" strokeWidth={1.8} />
           </span>
-          <h1 className="mt-6 text-2xl font-semibold tracking-tight">Vérifiez votre boîte mail</h1>
+          <h1 className="mt-6 text-2xl font-semibold tracking-tight">Consultez vos e-mails</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Si un compte existe pour <span className="font-medium text-foreground">{sentTo}</span>,
-            un e-mail vient de partir avec un lien pour choisir un nouveau mot de passe. Le lien
-            est valable 1 heure.
+            Si un compte existe pour <span className="font-medium text-foreground">{sentTo}</span>, vous allez recevoir un lien valable 1 heure.
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Rien reçu ? Regardez dans les courriers indésirables.
@@ -66,8 +64,7 @@ export default function ForgotPasswordPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight">Mot de passe oublié</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          Indiquez l&apos;adresse e-mail de votre compte : nous vous envoyons un lien pour
-          choisir un nouveau mot de passe.
+          Recevez par e-mail un lien pour choisir un nouveau mot de passe.
         </p>
       </div>
 

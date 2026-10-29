@@ -86,7 +86,7 @@ export async function addDocument(
     throw dbError("documents add", error, {
       "23505": "Ce document est déjà ajouté",
       // Le dossier de rangement n'est pas un dossier de ce candidat
-      "23503": "Dossier introuvable",
+      "23503": "Cette catégorie n'existe plus",
     });
   }
 
@@ -162,7 +162,7 @@ export async function deleteDocument(auth: AuthorizedCase, caseId: string, docId
   });
 }
 
-// Vers un dossier de rangement, ou vers « Sans dossier » (folderId null)
+// Vers un dossier de rangement, ou vers « Sans catégorie » (folderId null)
 export async function moveDocument(
   auth: AuthorizedCase,
   caseId: string,
@@ -181,7 +181,7 @@ export async function moveDocument(
   if (error) {
     throw dbError("documents move", error, {
       "55006": LOCKED("déplacé"),
-      "23503": "Dossier introuvable",
+      "23503": "Cette catégorie n'existe plus",
     });
   }
 

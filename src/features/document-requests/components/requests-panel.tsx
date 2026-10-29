@@ -184,8 +184,7 @@ export function RequestsPanel({
 
       {requests.length === 0 && !adding && (
         <p className="border-t px-3 py-3 text-xs text-muted-foreground">
-          Listez les pièces que le candidat doit vous envoyer (passeport, relevés de notes…). Il
-          les envoie depuis son espace, en PDF ou en photos, et ne peut envoyer que celles-ci.
+          Demandez au candidat les pièces à envoyer depuis son espace : passeport, relevés de notes…
         </p>
       )}
 
@@ -256,7 +255,7 @@ export function RequestsPanel({
                       ? `Reçue le ${r.document.dateLabel} : ${r.document.fileName} (${r.document.sizeLabel})`
                       : folderName(r.folderId)
                         ? `Sera rangée dans « ${folderName(r.folderId)} »`
-                        : "Sera rangée sans dossier"}
+                        : "Sera rangée sans catégorie"}
                   </p>
                 </div>
 
@@ -299,7 +298,7 @@ export function RequestsPanel({
                           size="xs"
                           disabled={rowBusy}
                           onClick={() => void setAccepted(r, true)}
-                          title="Le candidat ne pourra plus remplacer ni retirer cette pièce"
+                          title="Le candidat ne pourra plus la changer"
                         >
                           <Check /> Accepter
                         </Button>
@@ -311,7 +310,7 @@ export function RequestsPanel({
                           disabled={rowBusy}
                           onClick={() => void setAccepted(r, false)}
                           aria-label={`Ne plus accepter ${r.label}`}
-                          title="Ne plus accepter : le candidat pourra la remplacer"
+                          title="Le candidat pourra à nouveau la changer"
                         >
                           <Undo2 />
                         </Button>
@@ -327,7 +326,7 @@ export function RequestsPanel({
                               setRow({ id: r.id, mode: "edit" });
                             }}
                             aria-label={`Modifier ${r.label}`}
-                            title="Renommer ou changer le dossier de rangement"
+                            title="Modifier la pièce"
                           >
                             <Pencil />
                           </Button>
@@ -415,7 +414,7 @@ function RequestForm({
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           maxLength={80}
-          placeholder="Nom de la pièce (ex. Passeport)"
+          placeholder="Ex. : Passeport"
           aria-label="Nom de la pièce"
           disabled={busy}
           className={cn(fieldClass, "min-w-48 flex-1")}
@@ -428,7 +427,7 @@ function RequestForm({
             disabled={busy}
             className={cn(fieldClass, "max-w-48 text-foreground")}
           >
-            <option value={NO_FOLDER}>Sans dossier</option>
+            <option value={NO_FOLDER}>Sans catégorie</option>
             {folders.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.name}

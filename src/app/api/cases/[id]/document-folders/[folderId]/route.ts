@@ -17,7 +17,7 @@ export function PATCH(request: Request, { params }: Ctx) {
 }
 
 // Supprimer un dossier de documents (patron seulement) : ses documents
-// passent dans « Sans dossier »
+// passent dans « Sans catégorie »
 export function DELETE(_request: Request, { params }: Ctx) {
   return safely("document folders delete", async () => {
     const { id, folderId } = await params;

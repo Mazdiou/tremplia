@@ -54,7 +54,7 @@ export function MyTasksPanel({
       {rows.length === 0 ? (
         <div className="flex items-center gap-3 px-5 py-5 text-sm text-muted-foreground">
           <ListTodo className="size-5 shrink-0" aria-hidden />
-          Aucune tâche à faire. Ajoutez-en depuis l&apos;onglet Tâches d&apos;un dossier.
+          Aucune tâche à faire.
         </div>
       ) : (
         <>

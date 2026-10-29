@@ -39,7 +39,7 @@ export function CashflowPanel({
   return (
     <Panel
       title="Encaissements par mois"
-      description="Six derniers mois, paiements annulés exclus."
+      description="Sur les six derniers mois."
       actions={
         <PanelLink href={href} icon={Wallet}>
           Détail

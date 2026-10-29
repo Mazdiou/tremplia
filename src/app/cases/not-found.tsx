@@ -12,7 +12,7 @@ export default function CaseNotFound() {
       <EmptyState
         icon={FolderSearch}
         title="Dossier introuvable"
-        description="Ce dossier n'existe pas ou n'appartient pas à votre agence. Vérifiez le lien, ou choisissez un dossier dans la liste."
+        description="Il a peut-être été supprimé, ou le lien est incorrect."
         action={
           <Link href="/cases" className={buttonVariants({ variant: "outline" })}>
             Retour aux dossiers

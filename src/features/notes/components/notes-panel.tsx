@@ -111,7 +111,7 @@ export function NotesPanel({
             value={draft}
             maxLength={MAX_NOTE_LENGTH}
             disabled={adding}
-            placeholder="Écrivez une note sur cette candidature. Elle sera visible par toute l'agence."
+            placeholder="Une note pour toute l'équipe…"
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -150,7 +150,7 @@ export function NotesPanel({
           />
           <p className="mt-3 text-sm font-medium">Aucune note pour ce dossier</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Les notes aident toute l&apos;équipe à suivre cette candidature.
+            Partagez avec l&apos;équipe ce qu&apos;il faut savoir sur ce dossier.
           </p>
         </div>
       ) : (

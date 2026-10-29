@@ -95,8 +95,8 @@ export function BulkActionsBar({
     setMessage({
       text:
         changed === 0
-          ? "Aucun changement : les dossiers étaient déjà ainsi."
-          : `${plural(changed, "dossier mis à jour", "dossiers mis à jour")}.`,
+          ? "Ces dossiers étaient déjà à jour."
+          : plural(changed, "dossier mis à jour", "dossiers mis à jour"),
       error: false,
     });
     onClear();
@@ -245,7 +245,7 @@ export function BulkActionsBar({
             onSaved={() => {
               setTaskToday(null);
               setMessage({
-                text: `Tâche ajoutée à ${plural(created.current, "dossier")}.`,
+                text: `Tâche ajoutée à ${plural(created.current, "dossier")}`,
                 error: false,
               });
               onClear();

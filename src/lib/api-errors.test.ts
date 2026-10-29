@@ -16,6 +16,6 @@ describe("erreurs de la base", () => {
   it("une erreur inconnue devient une erreur serveur, sans détail", () => {
     const e = dbError("test", { code: "XX000" });
     expect(e.status).toBe(500);
-    expect(e.message).toBe("Erreur serveur");
+    expect(e.message).toBe("Une erreur est survenue. Réessayez dans un instant.");
   });
 });

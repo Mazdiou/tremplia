@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { ListTodo } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { PageContainer, PageHeader } from "@/components/page-ui";
 import { getShellUser } from "@/components/shell/app-shell";
+import { buttonVariants } from "@/components/ui/button";
+import { BRAND } from "@/config/brand";
 import { listCampaigns } from "@/features/campaigns/server/queries";
 import { STATUS_SUFFIXES } from "@/features/cases/labels";
 import { isReadOnly } from "@/features/subscription/server/subscription";
@@ -96,14 +99,13 @@ export default async function TasksPage({
     { key: "done", title: `Faites ces ${DONE_DAYS} derniers jours`, tasks: done, collapsed: true },
   ];
 
-  const whoLabel =
-    who === "moi" ? "Mes tâches" : who === "equipe" ? "Toute l'équipe" : members.find((m) => m.id === who)?.name;
+  
 
   return (
     <PageContainer>
       <PageHeader
         title="Tâches"
-        subtitle={tasks ? `${whoLabel}, ${plural(open.length, "tâche")} à faire` : whoLabel}
+        subtitle={tasks && open.length > 0 ? `${plural(open.length, "tâche")} à faire` : undefined}
         actions={
           <TasksFilters
             who={who}
@@ -123,7 +125,12 @@ export default async function TasksPage({
         <EmptyState
           icon={ListTodo}
           title={who === "moi" ? "Aucune tâche pour vous" : "Aucune tâche"}
-          description="Une tâche note ce qu'il reste à faire sur un dossier, et pour quand. Ajoutez-la depuis l'onglet Tâches du dossier, ou pour plusieurs dossiers à la fois avec la sélection de la liste."
+          description={`Notez ce qu'il reste à faire sur un dossier : ${BRAND.name} vous le rappelle le jour venu.`}
+          action={
+            <Link href="/cases" className={buttonVariants({ variant: "outline" })}>
+              Ouvrir les dossiers
+            </Link>
+          }
         />
       ) : (
         <TasksOverview

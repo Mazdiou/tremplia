@@ -48,8 +48,7 @@ export function CopyTip() {
     <div className="flex items-start gap-3 rounded-xl border bg-muted/40 px-4 py-3 text-sm">
       <MonitorDown className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
       <p className="min-w-0 flex-1">
-        Astuce : retrouvez ces PDF rangés comme ici (campagne, groupe, candidat) dans un dossier
-        de votre ordinateur, prêts à déposer sur les plateformes.{" "}
+        Gardez une copie de ces PDF sur votre ordinateur, prête à déposer sur les plateformes.{" "}
         <Link href="/settings#ordinateur" className="font-medium whitespace-nowrap text-link hover:underline">
           Activer la copie
         </Link>

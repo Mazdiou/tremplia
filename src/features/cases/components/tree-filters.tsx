@@ -20,7 +20,7 @@ const DISPLAY_OPTIONS = [
   { key: "showLevel", label: "Afficher le niveau d'études" },
   { key: "showPayments", label: "Afficher le reste à payer" },
   { key: "showStage", label: "Afficher l'étape" },
-  { key: "showClosed", label: "Afficher clos et abandonnés" },
+  { key: "showClosed", label: "Afficher les dossiers clos et abandonnés" },
   { key: "showArchived", label: "Afficher les campagnes archivées" },
 ] as const satisfies readonly { key: keyof UiPrefs; label: string }[];
 

@@ -95,7 +95,7 @@ export function CampaignSettingsForm({
     <form onSubmit={submit} noValidate className="space-y-8">
       <FormSection
         title="Général"
-        description="Le nom de la campagne, son tarif et les plateformes proposées pour les comptes des candidats."
+        description="Nom, tarif et plateformes proposées aux candidats."
       >
         <TextField
           id="campaign-name"
@@ -128,7 +128,7 @@ export function CampaignSettingsForm({
 
       <FormSection
         title="Dates"
-        description="Échéances de la campagne : la plus proche s'affiche sur le tableau de bord."
+        description="La plus proche s'affiche sur le tableau de bord."
       >
         {draft.dates.length === 0 ? (
           <p className="text-sm text-muted-foreground">Aucune date pour le moment.</p>
@@ -248,7 +248,7 @@ export function CampaignSettingsForm({
       {!isEdit && (
         <FormSection
           title="Groupes de départ"
-          description="Pour ranger les dossiers (DAP, Hors-DAP, École…). Modifiables ensuite."
+          description="Pour ranger les dossiers : DAP, Hors-DAP, École…"
         >
           {groups.length === 0 && (
             <p className="text-sm text-muted-foreground">
@@ -291,7 +291,7 @@ export function CampaignSettingsForm({
       {!isEdit && (
         <FormSection
           title="Étapes des dossiers"
-          description="Le parcours d'un dossier, dans l'ordre : chaque nouveau dossier commence à la première. Modifiables ensuite."
+          description="Le parcours d'un dossier, dans l'ordre."
         >
           <StageListEditor idPrefix="stage" value={stages} onChange={setStages} errors={errors} />
         </FormSection>

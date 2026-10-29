@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DocItem, FolderItem } from "./documents-panel";
 
-// Clé de la section « Sans dossier » (et valeur correspondante du menu Déplacer)
+// Clé de la section « Sans catégorie » (et valeur correspondante du menu Déplacer)
 export const NO_FOLDER = "none";
 // Type propre au glisser-déposer d'un document de cette page
 export const DOC_DRAG_TYPE = "application/x-tremplia-doc";
@@ -131,7 +131,7 @@ export function DocumentRow({
             }}
             className={cn(fieldClass, "max-w-48")}
           >
-            <option value={NO_FOLDER}>Sans dossier</option>
+            <option value={NO_FOLDER}>Sans catégorie</option>
             {folders.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.name}
@@ -171,7 +171,7 @@ export function DocumentRow({
                 disabled={busy}
                 onClick={() => actions.startMove(d)}
                 aria-label={`Déplacer ${d.name}`}
-                title="Déplacer vers un dossier (ou glissez le document)"
+                title="Changer de catégorie"
               >
                 <FolderInput />
               </Button>

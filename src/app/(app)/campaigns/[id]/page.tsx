@@ -162,8 +162,7 @@ export default async function CampaignPage({
 
       {archived && (
         <p className="rounded-xl border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
-          Campagne archivée : elle ne reçoit plus de dossier et ses réglages
-          sont figés. Ses dossiers restent consultables et modifiables.
+          Cette campagne est archivée. Ses dossiers restent modifiables.
         </p>
       )}
 
@@ -201,7 +200,7 @@ export default async function CampaignPage({
         <div className="grid items-start gap-5 md:grid-cols-2">
           <Panel title="Dates">
             {items.length === 0 ? (
-              <p className="px-5 py-4 text-sm text-muted-foreground">Aucune date.</p>
+              <p className="px-5 py-4 text-sm text-muted-foreground">Aucune date</p>
             ) : (
               <ul>
                 {items.map((d) => (
@@ -225,7 +224,7 @@ export default async function CampaignPage({
           <div className="space-y-5">
             <Panel title="Informations">
               {infos.length === 0 ? (
-                <p className="px-5 py-4 text-sm text-muted-foreground">Aucune information.</p>
+                <p className="px-5 py-4 text-sm text-muted-foreground">Aucune information</p>
               ) : (
                 <dl>
                   {infos.map((i) => (
@@ -266,8 +265,8 @@ export default async function CampaignPage({
         title="Étapes des dossiers"
         description={
           archived
-            ? "Figées tant que la campagne est archivée. L'étape de chaque dossier reste modifiable."
-            : "Le parcours d'un dossier, dans l'ordre. Nombre de dossiers actifs à chaque étape."
+            ? "Figées tant que la campagne est archivée."
+            : "Le parcours d'un dossier et le nombre de dossiers actifs à chaque étape."
         }
       >
         <CampaignStages campaignId={id} stages={stages} canEdit={canEdit} />
@@ -278,7 +277,7 @@ export default async function CampaignPage({
         description={
           archived
             ? "Figés tant que la campagne est archivée."
-            : "Pour ranger les dossiers. Supprimer un groupe ne supprime aucun dossier."
+            : "Pour ranger les dossiers de la campagne."
         }
       >
         <GroupsManager campaignId={id} groups={groups} readOnly={archived || readOnly} />

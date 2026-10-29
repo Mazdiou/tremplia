@@ -89,8 +89,7 @@ export function EmployeePermissions({
     >
       <legend className="sr-only">Permissions de {name}</legend>
       <p className="text-xs text-muted-foreground">
-        En plus de ce que tout employé peut faire (dossiers, documents, enregistrer un paiement…).
-        L&apos;équipe et les réglages restent réservés au patron.
+        En plus des dossiers, documents et paiements, accessibles à tous.
       </p>
       <div className="grid gap-2 sm:grid-cols-3">
         {PERMISSIONS.map((p) => {

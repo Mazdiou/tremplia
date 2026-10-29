@@ -59,7 +59,7 @@ export default async function CasesHomePage() {
     <PageContainer width="narrow">
       <PageHeader
         title="Dossiers"
-        subtitle="Choisissez un dossier dans l'arbre."
+        subtitle="Choisissez un dossier dans la liste."
         actions={!readOnly && <NewCaseLink />}
       />
       {active.map((campaign) => {

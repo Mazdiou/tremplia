@@ -54,7 +54,7 @@ export default function LoginPage() {
       <LoginSwitch active="agency" />
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Bon retour parmi nous
+          Content de vous revoir
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Connectez-vous pour retrouver les dossiers de votre agence.
@@ -69,8 +69,7 @@ export default function LoginPage() {
             className="space-y-3 rounded-lg border border-amber-300/60 bg-amber-100 px-3 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
           >
             <p>
-              Confirmez d&apos;abord votre adresse e-mail : cliquez sur le lien reçu à
-              l&apos;inscription (pensez aux courriers indésirables).
+              Confirmez d&apos;abord votre adresse e-mail avec le lien reçu à l&apos;inscription. Pensez à regarder dans les courriers indésirables.
             </p>
             <ResendConfirmation email={unconfirmed} />
           </div>

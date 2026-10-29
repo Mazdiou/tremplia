@@ -110,11 +110,7 @@ export default async function CampaignsPage() {
     <PageContainer width="wide">
       <PageHeader
         title="Campagnes"
-        subtitle={
-          manages
-            ? "Créez vos campagnes ou partez d'un modèle préconfiguré."
-            : "Consultation seulement : le patron gère les campagnes, vous gérez les groupes."
-        }
+        subtitle={manages ? undefined : "Vous pouvez gérer les groupes. Le reste est réservé au patron."}
         actions={
           canCreate && (
             <>
@@ -135,8 +131,8 @@ export default async function CampaignsPage() {
           title="Aucune campagne"
           description={
             manages
-              ? "Créez votre première campagne ou importez un modèle préconfiguré ci-dessous."
-              : "Le patron de l'agence doit créer une campagne."
+              ? "Une campagne regroupe les dossiers d'une procédure, avec ses dates et ses étapes."
+              : "Le patron n'a pas encore créé de campagne."
           }
         />
       ) : (
@@ -175,10 +171,9 @@ export default async function CampaignsPage() {
       {canCreate && (
         <section id="modeles" className="scroll-mt-6 space-y-3 border-t pt-6">
           <div>
-            <h2 className="text-lg font-semibold">Modèles préconfigurés</h2>
+            <h2 className="text-lg font-semibold">Modèles</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              L&apos;import crée une copie de la campagne dans votre agence :
-              vous pouvez ensuite tout modifier.
+              Partez d&apos;une campagne prête à l&apos;emploi, puis adaptez-la.
             </p>
           </div>
           <TemplateGallery

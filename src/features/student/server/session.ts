@@ -74,6 +74,6 @@ export const getStudentSession = cache(async (): Promise<StudentSession | null> 
 // Pour les routes API du candidat : refuse (401) au lieu de renvoyer null
 export async function requireApiStudent(): Promise<StudentSession> {
   const session = await getStudentSession();
-  if (!session) throw new ApiError(401, "Votre session a expiré : reconnectez-vous");
+  if (!session) throw new ApiError(401, "Vous avez été déconnecté. Reconnectez-vous.");
   return session;
 }

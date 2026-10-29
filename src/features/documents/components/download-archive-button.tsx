@@ -59,7 +59,7 @@ export function DownloadArchiveButton({
       size="sm"
       disabled={progress !== null}
       onClick={() => void download()}
-      title="Télécharger tous les documents dans une archive ZIP"
+      title="Télécharger en ZIP"
     >
       {progress ? (
         <>

@@ -54,7 +54,7 @@ export async function saveExternalAccount(
       "23505": "Ce dossier a déjà un compte pour cette plateforme",
       "23514": "Identifiant et mot de passe requis pour un compte existant",
       "22023": "Un compte existant ne redevient pas « à créer »",
-      "54000": "Limite de 10 comptes par dossier atteinte",
+      "54000": "10 comptes au maximum par dossier",
       P0002: "Dossier introuvable",
     });
   }
@@ -105,7 +105,7 @@ export async function revealPassword(
     targetType: "external_account",
     targetId: accountId,
   });
-  if (!logged) throw new ApiError(503, "Journal indisponible, réessayez dans un instant");
+  if (!logged) throw new ApiError(503, "Action impossible pour le moment. Réessayez dans un instant.");
 
   try {
     return decryptSecret(secret.password_encrypted as string, aad(member.agencyId, accountId));

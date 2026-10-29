@@ -270,7 +270,7 @@ function AccountRow({
 
       {password !== null && (
         <p className="pb-1 text-xs text-muted-foreground">
-          Cet affichage est enregistré dans le journal de l&apos;agence.
+          Cette consultation est notée dans l&apos;historique.
         </p>
       )}
       {error && (
@@ -406,8 +406,7 @@ function AccountForm({
             {wasExisting
               ? "Laissez vide pour garder le mot de passe actuel. "
               : ""}
-            Il est chiffré avant d&apos;être enregistré et n&apos;apparaît jamais
-            dans les listes ni dans le journal.
+            Il est chiffré et ne s&apos;affiche jamais dans les listes.
           </p>
         </div>
       )}

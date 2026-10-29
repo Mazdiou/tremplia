@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Banknote, Wallet } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { PageContainer, PageHeader } from "@/components/page-ui";
+import { buttonVariants } from "@/components/ui/button";
 import { getAgency } from "@/features/agency/server/get-agency";
 import { ExcelDownloadButton } from "@/features/export/components/export-campaign-button";
 import { CollectionList } from "@/features/payments/components/collection-list";
@@ -130,11 +131,7 @@ export default async function PaymentsPage({
     <PageContainer>
       <PageHeader
         title="Paiements"
-        subtitle={
-          member.isOwner
-            ? "Tous les paiements de l'agence, visibles par vous et les membres autorisés."
-            : "Tous les paiements de l'agence, accès accordé par le patron."
-        }
+        
         actions={
           rowCount > 0 && (
             <ExcelDownloadButton url={query ? `/api/payments/export?${query}` : "/api/payments/export"} />
@@ -152,13 +149,13 @@ export default async function PaymentsPage({
           <EmptyState
             icon={Wallet}
             title="Aucune campagne"
-            description="Les paiements apparaîtront ici dès que vos dossiers en auront."
+            description="Les paiements de vos dossiers apparaîtront ici."
           />
         ) : (
           <EmptyState
             icon={Wallet}
             title="Aucune campagne active"
-            description="Choisissez « Toutes, archivées comprises » dans le filtre de campagne pour voir les paiements des campagnes archivées."
+            description="Pour les campagnes archivées, choisissez « Toutes, archivées comprises » dans le filtre."
           />
         )
       ) : filters.view === "encaissements" ? (
@@ -223,8 +220,7 @@ function Collections({
         </div>
         {totals.cancelledCount > 0 && (
           <p className="px-1 text-xs text-muted-foreground">
-            {plural(totals.cancelledCount, "paiement annulé", "paiements annulés")} sur la période :
-            affichés barrés, non comptés.
+            {plural(totals.cancelledCount, "paiement annulé", "paiements annulés")} sur la période, barrés et non comptés.
           </p>
         )}
       </section>
@@ -233,15 +229,19 @@ function Collections({
         <EmptyState
           icon={Banknote}
           title="Aucun encaissement sur cette période"
-          description="Les paiements s'enregistrent dans l'onglet Paiements de chaque dossier, ou avec « Encaisser » dans la vue Restes à payer."
+          description="Les paiements enregistrés dans les dossiers apparaîtront ici."
+          action={
+            <Link href="/payments?vue=restes" className={buttonVariants({ variant: "outline" })}>
+              Voir les restes à payer
+            </Link>
+          }
         />
       ) : (
         <>
           <CollectionList days={shown.days} />
           {shown.rows < rows.length && (
             <p className="px-1 text-sm text-muted-foreground">
-              {shown.rows} paiements affichés sur {rows.length}. Les totaux et l&apos;export Excel
-              portent sur toute la période.
+              {shown.rows} paiements affichés sur {rows.length}. Les totaux et l&apos;export comptent toute la période.
             </p>
           )}
         </>
@@ -276,7 +276,7 @@ function Balances({
           hint={`sur ${formatDA(rows.reduce((n, r) => n + r.agreed, 0))} convenus`}
         />
         <Figure
-          label="Rien payé encore"
+          label="Sans aucun paiement"
           value={String(totals.neverPaid)}
           hint={totals.neverPaid > 1 ? "candidats" : "candidat"}
         />
@@ -293,14 +293,13 @@ function Balances({
           <BalanceList rows={shown} readOnly={readOnly} agency={agency} />
           {shown.length < rows.length && (
             <p className="px-1 text-sm text-muted-foreground">
-              {shown.length} candidats affichés sur {rows.length}. Les totaux et l&apos;export Excel
-              portent sur tous.
+              {shown.length} candidats affichés sur {rows.length}. Les totaux et l&apos;export les comptent tous.
             </p>
           )}
         </>
       )}
       <p className="px-1 text-xs text-muted-foreground">
-        Dossiers abandonnés et dossiers sans montant convenu non compris.
+        Hors dossiers abandonnés et sans montant convenu.
       </p>
     </>
   );

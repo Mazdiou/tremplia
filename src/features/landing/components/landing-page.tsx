@@ -43,12 +43,12 @@ const FEATURES = [
   {
     icon: FileText,
     title: "Documents en ordre",
-    text: "Chaque pièce classée dans son dossier, verrouillable par le patron. Vos photos deviennent des PDF, le dossier complet part en un ZIP.",
+    text: "Chaque pièce classée dans sa catégorie, verrouillable par le patron. Vos photos deviennent des PDF, le dossier complet part en un ZIP.",
   },
   {
     icon: GraduationCap,
     title: "Formations et réponses",
-    text: "Les vœux du candidat classés par ordre de préférence, et la réponse de chaque établissement dès qu'elle arrive.",
+    text: "Les formations visées par ordre de préférence, et la réponse de chaque établissement dès qu'elle arrive.",
   },
   {
     icon: NotebookPen,

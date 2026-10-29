@@ -25,8 +25,8 @@ export default async function StudentProgramsPage() {
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
         {programs.length > 1
-          ? `${plural(programs.length, "formation")}, de votre préférée à la moins souhaitée.`
-          : "1 formation."}
+          ? `${plural(programs.length, "formation")}, par ordre de préférence.`
+          : "1 formation"}
       </p>
       <ol className="divide-y rounded-xl border bg-card">
         {programs.map((p, i) => (

@@ -62,7 +62,7 @@ export async function createCase(member: Member, input: CreateCaseInput) {
     if (duplicates.length > 0) {
       throw new ApiError(
         409,
-        "Un dossier avec ce nom, ce prénom et cette date de naissance existe déjà dans cette campagne",
+        "Ce candidat a déjà un dossier dans cette campagne",
         { code: "possible_duplicate", duplicates },
       );
     }
@@ -110,7 +110,7 @@ export async function createCase(member: Member, input: CreateCaseInput) {
       "55000": "Cette campagne est archivée : elle ne reçoit plus de dossier",
       "23503": "Campagne ou groupe introuvable",
       "23505": "Un seul compte par plateforme",
-      "22023": "Données invalides (responsable inactif ?)",
+      "22023": "Le responsable choisi n'est plus actif.",
       "22003": "Le paiement dépasse le montant convenu",
     });
   }
@@ -183,7 +183,7 @@ export async function updateCase(auth: AuthorizedCase, caseId: string, input: Up
     });
     if (error) {
       throw dbError("cases assign", error, {
-        "22023": "Responsable invalide (compte inactif ou d'une autre agence)",
+        "22023": "Ce responsable n'est plus actif. Choisissez-en un autre.",
       });
     }
     await logCaseActivity(auth, caseId, {

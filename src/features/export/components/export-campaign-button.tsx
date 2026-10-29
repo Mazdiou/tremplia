@@ -36,7 +36,7 @@ export function ExcelDownloadButton({ url }: { url: string }) {
       const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: unknown } | null;
-        setError(typeof data?.error === "string" ? data.error : `Erreur ${res.status}`);
+        setError(typeof data?.error === "string" ? data.error : "Une erreur est survenue. Réessayez dans un instant.");
         return;
       }
       saveFile(await res.blob(), fileNameOf(res));

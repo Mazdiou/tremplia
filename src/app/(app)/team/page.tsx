@@ -128,13 +128,13 @@ export default async function TeamPage() {
     <PageContainer>
       <PageHeader
         title="Équipe"
-        subtitle={`${plural(active.length, "membre actif", "membres actifs")}. Seul le patron gère l'équipe et les permissions.`}
+        subtitle={plural(active.length, "membre actif", "membres actifs")}
       />
 
       <div className="space-y-5">
         <Panel
           title="Membres"
-          description="Un employé qui part se désactive : il ne peut plus se connecter, et tout ce qu'il a fait reste dans l'historique."
+          description="Un employé désactivé ne peut plus se connecter. Son historique est conservé."
         >
           <ul>{active.map(row)}</ul>
         </Panel>
@@ -147,7 +147,7 @@ export default async function TeamPage() {
                   Anciens membres ({former.length})
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
-                  Comptes désactivés. Seul un compte sans historique peut être supprimé.
+                  Seul un compte sans historique peut être supprimé.
                 </span>
               </span>
               <ChevronDown
@@ -164,7 +164,7 @@ export default async function TeamPage() {
             title="Ajouter un employé"
             description={
               active.length <= 1
-                ? "Vous êtes seul pour l'instant. Chaque employé a son compte et travaille sur les mêmes dossiers ; un mot de passe temporaire est créé, qu'il remplace à sa première connexion."
+                ? "Chacun a son compte et travaille sur les mêmes dossiers."
                 : "Un mot de passe temporaire est créé : l'employé le remplace à sa première connexion."
             }
             highlight={active.length <= 1}

@@ -7,6 +7,8 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { StatusMessage, type ActionMessage } from "@/components/page-ui";
 import { dateTimeFormat } from "@/lib/dates";
 import { plural } from "@/lib/plural";
+import { BRAND } from "@/config/brand";
+import { COPY_FOLDER_NAME } from "../browser";
 import { copySummary } from "../summary";
 import { useLocalCopy } from "./local-copy-provider";
 
@@ -25,8 +27,7 @@ export function LocalCopySettings() {
   if (!copy.supported) {
     return (
       <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-        Disponible avec Chrome ou Edge, sur ordinateur. Ce navigateur ne permet pas à un site
-        d&apos;écrire dans un dossier.
+        Disponible avec Chrome ou Edge, sur ordinateur.
       </p>
     );
   }
@@ -54,13 +55,11 @@ export function LocalCopySettings() {
       <div className="space-y-3">
         <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
           <li>
-            Cliquez sur « Choisir le dossier ». Dans la fenêtre, créez un dossier (par exemple
-            « Tremplia » sur le Bureau) et choisissez-le.
+            Choisissez un dossier, ou créez-en un, par exemple « {COPY_FOLDER_NAME} » sur le Bureau.
           </li>
-          <li>Acceptez que Tremplia modifie les fichiers de ce dossier.</li>
+          <li>Autorisez {BRAND.name} à y enregistrer des fichiers.</li>
           <li>
-            Vos campagnes, groupes et candidats y sont copiés, puis mis à jour tant que Tremplia
-            est ouvert sur cet ordinateur.
+            Les documents y sont rangés par campagne, groupe et candidat, et restent à jour.
           </li>
         </ol>
         <Button onClick={() => void choose()} disabled={busy}>
@@ -108,8 +107,7 @@ export function LocalCopySettings() {
 
       {copy.permission !== "granted" && (
         <p className="rounded-lg bg-muted px-3 py-2 text-sm">
-          Chrome demande de nouveau l&apos;autorisation d&apos;écrire dans ce dossier : cliquez sur
-          « Mettre à jour maintenant », puis acceptez.
+          Chrome demande à nouveau l&apos;autorisation : cliquez sur « Mettre à jour maintenant ».
         </p>
       )}
       {copy.autoError && !message && (
@@ -128,8 +126,7 @@ export function LocalCopySettings() {
         <span>
           Copier automatiquement
           <span className="block text-xs text-muted-foreground">
-            À l&apos;ouverture de Tremplia et dès qu&apos;un document change dans un dossier
-            ouvert. Sinon, seulement avec le bouton.
+            À l&apos;ouverture de {BRAND.name} et à chaque document modifié.
           </span>
         </span>
       </label>

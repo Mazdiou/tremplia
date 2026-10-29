@@ -46,8 +46,7 @@ export function StudentNotificationsButton({
               Notifications
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Soyez prévenu sur ce téléphone de chaque message {ofName(agencyName)}, même
-              l&apos;appli fermée.
+              Soyez prévenu sur ce téléphone de chaque message {ofName(agencyName)}, même l&apos;application fermée.
             </p>
           </div>
           <Button
@@ -83,7 +82,7 @@ export function StudentPushDevice({
       appName="Mon dossier"
       owner={owner}
       activateLabel="Être prévenu des nouveaux messages"
-      offLabel={`Recevez une notification à chaque message ${ofName(agencyName)}, même l'appli fermée.`}
+      offLabel={`Recevez une notification à chaque message ${ofName(agencyName)}, même l'application fermée.`}
       onLabel={`Vous êtes prévenu des messages ${ofName(agencyName)} sur cet appareil.`}
     />
   );

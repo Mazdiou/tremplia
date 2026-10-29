@@ -65,8 +65,7 @@ export default async function SettingsPage() {
       {readOnly && (
         <p className="flex items-start gap-2 rounded-xl border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
           <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
-          Abonnement expiré : les réglages se consultent mais ne se modifient plus. Le mot de
-          passe peut toujours être changé.
+          Abonnement expiré : les réglages sont en lecture seule, sauf votre mot de passe.
         </p>
       )}
 
@@ -74,7 +73,7 @@ export default async function SettingsPage() {
         <FormSection
           id="compte"
           title="Mon compte"
-          description="Votre nom, tel que l'équipe le voit dans les dossiers et l'historique."
+          description="Votre nom, tel que l'équipe le voit."
         >
           {email && (
             <div className="space-y-1">
@@ -91,7 +90,7 @@ export default async function SettingsPage() {
         <FormSection
           id="apparence"
           title="Apparence"
-          description="Retenu sur cet appareil."
+          description="Propre à cet appareil."
         >
           <div className="space-y-2">
             <p className="text-sm font-medium md:hidden">Thème</p>
@@ -107,7 +106,7 @@ export default async function SettingsPage() {
         <FormSection
           id="notifications"
           title="Notifications"
-          description={`Sur votre téléphone ou votre ordinateur, même quand ${BRAND.name} est fermé. À activer sur chaque appareil. Vos choix ne valent que pour vous.`}
+          description={`Messages, pièces reçues et tâches du jour, même quand ${BRAND.name} est fermé.`}
         >
           <PushDevice
             publicKey={publicKey}
@@ -128,7 +127,7 @@ export default async function SettingsPage() {
         <FormSection
           id="ordinateur"
           title="Sur cet ordinateur"
-          description={`Les documents des dossiers en cours, rangés comme dans ${BRAND.name} (campagne, groupe, candidat), pour les déposer facilement sur les plateformes. Propre à cet ordinateur et à votre compte.`}
+          description="Une copie des documents sur cet ordinateur, prête à déposer sur les plateformes."
         >
           <LocalCopySettings />
         </FormSection>
@@ -137,7 +136,6 @@ export default async function SettingsPage() {
           <FormSection
             id="mot-de-passe"
             title="Mot de passe"
-            description="Votre mot de passe actuel est demandé. Vos autres appareils sont ensuite déconnectés."
           >
             <PasswordForm email={email} />
           </FormSection>
@@ -147,7 +145,7 @@ export default async function SettingsPage() {
           <FormSection
             id="agence"
             title="Agence"
-            description="Le nom et le téléphone sont repris dans l'espace candidat et les messages WhatsApp."
+            description="Affichés aux candidats et dans les messages WhatsApp."
           >
             <AgencyProfileForm
               initial={{ name: agency.name, city: agency.city, phone: agency.phone }}
@@ -160,7 +158,7 @@ export default async function SettingsPage() {
           <FormSection
             id="campagnes"
             title="Nouvelles campagnes"
-            description="Proposés à chaque nouvelle campagne, puis modifiables sur la campagne. Les campagnes déjà créées ne changent pas."
+            description="Proposés par défaut à chaque nouvelle campagne."
           >
             <CampaignDefaultsForm
               initial={{
@@ -177,7 +175,7 @@ export default async function SettingsPage() {
           <FormSection
             id="guide"
             title="Guide de démarrage"
-            description="Les étapes « Bien démarrer » du tableau de bord, pour toute l'agence."
+            description="Le guide « Bien démarrer » du tableau de bord."
           >
             <GuideSetting hidden={guideHidden} />
           </FormSection>
@@ -196,7 +194,6 @@ export default async function SettingsPage() {
         <FormSection
           id="connexion"
           title="Connexion"
-          description="Fermez votre session sur cet appareil."
         >
           <SessionActions />
         </FormSection>

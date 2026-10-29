@@ -23,7 +23,7 @@ export default async function AdminPage() {
     <PageContainer width="wide">
       <PageHeader
         title="Administration"
-        subtitle={`${plural(agencies.length, "agence")}. Page réservée à l'administrateur de la plateforme.`}
+        subtitle={plural(agencies.length, "agence")}
       />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="En essai" value={count("trial")} />

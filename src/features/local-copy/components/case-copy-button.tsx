@@ -35,7 +35,7 @@ export function CaseCopyButton({
       size="sm"
       disabled={copy.running !== null}
       onClick={() => void update()}
-      title="Mettre à jour les documents de ce candidat dans le dossier de copie de cet ordinateur"
+      title="Mettre à jour la copie sur cet ordinateur"
     >
       {mine ? (
         <>

@@ -35,7 +35,7 @@ const methodOptions = optionsOf(PAYMENT_METHODS, PAYMENT_METHOD_LABELS);
 
 const PAYMENT_STATE_PILL: Record<PaymentState, { tone: PillTone; label: string }> = {
   unset: { tone: "off", label: "Montant à fixer" },
-  unpaid: { tone: "warn", label: "Rien payé" },
+  unpaid: { tone: "warn", label: "Non payé" },
   partial: { tone: "warn", label: "Paiement partiel" },
   paid: { tone: "ok", label: "Soldé" },
 };
@@ -523,7 +523,7 @@ export function PaymentsPanel({
         title="Annuler ce paiement ?"
         body={
           toCancel
-            ? `Le paiement de ${formatDA(toCancel.amount)} du ${formatLongDate(toCancel.paidOn)} ne comptera plus. Il reste visible, barré, avec le motif.`
+            ? `Le paiement de ${formatDA(toCancel.amount)} du ${formatLongDate(toCancel.paidOn)} ne comptera plus. Il restera visible, barré.`
             : ""
         }
         confirmLabel="Annuler le paiement"

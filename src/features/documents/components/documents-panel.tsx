@@ -27,6 +27,7 @@ import {
   type DocRowMode,
 } from "./document-row";
 import { FolderSection, type FolderActions, type FolderMode } from "./folder-section";
+import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 import { StatusMessage, type ActionMessage } from "@/components/page-ui";
 
@@ -110,7 +111,7 @@ export function DocumentsPanel({
   );
   useAutoCaseCopy(caseId, copySignature, say);
 
-  // Documents par section (un document dont le dossier est inconnu va dans « Sans dossier »)
+  // Documents par section (un document dont le dossier est inconnu va dans « Sans catégorie »)
   const byKey = useMemo(() => {
     const map = new Map<string, DocItem[]>();
     for (const d of docs) {
@@ -161,7 +162,7 @@ export function DocumentsPanel({
   }
 
   function tooManyPhotos(skipped: number) {
-    return `${MAX_PHOTOS_PER_PDF} photos au plus à la fois : ${skipped} laissée(s) de côté`;
+    return `${MAX_PHOTOS_PER_PDF} photos au plus à la fois : ${plural(skipped, "photo laissée", "photos laissées")} de côté`;
   }
 
   // Crée le ou les PDF à partir des photos, puis les envoie
@@ -241,7 +242,7 @@ export function DocumentsPanel({
       say(res.error, true);
     } else {
       const target = folders.find((f) => f.id === folderId);
-      say(target ? `Document déplacé dans « ${target.name} »` : "Document retiré de son dossier");
+      say(target ? `Document déplacé dans « ${target.name} »` : "Document retiré de sa catégorie");
     }
     router.refresh();
   }
@@ -338,7 +339,7 @@ export function DocumentsPanel({
       return;
     }
     setCreatingFolder(false);
-    say("Dossier créé");
+    say("Catégorie créée");
     router.refresh();
   }
 
@@ -362,7 +363,7 @@ export function DocumentsPanel({
         return;
       }
       setFolderRow(null);
-      say("Dossier renommé");
+      say("Catégorie renommée");
       router.refresh();
     },
     askDelete(f) {
@@ -375,7 +376,7 @@ export function DocumentsPanel({
       setFolderBusy(false);
       setFolderRow(null);
       if (!res.ok) say(res.error, true);
-      else say("Dossier supprimé");
+      else say("Catégorie supprimée");
       router.refresh();
     },
     cancel: () => setFolderRow(null),
@@ -450,7 +451,7 @@ export function DocumentsPanel({
   }
 
   const unfiledCount = byKey.get(NO_FOLDER)?.length ?? 0;
-  // « Sans dossier » : visible s'il contient des documents, pendant un glisser
+  // « Sans catégorie » : visible s'il contient des documents, pendant un glisser
   // (pour pouvoir y ramener un document) ou s'il n'y a aucun dossier.
   const showUnfiled =
     unfiledCount > 0 || dragDocId !== null || folders.length === 0;
@@ -491,9 +492,7 @@ export function DocumentsPanel({
                 Choisir des fichiers
               </Button>
               <p className="text-xs">
-                PDF ou photos (JPG, PNG), 10 Mo maximum par document. Les photos
-                sont assemblées en PDF avant l&apos;envoi. Ajoutés sans dossier : pour
-                les ranger tout de suite, déposez-les sur un dossier ci-dessous.
+                PDF ou photos, 10 Mo maximum. Les photos deviennent un PDF.
               </p>
             </>
           )}
@@ -537,8 +536,8 @@ export function DocumentsPanel({
           <input
             autoFocus
             maxLength={80}
-            placeholder="Nom du dossier"
-            aria-label="Nom du nouveau dossier"
+            placeholder="Nom de la catégorie"
+            aria-label="Nom de la nouvelle catégorie"
             disabled={folderBusy}
             onKeyDown={(e) => {
               if (e.key === "Escape") setCreatingFolder(false);
@@ -560,7 +559,7 @@ export function DocumentsPanel({
               setCreatingFolder(true);
             }}
           >
-            <FolderPlus /> Nouveau dossier
+            <FolderPlus /> Nouvelle catégorie
           </Button>
         )}
       </div>

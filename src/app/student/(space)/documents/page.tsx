@@ -19,7 +19,7 @@ export default async function StudentDocumentsPage() {
       <EmptyState
         icon={FileUp}
         title="Aucune pièce demandée pour le moment"
-        description={`Quand ${agency.name} vous demandera des documents, vous pourrez les envoyer ici.`}
+        description={`Les pièces demandées par ${agency.name} apparaîtront ici.`}
       />
     );
   }

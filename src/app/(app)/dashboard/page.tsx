@@ -119,8 +119,8 @@ export default async function DashboardPage({
             title={`Bienvenue dans ${BRAND.name}`}
             description={
               u.member.isOwner
-                ? "Commencez par créer une campagne ou importer un modèle (Campus France, par exemple) : vous pourrez ensuite y ajouter vos dossiers."
-                : "Aucune campagne active pour le moment. Prévenez le patron : il doit créer une campagne avant que vous puissiez ajouter des dossiers."
+                ? "Commencez par une campagne : créez-la, ou partez du modèle Campus France."
+                : "Le patron n'a pas encore créé de campagne. Vous pourrez ajouter des dossiers ensuite."
             }
           />
         )}
@@ -385,7 +385,7 @@ export default async function DashboardPage({
               </h3>
               {topOwing.length === 0 ? (
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Aucun candidat ne doit d&apos;argent à l&apos;agence.
+                  Tous les paiements sont à jour.
                 </p>
               ) : (
                 <ul className="mt-1">

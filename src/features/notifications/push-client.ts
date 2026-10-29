@@ -206,7 +206,7 @@ export async function subscribePush(publicKey: string): Promise<SubscribeResult>
     return {
       ok: false,
       error:
-        "Ce navigateur n'a pas pu activer les notifications. Réessayez dans un moment ; si cela continue, essayez un autre navigateur.",
+        "Les notifications n'ont pas pu être activées. Réessayez, ou essayez un autre navigateur.",
     };
   }
 }

@@ -198,7 +198,7 @@ function PaletteDialog({
             setActive(0);
           }}
           onKeyDown={onKeyDown}
-          placeholder="Rechercher un candidat (nom ou téléphone) ou une page"
+          placeholder="Rechercher un candidat ou une page"
           aria-label="Rechercher un candidat ou une page"
           role="combobox"
           aria-expanded
@@ -229,7 +229,7 @@ function PaletteDialog({
         </ul>
         <p role="status" className="px-5 py-1.5 text-xs text-muted-foreground">
           {search.tooShort
-            ? "Saisissez au moins 2 caractères pour chercher un candidat."
+            ? "Tapez le nom ou le téléphone d'un candidat."
             : searchStatusLabel(search)}
         </p>
       </div>

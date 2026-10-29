@@ -21,7 +21,7 @@ type RequestInput = z.infer<typeof documentRequestSchema>;
 const REQUEST_ERRORS = {
   "23505": "Cette pièce est déjà demandée",
   // Le dossier de rangement n'est pas un dossier de ce candidat
-  "23503": "Dossier de rangement introuvable",
+  "23503": "Cette catégorie n'existe plus",
   P0002: "Pièce introuvable",
 };
 
@@ -37,7 +37,7 @@ export async function createRequest(auth: AuthorizedCase, caseId: string, input:
     throw dbError("document requests create", error, {
       ...REQUEST_ERRORS,
       P0002: "Dossier introuvable",
-      "54000": `Vous avez atteint la limite de ${MAX_REQUESTS_PER_CASE} pièces pour ce candidat`,
+      "54000": `${MAX_REQUESTS_PER_CASE} pièces au maximum par candidat`,
     });
   }
 

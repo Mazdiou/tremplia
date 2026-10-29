@@ -142,8 +142,7 @@ export function ReviewBanner({
             <div>
               <p className="font-medium">Votre avis est attendu</p>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                Relisez votre lettre de motivation et vos formations, puis donnez votre
-                accord pour que {agencyName} continue votre candidature.
+                Relisez votre lettre et vos formations, puis validez-les.
               </p>
             </div>
           </div>
@@ -184,8 +183,7 @@ export function ReviewBanner({
             <p className="font-medium">Demande de modification envoyée</p>
             <p className="mt-0.5 text-sm text-muted-foreground">
               {respondedLabel && `Le ${respondedLabel}. `}
-              {agencyName} va faire les corrections ; vous pourrez ensuite valider la
-              nouvelle version.
+              {agencyName} va faire les corrections. Vous validerez ensuite la nouvelle version.
             </p>
             {lastRequest && (
               <blockquote className="mt-2 border-l-2 border-amber-500/50 pl-3 text-sm whitespace-pre-wrap break-words">

@@ -21,7 +21,7 @@ const MESSAGES = {
   P0002: "Paiement introuvable",
   "22003": "Le paiement dépasse le reste à payer",
   "55000": "Indiquez d'abord le montant convenu",
-  "54000": "Limite de 200 paiements par dossier atteinte",
+  "54000": "200 paiements au maximum par dossier",
   "23514": "Paiement invalide",
 };
 

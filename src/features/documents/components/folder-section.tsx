@@ -11,7 +11,7 @@ import type { FolderItem } from "./documents-panel";
 export type FolderMode = "view" | "rename" | "confirm";
 
 export type FolderActions = {
-  // Ajouter des PDF ou des photos dans ce dossier (null : « Sans dossier »)
+  // Ajouter des PDF ou des photos dans ce dossier (null : « Sans catégorie »)
   addFiles: (folderId: string | null) => void;
   startRename: (f: FolderItem) => void;
   rename: (f: FolderItem, value: string) => void;
@@ -21,7 +21,7 @@ export type FolderActions = {
 };
 
 // Une section de la page des documents : un dossier de rangement, ou
-// « Sans dossier » (folder null). Zone de dépôt : voir dropProps du panneau.
+// « Sans catégorie » (folder null). Zone de dépôt : voir dropProps du panneau.
 export function FolderSection({
   folder,
   count,
@@ -52,7 +52,7 @@ export function FolderSection({
   // Les documents de la section
   children: ReactNode;
 }) {
-  const title = folder?.name ?? "Sans dossier";
+  const title = folder?.name ?? "Sans catégorie";
   return (
     <section
       aria-label={title}
@@ -80,7 +80,7 @@ export function FolderSection({
             autoFocus
             defaultValue={folder.name}
             maxLength={80}
-            aria-label="Nom du dossier"
+            aria-label="Nom de la catégorie"
             disabled={busy}
             onFocus={(e) => e.currentTarget.select()}
             onKeyDown={(e) => {
@@ -104,8 +104,8 @@ export function FolderSection({
             <>
               <span className="mr-1 text-xs">
                 {count > 0
-                  ? `Supprimer ce dossier ? Ses ${plural(count, "document")} iront dans « Sans dossier ».`
-                  : "Supprimer ce dossier ?"}
+                  ? `Supprimer cette catégorie ? Ses ${plural(count, "document")} iront dans « Sans catégorie ».`
+                  : "Supprimer cette catégorie ?"}
               </span>
               <Button
                 variant="destructive"
@@ -126,7 +126,7 @@ export function FolderSection({
                 size="icon-sm"
                 onClick={() => actions.addFiles(folder?.id ?? null)}
                 aria-label={`Ajouter des documents dans ${title}`}
-                title="Ajouter des PDF ou des photos dans ce dossier"
+                title="Ajouter des documents"
               >
                 <Plus />
               </Button>
@@ -135,8 +135,8 @@ export function FolderSection({
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => actions.startRename(folder)}
-                  aria-label={`Renommer le dossier ${folder.name}`}
-                  title="Renommer le dossier"
+                  aria-label={`Renommer la catégorie ${folder.name}`}
+                  title="Renommer"
                 >
                   <Pencil />
                 </Button>
@@ -146,8 +146,8 @@ export function FolderSection({
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => actions.askDelete(folder)}
-                  aria-label={`Supprimer le dossier ${folder.name}`}
-                  title="Supprimer le dossier (patron)"
+                  aria-label={`Supprimer la catégorie ${folder.name}`}
+                  title="Supprimer"
                 >
                   <Trash2 />
                 </Button>
@@ -163,8 +163,8 @@ export function FolderSection({
             {readOnly
               ? "Aucun document."
               : folder
-                ? "Dossier vide : déposez des PDF ou des photos ici."
-                : "Déposez ici un document pour le sortir de son dossier."}
+                ? "Catégorie vide : déposez des PDF ou des photos ici."
+                : "Déposez un document ici pour le sortir de sa catégorie."}
           </p>
         ) : (
           <ul className="divide-y border-t">{children}</ul>

@@ -255,8 +255,7 @@ export function CaseForm(
           <div>
             <p className="font-medium">Données importées de « {imported.name} »</p>
             <p className="mt-1 text-muted-foreground">
-              Vérifiez-les et modifiez ce qui a changé (le niveau d&apos;études,
-              par exemple). Les mots de passe des comptes sont à ressaisir.
+              Vérifiez ce qui a changé, comme le niveau d&apos;études. Les mots de passe sont à ressaisir.
             </p>
           </div>
         </div>
@@ -274,8 +273,8 @@ export function CaseForm(
           title="Rattachement"
           description={
             isEdit
-              ? "Un dossier ne change jamais de campagne. Ses groupes restent modifiables."
-              : "La campagne du dossier, et ses groupes de rangement."
+              ? "La campagne ne peut plus changer. Les groupes, si."
+              : "Où ranger ce dossier."
           }
         >
           <SelectField
@@ -396,7 +395,7 @@ export function CaseForm(
         {!isEdit && (
           <FormSection
             title="Paiement"
-            description="Ce qui est convenu avec le candidat et ce qu'il règle aujourd'hui. Tout peut se faire plus tard, dans l'onglet Paiements."
+            description="Le montant convenu et, si le candidat paie aujourd'hui, son premier paiement."
           >
             <div className="grid gap-4 @md:grid-cols-2">
               <AmountField
@@ -470,7 +469,7 @@ export function CaseForm(
               label="Responsable du dossier"
               value={assignedTo}
               onChange={setAssignedTo}
-              placeholder={isEdit && !props.initial.assignedTo ? "Aucun (non attribué)" : undefined}
+              placeholder={isEdit && !props.initial.assignedTo ? "Sans responsable" : undefined}
               options={props.members.map((m) => ({
                 value: m.id,
                 label: `${fullName(m.first_name, m.last_name)}${m.id === props.currentUserId ? " (moi)" : ""}${m.is_active === false ? " (désactivé)" : ""}`,
@@ -517,8 +516,7 @@ export function CaseForm(
             <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
             <div className="space-y-2">
               <p className="font-medium">
-                Un dossier avec ce nom, ce prénom et cette date de naissance
-                existe déjà dans cette campagne.
+                Ce candidat a déjà un dossier dans cette campagne.
               </p>
               <ul className="list-inside list-disc">
                 {duplicates.map((id) => (

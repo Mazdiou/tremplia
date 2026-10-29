@@ -45,7 +45,7 @@ export function DeleteEmployeeButton({
       <ConfirmDialog
         open={confirming}
         title={`Supprimer le compte de ${name} ?`}
-        body={error ?? "Le compte est supprimé définitivement. Cette action est irréversible."}
+        body={error ?? "Cette action est irréversible."}
         confirmLabel="Supprimer définitivement"
         // Refusée (historique) : réessayer donnerait la même réponse
         cancelLabel={error ? "Fermer" : "Annuler"}

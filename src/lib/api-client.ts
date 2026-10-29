@@ -43,7 +43,7 @@ export async function callApi<T = Json>(
   }
   return {
     ok: false,
-    error: typeof data?.error === "string" ? data.error : `Erreur ${res.status}`,
+    error: typeof data?.error === "string" ? data.error : "Une erreur est survenue. Réessayez dans un instant.",
     fieldErrors,
     data,
   };

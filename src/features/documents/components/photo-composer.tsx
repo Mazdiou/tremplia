@@ -74,7 +74,7 @@ export function PhotoComposer({
   onSubmit,
 }: {
   pages: PhotoPage[];
-  // Dossier de rangement qui recevra les documents (null : « Sans dossier »)
+  // Dossier de rangement qui recevra les documents (null : « Sans catégorie »)
   folderName?: string | null;
   // Nom de la pièce que ces photos composent (espace du candidat)
   piece?: string;
@@ -106,7 +106,7 @@ export function PhotoComposer({
         <p className="text-xs text-muted-foreground">
           {piece
             ? `Une page par photo, dans l'ordre ci-dessous`
-            : `Rangement : ${folderName ? `« ${folderName} »` : "sans dossier"}`}
+            : `Catégorie : ${folderName ? `« ${folderName} »` : "aucune"}`}
         </p>
       </div>
 
@@ -227,7 +227,7 @@ export function PhotoComposer({
             onChange={(e) => setName(e.target.value)}
             maxLength={120}
             disabled={busy}
-            placeholder="Nom du document, ex. : Passeport"
+            placeholder="Ex. : Passeport"
             aria-label="Nom du document"
             className="h-8 min-w-0 flex-1 basis-56 rounded-lg border bg-background px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           />

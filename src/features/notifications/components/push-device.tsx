@@ -89,15 +89,14 @@ export function PushDevice({
   if (state === "unsupported") {
     return (
       <Notice>
-        Ce navigateur ne permet pas les notifications (ou la navigation privée les bloque).
-        Essayez Chrome, Edge, Firefox ou Safari à jour.
+        Ce navigateur ne permet pas les notifications. Essayez Chrome, Edge, Firefox ou Safari, hors navigation privée.
       </Notice>
     );
   }
   if (state === "ios-install") {
     return (
       <Notice>
-        Sur iPhone et iPad, les notifications arrivent seulement dans l&apos;appli installée :
+        Sur iPhone et iPad, les notifications arrivent seulement dans l&apos;application installée :
         dans Safari, touchez Partager puis «&nbsp;Sur l&apos;écran d&apos;accueil&nbsp;», ouvrez {appName}{" "}
         depuis cette icône, et revenez ici.
       </Notice>
@@ -127,7 +126,7 @@ export function PushDevice({
     if (!res.ok) return setMessage({ text: res.error, error: true });
     if (result.subscription.endpoint) rememberPushDevice(owner, result.subscription.endpoint);
     setState("on");
-    setMessage({ text: "Notifications activées.", error: false });
+    setMessage({ text: "Notifications activées", error: false });
   }
 
   async function deactivate() {
@@ -136,7 +135,7 @@ export function PushDevice({
     await forgetPushDevice(deviceUrl);
     setBusy(false);
     setState("off");
-    setMessage({ text: "Notifications désactivées sur cet appareil.", error: false });
+    setMessage({ text: "Notifications désactivées sur cet appareil", error: false });
   }
 
   async function test(delayed: boolean) {

@@ -8,7 +8,7 @@ import { MAX_FOLDERS_PER_CASE } from "../schemas";
 
 // Dossiers de rangement des documents d'un dossier candidat (un seul niveau).
 
-const NAME_TAKEN = { "23505": "Un dossier porte déjà ce nom" };
+const NAME_TAKEN = { "23505": "Une catégorie porte déjà ce nom" };
 
 // Le dossier de documents doit appartenir à ce dossier candidat
 async function findFolder(auth: AuthorizedCase, caseId: string, folderId: string) {
@@ -20,7 +20,7 @@ async function findFolder(auth: AuthorizedCase, caseId: string, folderId: string
     .eq("agency_id", auth.agencyId)
     .maybeSingle();
   if (error) throw dbError("document folders read", error);
-  if (!data) throw new ApiError(404, "Dossier introuvable");
+  if (!data) throw new ApiError(404, "Cette catégorie n'existe plus");
   return data.name as string;
 }
 
@@ -35,7 +35,7 @@ export async function createFolder(auth: AuthorizedCase, caseId: string, name: s
   if ((count ?? 0) >= MAX_FOLDERS_PER_CASE) {
     throw new ApiError(
       409,
-      `Vous avez atteint la limite de ${MAX_FOLDERS_PER_CASE} dossiers pour ce candidat`,
+      `${MAX_FOLDERS_PER_CASE} catégories au maximum par candidat`,
     );
   }
 
@@ -52,7 +52,7 @@ export async function createFolder(auth: AuthorizedCase, caseId: string, name: s
   if (error || !data) {
     throw error
       ? dbError("document folders create", error, NAME_TAKEN)
-      : new ApiError(500, "Impossible de créer le dossier");
+      : new ApiError(500, "La catégorie n'a pas pu être créée. Réessayez.");
   }
 
   const id = data.id as string;
@@ -87,12 +87,12 @@ export async function renameFolder(
   });
 }
 
-// Patron seulement. Les documents du dossier passent dans « Sans dossier »
+// Patron seulement. Les documents du dossier passent dans « Sans catégorie »
 // (aucun PDF n'est supprimé). La fonction SQL revérifie le rôle et refuse
 // si un document est verrouillé.
 export async function deleteFolder(auth: AuthorizedCase, caseId: string, folderId: string) {
   if (!auth.member.isOwner) {
-    throw new ApiError(403, "Seul le patron peut supprimer un dossier");
+    throw new ApiError(403, "Seul le patron peut supprimer une catégorie");
   }
   await findFolder(auth, caseId, folderId);
 
@@ -110,9 +110,9 @@ export async function deleteFolder(auth: AuthorizedCase, caseId: string, folderI
   });
   if (error) {
     throw dbError("document folders delete", error, {
-      P0002: "Dossier introuvable",
+      P0002: "Cette catégorie n'existe plus",
       "55006":
-        "Ce dossier contient un document verrouillé par le patron : déverrouillez-le d'abord",
+        "Cette catégorie contient un document verrouillé. Déverrouillez-le d'abord.",
     });
   }
 

@@ -24,8 +24,7 @@ export default function ErrorPage({
       <LogoMark className="size-11" />
       <h1 className="mt-6 text-2xl font-semibold tracking-tight">Une erreur est survenue</h1>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-        Le problème nous a été signalé. Réessayez dans un instant ; s&apos;il
-        persiste, revenez à l&apos;accueil.
+        Nous avons été prévenus. Réessayez dans un instant.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         <Button onClick={reset}>Réessayer</Button>

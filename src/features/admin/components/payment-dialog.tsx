@@ -89,8 +89,7 @@ function PaymentDialog({
         </h2>
         {gift && (
           <p className="text-sm text-muted-foreground">
-            L&apos;abonnement est prolongé sans paiement. La ligne apparaît « Offert » dans
-            l&apos;historique et peut être annulée comme un paiement.
+            L&apos;abonnement est prolongé sans paiement, et noté « Offert » dans l&apos;historique.
           </p>
         )}
 

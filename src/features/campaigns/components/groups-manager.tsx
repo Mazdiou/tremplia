@@ -154,7 +154,7 @@ export function GroupsManager({
       <ConfirmDialog
         open={toDelete !== null}
         title={`Supprimer le groupe « ${toDelete?.name ?? ""} » ?`}
-        body="Les dossiers de ce groupe ne sont pas supprimés : ils perdent seulement ce classement (et passent dans « Non classés » s'ils n'ont plus aucun groupe)."
+        body="Les dossiers ne sont pas supprimés, seulement retirés de ce groupe."
         confirmLabel="Supprimer le groupe"
         danger
         loading={busy}

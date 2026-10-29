@@ -8,8 +8,8 @@ export type Permission = (typeof PERMISSIONS)[number];
 
 export const PERMISSION_INFO: Record<Permission, { label: string; description: string }> = {
   payments_view: {
-    label: "Voir la caisse",
-    description: "Page Paiements (encaissements, restes à payer, export Excel) et chiffres de paiement du tableau de bord.",
+    label: "Voir les paiements",
+    description: "La page Paiements et les chiffres de paiement du tableau de bord.",
   },
   payments_manage: {
     label: "Corriger les paiements",
@@ -17,7 +17,7 @@ export const PERMISSION_INFO: Record<Permission, { label: string; description: s
   },
   campaigns_manage: {
     label: "Gérer les campagnes",
-    description: "Créer, modifier, archiver ou supprimer une campagne vide, ses étapes, importer un modèle, exporter en Excel.",
+    description: "Créer, modifier et archiver les campagnes, et les exporter en Excel.",
   },
 };
 

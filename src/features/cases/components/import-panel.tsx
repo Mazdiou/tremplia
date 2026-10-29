@@ -64,10 +64,7 @@ export function ImportPanel({
     <section className="space-y-4 rounded-2xl border bg-card p-5">
       <h2 className="text-base font-semibold">Importer depuis une autre campagne</h2>
       <p className="text-sm text-muted-foreground">
-        Reprenez l&apos;identité, le parcours et les comptes externes
-        d&apos;un candidat. Le nouveau dossier est indépendant :
-        l&apos;ancien n&apos;est pas modifié, et ni ses groupes, ni ses notes,
-        ni ses documents ne sont repris.
+        Reprenez l&apos;identité, le parcours et les comptes d&apos;un ancien dossier. Notes et documents ne sont pas repris.
       </p>
       <SelectField
         id="import-source"
@@ -121,8 +118,7 @@ export function ImportPanel({
 
       {matches && matches.length === 0 && (
         <p className="text-sm text-muted-foreground" role="status">
-          Aucun dossier trouvé pour ce nom, ce prénom et cette date de naissance
-          dans cette campagne.
+          Aucun dossier ne correspond dans cette campagne.
         </p>
       )}
 

@@ -71,9 +71,9 @@ export function buildSteps(p: OnboardingProgress): OnboardingStep[] {
     {
       id: "equipe",
       title: "Ajouter un employé",
-      description: "Vos collaborateurs travaillent sur les mêmes dossiers, chacun avec son compte.",
+      description: "Vos employés travaillent sur les mêmes dossiers, chacun avec son compte.",
       done: p.hasEmployee,
-      action: { label: "Inviter un employé", href: "/team" },
+      action: { label: "Ajouter un employé", href: "/team" },
     },
   ];
 }

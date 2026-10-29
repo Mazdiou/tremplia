@@ -132,7 +132,7 @@ export async function listAgencyPayments(agencyId: string): Promise<AdminPayment
 const MESSAGES = {
   P0002: "Introuvable",
   "42501": "Réservé à l'administrateur de la plateforme",
-  "23514": "Données invalides",
+  "23514": "Certaines informations sont incorrectes.",
   "55000": "Seul le dernier paiement non annulé peut être annulé",
 };
 

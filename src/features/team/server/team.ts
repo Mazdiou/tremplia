@@ -36,7 +36,7 @@ export async function addEmployee(owner: Member, input: NewEmployeeInput) {
     email_confirm: true,
   });
   if (authError || !created.user) {
-    throw new ApiError(400, "Impossible de créer le compte (e-mail déjà utilisé ?)");
+    throw new ApiError(400, "Cette adresse e-mail est peut-être déjà utilisée.");
   }
 
   const { error } = await admin.rpc("add_employee", {
@@ -49,7 +49,7 @@ export async function addEmployee(owner: Member, input: NewEmployeeInput) {
   if (error) {
     await admin.auth.admin.deleteUser(created.user.id);
     reportError("[team create]", error.code);
-    throw new ApiError(500, "Erreur lors de la création de l'employé");
+    throw new ApiError(500, "Le compte n'a pas pu être créé. Réessayez.");
   }
 
   await logActivity(admin, {
@@ -95,7 +95,7 @@ export async function resetEmployeePassword(owner: Member, employeeId: string) {
   const { error: pwError } = await admin.auth.admin.updateUserById(employeeId, { password });
   if (pwError) {
     reportError("[team password]", pwError.code ?? pwError.status);
-    throw new ApiError(500, "Opération impossible");
+    throw new ApiError(500, "Action impossible pour le moment. Réessayez.");
   }
 
   const { error: flagError } = await admin
@@ -105,7 +105,7 @@ export async function resetEmployeePassword(owner: Member, employeeId: string) {
     .eq("agency_id", owner.agencyId);
   if (flagError) {
     reportError("[team password]", flagError.code);
-    throw new ApiError(500, "Opération impossible");
+    throw new ApiError(500, "Action impossible pour le moment. Réessayez.");
   }
 
   await logActivity(admin, {
@@ -139,7 +139,7 @@ export async function setEmployeeActive(owner: Member, employeeId: string, isAct
   const { error: banError } = await admin.auth.admin.updateUserById(employeeId, {
     ban_duration: isActive ? "none" : "876000h",
   });
-  if (banError) throw new ApiError(500, "Opération impossible");
+  if (banError) throw new ApiError(500, "Action impossible pour le moment. Réessayez.");
 
   // 2. Mettre à jour le profil (annule le blocage Auth si ça échoue)
   const { error } = await admin.rpc("set_employee_active", {
@@ -201,7 +201,7 @@ export async function setEmployeePermissions(
 }
 
 const HAS_HISTORY =
-  "Ce membre a déjà travaillé sur des dossiers (historique, notes, paiements, documents…). Pour garder cet historique, son compte ne peut pas être supprimé. Désactivé, il ne peut plus se connecter.";
+  "Ce membre a déjà travaillé sur des dossiers : son compte reste désactivé pour garder son historique.";
 
 // Supprimer un employé désactivé. La base refuse d'elle-même un patron, un
 // compte actif, ou un compte qui a un historique (dossiers, documents,

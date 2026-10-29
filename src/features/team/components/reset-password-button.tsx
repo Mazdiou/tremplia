@@ -43,7 +43,7 @@ export function ResetPasswordButton({ id, name }: { id: string; name: string }) 
         title={`Nouveau mot de passe pour ${name} ?`}
         body={
           error ??
-          "Un mot de passe temporaire va remplacer le sien : l'actuel ne marchera plus et la personne sera déconnectée. Elle en choisira un nouveau à sa prochaine connexion."
+          "Son mot de passe actuel ne marchera plus. Elle en choisira un nouveau à sa prochaine connexion."
         }
         confirmLabel="Créer le mot de passe"
         loading={loading}

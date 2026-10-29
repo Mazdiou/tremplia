@@ -79,7 +79,7 @@ export async function replaceCampaignStages(
   if (error) {
     throw dbError("stages replace", error, {
       P0002: "Campagne introuvable",
-      "22023": "Étapes invalides (deux noms identiques, ou étape d'une autre campagne)",
+      "22023": "Deux étapes portent le même nom.",
     });
   }
   const moved = typeof data === "number" ? data : 0;

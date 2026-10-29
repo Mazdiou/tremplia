@@ -40,7 +40,7 @@ async function saveDevice(
   if (error) {
     throw dbError("push device save", error, {
       "42501": owner.userId ? "Accès refusé" : "Votre accès a été fermé par l'agence",
-      "23514": "Appareil refusé par le serveur",
+      "23514": "Cet appareil n'a pas pu être activé. Réessayez.",
     });
   }
 }

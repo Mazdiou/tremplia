@@ -58,7 +58,7 @@ export function ConfirmLink({ tokenHash, type }: { tokenHash: string | null; typ
           Un lien ne sert qu&apos;une fois et reste valable 1 heure.{" "}
           {type === "recovery"
             ? "Demandez-en un nouveau."
-            : "Si votre adresse est déjà confirmée, connectez-vous ; sinon, la page de connexion permet d'en recevoir un nouveau."}
+            : "Adresse déjà confirmée ? Connectez-vous. Sinon, demandez un nouveau lien depuis la page de connexion."}
         </p>
         <Link
           href={type === "recovery" ? "/forgot-password" : "/login"}

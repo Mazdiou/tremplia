@@ -48,7 +48,7 @@ export default async function DocumentsPage({
   // Les dossiers de départ sont créés une seule fois par dossier candidat
   // (cases.folders_initialized_at) : la fonction SQL n'est appelée que la
   // première fois. Un échec ne bloque pas la page : les documents restent
-  // visibles dans « Sans dossier ».
+  // visibles dans « Sans catégorie ».
   if (caller && !readOnly && !found.c.folders_initialized_at) {
     const { error } = await createAdminClient().rpc("ensure_default_document_folders", {
       p_case_id: id,
@@ -96,7 +96,7 @@ export default async function DocumentsPage({
       : found.campaign?.status === "archived"
         ? "Campagne archivée : le candidat ne peut plus se connecter à son espace."
         : !accessEnabled
-          ? "L'accès du candidat est fermé : il verra ces pièces dès que vous ouvrirez son espace (en haut du dossier)."
+          ? "L'espace candidat est fermé. Ouvrez-le en haut du dossier pour qu'il voie ces pièces."
           : null;
 
   return (

@@ -73,8 +73,7 @@ export function AddEmployeeForm() {
           <div className="min-w-0">
             <p className="font-medium">Compte créé pour {created.email}</p>
             <p className="text-muted-foreground">
-              Notez ce mot de passe maintenant : il ne sera plus affiché.
-              L&apos;employé en choisira un nouveau à sa première connexion.
+              Notez ce mot de passe : il ne sera plus affiché. L&apos;employé le changera à sa première connexion.
             </p>
           </div>
           <div className="flex items-center gap-2">

@@ -95,7 +95,6 @@ export default async function NewCasePage({
           </Link>
         }
         title="Nouveau dossier"
-        subtitle="Les champs marqués d'un astérisque sont obligatoires."
       />
       <CaseForm
         mode="create"

@@ -13,7 +13,7 @@ import type { ProgramInput, ProgramResult } from "@/features/programs/schemas";
 const MESSAGES = {
   P0002: "Formation introuvable",
   "23514": "Formation invalide",
-  "54000": "Limite de 20 formations par dossier atteinte",
+  "54000": "20 formations au maximum par dossier",
 };
 
 function fields(input: ProgramInput) {

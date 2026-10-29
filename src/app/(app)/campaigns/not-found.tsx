@@ -11,7 +11,7 @@ export default function CampaignNotFound() {
       <EmptyState
         icon={CalendarX}
         title="Campagne introuvable"
-        description="Cette campagne n'existe pas, a été supprimée ou n'appartient pas à votre agence."
+        description="Elle a peut-être été supprimée, ou le lien est incorrect."
         action={
           <Link href="/campaigns" className={buttonVariants({ variant: "outline" })}>
             Retour aux campagnes

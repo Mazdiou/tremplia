@@ -15,7 +15,7 @@ export const requestLabelSchema = z
 
 // Corps des requêtes de l'agence
 
-// Création ou modification ; folderId null : « Sans dossier »
+// Création ou modification ; folderId null : « Sans catégorie »
 export const documentRequestSchema = z.object({
   label: requestLabelSchema,
   folderId: uuidSchema.nullable(),

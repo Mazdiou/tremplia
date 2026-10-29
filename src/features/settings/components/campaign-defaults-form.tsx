@@ -67,8 +67,7 @@ export function CampaignDefaultsForm({
             Étapes des dossiers
           </p>
           <p className="text-xs text-muted-foreground">
-            Le parcours d&apos;un dossier, dans l&apos;ordre : chaque nouveau dossier commence à
-            la première.
+            Le parcours d&apos;un dossier, dans l&apos;ordre.
           </p>
           <StageListEditor
             idPrefix="defaults-stage"

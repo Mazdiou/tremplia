@@ -39,7 +39,7 @@ export function NotificationPreferencesForm({
       setPrefs(previous);
       return setMessage({ text: res.error, error: true });
     }
-    setMessage({ text: "Enregistré.", error: false });
+    setMessage({ text: "Préférences enregistrées", error: false });
   }
 
   return (

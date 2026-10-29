@@ -30,7 +30,7 @@ const GROUPS = [
   },
   {
     key: "approved",
-    title: "Validés, candidatures à envoyer",
+    title: "Candidatures à envoyer",
     icon: Send,
     tone: "text-success",
     href: (id: string) => `/cases/${id}/programs`,
@@ -86,7 +86,7 @@ export function TodoPanel({ todo }: { todo: Todo }) {
       {total === 0 ? (
         <p className="flex items-center gap-2 px-5 py-4 text-sm text-muted-foreground">
           <CheckCircle2 className="size-4 text-success" aria-hidden />
-          Rien en attente : aucun message non lu ni demande de candidat.
+          Rien en attente.
         </p>
       ) : (
         <div className="grid gap-x-8 gap-y-5 px-5 py-4 @2xl:grid-cols-2 @5xl:grid-cols-3">

@@ -310,8 +310,7 @@ export function ProgramsPanel({
             <p className="mt-3 text-sm font-medium">Aucune formation pour ce dossier</p>
             {!readOnly && (
               <p className="mt-1 text-sm text-muted-foreground">
-                Ajoutez les formations visées par le candidat, de la préférée à la moins
-                souhaitée.
+                Ajoutez les formations visées, par ordre de préférence.
               </p>
             )}
           </div>

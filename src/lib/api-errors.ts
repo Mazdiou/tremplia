@@ -47,7 +47,7 @@ export async function parseBody<T extends z.ZodType>(
   try {
     body = await request.json();
   } catch {
-    throw new ApiError(400, "Requête invalide");
+    throw new ApiError(400, "Action impossible. Rechargez la page.");
   }
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -55,7 +55,7 @@ export async function parseBody<T extends z.ZodType>(
       path: i.path.join("."),
       message: i.message,
     }));
-    throw new ApiError(400, fields[0]?.message ?? "Données invalides", {
+    throw new ApiError(400, fields[0]?.message ?? "Certaines informations sont incorrectes.", {
       fields,
     });
   }
@@ -64,7 +64,7 @@ export async function parseBody<T extends z.ZodType>(
 
 export function parseId(value: string): string {
   if (!isUuid(value)) {
-    throw new ApiError(400, "Identifiant invalide");
+    throw new ApiError(400, "Lien incorrect. Rechargez la page.");
   }
   return value;
 }
@@ -72,17 +72,17 @@ export function parseId(value: string): string {
 // Codes d'erreur levés par la base (contraintes et fonctions SQL)
 const DB_ERRORS: Record<string, [number, string]> = {
   "42501": [403, "Accès refusé"],
-  P0002: [404, "Élément introuvable"],
+  P0002: [404, "Introuvable : il a peut-être été supprimé."],
   "23505": [409, "Ce nom est déjà utilisé"],
   "55000": [409, "Campagne archivée : réactivez-la d'abord"],
-  "55006": [409, "Élément verrouillé par le patron"],
+  "55006": [409, "Verrouillé par le patron."],
   "2BP01": [409, "Cette campagne contient des dossiers : archivez-la plutôt"],
-  "54000": [409, "Limite atteinte"],
+  "54000": [409, "Vous avez atteint le maximum autorisé."],
   // Abonnement terminé (déclencheurs de la migration subscriptions)
   "25006": [403, "Abonnement expiré : votre agence est en lecture seule."],
-  "23514": [400, "Données invalides"],
-  "23503": [400, "Données invalides"],
-  "22023": [400, "Données invalides"],
+  "23514": [400, "Certaines informations sont incorrectes."],
+  "23503": [400, "Certaines informations sont incorrectes."],
+  "22023": [400, "Certaines informations sont incorrectes."],
   "22003": [400, "Montant invalide"],
   "22007": [400, "Date invalide"],
   "22008": [400, "Date invalide"],
@@ -98,7 +98,7 @@ export function dbError(
   const known = error.code ? DB_ERRORS[error.code] : undefined;
   if (!known) {
     reportError(`[${label}]`, error.code ?? "erreur");
-    return new ApiError(500, "Erreur serveur");
+    return new ApiError(500, "Une erreur est survenue. Réessayez dans un instant.");
   }
   return new ApiError(known[0], messages[error.code!] ?? known[1]);
 }
@@ -123,6 +123,6 @@ export async function safely(
   } catch (e) {
     if (e instanceof ApiError) return fail(e.message, e.status, e.extra);
     reportException(`[${label}]`, e);
-    return fail("Erreur serveur", 500);
+    return fail("Une erreur est survenue. Réessayez dans un instant.", 500);
   }
 }

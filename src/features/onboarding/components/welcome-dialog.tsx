@@ -7,6 +7,7 @@ import { LogoMark } from "@/components/logo-mark";
 import { useModalDialog } from "@/hooks/use-modal-dialog";
 import { callApi } from "@/lib/api-client";
 import { BRAND } from "@/config/brand";
+import { plural } from "@/lib/plural";
 
 const OWNER_POINTS = [
   {
@@ -92,9 +93,9 @@ export function WelcomeDialog({
         <p className="flex-1 text-xs text-muted-foreground">
           {isOwner
             ? trialDays !== null
-              ? `Essai gratuit : encore ${trialDays} jour${trialDays > 1 ? "s" : ""}. Le guide du tableau de bord vous accompagne.`
+              ? `Essai gratuit : encore ${plural(trialDays, "jour")}. Le guide du tableau de bord vous accompagne.`
               : "Le guide du tableau de bord vous accompagne pas à pas."
-            : "Bon travail !"}
+            : "Bon travail."}
         </p>
         <Button autoFocus onClick={close} className="max-sm:w-full">
           C&apos;est parti

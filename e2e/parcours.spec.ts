@@ -405,7 +405,7 @@ test("réglages : choix des notifications, gardés pour ce membre", async () => 
   await expect(section.getByRole("checkbox", { name: /Messages des candidats/ })).toBeChecked();
   await expect(daily).not.toBeChecked();
   await daily.check();
-  await expect(section.getByRole("status").filter({ hasText: "Enregistré." })).toBeVisible();
+  await expect(section.getByRole("status").filter({ hasText: "Préférences enregistrées" })).toBeVisible();
   await page.reload();
   await expect(page.locator("#notifications").getByRole("checkbox", { name: /Tâches du jour/ })).toBeChecked();
 });
@@ -504,15 +504,15 @@ test("permissions d'un employé : caisse et campagnes", async ({ browser }) => {
   await employee.goto("/campaigns");
   await expect(employee.getByRole("link", { name: "Créer une campagne" })).toHaveCount(0);
 
-  // Le patron accorde « Voir la caisse » et « Gérer les campagnes »
+  // Le patron accorde « Voir les paiements » et « Gérer les campagnes »
   const name = `Sara Employee${run}`;
   await page.goto("/team");
   await page.getByRole("button", { name: `Modifier les permissions de ${name}` }).click();
-  await page.getByRole("checkbox", { name: /Voir la caisse/ }).check();
+  await page.getByRole("checkbox", { name: /Voir les paiements/ }).check();
   await page.getByRole("checkbox", { name: /Gérer les campagnes/ }).check();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   const granted = page.getByRole("list", { name: `Permissions de ${name}` });
-  await expect(granted.getByText("Voir la caisse")).toBeVisible();
+  await expect(granted.getByText("Voir les paiements")).toBeVisible();
   await expect(granted.getByText("Gérer les campagnes")).toBeVisible();
 
   // (première visite : la fenêtre de bienvenue couvre le menu, on ne clique pas)
@@ -540,7 +540,7 @@ test("permissions d'un employé : caisse et campagnes", async ({ browser }) => {
 
   // Retrait : l'accès se ferme
   await page.getByRole("button", { name: `Modifier les permissions de ${name}` }).click();
-  await page.getByRole("checkbox", { name: /Voir la caisse/ }).uncheck();
+  await page.getByRole("checkbox", { name: /Voir les paiements/ }).uncheck();
   await page.getByRole("checkbox", { name: /Gérer les campagnes/ }).uncheck();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByText("Aucune permission en plus")).toBeVisible();
@@ -630,7 +630,7 @@ test("un employé qui a un historique ne peut pas être supprimé", async ({ bro
   await row.getByRole("button", { name: "Supprimer" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: "Supprimer définitivement" }).click();
-  await expect(dialog.getByText(/garder cet historique/)).toBeVisible();
+  await expect(dialog.getByText(/garder son historique/)).toBeVisible();
   await dialog.getByRole("button", { name: "Fermer" }).click();
 
   // Toujours là, parmi les anciens membres
@@ -648,13 +648,13 @@ test("mot de passe oublié : lien reçu par e-mail puis nouveau mot de passe", a
   await expect(visitor.getByRole("heading", { name: "Mot de passe oublié" })).toBeVisible();
   await visitor.getByLabel("Adresse e-mail").fill(owner.email);
   await visitor.getByRole("button", { name: "Recevoir le lien" }).click();
-  await expect(visitor.getByRole("heading", { name: "Vérifiez votre boîte mail" })).toBeVisible();
+  await expect(visitor.getByRole("heading", { name: "Consultez vos e-mails" })).toBeVisible();
 
   // Une adresse inconnue reçoit exactement la même réponse
   await visitor.goto("/forgot-password");
   await visitor.getByLabel("Adresse e-mail").fill(`inconnu-${run}@e2e.test`);
   await visitor.getByRole("button", { name: "Recevoir le lien" }).click();
-  await expect(visitor.getByRole("heading", { name: "Vérifiez votre boîte mail" })).toBeVisible();
+  await expect(visitor.getByRole("heading", { name: "Consultez vos e-mails" })).toBeVisible();
 
   const link = await emailLink(owner.email, "mot de passe");
   await visitor.goto(link);

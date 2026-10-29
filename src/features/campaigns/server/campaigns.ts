@@ -30,7 +30,7 @@ async function create(
     p_stages: settings.stages,
   });
   if (error || typeof data !== "string") {
-    throw error ? dbError("campaigns create", error, NAME_TAKEN) : new ApiError(500, "Erreur serveur");
+    throw error ? dbError("campaigns create", error, NAME_TAKEN) : new ApiError(500, "Une erreur est survenue. Réessayez dans un instant.");
   }
   return { admin, id: data };
 }
@@ -154,7 +154,7 @@ export async function deleteCampaign(member: Member, campaignId: string) {
 
 const GROUP_ERRORS = {
   "23505": "Un groupe de cette campagne porte déjà ce nom",
-  "54000": "Limite de 30 groupes par campagne atteinte",
+  "54000": "30 groupes au maximum par campagne",
 };
 
 // Le groupe doit appartenir à la campagne de l'adresse (et à l'agence)
@@ -183,7 +183,7 @@ export async function createGroup(member: Member, campaignId: string, name: stri
   if (error || typeof data !== "string") {
     throw error
       ? dbError("groups create", error, { ...GROUP_ERRORS, P0002: "Campagne introuvable" })
-      : new ApiError(500, "Erreur serveur");
+      : new ApiError(500, "Une erreur est survenue. Réessayez dans un instant.");
   }
   await logActivity(admin, {
     agencyId: member.agencyId,

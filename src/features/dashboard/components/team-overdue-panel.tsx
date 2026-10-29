@@ -17,7 +17,7 @@ export function TeamOverduePanel({
   today: string;
 }) {
   return (
-    <Panel title="Retards de l'équipe" description="Tâches en retard, campagnes actives.">
+    <Panel title="Retards de l'équipe" description="Tâches en retard de chaque membre.">
       {rows.length === 0 ? (
         <p className="flex items-center gap-2 px-5 py-5 text-sm text-muted-foreground">
           <CheckCircle2 className="size-4 shrink-0 text-success" aria-hidden />

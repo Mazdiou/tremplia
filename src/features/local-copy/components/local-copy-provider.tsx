@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { callApi } from "@/lib/api-client";
 import {
+  COPY_FOLDER_NAME,
   clearConfig,
   copyRootLabel,
   folderPermission,
@@ -66,10 +67,10 @@ function errorMessage(e: unknown): string {
   }
   const name = e instanceof Error ? e.name : "";
   if (name === "NotFoundError") {
-    return "Le dossier de copie est introuvable (déplacé ou supprimé ?). Choisissez-le de nouveau.";
+    return "Le dossier de copie a été déplacé ou supprimé. Choisissez-le à nouveau.";
   }
   if (name === "NotAllowedError" || name === "SecurityError") {
-    return "Chrome n'autorise plus l'accès au dossier. Cliquez sur « Mettre à jour maintenant » pour le permettre de nouveau.";
+    return "Chrome n'autorise plus l'accès au dossier. Cliquez sur « Mettre à jour maintenant ».";
   }
   if (name === "QuotaExceededError") return "Plus assez de place sur le disque.";
   return "La copie a échoué. Vérifiez votre connexion et réessayez.";
@@ -118,7 +119,7 @@ export function LocalCopyProvider({
   const run = useCallback(
     async ({ caseId, manual }: { caseId?: string; manual: boolean }): Promise<RunOutcome> => {
       const c = configRef.current;
-      if (!c) return { ok: false, error: "Aucun dossier de copie choisi (Réglages)." };
+      if (!c) return { ok: false, error: "Choisissez d'abord un dossier de copie dans les Réglages." };
       const p = await folderPermission(c.handle, manual).catch(() => "denied" as const);
       setPermission(p);
       if (p !== "granted") {
@@ -215,7 +216,7 @@ export function LocalCopyProvider({
     } catch {
       return {
         chosen: false,
-        error: "Ce dossier ne peut pas être choisi. Créez un dossier « Tremplia » (sur le Bureau par exemple) et choisissez-le.",
+        error: `Ce dossier ne peut pas être choisi. Créez un dossier « ${COPY_FOLDER_NAME} », sur le Bureau par exemple, et choisissez-le.`,
       };
     }
     if (!handle) return { chosen: false, error: null };

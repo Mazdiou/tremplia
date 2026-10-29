@@ -40,7 +40,7 @@ export async function registerAgency(input: RegisterInput, ip: string): Promise<
     email_confirm: false,
   });
   if (authError || !created.user) {
-    throw weakPasswordError(authError) ?? new ApiError(400, "Impossible de créer le compte (e-mail déjà utilisé)");
+    throw weakPasswordError(authError) ?? new ApiError(400, "Cette adresse e-mail est déjà utilisée.");
   }
 
   // 2. Création de l'agence et du profil patron
@@ -57,7 +57,7 @@ export async function registerAgency(input: RegisterInput, ip: string): Promise<
   if (rpcError || typeof agencyId !== "string") {
     await admin.auth.admin.deleteUser(created.user.id);
     if (rpcError) reportError("[register]", rpcError.code);
-    throw new ApiError(500, "Erreur lors de la création de l'agence");
+    throw new ApiError(500, "L'agence n'a pas pu être créée. Réessayez.");
   }
 
   await logActivity(admin, {
@@ -85,7 +85,7 @@ export async function replaceTemporaryPassword(userId: string, password: string)
     .maybeSingle();
   if (readError) {
     reportError("[change-password]", readError.code);
-    throw new ApiError(500, "Changement impossible");
+    throw new ApiError(500, "Le mot de passe n'a pas pu être changé. Réessayez.");
   }
   if (!profile?.is_active || profile.must_change_password !== true) {
     throw new ApiError(403, "Votre mot de passe est déjà choisi");
@@ -96,7 +96,7 @@ export async function replaceTemporaryPassword(userId: string, password: string)
     const weak = weakPasswordError(pwError);
     if (weak) throw weak;
     reportError("[change-password]", pwError.code ?? pwError.status);
-    throw new ApiError(500, "Changement impossible");
+    throw new ApiError(500, "Le mot de passe n'a pas pu être changé. Réessayez.");
   }
 
   const { error: flagError } = await admin
@@ -105,7 +105,7 @@ export async function replaceTemporaryPassword(userId: string, password: string)
     .eq("id", userId);
   if (flagError) {
     reportError("[change-password]", flagError.code);
-    throw new ApiError(500, "Changement impossible");
+    throw new ApiError(500, "Le mot de passe n'a pas pu être changé. Réessayez.");
   }
 }
 
@@ -120,7 +120,7 @@ export async function resetPasswordFromLink(userId: string, password: string) {
     .maybeSingle();
   if (readError) {
     reportError("[reset-password]", readError.code);
-    throw new ApiError(500, "Changement impossible");
+    throw new ApiError(500, "Le mot de passe n'a pas pu être changé. Réessayez.");
   }
   if (!profile?.is_active) throw new ApiError(403, "Compte désactivé");
 
@@ -129,7 +129,7 @@ export async function resetPasswordFromLink(userId: string, password: string) {
     const weak = weakPasswordError(pwError);
     if (weak) throw weak;
     reportError("[reset-password]", pwError.code ?? pwError.status);
-    throw new ApiError(500, "Changement impossible");
+    throw new ApiError(500, "Le mot de passe n'a pas pu être changé. Réessayez.");
   }
 
   const { error: flagError } = await admin
