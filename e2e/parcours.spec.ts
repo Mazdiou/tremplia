@@ -321,6 +321,43 @@ test("le candidat se connecte et écrit à l'agence", async ({ browser }) => {
   );
 });
 
+test("pièce demandée par l'agence, envoyée par le candidat, puis acceptée", async ({ browser }) => {
+  // L'agence demande une pièce
+  await page.goto(`${caseUrl}/documents`);
+  const requests = page.getByRole("region", { name: "Pièces demandées au candidat" });
+  await requests.getByRole("button", { name: "Demander une pièce" }).click();
+  await requests.getByLabel("Nom de la pièce").fill("Relevé de notes");
+  await requests.getByRole("button", { name: "Demander", exact: true }).click();
+  const agencyRow = requests.getByRole("listitem").filter({ hasText: "Relevé de notes" });
+  await expect(agencyRow.getByText("En attente")).toBeVisible();
+
+  // Le candidat l'envoie depuis l'onglet « Pièces » de son espace
+  const student = await browser.newPage();
+  await student.goto("/student/login");
+  await student.getByLabel("Code d'accès").fill(studentCode);
+  await student.getByRole("button", { name: "Accéder à mon dossier" }).click();
+  await expect(student).toHaveURL(/\/student$/);
+  await student.getByRole("navigation", { name: "Sections de mon dossier" }).getByRole("link", { name: /Pièces/ }).click();
+  const studentRow = student.getByRole("listitem", { name: "Relevé de notes" });
+  await expect(studentRow.getByText("À envoyer")).toBeVisible();
+  const chooser = student.waitForEvent("filechooser");
+  await studentRow.getByRole("button", { name: "Envoyer" }).click();
+  await (await chooser).setFiles({ name: "releve.pdf", mimeType: "application/pdf", buffer: PDF });
+  await expect(studentRow.getByText(/Pièce envoyée/)).toBeVisible();
+  await expect(studentRow.getByText("Envoyée", { exact: true })).toBeVisible();
+
+  // L'agence la voit arriver, l'accepte ; le candidat ne peut plus la changer
+  await page.reload();
+  await expect(agencyRow.getByText("À vérifier")).toBeVisible();
+  await agencyRow.getByRole("button", { name: "Accepter" }).click();
+  await expect(agencyRow.getByText("Acceptée")).toBeVisible();
+
+  await student.reload();
+  await expect(studentRow.getByText("Acceptée", { exact: true })).toBeVisible();
+  await expect(studentRow.getByRole("button", { name: /Remplacer|Retirer/ })).toHaveCount(0);
+  await student.close();
+});
+
 test("un mauvais code d'accès est refusé", async ({ browser }) => {
   const student = await browser.newPage();
   await student.goto("/student/login");

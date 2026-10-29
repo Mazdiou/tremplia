@@ -58,7 +58,8 @@ export default function ConfidentialitePage() {
               <strong>Candidats</strong> : identité, date de naissance, nationalité, ville,
               coordonnées (et celles d&apos;un proche, un parent par exemple, si l&apos;agence les
               saisit), niveau d&apos;études, filière et établissement actuels, diplômes, tests de
-              langue, formations visées et réponses des établissements, documents (PDF), lettre de
+              langue, formations visées et réponses des établissements, documents (PDF, ajoutés
+              par l&apos;agence ou envoyés par le candidat depuis son espace), lettre de
               motivation et avis du candidat, identifiants de plateformes (chiffrés), code
               d&apos;accès à l&apos;espace candidat (chiffré), notes et tâches de l&apos;agence,
               paiements, messages échangés avec l&apos;agence.

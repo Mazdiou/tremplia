@@ -42,6 +42,7 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 | **Campagnes** | Une campagne par procédure et par année (ex. Campus France 2026-2027), créée de zéro ou importée d'un modèle. Elle porte ses groupes (DAP, Hors-DAP, École…), ses étapes (parcours propre à la campagne), ses dates clés, ses informations utiles et ses plateformes suggérées. Archivable, réactivable ; supprimable tant qu'elle ne contient aucun dossier. |
 | **Dossiers** | Un dossier par candidat : identité, contact, niveau, diplômes, tests de langue, groupes, étape, statut (actif, clos, abandonné). Rangés dans un arbre par campagne et par groupe, avec recherche (Ctrl+K). Shift+N (hors saisie) ouvre un nouveau dossier dans la campagne en cours. Un nouveau dossier peut être prérempli à partir d'un candidat déjà suivi dans une autre campagne. Mode sélection de l'arbre : même étape, même responsable (patron) ou même tâche pour plusieurs dossiers d'un coup. |
 | **Documents** | PDF (10 Mo au plus) classés en dossiers, déplaçables par glisser-déposer, verrouillables par le patron, téléchargeables en une archive ZIP. Des photos (téléphone, scanner) s'assemblent en PDF dans le navigateur avant l'envoi : ordre des pages, pages retirées, un seul PDF ou un par photo (30 photos au plus). |
+| **Pièces demandées** | En tête de l'onglet Documents : tout membre demande au candidat les pièces à envoyer (30 au plus, avec suggestions et dossier de rangement). Le candidat ne peut envoyer que celles-ci, depuis son espace ; le document reçu rejoint les documents du dossier (« ajouté par le candidat »). Pièce à vérifier (pastille de l'onglet), puis acceptée par un membre : le candidat ne peut plus la remplacer ni la retirer. Ne plus demander une pièce garde le document reçu. 20 envois préparés par heure et par dossier au plus ; ceux jamais confirmés sont effacés du stockage après un jour. |
 | **Comptes externes** | Identifiants du candidat sur les plateformes (Études en France, etc.). Mots de passe chiffrés, chaque affichage est journalisé. |
 | **Lettre de motivation** | Rédigée dans le dossier, soumise à l'avis du candidat. |
 | **Formations** | Formations visées, ordonnées, avec la réponse de l'établissement (sans réponse, envoyée, acceptée, liste d'attente, refusée). Soumises à l'avis du candidat. |
@@ -54,7 +55,7 @@ candidats suivent leur dossier dans un espace à part, avec un simple code.
 | **Tableau de bord** | Widgets, dans l'ordre par défaut : « À traiter », mes tâches, dossiers sans nouvelles (aucune action de l'agence depuis 14 jours), retards de l'équipe, chiffres clés, avancement des dossiers (une campagne) ou cartes des campagnes (plusieurs), prochaines échéances, réponses des établissements, paiements, encaissements par mois, activité de l'équipe (sur ordinateur seulement) ; toutes les campagnes actives ou une seule. Liste et règles : `src/features/dashboard/widgets.ts`. « Personnaliser » : chaque membre choisit ses widgets, leur ordre (glisser-déposer ou flèches) et leur taille (demi ou pleine largeur) ; le patron peut proposer sa disposition à toute l'équipe, puis la retirer. Paiements et encaissements : patron ou droit « Voir la caisse » ; retards et activité de l'équipe : patron. |
 | **Export Excel** | Classeur complet d'une campagne (patron ou droit « Gérer les campagnes ») ; paiements de l'agence depuis la page « Paiements ». |
 | **Copie sur l'ordinateur** | Chrome et Edge sur ordinateur : chaque membre choisit un dossier (Réglages › Sur cet ordinateur) où Tremplia recopie les PDF des dossiers en cours, rangés comme l'arbre (campagne / groupe ou « Non classés » / NOM Prénom / dossier de documents), pour les déposer facilement sur les plateformes. Mise à jour à l'ouverture de Tremplia, dès qu'un document change dans un dossier ouvert, ou avec un bouton (Réglages, onglet Documents). Tremplia ne touche qu'aux fichiers qu'il a copiés (liste cachée `.tremplia-copie.json`). |
-| **Notifications** | Sur le téléphone ou l'ordinateur, même Tremplia fermé : chaque membre les active sur chacun de ses appareils et choisit pour lui-même (Réglages › Notifications) : messages des candidats et réponses sur la lettre et les formations (dossiers dont il est responsable ; patron : aussi ceux sans responsable actif), tâche confiée par un collègue, tâches du jour chaque matin. Voir [Notifications](#notifications). |
+| **Notifications** | Sur le téléphone ou l'ordinateur, même Tremplia fermé : chaque membre les active sur chacun de ses appareils et choisit pour lui-même (Réglages › Notifications) : messages des candidats, réponses sur la lettre et les formations, pièces envoyées (dossiers dont il est responsable ; patron : aussi ceux sans responsable actif), tâche confiée par un collègue, tâches du jour chaque matin. Voir [Notifications](#notifications). |
 | **Réglages** | Mon compte, mot de passe, apparence (thème clair ou sombre, retenu sur l'appareil ; c'est là qu'il se change sur téléphone), notifications, copie sur l'ordinateur ; pour le patron, l'agence, les valeurs des nouvelles campagnes, le guide de démarrage et l'abonnement. |
 | **Guide de démarrage** | Mot de bienvenue à la première connexion de chaque membre, puis, pour le patron d'une nouvelle agence, la liste « Bien démarrer » en haut du tableau de bord : six étapes (campagne, dossier, document, espace candidat, tâche, employé) qui se cochent d'après les vraies données et mènent chacune au bon écran. Masquable (pour toute l'agence), réaffichable dans les réglages. Les agences déjà inscrites ne le voient pas. |
 | **Équipe** | Le patron ajoute ses employés (mot de passe temporaire à remplacer à la première connexion), leur donne un nouveau mot de passe temporaire s'ils ont oublié le leur (l'ancien cesse de marcher, leurs sessions sont fermées), leur accorde des permissions (voir ci-dessous), les désactive ou les supprime (seulement s'ils n'ont rien créé : sinon ils sont désactivés). Les membres désactivés sont rangés dans « Anciens membres », replié. |
@@ -77,9 +78,12 @@ permissions (page Équipe, `src/lib/permissions.ts`, revérifiées par la base) 
 
 Connexion avec le code de son dossier, donné par l'agence (sans compte). Le
 candidat consulte ses informations, valide ou demande une modification de sa
-lettre et de ses formations, et échange avec l'agence par messages. Il peut
-être prévenu des messages de l'agence sur son téléphone (bouton en haut de
-ses messages).
+lettre et de ses formations, et échange avec l'agence par messages. Si
+l'agence lui demande des pièces, l'onglet « Pièces » apparaît : il envoie
+chacune en PDF ou en photos (assemblées en un PDF), puis peut la voir, la
+remplacer ou la retirer tant que l'agence ne l'a pas acceptée. Il peut être
+prévenu des messages de l'agence et des pièces demandées sur son téléphone
+(bouton en haut de ses messages).
 
 ### Pour l'administrateur de la plateforme (`/admin`)
 
@@ -203,7 +207,8 @@ de la précédente :
 - tableau de bord personnalisé puis remis à la disposition de départ ;
   disposition proposée à l'équipe puis retirée ;
 - ouverture de l'espace candidat, connexion du candidat et message reçu par
-  l'agence, refus d'un mauvais code ;
+  l'agence, pièce demandée par l'agence, envoyée par le candidat puis
+  acceptée, refus d'un mauvais code ;
 - réglages (profil de l'agence, valeurs des nouvelles campagnes, choix des
   notifications, changement du mot de passe) ;
 - page Paiements (encaissements, restes à payer, export) ; permissions d'un
@@ -771,9 +776,11 @@ le lisent pas. Code : `src/features/notifications`, affichage par
 |---|---|---|
 | Message d'un candidat | Le responsable du dossier ; s'il n'y en a pas (ou plus d'actif), les patrons | `sendStudentMessage` |
 | Réponse du candidat (validation, demande de modification) | Idem | `submitReview` |
+| Pièce envoyée ou remplacée par le candidat | Idem | `addStudentDocument` |
 | Tâche confiée | Le membre chargé de la tâche, quand un collègue la lui confie (création, changement de responsable, ou même tâche pour plusieurs dossiers : une seule notification) | `createTask`, `updateTask`, `applyBulkAction` |
 | Tâches du jour | Chaque matin vers 8 h, le membre qui l'a demandée, s'il a des tâches du jour ou en retard (campagnes actives) | `/api/cron/task-digest` (`.github/workflows/taches-quotidiennes.yml`) |
 | Message de l'agence | Le candidat, sur les appareils activés depuis ses messages, tant que son accès (code) reste le même | `sendAgencyMessage` |
+| Pièce demandée par l'agence | Idem (plusieurs demandes à la suite : une seule notification, la dernière) | `createRequest` |
 
 - **Choix** (Réglages › Notifications) : chaque membre pour lui-même, sur
   tous ses appareils. Par défaut tout est coché sauf « Tâches du jour ».

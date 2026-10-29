@@ -8,10 +8,12 @@ import {
   agencyMessagePush,
   assignedTaskPush,
   assignedTasksPush,
+  documentRequestPush,
   studentDocumentPush,
   studentMessagePush,
   studentReviewPush,
   taskDigestPush,
+  type PushPayload,
 } from "../texts";
 import { pushConfigured, pushInBackground, sendPush, type PushTarget } from "./push";
 
@@ -149,9 +151,15 @@ export function notifyAssignedTasks(
   });
 }
 
-// Message de l'agence : les appareils du candidat (accès en cours)
-export function notifyStudent(agencyId: string, caseId: string, body: string) {
-  pushInBackground("push student", async () => {
+// Vers les appareils du candidat (accès en cours seulement), au nom de
+// l'agence
+function pushToStudent(
+  label: string,
+  agencyId: string,
+  caseId: string,
+  payload: (agencyName: string) => PushPayload,
+) {
+  pushInBackground(label, async () => {
     const admin = createAdminClient();
     const to = await targets(admin, "push_targets_student", {
       p_agency_id: agencyId,
@@ -160,8 +168,20 @@ export function notifyStudent(agencyId: string, caseId: string, body: string) {
     if (to.length === 0) return;
     const { data, error } = await admin.from("agencies").select("name").eq("id", agencyId).maybeSingle();
     if (error) throw dbError("push agency name", error);
-    await sendPush(to, agencyMessagePush((data?.name as string | undefined) ?? "Votre agence", body));
+    await sendPush(to, payload((data?.name as string | undefined) ?? "Votre agence"));
   });
+}
+
+// Message de l'agence
+export function notifyStudent(agencyId: string, caseId: string, body: string) {
+  pushToStudent("push student", agencyId, caseId, (name) => agencyMessagePush(name, body));
+}
+
+// Pièce demandée par l'agence
+export function notifyStudentRequest(agencyId: string, caseId: string, label: string) {
+  pushToStudent("push student request", agencyId, caseId, (name) =>
+    documentRequestPush(name, label),
+  );
 }
 
 // Récapitulatif du matin, lancé une fois par jour

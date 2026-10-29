@@ -31,6 +31,7 @@ export const pushTestSchema = pushEndpointSchema.extend({ delayed: z.boolean().o
 export const notificationPreferencesSchema = z.object({
   studentMessages: z.boolean(),
   studentReviews: z.boolean(),
+  studentDocuments: z.boolean(),
   assignedTasks: z.boolean(),
   dailyTasks: z.boolean(),
 });
@@ -41,6 +42,7 @@ export type NotificationPreferences = z.infer<typeof notificationPreferencesSche
 export const DEFAULT_PREFERENCES: NotificationPreferences = {
   studentMessages: true,
   studentReviews: true,
+  studentDocuments: true,
   assignedTasks: true,
   dailyTasks: false,
 };
@@ -48,6 +50,7 @@ export const DEFAULT_PREFERENCES: NotificationPreferences = {
 export const PREFERENCE_KEYS = [
   "studentMessages",
   "studentReviews",
+  "studentDocuments",
   "assignedTasks",
   "dailyTasks",
 ] as const satisfies readonly (keyof NotificationPreferences)[];
@@ -63,6 +66,10 @@ export function preferenceInfo(isOwner: boolean) {
     studentReviews: {
       label: "Réponses des candidats",
       description: `Lettre ou formations validées, demande de modification. ${cases}`,
+    },
+    studentDocuments: {
+      label: "Pièces des candidats",
+      description: `Pièce demandée envoyée ou remplacée par le candidat. ${cases}`,
     },
     assignedTasks: {
       label: "Tâches confiées",

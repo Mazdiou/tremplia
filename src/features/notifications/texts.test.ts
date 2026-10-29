@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   agencyMessagePush,
   assignedTaskPush,
+  documentRequestPush,
   assignedTasksPush,
   messageFrom,
   ofName,
@@ -125,6 +126,16 @@ describe("notifications du candidat", () => {
       tag: "message",
     });
   });
+
+  it("pièce demandée : l'agence, la pièce, vers l'onglet Pièces ; une seule à la fois", () => {
+    expect(documentRequestPush("Atlas Études", "Passeport")).toEqual({
+      title: "Atlas Études vous demande une pièce",
+      body: "« Passeport » : envoyez-la depuis votre espace.",
+      url: "/student/documents",
+      tag: "document-request",
+    });
+    expect(documentRequestPush("A", "x").tag).toBe(documentRequestPush("A", "y").tag);
+  });
 });
 
 describe("adresses ouvertes au toucher", () => {
@@ -136,6 +147,7 @@ describe("adresses ouvertes au toucher", () => {
       assignedTaskPush(CASE, { id: "t", title: "y" }, "Z", "X"),
       taskDigestPush(1, 1),
       agencyMessagePush("A", "y"),
+      documentRequestPush("A", "y"),
       testPush(),
     ]) {
       expect(p.url.startsWith("/")).toBe(true);

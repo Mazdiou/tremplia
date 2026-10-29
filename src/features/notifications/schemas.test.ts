@@ -58,6 +58,7 @@ describe("notificationPreferencesSchema", () => {
     expect(DEFAULT_PREFERENCES).toEqual({
       studentMessages: true,
       studentReviews: true,
+      studentDocuments: true,
       assignedTasks: true,
       dailyTasks: false,
     });

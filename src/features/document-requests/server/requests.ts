@@ -5,6 +5,7 @@ import {
   logCaseActivity,
   type AuthorizedCase,
 } from "@/features/cases/server/authorize-case";
+import { notifyStudentRequest } from "@/features/notifications/server/events";
 import {
   MAX_REQUESTS_PER_CASE,
   type acceptRequestSchema,
@@ -46,6 +47,8 @@ export async function createRequest(auth: AuthorizedCase, caseId: string, input:
     targetType: "document_request",
     targetId: id,
   });
+  // Rien n'arrive au candidat tant que son accès est fermé
+  notifyStudentRequest(auth.agencyId, caseId, input.label);
   return id;
 }
 

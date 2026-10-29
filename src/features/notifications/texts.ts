@@ -126,6 +126,17 @@ export function agencyMessagePush(agencyName: string, body: string): PushPayload
   };
 }
 
+// Pièce demandée par l'agence. Même tag pour toutes : plusieurs demandes à
+// la suite ne laissent qu'une notification, la dernière.
+export function documentRequestPush(agencyName: string, label: string): PushPayload {
+  return {
+    title: `${agencyName} vous demande une pièce`,
+    body: preview(`« ${label} » : envoyez-la depuis votre espace.`),
+    url: "/student/documents",
+    tag: "document-request",
+  };
+}
+
 // Essai : membre (vers Réglages) ou candidat (vers ses messages)
 export function testPush(student = false): PushPayload {
   return student
