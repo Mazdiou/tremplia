@@ -380,10 +380,12 @@ supabase/
 test/                   doublure de "server-only" pour Vitest
 e2e/                    tests de bout en bout (Playwright)
 scripts/backup/         sauvegarde chiffrée et restauration
+scripts/architecture.mjs  met à jour le schéma docs/architecture.html (hors
+                        dépôt) d'après le code ; --check affiche les écarts
 ```
 
 Domaines de `features/` : `admin`, `agency`, `auth`, `campaigns`, `cases`,
-`dashboard`, `documents`, `export`, `history`, `landing`, `local-copy`, `messages`,
+`dashboard`, `document-requests`, `documents`, `export`, `history`, `landing`, `local-copy`, `messages`,
 `motivation-letter`, `notes`, `notifications`, `onboarding`, `payments`, `programs`, `pwa`, `settings`,
 `stages`, `student`, `subscription`, `tasks`, `team`, `whatsapp`.
 
