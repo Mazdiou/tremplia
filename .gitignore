@@ -71,3 +71,6 @@ cle-privee*
 
 # documentation locale (schéma d'architecture…), gardée hors du dépôt
 /docs/
+
+# Outils de Claude Code (skills) : gardés sur cet ordinateur seulement
+.claude/
