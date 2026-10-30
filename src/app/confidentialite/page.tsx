@@ -139,7 +139,6 @@ export default function ConfidentialitePage() {
             "Comptes, dossiers et documents : tant que l'agence utilise le service. Après la fin d'un abonnement, ils restent consultables en lecture seule.",
             "Sur demande du patron de l'agence, toutes les données de l'agence sont supprimées dans un délai de 30 jours ; elles disparaissent ensuite des sauvegardes à mesure que celles-ci expirent (12 mois au plus).",
             `Inscription jamais confirmée : supprimée après ${UNCONFIRMED_DAYS} jours.`,
-            "Empreintes d'adresses IP et d'adresses e-mail (limites d'essais) : 1 jour.",
             "Sessions de connexion : jusqu'à la déconnexion ou leur expiration ; journal des connexions : tant que le compte existe.",
             "Appareils abonnés aux notifications : jusqu'à leur désactivation ou la déconnexion, ou dès que le navigateur ne les accepte plus.",
             "Sauvegardes chiffrées : 30 jours pour les quotidiennes, 12 mois pour les mensuelles.",

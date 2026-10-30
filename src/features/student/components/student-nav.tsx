@@ -77,6 +77,8 @@ export function StudentLogout() {
     <Button
       variant="ghost"
       size="sm"
+      // Sur téléphone, seule l'icône est affichée
+      aria-label="Se déconnecter"
       disabled={busy}
       onClick={async () => {
         setBusy(true);

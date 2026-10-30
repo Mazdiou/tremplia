@@ -507,6 +507,7 @@ Les migrations (`supabase/migrations/`) sont découpées par domaine :
 | `push_notifications` | appareils abonnés aux notifications, choix de chaque membre, destinataires de chaque événement, récapitulatif du matin |
 | `dashboard_layouts` | disposition du tableau de bord de chaque membre et celle de l'agence |
 | `case_last_activity` | date de la dernière action de l'agence sur chaque dossier (« Dossiers sans nouvelles ») |
+| `document_requests` | pièces demandées au candidat, envois depuis son espace, acceptation par l'agence |
 
 Chaque domaine a son fichier de tests pgTAP dans `supabase/tests/` ; les
 migrations qui complètent un domaine (`case_payment_totals`,
