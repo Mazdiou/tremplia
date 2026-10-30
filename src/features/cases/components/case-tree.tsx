@@ -170,13 +170,21 @@ export function CaseTree({
 
   const activeCampaigns = campaigns.filter((c) => c.status === "active");
   // Campagnes archivées masquées, sauf réglage ou dossier ouvert dedans
-  const shownCampaigns = campaigns.filter(
+  const visibleCampaigns = campaigns.filter(
     (c) =>
       c.status === "active" ||
       prefs.showArchived ||
       selectedCase?.campaign_id === c.id ||
       selectedCampaignId === c.id,
   );
+  // Épinglées en tête, par ordre alphabétique ; les autres gardent leur ordre
+  const pinned = new Set(prefs.pinned);
+  const shownCampaigns = [
+    ...visibleCampaigns
+      .filter((c) => pinned.has(c.id))
+      .sort((a, b) => a.name.localeCompare(b.name, "fr", { sensitivity: "base" })),
+    ...visibleCampaigns.filter((c) => !pinned.has(c.id)),
+  ];
 
   function isCampOpen(camp: TreeCampaign) {
     return (
@@ -402,12 +410,14 @@ export function CaseTree({
                 const campCases = found.filter((c) => c.campaign_id === camp.id);
                 const campOpen = isCampOpen(camp);
                 const campActive = camp.status === "active";
+                const campPinned = pinned.has(camp.id);
 
                 return (
                   <div key={camp.id}>
                     <CampaignHeader
                       name={camp.name}
                       archived={!campActive}
+                      pinned={campPinned}
                       open={campOpen}
                       onToggle={() =>
                         setPrefs((p) => ({ open: { ...p.open, [camp.id]: !campOpen } }))
@@ -417,6 +427,14 @@ export function CaseTree({
                         campaignId={camp.id}
                         campaignName={camp.name}
                         active={campActive && !readOnly}
+                        pinned={campPinned}
+                        onTogglePin={() =>
+                          setPrefs((p) => ({
+                            pinned: campPinned
+                              ? p.pinned.filter((id) => id !== camp.id)
+                              : [...p.pinned, camp.id],
+                          }))
+                        }
                         onAddGroup={() => {
                           setPrefs((p) => ({ open: { ...p.open, [camp.id]: true } }));
                           setAddingGroupFor(camp.id);

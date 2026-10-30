@@ -12,6 +12,8 @@ export type UiPrefs = {
   width: number;
   collapsed: boolean;
   open: Record<string, boolean>;
+  // Campagnes épinglées en tête de l'arbre (identifiants)
+  pinned: string[];
   showLevel: boolean;
   showClosed: boolean;
   showArchived: boolean;
@@ -40,6 +42,7 @@ export const DEFAULT_PREFS: UiPrefs = {
   width: 288,
   collapsed: false,
   open: {},
+  pinned: [],
   showLevel: false,
   showClosed: false,
   showArchived: false,
@@ -76,6 +79,7 @@ export function sanitize(raw: unknown): UiPrefs {
         : d.width,
     collapsed: r.collapsed === true,
     open: r.open && typeof r.open === "object" ? r.open : d.open,
+    pinned: Array.isArray(r.pinned) ? r.pinned.filter((id) => typeof id === "string") : d.pinned,
     showLevel: r.showLevel === true,
     showClosed: r.showClosed === true,
     showArchived: r.showArchived === true,

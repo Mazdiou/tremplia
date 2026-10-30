@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { AlarmClock, ChevronDown, ChevronRight } from "lucide-react";
+import { AlarmClock, ChevronDown, ChevronRight, Pin } from "lucide-react";
 import { PILL_TONE_CLASSES } from "@/components/page-ui";
 import { EDUCATION_LEVEL_LABELS, STATUS_SUFFIXES, labelOf } from "@/features/cases/labels";
 import type { TreeCase } from "@/features/cases/fetch-campaign-cases";
@@ -17,12 +17,14 @@ import { GroupActions } from "./tree-actions";
 export function CampaignHeader({
   name,
   archived,
+  pinned,
   open,
   onToggle,
   children,
 }: {
   name: string;
   archived: boolean;
+  pinned: boolean;
   open: boolean;
   onToggle: () => void;
   children: ReactNode;
@@ -41,6 +43,7 @@ export function CampaignHeader({
           <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
         )}
         <span className="truncate">{name}</span>
+        {pinned && <Pin className="size-3 shrink-0" role="img" aria-label="Épinglée" />}
         {archived && <span className="shrink-0 normal-case">(archivée)</span>}
       </button>
       {children}

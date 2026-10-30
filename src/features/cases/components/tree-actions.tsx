@@ -65,12 +65,16 @@ export function CampaignMenu({
   campaignId,
   campaignName,
   active,
+  pinned,
   onAddGroup,
+  onTogglePin,
 }: {
   campaignId: string;
   campaignName: string;
   active: boolean;
+  pinned: boolean;
   onAddGroup: () => void;
+  onTogglePin: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -115,6 +119,17 @@ export function CampaignMenu({
           <Link role="menuitem" href={`/campaigns/${campaignId}`} className={MENU_ITEM_CLASS}>
             Ouvrir la campagne
           </Link>
+          <button
+            role="menuitem"
+            type="button"
+            className={MENU_ITEM_CLASS}
+            onClick={() => {
+              setOpen(false);
+              onTogglePin();
+            }}
+          >
+            {pinned ? "Désépingler" : "Épingler en haut"}
+          </button>
         </div>
       )}
     </div>

@@ -48,4 +48,9 @@ describe("sanitize (mémoire de l'interface)", () => {
     expect(prefs.mine).toBe(false);
     expect(prefs.caseHeader).toBe("auto");
   });
+
+  it("ne garde que des identifiants dans les campagnes épinglées", () => {
+    expect(sanitize({ pinned: ["a", 3, null, "b"] }).pinned).toEqual(["a", "b"]);
+    expect(sanitize({ pinned: "a" }).pinned).toEqual([]);
+  });
 });
