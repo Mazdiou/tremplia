@@ -291,7 +291,10 @@ export function MetaList({
   const shown = items.filter((x) => x !== null && x !== undefined && x !== false && x !== "");
   return (
     <span className={cn("inline-flex max-w-full overflow-hidden align-bottom", className)}>
-      <span className="-ml-[17px] inline-flex min-w-0 flex-wrap items-center gap-y-0.5">
+      {/* Décalage = largeur d'un séparateur (2 × mx-2 + 1 px), en rem comme
+          ses marges : le séparateur en tête de chaque ligne est caché, le
+          texte jamais coupé, même en texte réduit */}
+      <span className="-ml-[calc(var(--spacing)*4+1px)] inline-flex min-w-0 flex-wrap items-center gap-y-0.5">
         {shown.map((item, i) => (
           <span key={i} className="inline-flex min-w-0 items-center">
             <span aria-hidden className="mx-2 h-3 w-px shrink-0 bg-current opacity-30" />
