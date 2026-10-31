@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Check,
   ChevronDown,
   Copy,
+  ExternalLink,
   Eye,
   EyeOff,
   KeyRound,
   Loader2,
   Mail,
+  MoreHorizontal,
   Pencil,
   Plus,
   Send,
@@ -25,6 +27,7 @@ import {
   MAX_EXTERNAL_ACCOUNTS,
   type ExternalAccountStatus,
 } from "@/features/cases/labels";
+import { useDismiss } from "@/hooks/use-dismiss";
 import { callApi } from "@/lib/api-client";
 import { RowMenu, TrackRow } from "./case-header";
 import { OutlookAssistant, type AssistantCandidate } from "./outlook-assistant";
@@ -45,7 +48,9 @@ const HIDE_AFTER_MS = 30_000;
 const selectClass =
   "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
 
-// En-tête de la fiche : comptes du candidat sur les plateformes externes.
+// En-tête de la fiche : comptes du candidat sur les plateformes externes, un
+// par pastille (la ligne garde sa hauteur quel que soit leur nombre). La
+// pastille ouvre la fiche du compte : identifiant, mot de passe, site.
 // Le mot de passe n'est jamais dans la page : il est demandé au serveur, qui
 // inscrit l'affichage au journal avant de le renvoyer. L'assistant Outlook
 // prépare l'adresse du candidat ; « Remettre » lui transmet ses comptes.
@@ -66,14 +71,20 @@ export function ExternalAccountsPinned({
   readOnly?: boolean;
 }) {
   const [adding, setAdding] = useState(false);
+  // Compte en cours de modification (formulaire sous les pastilles)
+  const [editing, setEditing] = useState<string | null>(null);
+  // Une seule fiche de compte ouverte à la fois
+  const [openId, setOpenId] = useState<string | null>(null);
   // Assistant monté au premier clic puis gardé (valeurs conservées)
   const [assistant, setAssistant] = useState<"open" | "closed" | null>(null);
   const [handover, setHandover] = useState(false);
   const listId = useId();
   const used = new Set(accounts.map((a) => a.platform.toLocaleLowerCase("fr")));
   const free = suggestions.filter((s) => !used.has(s.toLocaleLowerCase("fr")));
+  const editedAccount = accounts.find((a) => a.id === editing) ?? null;
 
-  const canAdd = !readOnly && !adding && accounts.length < MAX_EXTERNAL_ACCOUNTS;
+  const canAdd =
+    !readOnly && !adding && !editedAccount && accounts.length < MAX_EXTERNAL_ACCOUNTS;
   // Compte Outlook prévu (« à créer ») : l'assistant le complète au lieu
   // d'en ajouter un
   const outlookToCreate =
@@ -86,11 +97,16 @@ export function ExternalAccountsPinned({
 
   const openAssistant = () => {
     setAdding(false);
+    setEditing(null);
+    setOpenId(null);
     setAssistant("open");
   };
+  const startAdding = () => {
+    setEditing(null);
+    setOpenId(null);
+    setAdding(true);
+  };
 
-  // Ligne du panneau de suivi : un compte par ligne, le premier en face du
-  // libellé
   return (
     <>
       <datalist id={listId}>
@@ -101,21 +117,11 @@ export function ExternalAccountsPinned({
 
       <TrackRow
         icon={KeyRound}
-        label="Comptes externes"
+        label="Comptes"
         multiline
         actions={
-          (canHandOver || canAdd) && (
+          (canAdd || canHandOver) && (
             <>
-              {canHandOver && (
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={() => setHandover(true)}
-                  title="Envoyer ses comptes au candidat"
-                >
-                  <Send /> Remettre
-                </Button>
-              )}
               {assistInMenu ? (
                 <RowMenu
                   label="Ajouter un compte"
@@ -146,7 +152,7 @@ export function ExternalAccountsPinned({
                         className={cn(MENU_ITEM_CLASS, "flex items-center gap-2")}
                         onClick={() => {
                           close();
-                          setAdding(true);
+                          startAdding();
                         }}
                       >
                         <KeyRound className="size-4 text-muted-foreground" aria-hidden />
@@ -157,10 +163,33 @@ export function ExternalAccountsPinned({
                 </RowMenu>
               ) : (
                 canAdd && (
-                  <Button variant="ghost" size="xs" onClick={() => setAdding(true)}>
+                  <Button variant="ghost" size="xs" onClick={startAdding}>
                     <Plus /> Ajouter
                   </Button>
                 )
+              )}
+              {canHandOver && (
+                <RowMenu
+                  label="Autres actions sur les comptes"
+                  size="icon-xs"
+                  trigger={<MoreHorizontal />}
+                >
+                  {(close) => (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={cn(MENU_ITEM_CLASS, "flex items-center gap-2")}
+                      onClick={() => {
+                        close();
+                        setOpenId(null);
+                        setHandover(true);
+                      }}
+                    >
+                      <Send className="size-4 text-muted-foreground" aria-hidden />
+                      Remettre au candidat
+                    </button>
+                  )}
+                </RowMenu>
               )}
             </>
           )
@@ -171,14 +200,23 @@ export function ExternalAccountsPinned({
         ) : (
           <div className="w-full">
             {accounts.length > 0 && (
-              <ul className="space-y-1">
+              <ul className="flex flex-wrap gap-1.5" aria-label="Comptes du candidat">
                 {accounts.map((a) => (
-                  <AccountRow
+                  <AccountChip
                     key={a.id}
                     caseId={caseId}
                     account={a}
-                    listId={listId}
-                    readOnly={readOnly}
+                    open={openId === a.id}
+                    onOpenChange={(o) => setOpenId(o ? a.id : null)}
+                    onEdit={
+                      readOnly
+                        ? undefined
+                        : () => {
+                            setOpenId(null);
+                            setAdding(false);
+                            setEditing(a.id);
+                          }
+                    }
                     onAssist={!readOnly && a.id === outlookToCreate?.id ? openAssistant : undefined}
                   />
                 ))}
@@ -186,6 +224,15 @@ export function ExternalAccountsPinned({
             )}
             {adding && (
               <AccountForm caseId={caseId} listId={listId} onDone={() => setAdding(false)} />
+            )}
+            {editedAccount && (
+              <AccountForm
+                key={editedAccount.id}
+                caseId={caseId}
+                listId={listId}
+                account={editedAccount}
+                onDone={() => setEditing(null)}
+              />
             )}
           </div>
         )}
@@ -214,18 +261,115 @@ export function ExternalAccountsPinned({
   );
 }
 
-function AccountRow({
+// Largeur de la fiche d'un compte (w-80), pour l'ouvrir vers la gauche
+// quand la pastille est trop près du bord droit
+const PANEL_WIDTH = 320;
+
+// Pastille d'un compte et sa fiche, ouverte sous elle. Téléphone : en bas
+// de l'écran, comme les autres menus.
+function AccountChip({
   caseId,
   account,
-  listId,
-  readOnly,
+  open,
+  onOpenChange,
+  onEdit,
   onAssist,
 }: {
   caseId: string;
   account: PinnedAccount;
-  listId: string;
-  readOnly: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  // Absent : abonnement expiré, consultation seulement
+  onEdit?: () => void;
   // Compte Outlook à créer : ouvre l'assistant
+  onAssist?: () => void;
+}) {
+  const ref = useRef<HTMLLIElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const panelId = useId();
+  const [alignEnd, setAlignEnd] = useState(false);
+  const toCreate = account.status === "to_create";
+
+  useDismiss(ref, open, onOpenChange);
+
+  // Le focus passe dans la fiche à l'ouverture (lecteurs d'écran, clavier)
+  useEffect(() => {
+    if (open) panelRef.current?.focus();
+  }, [open]);
+
+  function toggle() {
+    if (!open && buttonRef.current) {
+      const { left } = buttonRef.current.getBoundingClientRect();
+      setAlignEnd(left + PANEL_WIDTH > document.documentElement.clientWidth - 16);
+    }
+    onOpenChange(!open);
+  }
+
+  return (
+    <li ref={ref} className="relative max-w-full">
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls={open ? panelId : undefined}
+        aria-label={`Compte ${account.platform}${toCreate ? ", à créer" : ""}`}
+        title={account.login ?? undefined}
+        onClick={toggle}
+        className={cn(
+          "touch-target flex h-6 max-w-full items-center gap-1 rounded-full border bg-card pr-1.5 pl-2.5 text-sm font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
+          open && "bg-muted",
+          toCreate && "border-dashed text-muted-foreground",
+        )}
+      >
+        <span className="truncate">{account.platform}</span>
+        {toCreate && <span className="shrink-0 text-xs font-normal">à créer</span>}
+        <ChevronDown
+          className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+      {open && (
+        <div
+          ref={panelRef}
+          id={panelId}
+          role="dialog"
+          aria-label={`Compte ${account.platform}`}
+          tabIndex={-1}
+          onKeyDown={(e) => {
+            // Échap (refermée par useDismiss) : retour sur la pastille
+            if (e.key === "Escape") buttonRef.current?.focus();
+          }}
+          className={cn(
+            "absolute top-8 z-30 w-80 rounded-xl border bg-popover p-3 text-popover-foreground shadow-lg outline-none",
+            alignEnd ? "right-0" : "left-0",
+            "max-sm:fixed max-sm:inset-x-4 max-sm:top-auto max-sm:right-4 max-sm:bottom-[calc(5rem+env(safe-area-inset-bottom))] max-sm:left-4 max-sm:w-auto",
+          )}
+        >
+          <AccountDetails
+            caseId={caseId}
+            account={account}
+            onEdit={onEdit}
+            onAssist={onAssist}
+          />
+        </div>
+      )}
+    </li>
+  );
+}
+
+// Contenu de la fiche d'un compte. Démonté à la fermeture : un mot de passe
+// affiché ne reste pas dans la page.
+function AccountDetails({
+  caseId,
+  account,
+  onEdit,
+  onAssist,
+}: {
+  caseId: string;
+  account: PinnedAccount;
+  onEdit?: () => void;
   onAssist?: () => void;
 }) {
   const [password, setPassword] = useState<string | null>(null);
@@ -233,7 +377,6 @@ function AccountRow({
   const [now, setNow] = useState(0);
   const [revealing, setRevealing] = useState(false);
   const [copied, setCopied] = useState<"login" | "password" | null>(null);
-  const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Masquage automatique après 30 s, décompte affiché, et masquage immédiat
@@ -288,70 +431,61 @@ function AccountRow({
   const isExisting = account.status === "existing";
   const secondsLeft = Math.max(0, Math.ceil((expiresAt - now) / 1000));
 
-  if (editing) {
-    return (
-      <li>
-        <AccountForm
-          caseId={caseId}
-          listId={listId}
-          account={account}
-          onDone={() => setEditing(false)}
-        />
-      </li>
-    );
-  }
-
   return (
-    <li>
-      {/* Crayon dans sa colonne : il reste au bout de la première ligne
-          même quand le compte passe sur deux */}
-      <div className="flex items-start gap-2">
-        <div className="flex min-h-6 min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
-          <span className="flex items-center gap-1.5 font-medium">
-            {account.url ? (
-              <a
-                href={account.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline-offset-2 hover:underline"
-              >
-                {account.platform}
-              </a>
-            ) : (
-              account.platform
-            )}
-          </span>
+    <div className="space-y-3 text-sm">
+      <div className="flex items-center justify-between gap-3">
+        <p className="min-w-0 truncate font-semibold">{account.platform}</p>
+        {account.url && (
+          <a
+            href={account.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex shrink-0 items-center gap-1 text-xs font-medium text-link hover:underline"
+          >
+            Ouvrir le site <ExternalLink className="size-3" aria-hidden />
+          </a>
+        )}
+      </div>
 
-          {account.login && (
-            <span className="flex min-w-0 items-center gap-1">
-              <span className="truncate">{account.login}</span>
+      <dl className="space-y-2.5">
+        {account.login && (
+          <div>
+            <dt className="text-xs text-muted-foreground">Identifiant</dt>
+            <dd className="flex items-center gap-1">
+              <span className="min-w-0 [overflow-wrap:anywhere]">{account.login}</span>
               <Button
                 variant="ghost"
                 size="icon-xs"
+                className="shrink-0"
                 onClick={() => copy(account.login!, "login")}
                 aria-label={`Copier l'identifiant ${account.platform}`}
                 title="Copier l'identifiant"
               >
                 {copied === "login" ? <Check /> : <Copy />}
               </Button>
-            </span>
-          )}
-
-          {isExisting ? (
-            password === null ? (
+            </dd>
+          </div>
+        )}
+        <div>
+          <dt className="text-xs text-muted-foreground">Mot de passe</dt>
+          <dd className="mt-0.5">
+            {!isExisting ? (
+              <span className="text-muted-foreground">
+                {EXTERNAL_ACCOUNT_STATUS_LABELS.to_create}
+              </span>
+            ) : password === null ? (
               <Button
-                variant="ghost"
-                size="icon-xs"
+                variant="outline"
+                size="xs"
                 onClick={reveal}
                 disabled={revealing}
                 aria-label={`Afficher le mot de passe ${account.platform}`}
-                title="Afficher le mot de passe"
               >
-                {revealing ? <Loader2 className="animate-spin" /> : <Eye />}
+                {revealing ? <Loader2 className="animate-spin" /> : <Eye />} Afficher
               </Button>
             ) : (
-              <span className="flex flex-wrap items-center gap-2">
-                <code className="rounded-md bg-background px-2 py-0.5 break-all">
+              <span className="flex flex-wrap items-center gap-1.5">
+                <code className="rounded-md bg-muted px-2 py-0.5 [overflow-wrap:anywhere]">
                   {password}
                 </code>
                 <Button variant="outline" size="xs" onClick={() => copy(password, "password")}>
@@ -365,50 +499,40 @@ function AccountRow({
                   {secondsLeft} s
                 </span>
               </span>
-            )
-          ) : (
-            <>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                {EXTERNAL_ACCOUNT_STATUS_LABELS.to_create}
-              </span>
-              {onAssist && (
-                <Button variant="outline" size="xs" onClick={onAssist}>
-                  <Mail /> Créer avec l&apos;assistant
-                </Button>
-              )}
-            </>
-          )}
+            )}
+          </dd>
         </div>
-
-        {!readOnly && (
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            className="shrink-0 text-muted-foreground"
-            onClick={() => {
-              setPassword(null);
-              setError(null);
-              setEditing(true);
-            }}
-            aria-label={`Modifier le compte ${account.platform}`}
-            title="Modifier"
-          >
-            <Pencil />
-          </Button>
-        )}
-      </div>
+      </dl>
 
       {password !== null && (
-        <p className="pb-1 text-xs text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Cette consultation est notée dans l&apos;historique.
         </p>
       )}
       {error && (
-        <p className="pb-1 text-sm text-destructive" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       )}
-    </li>
+
+      {onAssist && (
+        <Button size="sm" className="w-full" onClick={onAssist}>
+          <Mail /> Créer avec l&apos;assistant
+        </Button>
+      )}
+      {onEdit && (
+        <div className="border-t pt-2">
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={onEdit}
+            aria-label={`Modifier le compte ${account.platform}`}
+          >
+            <Pencil /> Modifier
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
 

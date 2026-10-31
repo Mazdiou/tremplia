@@ -294,9 +294,11 @@ function ReviewPill({ review }: { review: Review }) {
   const on = review.respondedLabel ? ` le ${review.respondedLabel}` : "";
   if (review.status === "approved") {
     return (
-      <StatusPill tone="ok">
-        <CircleCheck className="size-3.5" aria-hidden /> Validé par le candidat{on}
-      </StatusPill>
+      <span title="Lettre et formations validées par le candidat" className="flex">
+        <StatusPill tone="ok">
+          <CircleCheck className="size-3.5" aria-hidden /> Validé{on}
+        </StatusPill>
+      </span>
     );
   }
   if (review.status === "changes_requested") {

@@ -84,7 +84,7 @@ export function TrackPanel({ children }: { children: React.ReactNode }) {
 
 // Retrait des lignes secondaires d'une section, pour commencer sous son
 // contenu (largeur du libellé + écarts)
-export const TRACK_INDENT = "px-4 @xl:pl-[11.75rem]";
+export const TRACK_INDENT = "px-4 @xl:pl-[10.75rem]";
 
 export function TrackRow({
   icon: Icon,
@@ -112,7 +112,7 @@ export function TrackRow({
         multiline ? "items-start" : "items-center",
       )}
     >
-      <span className="col-start-1 row-start-1 flex min-h-6 items-center gap-2 whitespace-nowrap text-muted-foreground @xl:w-40 @xl:shrink-0">
+      <span className="col-start-1 row-start-1 flex min-h-6 items-center gap-2 whitespace-nowrap text-muted-foreground @xl:w-36 @xl:shrink-0">
         <Icon className="size-4 shrink-0" aria-hidden />
         {label}
       </span>

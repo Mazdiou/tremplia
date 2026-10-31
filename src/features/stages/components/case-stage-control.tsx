@@ -72,8 +72,11 @@ export function CaseStageControl({
               disabled={busy}
               onClick={() => void change(next.id)}
               title={`Passer à « ${next.name} »`}
+              // Libellé court dans la ligne « Étape » ; le nom de l'étape
+              // visée complète pour les lecteurs d'écran
+              aria-label={`${progress ? "Suivante" : "Commencer"} : ${next.name}`}
             >
-              {progress ? "Étape suivante" : "Commencer"} <ArrowRight />
+              {progress ? "Suivante" : "Commencer"} <ArrowRight />
             </Button>
           )
         }

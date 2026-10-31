@@ -259,16 +259,24 @@ test("adresse Outlook préparée par l'assistant, puis comptes remis au candidat
   await page.getByRole("menuitem", { name: "Adresse Outlook (assistant)" }).click();
   await expect(assistant.getByRole("textbox", { name: "Mot de passe" })).toHaveValue(password);
 
-  await assistant.getByRole("button", { name: "Compte créé : enregistrer" }).click();
+  await assistant.getByRole("button", { name: "Compte créé : enregistrer", exact: true }).click();
   await expect(assistant).toBeHidden();
   const address = `${local}2005@outlook.com`;
-  await expect(page.getByText(address)).toBeVisible();
+  // Le compte est une pastille : sa fiche montre l'identifiant
+  const chip = page.getByRole("button", { name: "Compte Outlook", exact: true });
+  await chip.click();
+  const details = page.getByRole("dialog", { name: "Compte Outlook", exact: true });
+  await expect(details.getByText(address)).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(details).toBeHidden();
+  await expect(chip).toBeFocused();
   // Un compte Outlook existe : « Ajouter » ouvre directement le formulaire
   await expect(page.getByRole("button", { name: "Ajouter", exact: true })).not.toHaveAttribute(
     "aria-haspopup",
   );
 
-  await page.getByRole("button", { name: "Remettre" }).click();
+  await page.getByRole("button", { name: "Autres actions sur les comptes" }).click();
+  await page.getByRole("menuitem", { name: "Remettre au candidat" }).click();
   const handover = page.getByRole("dialog", { name: "Remettre les comptes au candidat" });
   const message = handover.getByLabel("Message (modifiable)");
   await expect(message).toHaveValue(new RegExp(`Identifiant : ${address.replace(/\./g, "\\.")}`));
