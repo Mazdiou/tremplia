@@ -6,6 +6,7 @@ import {
   isOutlookPlatform,
   isValidOutlookLocalPart,
   outlookAddressSuggestions,
+  splitOutlookAddress,
 } from "./outlook";
 
 describe("adresses Outlook proposées", () => {
@@ -56,6 +57,22 @@ describe("règles de Microsoft pour l'adresse", () => {
     "refuse « %s »",
     (s) => {
       expect(isValidOutlookLocalPart(s)).toBe(false);
+    },
+  );
+});
+
+describe("adresse déjà notée sur la ligne « à créer »", () => {
+  it("reprend une adresse Outlook ou Hotmail", () => {
+    expect(splitOutlookAddress(" amine.madiou@Outlook.com ")).toEqual({
+      local: "amine.madiou",
+      domain: "outlook.com",
+    });
+    expect(splitOutlookAddress("a_m@hotmail.com")).toEqual({ local: "a_m", domain: "hotmail.com" });
+  });
+  it.each([null, "", "amine", "amine@gmail.com", "amine@outlook.fr", "2amine@outlook.com", "a@b@outlook.com"])(
+    "ignore « %s »",
+    (v) => {
+      expect(splitOutlookAddress(v)).toBeNull();
     },
   );
 });

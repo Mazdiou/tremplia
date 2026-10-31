@@ -23,6 +23,17 @@ export function isValidOutlookLocalPart(value: string) {
   );
 }
 
+// « amine.madiou@Outlook.com » → { local, domain } ; null pour une autre
+// adresse (Gmail…) ou une adresse invalide
+export function splitOutlookAddress(
+  address: string | null,
+): { local: string; domain: OutlookDomain } | null {
+  const match = address?.trim().match(/^([^@\s]+)@([^@\s]+)$/);
+  if (!match) return null;
+  const domain = OUTLOOK_DOMAINS.find((d) => d === match[2].toLowerCase());
+  return domain && isValidOutlookLocalPart(match[1]) ? { local: match[1], domain } : null;
+}
+
 // « Mohamed-Amine » → « mohamedamine », « N'Diaye » → « ndiaye » : un nom
 // écrit dans un autre alphabet donne une chaîne vide
 function slug(name: string) {

@@ -146,7 +146,7 @@ export async function handOverAccounts(auth: AuthorizedCase, caseId: string) {
     action: "external_account.handed_over",
     targetType: "case",
     targetId: caseId,
-    details: { count: accounts.length },
+    details: { accounts: accounts.length },
   });
   if (!logged) throw new ApiError(503, "Action impossible pour le moment. Réessayez dans un instant.");
 

@@ -21,6 +21,7 @@ import {
   generateAccountPassword,
   isValidOutlookLocalPart,
   outlookAddressSuggestions,
+  splitOutlookAddress,
   type OutlookDomain,
 } from "../outlook";
 
@@ -51,7 +52,7 @@ export function OutlookAssistant({
   open: boolean;
   caseId: string;
   candidate: AssistantCandidate;
-  account: { id: string; platform: string; url: string | null } | null;
+  account: { id: string; platform: string; url: string | null; login: string | null } | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -65,9 +66,11 @@ export function OutlookAssistant({
     candidate.lastName,
     candidate.birthDate,
   );
-  const [local, setLocal] = useState(suggestions[0] ?? "");
-  const [domain, setDomain] = useState<OutlookDomain>(OUTLOOK_DOMAINS[0]);
-  const [password, setPassword] = useState(() => generateAccountPassword());
+  // Adresse déjà notée sur la ligne « à créer » : reprise telle quelle
+  const planned = splitOutlookAddress(account?.login ?? null);
+  const [local, setLocalValue] = useState(planned?.local ?? suggestions[0] ?? "");
+  const [domain, setDomain] = useState<OutlookDomain>(planned?.domain ?? OUTLOOK_DOMAINS[0]);
+  const [password, setPasswordValue] = useState(() => generateAccountPassword());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -81,9 +84,22 @@ export function OutlookAssistant({
         : "Lettres, chiffres, « . », « _ » et « - » seulement, en commençant par une lettre";
   const passwordError = password.length < 8 ? "8 caractères au moins" : null;
   const ready = !localError && !passwordError;
+  // Erreur du serveur sur un champ affiché ici : sous ce champ ; sinon
+  // (plateforme, compte en double…) en bas de la fenêtre
+  const shownFieldError = Boolean(fieldErrors.login || fieldErrors.password);
+
+  // Une valeur corrigée efface l'erreur renvoyée par le serveur
+  function setLocal(value: string) {
+    setLocalValue(value);
+    setFieldErrors({});
+  }
+  function setPassword(value: string) {
+    setPasswordValue(value);
+    setFieldErrors({});
+  }
 
   async function save() {
-    if (!ready) return;
+    if (!ready || saving) return;
     setError(null);
     setFieldErrors({});
     const body = {
@@ -277,7 +293,7 @@ export function OutlookAssistant({
           </p>
         </Step>
 
-        {error && Object.keys(fieldErrors).length === 0 && (
+        {error && !shownFieldError && (
           <p className="text-sm text-destructive" role="alert">
             {error}
           </p>
@@ -323,7 +339,7 @@ function Step({
   );
 }
 
-export function CopyButton({ value, label }: { value: string; label: string }) {
+function CopyButton({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
 
