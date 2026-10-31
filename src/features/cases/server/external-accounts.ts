@@ -115,3 +115,57 @@ export async function revealPassword(
     throw new ApiError(500, "Impossible de lire le mot de passe");
   }
 }
+
+// Tous les comptes du dossier avec leur mot de passe, pour les remettre au
+// candidat (tout membre actif). Comme pour un affichage : journal D'ABORD.
+// Un compte « à créer » n'a ni identifiant ni mot de passe : il n'est pas
+// remis.
+export async function handOverAccounts(auth: AuthorizedCase, caseId: string) {
+  const { admin, member } = auth;
+
+  const { data: accounts, error: accountsError } = await admin
+    .from("case_external_accounts")
+    .select("id, platform, url, login")
+    .eq("case_id", caseId)
+    .eq("agency_id", member.agencyId)
+    .eq("status", "existing");
+  if (accountsError) throw dbError("external accounts handover", accountsError);
+  if (!accounts?.length) throw new ApiError(404, "Aucun compte à remettre pour ce dossier");
+
+  const { data: secrets, error } = await admin
+    .from("external_account_secrets")
+    .select("account_id, password_encrypted")
+    .eq("agency_id", member.agencyId)
+    .in(
+      "account_id",
+      accounts.map((a) => a.id),
+    );
+  if (error) throw dbError("external accounts handover", error);
+
+  const logged = await logCaseActivity(auth, caseId, {
+    action: "external_account.handed_over",
+    targetType: "case",
+    targetId: caseId,
+    details: { count: accounts.length },
+  });
+  if (!logged) throw new ApiError(503, "Action impossible pour le moment. Réessayez dans un instant.");
+
+  const encrypted = new Map(
+    (secrets ?? []).map((s) => [s.account_id as string, s.password_encrypted as string]),
+  );
+  return [...accounts]
+    .sort((a, b) => a.platform.localeCompare(b.platform))
+    .map((a) => {
+      let password: string | null = null;
+      const value = encrypted.get(a.id);
+      if (value) {
+        try {
+          password = decryptSecret(value, aad(member.agencyId, a.id));
+        } catch (e) {
+          // Mot de passe illisible : le compte est remis sans lui
+          reportException("[external accounts handover] déchiffrement", e);
+        }
+      }
+      return { platform: a.platform, url: a.url, login: a.login, password };
+    });
+}

@@ -1,8 +1,10 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronUp, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDismiss } from "@/hooks/use-dismiss";
 import { useUiPrefs } from "@/lib/ui-prefs";
 import { cn } from "@/lib/utils";
 
@@ -120,6 +122,49 @@ export function TrackRow({
       {actions && (
         <div className="col-start-2 row-start-1 flex flex-wrap items-center justify-end gap-1 @xl:ml-auto">
           {actions}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Menu déroulant d'une action de la ligne, ouvert sous son bouton, à droite
+export function RowMenu({
+  label,
+  size,
+  trigger,
+  children,
+}: {
+  // Nom du bouton pour les lecteurs d'écran
+  label: string;
+  size: "xs" | "icon-xs";
+  trigger: React.ReactNode;
+  children: (close: () => void) => React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useDismiss(ref, open, setOpen);
+  return (
+    <div ref={ref} className="relative">
+      <Button
+        variant="ghost"
+        size={size}
+        // Bouton avec texte (« Partager ») : c'est son nom ; icône seule :
+        // le libellé la nomme
+        aria-label={size === "icon-xs" ? label : undefined}
+        title={label}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {trigger}
+      </Button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute top-8 right-0 z-30 w-64 rounded-xl border bg-popover p-1 text-popover-foreground shadow-lg"
+        >
+          {children(() => setOpen(false))}
         </div>
       )}
     </div>

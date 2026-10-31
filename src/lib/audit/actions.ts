@@ -30,6 +30,7 @@ export const ACTIVITY_ACTIONS = [
   "case.stage_changed",
   "external_account.saved",
   "external_account.password_viewed",
+  "external_account.handed_over",
   "document.added",
   "document.renamed",
   "document.deleted",

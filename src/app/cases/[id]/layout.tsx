@@ -238,6 +238,13 @@ export default async function CaseLayout({
                 caseId={c.id}
                 accounts={externalAccounts}
                 suggestions={suggestions}
+                candidate={{
+                  firstName: c.first_name,
+                  lastName: c.last_name,
+                  birthDate: c.birth_date,
+                  phone: c.phone,
+                }}
+                agencyName={agency?.name ?? ""}
                 readOnly={readOnly}
               />
               <StudentAccessBar

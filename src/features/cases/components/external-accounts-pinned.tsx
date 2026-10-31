@@ -2,8 +2,21 @@
 
 import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Eye, EyeOff, KeyRound, Loader2, Pencil, Plus } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Loader2,
+  Mail,
+  Pencil,
+  Plus,
+  Send,
+} from "lucide-react";
 import { FieldError } from "@/components/form-fields";
+import { MENU_ITEM_CLASS } from "@/components/page-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +26,10 @@ import {
   type ExternalAccountStatus,
 } from "@/features/cases/labels";
 import { callApi } from "@/lib/api-client";
-import { TrackRow } from "./case-header";
+import { RowMenu, TrackRow } from "./case-header";
+import { OutlookAssistant, type AssistantCandidate } from "./outlook-assistant";
+import { AccountsHandover } from "./accounts-handover";
+import { isOutlookPlatform } from "../outlook";
 import { cn } from "@/lib/utils";
 
 type PinnedAccount = {
@@ -31,25 +47,47 @@ const selectClass =
 
 // En-tête de la fiche : comptes du candidat sur les plateformes externes.
 // Le mot de passe n'est jamais dans la page : il est demandé au serveur, qui
-// inscrit l'affichage au journal avant de le renvoyer.
+// inscrit l'affichage au journal avant de le renvoyer. L'assistant Outlook
+// prépare l'adresse du candidat ; « Remettre » lui transmet ses comptes.
 export function ExternalAccountsPinned({
   caseId,
   accounts,
   suggestions,
+  candidate,
+  agencyName,
   readOnly = false,
 }: {
   caseId: string;
   accounts: PinnedAccount[];
   suggestions: string[];
+  candidate: AssistantCandidate;
+  agencyName: string;
   // Abonnement expiré : consultation seulement
   readOnly?: boolean;
 }) {
   const [adding, setAdding] = useState(false);
+  // Assistant monté au premier clic puis gardé (valeurs conservées)
+  const [assistant, setAssistant] = useState<"open" | "closed" | null>(null);
+  const [handover, setHandover] = useState(false);
   const listId = useId();
   const used = new Set(accounts.map((a) => a.platform.toLocaleLowerCase("fr")));
   const free = suggestions.filter((s) => !used.has(s.toLocaleLowerCase("fr")));
 
   const canAdd = !readOnly && !adding && accounts.length < MAX_EXTERNAL_ACCOUNTS;
+  // Compte Outlook prévu (« à créer ») : l'assistant le complète au lieu
+  // d'en ajouter un
+  const outlookToCreate =
+    accounts.find((a) => a.status === "to_create" && isOutlookPlatform(a.platform)) ?? null;
+  const hasOutlook = accounts.some(
+    (a) => a.status === "existing" && isOutlookPlatform(a.platform),
+  );
+  const assistInMenu = canAdd && !hasOutlook && outlookToCreate === null;
+  const canHandOver = accounts.some((a) => a.status === "existing");
+
+  const openAssistant = () => {
+    setAdding(false);
+    setAssistant("open");
+  };
 
   // Ligne du panneau de suivi : un compte par ligne, le premier en face du
   // libellé
@@ -66,10 +104,65 @@ export function ExternalAccountsPinned({
         label="Comptes externes"
         multiline
         actions={
-          canAdd && (
-            <Button variant="ghost" size="xs" onClick={() => setAdding(true)}>
-              <Plus /> Ajouter
-            </Button>
+          (canHandOver || canAdd) && (
+            <>
+              {canHandOver && (
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => setHandover(true)}
+                  title="Envoyer ses comptes au candidat"
+                >
+                  <Send /> Remettre
+                </Button>
+              )}
+              {assistInMenu ? (
+                <RowMenu
+                  label="Ajouter un compte"
+                  size="xs"
+                  trigger={
+                    <>
+                      <Plus /> Ajouter <ChevronDown />
+                    </>
+                  }
+                >
+                  {(close) => (
+                    <>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={cn(MENU_ITEM_CLASS, "flex items-center gap-2")}
+                        onClick={() => {
+                          close();
+                          openAssistant();
+                        }}
+                      >
+                        <Mail className="size-4 text-muted-foreground" aria-hidden />
+                        Adresse Outlook (assistant)
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={cn(MENU_ITEM_CLASS, "flex items-center gap-2")}
+                        onClick={() => {
+                          close();
+                          setAdding(true);
+                        }}
+                      >
+                        <KeyRound className="size-4 text-muted-foreground" aria-hidden />
+                        Autre compte
+                      </button>
+                    </>
+                  )}
+                </RowMenu>
+              ) : (
+                canAdd && (
+                  <Button variant="ghost" size="xs" onClick={() => setAdding(true)}>
+                    <Plus /> Ajouter
+                  </Button>
+                )
+              )}
+            </>
           )
         }
       >
@@ -80,7 +173,14 @@ export function ExternalAccountsPinned({
             {accounts.length > 0 && (
               <ul className="space-y-1">
                 {accounts.map((a) => (
-                  <AccountRow key={a.id} caseId={caseId} account={a} listId={listId} readOnly={readOnly} />
+                  <AccountRow
+                    key={a.id}
+                    caseId={caseId}
+                    account={a}
+                    listId={listId}
+                    readOnly={readOnly}
+                    onAssist={!readOnly && a.id === outlookToCreate?.id ? openAssistant : undefined}
+                  />
                 ))}
               </ul>
             )}
@@ -90,6 +190,26 @@ export function ExternalAccountsPinned({
           </div>
         )}
       </TrackRow>
+
+      {assistant !== null && (
+        <OutlookAssistant
+          open={assistant === "open"}
+          caseId={caseId}
+          candidate={candidate}
+          account={outlookToCreate}
+          onClose={() => setAssistant("closed")}
+          onSaved={() => setAssistant(null)}
+        />
+      )}
+      {handover && (
+        <AccountsHandover
+          caseId={caseId}
+          candidate={candidate.firstName}
+          agencyName={agencyName}
+          phone={candidate.phone}
+          onClose={() => setHandover(false)}
+        />
+      )}
     </>
   );
 }
@@ -99,11 +219,14 @@ function AccountRow({
   account,
   listId,
   readOnly,
+  onAssist,
 }: {
   caseId: string;
   account: PinnedAccount;
   listId: string;
   readOnly: boolean;
+  // Compte Outlook à créer : ouvre l'assistant
+  onAssist?: () => void;
 }) {
   const [password, setPassword] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState(0);
@@ -244,9 +367,16 @@ function AccountRow({
               </span>
             )
           ) : (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              {EXTERNAL_ACCOUNT_STATUS_LABELS.to_create}
-            </span>
+            <>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                {EXTERNAL_ACCOUNT_STATUS_LABELS.to_create}
+              </span>
+              {onAssist && (
+                <Button variant="outline" size="xs" onClick={onAssist}>
+                  <Mail /> Créer avec l&apos;assistant
+                </Button>
+              )}
+            </>
           )}
         </div>
 

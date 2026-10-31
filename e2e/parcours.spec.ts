@@ -233,6 +233,58 @@ test("ouverture de l'espace candidat", async () => {
   studentCode = (await code.textContent())!.trim();
 });
 
+test("adresse Outlook préparée par l'assistant, puis comptes remis au candidat", async () => {
+  await page.goto(caseUrl);
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Adresse Outlook (assistant)" }).click();
+
+  const assistant = page.getByRole("dialog", { name: /Créer une adresse Outlook/ });
+  const local = `amine.${candidate.lastName.toLowerCase()}`;
+  await expect(assistant.getByLabel("Adresse", { exact: true })).toHaveValue(local);
+  // Deuxième proposition : avec l'année de naissance
+  await assistant.getByRole("button", { name: `${local}2005`, exact: true }).click();
+  await expect(assistant.getByLabel("Adresse", { exact: true })).toHaveValue(`${local}2005`);
+  const password = await assistant.getByRole("textbox", { name: "Mot de passe" }).inputValue();
+  expect(password).toMatch(/^[A-Z][a-z]+-[A-Z][a-z]+-[A-Z][a-z]+-\d{4}$/);
+  await expect(assistant.getByRole("link", { name: /inscription Microsoft/ })).toHaveAttribute(
+    "href",
+    "https://signup.live.com/",
+  );
+  await expect(assistant.getByText("14 mars 2005")).toBeVisible();
+
+  // Refermée puis rouverte : mêmes valeurs
+  await assistant.getByRole("button", { name: "Fermer" }).click();
+  await expect(assistant).toBeHidden();
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Adresse Outlook (assistant)" }).click();
+  await expect(assistant.getByRole("textbox", { name: "Mot de passe" })).toHaveValue(password);
+
+  await assistant.getByRole("button", { name: "Compte créé : enregistrer" }).click();
+  await expect(assistant).toBeHidden();
+  const address = `${local}2005@outlook.com`;
+  await expect(page.getByText(address)).toBeVisible();
+  // Un compte Outlook existe : « Ajouter » ouvre directement le formulaire
+  await expect(page.getByRole("button", { name: "Ajouter", exact: true })).not.toHaveAttribute(
+    "aria-haspopup",
+  );
+
+  await page.getByRole("button", { name: "Remettre" }).click();
+  const handover = page.getByRole("dialog", { name: "Remettre les comptes au candidat" });
+  const message = handover.getByLabel("Message (modifiable)");
+  await expect(message).toHaveValue(new RegExp(`Identifiant : ${address.replace(/\./g, "\\.")}`));
+  await expect(message).toHaveValue(new RegExp(`Mot de passe : ${password}`));
+  await expect(handover.getByRole("link", { name: "WhatsApp" })).toHaveAttribute(
+    "href",
+    /^https:\/\/wa\.me\/213555123456\?text=Bonjour%20Amine/,
+  );
+  await handover.getByRole("button", { name: "Fermer" }).click();
+  await expect(handover).toBeHidden();
+
+  await page.goto(`${caseUrl}/history`);
+  await expect(page.getByText("a affiché les comptes à remettre au candidat")).toHaveCount(1);
+  await expect(page.getByText("a enregistré un compte externe")).toHaveCount(1);
+});
+
 test("le guide coche les étapes faites", async () => {
   await page.goto("/dashboard");
   // Campagne, dossier, document et espace candidat

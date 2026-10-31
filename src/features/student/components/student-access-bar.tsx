@@ -21,10 +21,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { MENU_ITEM_CLASS, StatusPill } from "@/components/page-ui";
-import { useDismiss } from "@/hooks/use-dismiss";
 import { callApi } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import {
+  RowMenu,
   TRACK_INDENT,
   TrackRow,
   useHeaderTarget,
@@ -313,48 +313,5 @@ function ReviewPill({ review }: { review: Review }) {
     >
       <Hourglass className="size-3.5" aria-hidden /> En attente de son avis
     </span>
-  );
-}
-
-// Menu déroulant d'une action de la ligne, ouvert sous son bouton, à droite
-function RowMenu({
-  label,
-  size,
-  trigger,
-  children,
-}: {
-  // Nom du bouton pour les lecteurs d'écran
-  label: string;
-  size: "xs" | "icon-xs";
-  trigger: React.ReactNode;
-  children: (close: () => void) => React.ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useDismiss(ref, open, setOpen);
-  return (
-    <div ref={ref} className="relative">
-      <Button
-        variant="ghost"
-        size={size}
-        // Bouton avec texte (« Partager ») : c'est son nom ; icône seule :
-        // le libellé la nomme
-        aria-label={size === "icon-xs" ? label : undefined}
-        title={label}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-      >
-        {trigger}
-      </Button>
-      {open && (
-        <div
-          role="menu"
-          className="absolute top-8 right-0 z-30 w-64 rounded-xl border bg-popover p-1 text-popover-foreground shadow-lg"
-        >
-          {children(() => setOpen(false))}
-        </div>
-      )}
-    </div>
   );
 }
