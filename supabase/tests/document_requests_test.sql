@@ -333,7 +333,8 @@ from ctx, generate_series(1, 20 - (
     and created_at > now() - interval '1 hour')::integer);
 select throws_ok($$select pg_temp.prep(pg_temp.req('Passeport'))$$,
   '54000', null, '20 envois préparés par heure au plus');
-delete from public.student_document_uploads where request_id is null;
+delete from public.student_document_uploads
+where request_id is null and case_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
 
 -- 8. Notifications
 

@@ -1,13 +1,14 @@
 begin;
-select plan(6);
+select plan(8);
 
 -- Seules les tables utiles à l'agence sont diffusées en temps réel ; le
 -- cloisonnement repose sur leur RLS (lecture réservée à l'agence).
 select set_eq(
   $$ select tablename::text from pg_publication_tables
      where pubname = 'supabase_realtime' and schemaname = 'public' $$,
-  array['case_document_requests', 'case_messages', 'case_student_reviews', 'case_tasks'],
-  'publication temps réel : messages, réponses et pièces du candidat, tâches'
+  array['case_document_requests', 'case_messages', 'case_student_reviews', 'case_tasks',
+        'online_signups'],
+  'publication temps réel : messages, réponses et pièces du candidat, tâches, inscriptions en ligne'
 );
 
 select ok(
@@ -33,6 +34,16 @@ select is(
   (select relreplident::text from pg_class where oid = 'public.case_tasks'::regclass),
   'f',
   'case_tasks : identité complète pour diffuser les suppressions'
+);
+
+select ok(
+  (select relrowsecurity from pg_class where oid = 'public.online_signups'::regclass),
+  'online_signups : RLS active'
+);
+select is(
+  (select relreplident::text from pg_class where oid = 'public.online_signups'::regclass),
+  'f',
+  'online_signups : identité complète pour diffuser les demandes refusées ou acceptées'
 );
 
 select * from finish();
