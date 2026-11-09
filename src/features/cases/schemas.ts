@@ -206,6 +206,9 @@ export const createCaseSchema = z
     sourceCampaignId: optionalUuidSchema,
     // Création confirmée malgré un doublon possible
     confirmDuplicate: z.boolean().optional(),
+    // Demande d'inscription en ligne acceptée par ce dossier (supprimée
+    // dans la même transaction)
+    signupId: optionalUuidSchema,
   })
   .superRefine(checkSecondaryContact)
   .superRefine((d, ctx) => {

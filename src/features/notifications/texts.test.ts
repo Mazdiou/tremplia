@@ -6,6 +6,7 @@ import {
   assignedTasksPush,
   messageFrom,
   ofName,
+  onlineSignupPush,
   preview,
   studentDocumentPush,
   studentMessagePush,
@@ -85,6 +86,16 @@ describe("notifications de l'agence", () => {
     );
   });
 
+  it("inscription en ligne : le candidat et sa campagne, vers la liste des demandes", () => {
+    expect(onlineSignupPush("BENALI Karim", "France 2027")).toEqual({
+      title: "Nouvelle inscription en ligne",
+      body: "BENALI Karim (France 2027)",
+      url: "/cases/inscriptions",
+      tag: "online-signup",
+    });
+    expect(onlineSignupPush("BENALI Karim", null).body).toBe("BENALI Karim");
+  });
+
   it("tâche confiée : qui, quoi, pour quel candidat", () => {
     expect(
       assignedTaskPush(CASE, { id: "t1", title: "Relevé de notes" }, "Amine Madiou", "BENALI Karim"),
@@ -144,6 +155,7 @@ describe("adresses ouvertes au toucher", () => {
       studentMessagePush(CASE, "X", "y"),
       studentReviewPush(CASE, "X", { decision: "approved" }),
       studentDocumentPush(CASE, "X", "y", false),
+      onlineSignupPush("X", "y"),
       assignedTaskPush(CASE, { id: "t", title: "y" }, "Z", "X"),
       taskDigestPush(1, 1),
       agencyMessagePush("A", "y"),

@@ -2,7 +2,8 @@ name: Tâches quotidiennes
 
 # Chaque matin, par l'application :
 # - e-mails de fin d'essai ou d'abonnement (7 jours et 1 jour avant) ;
-# - suppression des inscriptions jamais confirmées depuis 7 jours ;
+# - suppression des inscriptions jamais confirmées depuis 7 jours, et des
+#   demandes d'inscription en ligne restées sans réponse depuis 90 jours ;
 # - notification « Vos tâches du jour » aux membres qui l'ont demandée.
 # Ne dépend pas de l'hébergeur : la même tâche servira sur un autre serveur.
 # Mise en place : README, « E-mails ».
@@ -41,7 +42,7 @@ jobs:
             --retry 2 --retry-delay 30 --retry-all-errors \
             -X POST -H "Authorization: Bearer $CRON_SECRET" \
             "${APP_URL:-https://www.tremplia.com}/api/cron/subscription-reminders"
-      - name: Inscriptions jamais confirmées
+      - name: Inscriptions jamais confirmées et vieilles demandes
         # Même si les rappels ont échoué
         if: always() && steps.config.outputs.active == 'true'
         run: |

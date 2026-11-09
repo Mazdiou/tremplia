@@ -11,6 +11,11 @@ import { SessionActions } from "@/features/settings/components/session-actions";
 import { ThemeChoice } from "@/features/settings/components/theme-choice";
 import { TextSizeChoice } from "@/features/settings/components/text-size-choice";
 import { getAgencySettings } from "@/features/settings/server/settings";
+import { listCampaigns } from "@/features/campaigns/server/queries";
+import { SignupSettingsForm } from "@/features/signup/components/signup-settings-form";
+import { slugFromName } from "@/features/signup/schemas";
+import { getSignupSettings } from "@/features/signup/server/agency";
+import { siteUrl } from "@/lib/site-url";
 import { GuideSetting } from "@/features/onboarding/components/guide-setting";
 import { LocalCopySettings } from "@/features/local-copy/components/local-copy-settings";
 import { NotificationPreferencesForm } from "@/features/notifications/components/notification-preferences";
@@ -30,8 +35,8 @@ import type { Metadata } from "next";
 export const metadata: Metadata = { title: "Réglages" };
 
 // Réglages : le compte de chacun (nom, mot de passe, connexion) ; pour le
-// patron, en plus, l'agence, les valeurs des nouvelles campagnes et
-// l'abonnement.
+// patron, en plus, l'agence, l'inscription en ligne, les valeurs des
+// nouvelles campagnes et l'abonnement.
 export default async function SettingsPage() {
   const member = await requireMember();
   if (!member) redirect("/login");
@@ -41,14 +46,23 @@ export default async function SettingsPage() {
   if (isOwner) void listPlatformPayments();
   const supabase = await createClient();
   const publicKey = pushPublicKey();
-  const [{ data: claimsData }, subscription, agency, guideHidden, notificationPrefs] =
-    await Promise.all([
-      supabase.auth.getClaims(),
-      getSubscription(member.agencyId),
-      isOwner ? getAgencySettings(member.agencyId) : Promise.resolve(null),
-      isOwner ? isOnboardingHidden(member.agencyId) : Promise.resolve(true),
-      publicKey ? getPreferences(member) : Promise.resolve(null),
-    ]);
+  const [
+    { data: claimsData },
+    subscription,
+    agency,
+    guideHidden,
+    notificationPrefs,
+    signup,
+    campaigns,
+  ] = await Promise.all([
+    supabase.auth.getClaims(),
+    getSubscription(member.agencyId),
+    isOwner ? getAgencySettings(member.agencyId) : Promise.resolve(null),
+    isOwner ? isOnboardingHidden(member.agencyId) : Promise.resolve(true),
+    publicKey ? getPreferences(member) : Promise.resolve(null),
+    isOwner ? getSignupSettings(member.agencyId) : Promise.resolve(null),
+    isOwner ? listCampaigns() : Promise.resolve([]),
+  ]);
   const email = typeof claimsData?.claims.email === "string" ? claimsData.claims.email : "";
   // Abonnement expiré : tout se consulte, rien ne se modifie (sauf le mot
   // de passe et la connexion, qui protègent le compte)
@@ -149,6 +163,29 @@ export default async function SettingsPage() {
           >
             <AgencyProfileForm
               initial={{ name: agency.name, city: agency.city, phone: agency.phone }}
+              readOnly={readOnly}
+            />
+          </FormSection>
+        )}
+
+        {isOwner && agency && signup && (
+          <FormSection
+            id="inscription"
+            title="Inscription en ligne"
+            description="Une page où les candidats s'inscrivent eux-mêmes, à partager sur Facebook ou WhatsApp."
+          >
+            <SignupSettingsForm
+              initial={{
+                enabled: signup.enabled,
+                slug: signup.slug ?? slugFromName(agency.name),
+                campaignIds: signup.openCampaignIds,
+              }}
+              savedSlug={signup.slug}
+              campaigns={campaigns
+                .filter((c) => c.status === "active")
+                .map(({ id, name }) => ({ id, name }))}
+              site={siteUrl()}
+              agencyName={agency.name}
               readOnly={readOnly}
             />
           </FormSection>

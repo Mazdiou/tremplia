@@ -98,6 +98,36 @@ export type CaseFieldsDraft = {
   languageTests: { test: string; otherName: string; result: string; date: string }[];
 };
 
+// Champs envoyés à l'API : années en nombres, le reste tel quel (le serveur
+// valide et nettoie, vide = absent).
+export function caseFieldsPayload(f: CaseFieldsDraft) {
+  return {
+    ...f,
+    diplomas: f.diplomas.map((d) => ({
+      ...d,
+      year: d.year.trim() === "" ? null : Number(d.year),
+    })),
+  };
+}
+
+// Valeurs vides d'un nouveau formulaire
+export const EMPTY_CASE_FIELDS: CaseFieldsDraft = {
+  firstName: "",
+  lastName: "",
+  birthDate: "",
+  phone: "",
+  email: "",
+  city: "",
+  nationality: "",
+  secondaryContactName: "",
+  secondaryContactPhone: "",
+  educationLevel: "",
+  currentField: "",
+  currentInstitution: "",
+  diplomas: [],
+  languageTests: [],
+};
+
 // Dossier retrouvé dans une autre campagne pour préremplir un nouveau
 // dossier. Comptes repris SANS mot de passe : il est à ressaisir.
 export type ImportMatch = {

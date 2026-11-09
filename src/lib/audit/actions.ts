@@ -4,6 +4,7 @@ export const ACTIVITY_ACTIONS = [
   "agency.created",
   "agency.updated",
   "agency.defaults_updated",
+  "agency.signup_updated",
   "account.password_changed",
   "employee.created",
   "employee.deactivated",
@@ -71,6 +72,7 @@ export const ACTIVITY_ACTIONS = [
   "task.reopened",
   "task.deleted",
   "task.all_completed",
+  "online_signup.refused",
   // Actions du candidat lui-même (actor_id vide)
   "student.logged_in",
   "student.approved",
@@ -79,6 +81,8 @@ export const ACTIVITY_ACTIONS = [
   "student.document_sent",
   "student.document_replaced",
   "student.document_removed",
+  // Demande envoyée sur la page d'inscription en ligne (actor_id vide)
+  "online_signup.received",
 ] as const;
 
 export type ActivityAction = (typeof ACTIVITY_ACTIONS)[number];
@@ -98,4 +102,5 @@ export type ActivityTarget =
   | "case_program"
   | "case_message"
   | "case_payment"
-  | "case_task";
+  | "case_task"
+  | "online_signup";

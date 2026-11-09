@@ -437,6 +437,81 @@ test("un mauvais code d'accès est refusé", async ({ browser }) => {
   await student.close();
 });
 
+test("inscription en ligne : page ouverte, demande acceptée en dossier, autre demande refusée", async ({
+  browser,
+}) => {
+  // Le patron ouvre la page et propose la campagne importée
+  await page.goto("/settings#inscription");
+  const section = page.locator("#inscription");
+  await section.getByLabel("Page d'inscription ouverte").check();
+  await expect(section.getByLabel(/Adresse de la page/)).toHaveValue(`agence-e2e-${run}`);
+  await section.getByText(/Campus France/).click();
+  await section.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(section.getByRole("status")).toContainText("Modifications enregistrées");
+  await expect(section.getByText("Votre page est en ligne")).toBeVisible();
+  const signupPath = `/inscription/agence-e2e-${run}`;
+  await expect(section.getByText(signupPath)).toBeVisible();
+
+  // Un candidat, sans compte, s'inscrit en quatre étapes
+  async function signUp(firstName: string, lastName: string, message = "") {
+    const visitor = await browser.newPage();
+    await visitor.goto(signupPath);
+    await expect(visitor.getByRole("heading", { level: 1 })).toContainText(`Agence E2E ${run}`);
+    await visitor.locator("#firstName").fill(firstName);
+    await visitor.locator("#lastName").fill(lastName);
+    await visitor.locator("#birthDate").fill("2006-01-20");
+    await visitor.locator("#phone").fill("0661 22 33 44");
+    await visitor.getByRole("button", { name: "Continuer" }).click();
+    // Une seule campagne proposée : rien à choisir
+    await expect(visitor.getByText(/Campagne : .*Campus France/)).toBeVisible();
+    if (message) await visitor.getByLabel("Votre projet en quelques mots").fill(message);
+    await visitor.getByRole("button", { name: "Continuer" }).click();
+    // Étape vérifiée avant de passer à la suivante
+    await visitor.getByRole("button", { name: "Continuer" }).click();
+    await expect(visitor.getByText("Choisissez le niveau d'études")).toBeVisible();
+    await visitor.locator("#educationLevel").selectOption("terminale");
+    await visitor.getByRole("button", { name: "Continuer" }).click();
+    await expect(visitor.getByRole("definition").filter({ hasText: `${firstName} ${lastName}` })).toBeVisible();
+    await visitor.getByRole("button", { name: "Envoyer ma demande" }).click();
+    await expect(visitor.getByText("Cochez la case pour envoyer votre demande")).toBeVisible();
+    await visitor.getByLabel(/J'accepte que ces informations soient transmises/).check();
+    await visitor.getByRole("button", { name: "Envoyer ma demande" }).click();
+    await expect(visitor.getByRole("heading", { name: "Demande envoyée" })).toBeVisible();
+    await visitor.close();
+  }
+  await signUp("Lina", `Haddad${run}`, "Je vise une licence d'informatique.");
+
+  // L'agence la voit en haut de l'arbre, puis crée le dossier, prérempli
+  await page.goto("/cases");
+  await page.getByRole("link", { name: /Inscriptions en ligne/ }).click();
+  await expect(page).toHaveURL(/\/cases\/inscriptions$/);
+  const card = page.getByRole("listitem").filter({ hasText: `HADDAD${run.toUpperCase()} Lina` });
+  await expect(card.getByText("Je vise une licence d'informatique.")).toBeVisible();
+  await card.getByRole("link", { name: "Créer le dossier" }).click();
+  await expect(page).toHaveURL(/\/cases\/new\?inscription=[0-9a-f-]{36}$/);
+  const signupUrl = new URL(page.url()).pathname + new URL(page.url()).search;
+  await expect(page.getByText(/Inscription en ligne reçue le/)).toBeVisible();
+  await expect(page.locator("#lastName")).toHaveValue(`Haddad${run}`);
+  await expect(page.locator("#initialNote")).toHaveValue("Je vise une licence d'informatique.");
+  await page.getByRole("button", { name: "Créer le dossier" }).click();
+  await expect(page).toHaveURL(/\/cases\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Lina");
+
+  // La demande a disparu ; son lien ne crée pas un second dossier
+  await page.goto("/cases/inscriptions");
+  await expect(page.getByText("Aucune demande en attente")).toBeVisible();
+  await page.goto(signupUrl);
+  await expect(page.getByText("Demande déjà traitée")).toBeVisible();
+
+  // Une autre demande, refusée : elle est supprimée
+  await signUp("Yanis", `Ouali${run}`);
+  await page.goto("/cases/inscriptions");
+  const other = page.getByRole("listitem").filter({ hasText: `OUALI${run.toUpperCase()} Yanis` });
+  await other.getByRole("button", { name: "Refuser" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Refuser la demande" }).click();
+  await expect(page.getByText("Aucune demande en attente")).toBeVisible();
+});
+
 test("réglages : profil de l'agence et valeurs des nouvelles campagnes", async () => {
   await page.goto("/settings");
   const agency = page.locator("#agence");

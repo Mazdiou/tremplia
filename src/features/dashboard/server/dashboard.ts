@@ -15,6 +15,9 @@ type Named = { id: string; first_name: string; last_name: string };
 export type TodoItem = Named & { when: string | null; detail: string };
 
 export type Todo = {
+  // Demandes reçues sur la page d'inscription en ligne (identifiant de la
+  // demande, pas d'un dossier)
+  signups: TodoItem[];
   // Le candidat demande une modification de sa lettre ou de ses formations
   changes: TodoItem[];
   // Messages du candidat que personne n'a lus
@@ -32,7 +35,7 @@ export async function loadTodo(
   campaignIds: string[],
   unreadPromise: Promise<Record<string, number>>,
 ): Promise<Todo> {
-  const [unread, reviewsRes] = await Promise.all([
+  const [unread, reviewsRes, signupsRes] = await Promise.all([
     unreadPromise,
     supabase
       .from("case_student_reviews")
@@ -42,8 +45,34 @@ export async function loadTodo(
       .in("cases.campaign_id", campaignIds)
       .order("responded_at", { ascending: false })
       .limit(200),
+    supabase
+      .from("online_signups")
+      .select("id, campaign_id, fields, created_at")
+      .order("created_at", { ascending: false })
+      .limit(100),
   ]);
   if (reviewsRes.error) reportError("[dashboard todo]", reviewsRes.error.code);
+  if (signupsRes.error) reportError("[dashboard todo signups]", signupsRes.error.code);
+
+  // Demandes des campagnes affichées, et celles dont la campagne a été
+  // supprimée depuis (elles attendent aussi une réponse)
+  const shown = new Set(campaignIds);
+  const signups = (
+    (signupsRes.data ?? []) as {
+      id: string;
+      campaign_id: string | null;
+      fields: { first_name: string; last_name: string };
+      created_at: string;
+    }[]
+  )
+    .filter((s) => s.campaign_id === null || shown.has(s.campaign_id))
+    .map((s) => ({
+      id: s.id,
+      first_name: s.fields.first_name,
+      last_name: s.fields.last_name,
+      when: s.created_at,
+      detail: "inscription en ligne",
+    }));
 
   const reviews = (reviewsRes.data ?? []) as unknown as {
     case_id: string;
@@ -98,7 +127,7 @@ export async function loadTodo(
       detail: plural(unread[c.id], "message non lu", "messages non lus"),
     }));
 
-  return { changes, unread: unreadList, approved };
+  return { signups, changes, unread: unreadList, approved };
 }
 
 export type Results = {

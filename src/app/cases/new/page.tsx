@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Globe } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { PageContainer, PageHeader } from "@/components/page-ui";
+import { buttonVariants } from "@/components/ui/button";
+import { toCaseDraft } from "@/features/cases/case-record";
+import { getSignup } from "@/features/signup/server/agency";
+import { shortDateFormat } from "@/lib/dates";
+import { isUuid } from "@/lib/validation";
 import { createClient } from "@/lib/supabase/server";
 import { countCases } from "@/features/cases/case-stats";
 import { listCaseStats } from "@/features/cases/server/case-stats";
@@ -18,12 +25,41 @@ export const metadata: Metadata = { title: "Nouveau dossier" };
 export default async function NewCasePage({
   searchParams,
 }: {
-  searchParams: Promise<{ campaign?: string }>;
+  searchParams: Promise<{ campaign?: string; inscription?: string }>;
 }) {
   const member = await requireMember();
   if (!member) redirect("/login");
   if (await isReadOnly(member.agencyId)) {
     return <ReadOnlyNotice backHref="/cases" backLabel="Retour aux dossiers" />;
+  }
+
+  // Demande d'inscription en ligne à accepter : déjà traitée (ou d'une autre
+  // agence), on le dit plutôt que d'ouvrir un formulaire vide
+  const { campaign: wanted, inscription } = await searchParams;
+  const signup = inscription && isUuid(inscription) ? await getSignup(inscription) : null;
+  if (inscription && !signup) {
+    return (
+      <PageContainer>
+        <PageHeader
+          eyebrow={
+            <Link href="/cases/inscriptions" className="hover:text-foreground">
+              ← Inscriptions en ligne
+            </Link>
+          }
+          title="Nouveau dossier"
+        />
+        <EmptyState
+          icon={Globe}
+          title="Demande déjà traitée"
+          description="Un collègue a déjà créé le dossier ou refusé cette demande."
+          action={
+            <Link href="/cases/inscriptions" className={buttonVariants({ variant: "outline" })}>
+              Voir les inscriptions en ligne
+            </Link>
+          }
+        />
+      </PageContainer>
+    );
   }
 
   // Lecture via le RLS : seules les données de l'agence reviennent. Les
@@ -71,10 +107,13 @@ export default async function NewCasePage({
     defaultFee: settingsByCampaign.get(c.id)?.defaultFee ?? null,
   }));
 
-  // Présélection : la campagne ouverte dans l'arbre, sinon l'unique active
-  const wanted = (await searchParams).campaign;
+  // Présélection : la campagne choisie par le candidat (si elle reçoit
+  // encore des dossiers), la campagne ouverte dans l'arbre, sinon l'unique
+  // active
   const defaultCampaignId =
-    active.find((c) => c.id === wanted)?.id ?? (active.length === 1 ? active[0].id : null);
+    active.find((c) => c.id === signup?.campaignId)?.id ??
+    active.find((c) => c.id === wanted)?.id ??
+    (active.length === 1 ? active[0].id : null);
 
   // Campagnes d'où importer un candidat (archivées comprises), avec leur
   // nombre de dossiers
@@ -90,13 +129,29 @@ export default async function NewCasePage({
     <PageContainer>
       <PageHeader
         eyebrow={
-          <Link href="/cases" className="hover:text-foreground">
-            ← Dossiers
-          </Link>
+          signup ? (
+            <Link href="/cases/inscriptions" className="hover:text-foreground">
+              ← Inscriptions en ligne
+            </Link>
+          ) : (
+            <Link href="/cases" className="hover:text-foreground">
+              ← Dossiers
+            </Link>
+          )
         }
         title="Nouveau dossier"
       />
       <CaseForm
+        // Une autre demande ouverte ensuite repart de zéro
+        key={signup?.id ?? "new"}
+        signup={
+          signup && {
+            id: signup.id,
+            fields: toCaseDraft(signup.fields),
+            message: signup.message,
+            sentOn: shortDateFormat.format(new Date(signup.createdAt)),
+          }
+        }
         mode="create"
         campaigns={formCampaigns}
         defaultCampaignId={defaultCampaignId}

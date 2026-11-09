@@ -9,8 +9,8 @@ import { loadClient } from "@/lib/supabase/lazy-client";
 // composants serveur sont relus ; ce qui est en cours de saisie reste en place.
 //
 // Agence (agencyId fourni) : abonnement en temps réel aux messages, aux
-// réponses et aux pièces des candidats, et aux tâches de l'agence (filtrés
-// par le RLS).
+// réponses et aux pièces des candidats, aux tâches de l'agence et aux
+// demandes d'inscription en ligne (filtrés par le RLS).
 // Les suppressions de tâches arrivent aussi : la table est en identité
 // complète, le filtre agency_id s'applique à l'ancienne ligne. Si la
 // connexion tombe, une vérification toutes les 30 s prend le relais.
@@ -92,6 +92,13 @@ export function LiveRefresh({ agencyId }: { agencyId?: string }) {
             .on(
               "postgres_changes",
               { event: "UPDATE", schema: "public", table: "case_document_requests", filter },
+              refresh,
+            )
+            // Demande d'inscription en ligne reçue, acceptée ou refusée
+            // (identité complète : les suppressions passent le filtre)
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "online_signups", filter },
               refresh,
             );
           removeChannel = () => void supabase.removeChannel(channel);

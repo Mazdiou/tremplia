@@ -3,6 +3,8 @@
 // « a exporté une campagne en Excel », 6 fois, au lieu de remplir la liste.
 // Dans un dossier, l'objet affiché est le dossier : quatre documents ajoutés
 // au même dossier donnent « a ajouté un document : Malak KACI », 4 fois.
+// Les demandes d'inscription en ligne reçues à la suite (sans dossier ni
+// auteur) donnent une seule ligne.
 
 export type ActivityRow = {
   id: string;
@@ -20,7 +22,9 @@ const sameEntry = (a: ActivityRow, b: ActivityRow) =>
   a.actor_id === b.actor_id &&
   a.action === b.action &&
   a.case_id === b.case_id &&
-  (a.case_id !== null || a.target_id === b.target_id);
+  (a.case_id !== null ||
+    a.target_id === b.target_id ||
+    a.action === "online_signup.received");
 
 // Lignes de la plus récente à la plus ancienne ; chaque groupe garde la date
 // de sa ligne la plus récente

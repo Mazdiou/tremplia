@@ -36,6 +36,16 @@ describe("groupActivity", () => {
     ]);
   });
 
+  it("regroupe les demandes d'inscription en ligne reçues à la suite", () => {
+    const signup = (id: string, target: string) =>
+      row(id, { actor_id: null, action: "online_signup.received", target_type: "online_signup", target_id: target });
+    const groups = groupActivity([signup("3", "s3"), signup("2", "s2"), row("1")], 6);
+    expect(groups.map((g) => [g.id, g.count])).toEqual([
+      ["3", 2],
+      ["1", 1],
+    ]);
+  });
+
   it("ne regroupe pas des lignes séparées par une autre", () => {
     const groups = groupActivity([row("3"), row("2", { action: "case.updated" }), row("1")], 6);
     expect(groups.map((g) => g.count)).toEqual([1, 1, 1]);

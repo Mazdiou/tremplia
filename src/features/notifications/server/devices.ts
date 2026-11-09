@@ -146,7 +146,7 @@ export async function sendStudentTestPush(
 export async function getPreferences(member: Member): Promise<NotificationPreferences> {
   const { data, error } = await createAdminClient()
     .from("notification_preferences")
-    .select("student_messages, student_reviews, student_documents, assigned_tasks, daily_tasks")
+    .select("student_messages, student_reviews, student_documents, online_signups, assigned_tasks, daily_tasks")
     .eq("user_id", member.userId)
     .eq("agency_id", member.agencyId)
     .maybeSingle();
@@ -160,6 +160,7 @@ export async function getPreferences(member: Member): Promise<NotificationPrefer
     studentMessages: data.student_messages as boolean,
     studentReviews: data.student_reviews as boolean,
     studentDocuments: data.student_documents as boolean,
+    onlineSignups: data.online_signups as boolean,
     assignedTasks: data.assigned_tasks as boolean,
     dailyTasks: data.daily_tasks as boolean,
   };
@@ -172,6 +173,7 @@ export async function savePreferences(member: Member, prefs: NotificationPrefere
     p_student_messages: prefs.studentMessages,
     p_student_reviews: prefs.studentReviews,
     p_student_documents: prefs.studentDocuments,
+    p_online_signups: prefs.onlineSignups,
     p_assigned_tasks: prefs.assignedTasks,
     p_daily_tasks: prefs.dailyTasks,
   });

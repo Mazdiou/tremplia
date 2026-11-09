@@ -3,12 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Info, TriangleAlert } from "lucide-react";
+import { Check, Globe, Info, TriangleAlert } from "lucide-react";
 import { FormActions, FormSection } from "@/components/page-ui";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { callApi, type ApiResult } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import type { CaseFieldsDraft, ImportMatch } from "@/features/cases/case-record";
+import {
+  EMPTY_CASE_FIELDS,
+  caseFieldsPayload,
+  type CaseFieldsDraft,
+  type ImportMatch,
+} from "@/features/cases/case-record";
 import {
   EDUCATION_LEVELS,
   EDUCATION_LEVEL_LABELS,
@@ -53,34 +58,15 @@ export type FormMember = {
   is_active?: boolean;
 };
 
-const EMPTY_FIELDS: CaseFieldsDraft = {
-  firstName: "",
-  lastName: "",
-  birthDate: "",
-  phone: "",
-  email: "",
-  city: "",
-  nationality: "",
-  secondaryContactName: "",
-  secondaryContactPhone: "",
-  educationLevel: "",
-  currentField: "",
-  currentInstitution: "",
-  diplomas: [],
-  languageTests: [],
+// Demande d'inscription en ligne à accepter : le formulaire part de ses
+// informations, son message devient la note initiale
+export type FormSignup = {
+  id: string;
+  fields: CaseFieldsDraft;
+  message: string | null;
+  // Date d'envoi, déjà mise en forme
+  sentOn: string;
 };
-
-// Champs envoyés à l'API : années en nombres, le reste tel quel (le serveur
-// valide et nettoie, vide = absent).
-function toPayload(f: CaseFieldsDraft) {
-  return {
-    ...f,
-    diplomas: f.diplomas.map((d) => ({
-      ...d,
-      year: d.year.trim() === "" ? null : Number(d.year),
-    })),
-  };
-}
 
 export function CaseForm(
   props:
@@ -93,6 +79,7 @@ export function CaseForm(
         members: FormMember[];
         isOwner: boolean;
         currentUserId: string;
+        signup?: FormSignup | null;
       }
     | {
         mode: "edit";
@@ -115,13 +102,14 @@ export function CaseForm(
     isEdit ? props.initial.groupIds : [],
   );
   const [fields, setFields] = useState<CaseFieldsDraft>(
-    isEdit ? props.initial.fields : EMPTY_FIELDS,
+    isEdit ? props.initial.fields : (props.signup?.fields ?? EMPTY_CASE_FIELDS),
   );
   const [assignedTo, setAssignedTo] = useState(
     isEdit ? (props.initial.assignedTo ?? "") : props.currentUserId,
   );
   const [accounts, setAccounts] = useState<AccountDraft[]>([]);
-  const [initialNote, setInitialNote] = useState("");
+  const signup = isEdit ? null : (props.signup ?? null);
+  const [initialNote, setInitialNote] = useState(signup?.message ?? "");
   // Montant convenu : le tarif de la campagne, tant qu'il n'a pas été changé
   const [agreedAmount, setAgreedAmount] = useState(() =>
     isEdit
@@ -184,7 +172,7 @@ export function CaseForm(
       res = await callApi(`/api/cases/${props.caseId}`, {
         method: "PATCH",
         body: {
-          ...toPayload(fields),
+          ...caseFieldsPayload(fields),
           assignedTo: props.isOwner ? assignedTo : "",
         },
       });
@@ -202,7 +190,7 @@ export function CaseForm(
           campaignId,
           groupIds,
           assignedTo: props.isOwner ? assignedTo : "",
-          ...toPayload(fields),
+          ...caseFieldsPayload(fields),
           externalAccounts: accounts.map((a) => ({
             ...a,
             password: a.status === "existing" ? a.password : "",
@@ -213,6 +201,7 @@ export function CaseForm(
             paidToday.trim() === "" ? undefined : { amount: paidToday, method: paidMethod },
           sourceCampaignId: imported?.id ?? "",
           confirmDuplicate,
+          signupId: signup?.id ?? "",
         },
       });
     }
@@ -242,11 +231,24 @@ export function CaseForm(
 
   return (
     <div className="space-y-8">
-      {!isEdit && (
+      {!isEdit && !signup && (
         <ImportPanel
           sources={props.sources.filter((s) => s.id !== campaignId)}
           onImport={handleImport}
         />
+      )}
+
+      {signup && (
+        <div className="flex gap-3 rounded-xl border border-primary/30 bg-highlight p-4 text-sm">
+          <Globe className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+          <div>
+            <p className="font-medium">Inscription en ligne reçue le {signup.sentOn}</p>
+            <p className="mt-1 text-muted-foreground">
+              Vérifiez les informations saisies par le candidat, choisissez le responsable, puis
+              créez le dossier. La demande disparaît alors de la liste.
+            </p>
+          </div>
+        </div>
       )}
 
       {imported && (
@@ -546,7 +548,7 @@ export function CaseForm(
             </p>
           )}
           <Link
-            href={isEdit ? `/cases/${props.caseId}` : "/cases"}
+            href={isEdit ? `/cases/${props.caseId}` : signup ? "/cases/inscriptions" : "/cases"}
             className={buttonVariants({ variant: "outline" })}
           >
             Annuler

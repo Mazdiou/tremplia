@@ -77,6 +77,18 @@ export function studentDocumentPush(
   };
 }
 
+// Demande reçue sur la page d'inscription en ligne : le candidat et sa
+// campagne, vers la liste des demandes. Même tag pour toutes : plusieurs
+// demandes à la suite ne laissent qu'une notification, la dernière.
+export function onlineSignupPush(studentName: string, campaignName: string | null): PushPayload {
+  return {
+    title: "Nouvelle inscription en ligne",
+    body: preview(campaignName ? `${studentName} (${campaignName})` : studentName),
+    url: "/cases/inscriptions",
+    tag: "online-signup",
+  };
+}
+
 export function assignedTaskPush(
   caseId: string,
   task: { id: string; title: string },

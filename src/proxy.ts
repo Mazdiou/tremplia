@@ -12,6 +12,12 @@ const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password"];
 // pages légales
 const OPEN_PATHS = ["/auth/confirm", "/mentions-legales", "/conditions", "/confidentialite"];
 
+// Pages d'inscription en ligne des agences (/inscription/<adresse>) et leur
+// route d'envoi : publiques, aucune session n'y est consultée
+function isSignupPath(path: string) {
+  return /^\/(api\/)?inscription\//.test(path);
+}
+
 // Pages de l'agence : un visiteur non connecté est envoyé sur la connexion.
 // Elles revérifient elles-mêmes le membre (requireMember) : une section
 // oubliée ici resterait protégée, elle afficherait seulement la connexion
@@ -40,7 +46,11 @@ function isStudentPath(path: string) {
 }
 
 export async function proxy(request: NextRequest) {
-  if (isStudentPath(request.nextUrl.pathname) || OPEN_PATHS.includes(request.nextUrl.pathname)) {
+  if (
+    isStudentPath(request.nextUrl.pathname) ||
+    isSignupPath(request.nextUrl.pathname) ||
+    OPEN_PATHS.includes(request.nextUrl.pathname)
+  ) {
     return NextResponse.next();
   }
 

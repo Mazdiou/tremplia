@@ -37,6 +37,7 @@ import { CampaignHeader, TreeBranch } from "./tree-branch";
 import { TreeDisplaySettings, TreeFilters, TreeSearchBox } from "./tree-filters";
 import { useTreeWidth } from "./tree-resize";
 import { BRAND } from "@/config/brand";
+import { SignupsTreeLink } from "@/features/signup/components/signups-tree-link";
 import { plural } from "@/lib/plural";
 
 type TreeCampaign = { id: string; name: string; status: string };
@@ -59,6 +60,7 @@ export function CaseTree({
   overdue,
   isOwner,
   readOnly = false,
+  signupCount = null,
 }: {
   campaigns: TreeCampaign[];
   groups: TreeGroup[];
@@ -76,6 +78,9 @@ export function CaseTree({
   isOwner: boolean;
   // Abonnement expiré : rien à créer (la base refuserait de toute façon)
   readOnly?: boolean;
+  // Demandes d'inscription en ligne en attente ; null : page jamais
+  // activée et aucune demande, la ligne n'est pas affichée
+  signupCount?: number | null;
 }) {
   const params = useParams<{ id?: string }>();
   const selectedId = params?.id;
@@ -395,6 +400,7 @@ export function CaseTree({
             />
           ) : (
             <>
+              {signupCount !== null && <SignupsTreeLink count={signupCount} />}
               {shownCampaigns.length === 0 && (
                 <p className="px-3 py-2 text-sm text-muted-foreground">
                   Aucune campagne active.

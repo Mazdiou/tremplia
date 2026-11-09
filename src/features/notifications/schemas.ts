@@ -32,6 +32,7 @@ export const notificationPreferencesSchema = z.object({
   studentMessages: z.boolean(),
   studentReviews: z.boolean(),
   studentDocuments: z.boolean(),
+  onlineSignups: z.boolean(),
   assignedTasks: z.boolean(),
   dailyTasks: z.boolean(),
 });
@@ -43,6 +44,7 @@ export const DEFAULT_PREFERENCES: NotificationPreferences = {
   studentMessages: true,
   studentReviews: true,
   studentDocuments: true,
+  onlineSignups: true,
   assignedTasks: true,
   dailyTasks: false,
 };
@@ -51,6 +53,7 @@ export const PREFERENCE_KEYS = [
   "studentMessages",
   "studentReviews",
   "studentDocuments",
+  "onlineSignups",
   "assignedTasks",
   "dailyTasks",
 ] as const satisfies readonly (keyof NotificationPreferences)[];
@@ -70,6 +73,10 @@ export function preferenceInfo(isOwner: boolean) {
     studentDocuments: {
       label: "Pièces des candidats",
       description: `Pièce demandée envoyée ou remplacée par le candidat. ${cases}`,
+    },
+    onlineSignups: {
+      label: "Inscriptions en ligne",
+      description: "Nouvelle demande reçue sur la page d'inscription de l'agence.",
     },
     assignedTasks: {
       label: "Tâches confiées",

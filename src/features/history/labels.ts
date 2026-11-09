@@ -8,6 +8,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "agency.created": "a créé l'agence",
   "agency.updated": "a modifié le profil de l'agence",
   "agency.defaults_updated": "a modifié les valeurs par défaut des campagnes",
+  "agency.signup_updated": "a modifié l'inscription en ligne",
   "account.password_changed": "a changé son mot de passe",
   "employee.created": "a ajouté un employé",
   "employee.deactivated": "a désactivé un employé",
@@ -75,6 +76,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "task.reopened": "a rouvert une tâche",
   "task.deleted": "a supprimé une tâche",
   "task.all_completed": "a marqué faites les tâches d'un dossier",
+  "online_signup.refused": "a refusé une demande d'inscription en ligne",
   "student.logged_in": "s'est connecté à son espace",
   "student.approved": "a validé sa lettre et ses formations",
   "student.changes_requested": "a demandé une modification",
@@ -82,6 +84,7 @@ const AGENCY_LABELS: Record<ActivityAction, string> = {
   "student.document_sent": "a envoyé une pièce demandée",
   "student.document_replaced": "a remplacé une pièce envoyée",
   "student.document_removed": "a retiré une pièce envoyée",
+  "online_signup.received": "a envoyé une demande d'inscription en ligne",
 };
 
 const CASE_LABELS: Record<ActivityAction, string> = {
@@ -125,7 +128,9 @@ export function activityActor(
   memberName: string | null | undefined,
   scope: "case" | "agency",
 ) {
-  if (action.startsWith("student.")) return scope === "case" ? "Le candidat" : "Un candidat";
+  if (action.startsWith("student.") || action === "online_signup.received") {
+    return scope === "case" ? "Le candidat" : "Un candidat";
+  }
   // Majuscule en tête de ligne (« un membre » quand le nom est illisible)
   const name = memberName || "Un ancien membre";
   return name.charAt(0).toUpperCase() + name.slice(1);

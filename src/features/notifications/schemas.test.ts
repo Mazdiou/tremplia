@@ -59,6 +59,7 @@ describe("notificationPreferencesSchema", () => {
       studentMessages: true,
       studentReviews: true,
       studentDocuments: true,
+      onlineSignups: true,
       assignedTasks: true,
       dailyTasks: false,
     });

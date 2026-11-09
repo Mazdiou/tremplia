@@ -104,9 +104,13 @@ export async function createCase(member: Member, input: CreateCaseInput) {
     p_initial_note: input.initialNote ?? null,
     p_agreed_amount: input.agreedAmount ?? null,
     p_initial_payment: input.initialPayment ?? null,
+    p_signup_id: input.signupId ?? null,
   });
   if (error) {
     throw dbError("cases create", error, {
+      ...(input.signupId && {
+        P0002: "Cette demande d'inscription a déjà été traitée par un collègue.",
+      }),
       "55000": "Cette campagne est archivée : elle ne reçoit plus de dossier",
       "23503": "Campagne ou groupe introuvable",
       "23505": "Un seul compte par plateforme",
@@ -132,6 +136,7 @@ export async function createCase(member: Member, input: CreateCaseInput) {
       initial_note: Boolean(input.initialNote),
       agreed_amount: input.agreedAmount ?? null,
       initial_payment: input.initialPayment?.amount ?? null,
+      online_signup: Boolean(input.signupId),
     },
   });
 

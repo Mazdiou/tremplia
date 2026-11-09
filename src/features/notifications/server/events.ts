@@ -9,6 +9,7 @@ import {
   assignedTaskPush,
   assignedTasksPush,
   documentRequestPush,
+  onlineSignupPush,
   studentDocumentPush,
   studentMessagePush,
   studentReviewPush,
@@ -92,6 +93,31 @@ export function notifyStudentDocument(
     await sendPush(
       to,
       studentDocumentPush(caseId, await studentName(admin, agencyId, caseId), label, replaced),
+    );
+  });
+}
+
+// Demande reçue sur la page d'inscription en ligne : les membres de l'agence
+// qui le veulent
+export function notifyOnlineSignup(agencyId: string, signupId: string) {
+  pushInBackground("push online signup", async () => {
+    const admin = createAdminClient();
+    const to = await targets(admin, "push_targets_online_signup", { p_agency_id: agencyId });
+    if (to.length === 0) return;
+    const { data, error } = await admin
+      .from("online_signups")
+      .select("fields, campaigns(name)")
+      .eq("id", signupId)
+      .eq("agency_id", agencyId)
+      .maybeSingle();
+    if (error) throw dbError("push signup read", error);
+    // Déjà acceptée ou refusée : plus rien à signaler
+    if (!data) return;
+    const fields = data.fields as { first_name: string; last_name: string };
+    const campaign = data.campaigns as unknown as { name: string } | null;
+    await sendPush(
+      to,
+      onlineSignupPush(displayName(fields.first_name, fields.last_name), campaign?.name ?? null),
     );
   });
 }

@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { CheckCircle2, ChevronRight, MessageSquareWarning, MessagesSquare, Send } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronRight,
+  Globe,
+  MessageSquareWarning,
+  MessagesSquare,
+  Send,
+} from "lucide-react";
 import { displayName } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import type { Todo, TodoItem } from "../server/dashboard";
@@ -8,12 +15,20 @@ import { plural } from "@/lib/plural";
 import { CountBadge } from "@/components/page-ui";
 
 // « À traiter » : ce qui attend l'agence, avec un accès direct au bon onglet
-// du dossier. Rien n'est à cocher : une ligne disparaît d'elle-même quand la
-// situation est réglée (message lu, modification faite, candidature envoyée).
+// du dossier (ou à la demande d'inscription en ligne). Rien n'est à cocher :
+// une ligne disparaît d'elle-même quand la situation est réglée (demande
+// acceptée ou refusée, message lu, modification faite, candidature envoyée).
 
 const SHOWN = 4;
 
 const GROUPS = [
+  {
+    key: "signups",
+    title: "Inscriptions en ligne",
+    icon: Globe,
+    tone: "text-primary",
+    href: (id: string) => `/cases/inscriptions#${id}`,
+  },
   {
     key: "changes",
     title: "Modifications demandées",

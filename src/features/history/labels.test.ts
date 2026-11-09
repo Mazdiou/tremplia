@@ -28,6 +28,11 @@ describe("activityActor", () => {
     expect(activityActor("note.created", undefined, "agency")).toBe("Un ancien membre");
   });
 
+  it("attribue la demande d'inscription en ligne au candidat, pas à un ancien membre", () => {
+    expect(activityActor("online_signup.received", null, "agency")).toBe("Un candidat");
+    expect(activityActor("online_signup.refused", "Yasmine K", "agency")).toBe("Yasmine K");
+  });
+
   it("met la majuscule au nom neutre (noms illisibles)", () => {
     expect(activityActor("note.created", "un membre", "case")).toBe("Un membre");
   });
