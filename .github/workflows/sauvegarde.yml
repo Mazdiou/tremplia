@@ -21,6 +21,10 @@ concurrency:
   group: sauvegarde
   cancel-in-progress: false
 
+# Dépôt public : le jeton de la tâche ne fait que lire le code
+permissions:
+  contents: read
+
 jobs:
   sauvegarder:
     runs-on: ubuntu-24.04

@@ -61,6 +61,25 @@ desktop.ini
 # Journaux et clés
 *.log
 *.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+signing_keys.json
+service-account*.json
+
+# Dépôt public : jamais d'export ni de copie de données (candidats,
+# paiements, prospection), où qu'ils soient posés
+*.csv
+*.xlsx
+*.xls
+*.sql.gz
+*.dump
+*.backup
+
+# Supabase en local : projet lié en ligne (adresse de la base, pooler)
+supabase/.temp/
+supabase/.branches/
 
 # Sauvegardes et clés age : jamais dans le dépôt
 *.age

@@ -18,6 +18,10 @@ concurrency:
   group: taches-quotidiennes
   cancel-in-progress: false
 
+# Dépôt public : le jeton de la tâche ne fait que lire le code
+permissions:
+  contents: read
+
 jobs:
   taches:
     runs-on: ubuntu-24.04

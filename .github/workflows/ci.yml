@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+# Dépôt public : le jeton de la tâche ne fait que lire le code
+permissions:
+  contents: read
+
 jobs:
   verifier:
     runs-on: ubuntu-24.04
