@@ -3,6 +3,7 @@ import { BRAND } from "@/config/brand";
 import { LEGAL } from "@/config/legal";
 import { ContactLink, LegalList, LegalPage, LegalSection } from "@/components/legal-page";
 import { UNCONFIRMED_DAYS } from "@/features/auth/schemas";
+import { SIGNUP_RETENTION_DAYS } from "@/features/signup/schemas";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -33,8 +34,9 @@ export default function ConfidentialitePage() {
           protection des personnes physiques dans le traitement des données à caractère personnel.
         </p>
         <p>
-          <strong>Données des candidats</strong> saisies par une agence : l&apos;agence en est
-          responsable, c&apos;est elle qui les collecte auprès de ses candidats. {BRAND.name} les
+          <strong>Données des candidats</strong> saisies par une agence, ou envoyées par le
+          candidat sur la page d&apos;inscription en ligne de l&apos;agence : l&apos;agence en
+          est responsable, c&apos;est elle qui les collecte auprès de ses candidats. {BRAND.name} les
           traite pour son compte, comme sous-traitant, uniquement pour lui fournir le service, et
           ne les utilise jamais à d&apos;autres fins.
         </p>
@@ -62,11 +64,14 @@ export default function ConfidentialitePage() {
               par l&apos;agence ou envoyés par le candidat depuis son espace), lettre de
               motivation et avis du candidat, identifiants de plateformes (chiffrés), code
               d&apos;accès à l&apos;espace candidat (chiffré), notes et tâches de l&apos;agence,
-              paiements, messages échangés avec l&apos;agence.
+              paiements, messages échangés avec l&apos;agence ; pour une demande
+              d&apos;inscription en ligne, les mêmes informations d&apos;identité et de parcours,
+              la campagne choisie et le message laissé à l&apos;agence.
             </>,
             <>
               <strong>Données techniques</strong> : pour limiter les essais de connexion,
-              d&apos;inscription et les demandes d&apos;e-mail, adresse IP et adresse e-mail gardées
+              d&apos;inscription, les demandes d&apos;inscription en ligne et les demandes
+              d&apos;e-mail, adresse IP et adresse e-mail gardées
               seulement sous forme d&apos;empreinte illisible ; pour la sécurité des comptes des
               agences, le service de connexion (Supabase) enregistre l&apos;adresse IP et le
               navigateur de chaque session et un journal des connexions ; journaux techniques de
@@ -139,6 +144,7 @@ export default function ConfidentialitePage() {
             "Comptes, dossiers et documents : tant que l'agence utilise le service. Après la fin d'un abonnement, ils restent consultables en lecture seule.",
             "Sur demande du patron de l'agence, toutes les données de l'agence sont supprimées dans un délai de 30 jours ; elles disparaissent ensuite des sauvegardes à mesure que celles-ci expirent (12 mois au plus).",
             `Inscription jamais confirmée : supprimée après ${UNCONFIRMED_DAYS} jours.`,
+            `Demande d'inscription en ligne : jusqu'à la réponse de l'agence (acceptée, elle devient un dossier ; refusée, elle est supprimée) ; sans réponse, supprimée après ${SIGNUP_RETENTION_DAYS} jours.`,
             "Sessions de connexion : jusqu'à la déconnexion ou leur expiration ; journal des connexions : tant que le compte existe.",
             "Appareils abonnés aux notifications : jusqu'à leur désactivation ou la déconnexion, ou dès que le navigateur ne les accepte plus.",
             "Sauvegardes chiffrées : 30 jours pour les quotidiennes, 12 mois pour les mensuelles.",

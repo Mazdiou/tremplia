@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Globe } from "lucide-react";
+import { plural } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 
 export const SIGNUPS_PAGE = "/cases/inscriptions";
@@ -23,11 +24,16 @@ export function SignupsTreeLink({ count }: { count: number }) {
       <Globe className="size-4 shrink-0 text-muted-foreground" aria-hidden />
       <span className="min-w-0 flex-1 truncate">Inscriptions en ligne</span>
       {count > 0 && (
-        <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground tabular-nums">
-          <span className="sr-only">(</span>
-          {count > 99 ? "99+" : count}
-          <span className="sr-only">{count > 1 ? " demandes)" : " demande)"}</span>
-        </span>
+        <>
+          <span
+            aria-hidden
+            className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground tabular-nums"
+          >
+            {count > 99 ? "99+" : count}
+          </span>
+          {/* Lu d'un seul tenant : « Inscriptions en ligne (2 demandes) » */}
+          <span className="sr-only"> ({plural(count, "demande")})</span>
+        </>
       )}
     </Link>
   );
