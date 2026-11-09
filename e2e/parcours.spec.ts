@@ -300,9 +300,13 @@ test("le guide coche les étapes faites", async () => {
     "aria-valuenow",
     "4",
   );
-  await expect(page.getByRole("button", { name: /Créer une tâche de relance/ })).toHaveAttribute(
-    "aria-expanded",
-    "true",
+  // Prochaine étape : la page d'inscription en ligne, qui mène aux réglages
+  await expect(
+    page.getByRole("button", { name: /Ouvrir votre page d'inscription en ligne/ }),
+  ).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("link", { name: "Ouvrir ma page" })).toHaveAttribute(
+    "href",
+    "/settings#inscription",
   );
 });
 
@@ -440,6 +444,18 @@ test("un mauvais code d'accès est refusé", async ({ browser }) => {
 test("inscription en ligne : page ouverte, demande acceptée en dossier, autre demande refusée", async ({
   browser,
 }) => {
+  // Page fermée : le patron découvre la fonction dans l'arbre et sur
+  // « Nouveau dossier » (encadré qu'on peut masquer pour de bon)
+  await page.goto("/cases/new");
+  await expect(page.getByRole("link", { name: "Inscriptions en ligne (Fermée)" })).toBeVisible();
+  const hint = page.getByRole("complementary", { name: "Inscription en ligne" });
+  await expect(hint).toBeVisible();
+  await hint.getByRole("button", { name: "Ne plus afficher" }).click();
+  await expect(hint).toBeHidden();
+  await page.reload();
+  await expect(page.locator("#lastName")).toBeVisible();
+  await expect(hint).toBeHidden();
+
   // Le patron ouvre la page et propose la campagne importée
   await page.goto("/settings#inscription");
   const section = page.locator("#inscription");
@@ -451,6 +467,15 @@ test("inscription en ligne : page ouverte, demande acceptée en dossier, autre d
   await expect(section.getByText("Votre page est en ligne")).toBeVisible();
   const signupPath = `/inscription/agence-e2e-${run}`;
   await expect(section.getByText(signupPath)).toBeVisible();
+
+  // L'étape du guide est cochée, la ligne de l'arbre n'est plus « Fermée »
+  await page.goto("/dashboard");
+  await expect(page.getByRole("progressbar", { name: "Avancement" })).toHaveAttribute(
+    "aria-valuenow",
+    "5",
+  );
+  await page.goto("/cases");
+  await expect(page.getByRole("link", { name: "Inscriptions en ligne", exact: true })).toBeVisible();
 
   // Un candidat, sans compte, s'inscrit en quatre étapes
   async function signUp(firstName: string, lastName: string, message = "") {

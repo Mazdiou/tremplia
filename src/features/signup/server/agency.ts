@@ -60,16 +60,37 @@ export const countSignups = cache(async (): Promise<number> => {
   return count ?? 0;
 });
 
-// Ligne de l'arbre des dossiers : le nombre de demandes, ou null si la page
-// n'a jamais servi (désactivée et aucune demande en attente)
-export async function signupTreeCount(agencyId: string): Promise<number | null> {
-  const supabase = await createClient();
-  const [count, { data, error }] = await Promise.all([
-    countSignups(),
-    supabase.from("agencies").select("signup_enabled").eq("id", agencyId).maybeSingle(),
-  ]);
-  if (error) reportError("[signups tree]", error.code);
-  return count > 0 || data?.signup_enabled ? count : null;
+// Page activée, et ouverte aux candidats (au moins une campagne active
+// proposée). En cache pour la durée d'un affichage.
+export const signupPageState = cache(
+  async (agencyId: string): Promise<{ enabled: boolean; open: boolean }> => {
+    const supabase = await createClient();
+    const [agencyRes, campaignsRes] = await Promise.all([
+      supabase.from("agencies").select("signup_enabled").eq("id", agencyId).maybeSingle(),
+      supabase
+        .from("campaigns")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "active")
+        .eq("signup_open", true),
+    ]);
+    if (agencyRes.error) reportError("[signup state]", agencyRes.error.code);
+    if (campaignsRes.error) reportError("[signup state campaigns]", campaignsRes.error.code);
+    const enabled = Boolean(agencyRes.data?.signup_enabled);
+    return { enabled, open: enabled && (campaignsRes.count ?? 0) > 0 };
+  },
+);
+
+// Ligne de l'arbre des dossiers : nombre de demandes et page ouverte ou non.
+// Toujours affichée au patron (c'est là qu'il découvre la fonction) ; pour
+// un employé, seulement si la page a servi (activée, ou des demandes en
+// attente).
+export async function signupTreeState(
+  agencyId: string,
+  isOwner: boolean,
+): Promise<{ count: number; open: boolean } | null> {
+  const [count, page] = await Promise.all([countSignups(), signupPageState(agencyId)]);
+  if (!isOwner && count === 0 && !page.enabled) return null;
+  return { count, open: page.open };
 }
 
 // Une demande de l'agence, ou null (déjà traitée, ou d'une autre agence)

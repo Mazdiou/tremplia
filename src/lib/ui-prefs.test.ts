@@ -42,11 +42,19 @@ describe("sanitize (mémoire de l'interface)", () => {
   });
 
   it("n'accepte que des valeurs connues", () => {
-    const prefs = sanitize({ sortBy: "date", collapsed: "oui", mine: 1, caseHeader: "oui" });
+    const prefs = sanitize({
+      sortBy: "date",
+      collapsed: "oui",
+      mine: 1,
+      caseHeader: "oui",
+      signupHintHidden: "oui",
+    });
     expect(prefs.sortBy).toBe("name");
     expect(prefs.collapsed).toBe(false);
     expect(prefs.mine).toBe(false);
     expect(prefs.caseHeader).toBe("auto");
+    expect(prefs.signupHintHidden).toBe(false);
+    expect(sanitize({ signupHintHidden: true }).signupHintHidden).toBe(true);
   });
 
   it("ne garde que des identifiants dans les campagnes épinglées", () => {

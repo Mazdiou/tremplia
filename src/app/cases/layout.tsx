@@ -12,7 +12,7 @@ import { agencyUnreadCounts } from "@/features/messages/server/messages";
 import { isReadOnly } from "@/features/subscription/server/subscription";
 import { isPlatformAdmin } from "@/features/admin/server/admin";
 import { overdueTasksByCase } from "@/features/tasks/server/read";
-import { signupTreeCount } from "@/features/signup/server/agency";
+import { signupTreeState } from "@/features/signup/server/agency";
 import { reportError, reportException } from "@/lib/report-error";
 
 export default async function CasesLayout({
@@ -34,14 +34,14 @@ export default async function CasesLayout({
       .order("first_name"),
   ]);
   const { member, initials } = await getShellUser();
-  const [[campaigns, groups, stages, membersRes], unread, overdue, readOnly, admin, signupCount] =
+  const [[campaigns, groups, stages, membersRes], unread, overdue, readOnly, admin, signupTree] =
     await Promise.all([
       shared,
       agencyUnreadCounts(member.agencyId),
       overdueTasksByCase(),
       isReadOnly(member.agencyId),
       isPlatformAdmin(member.userId),
-      signupTreeCount(member.agencyId),
+      signupTreeState(member.agencyId, member.isOwner),
     ]);
   if (membersRes.error) reportError("[cases layout] membres", membersRes.error.code);
 
@@ -71,7 +71,7 @@ export default async function CasesLayout({
           overdue={overdue}
           isOwner={member.isOwner}
           readOnly={readOnly}
-          signupCount={signupCount}
+          signups={signupTree}
         />
         <CasesContent>{children}</CasesContent>
       </div>

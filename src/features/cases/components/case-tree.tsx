@@ -60,7 +60,7 @@ export function CaseTree({
   overdue,
   isOwner,
   readOnly = false,
-  signupCount = null,
+  signups = null,
 }: {
   campaigns: TreeCampaign[];
   groups: TreeGroup[];
@@ -78,9 +78,9 @@ export function CaseTree({
   isOwner: boolean;
   // Abonnement expiré : rien à créer (la base refuserait de toute façon)
   readOnly?: boolean;
-  // Demandes d'inscription en ligne en attente ; null : page jamais
-  // activée et aucune demande, la ligne n'est pas affichée
-  signupCount?: number | null;
+  // Inscription en ligne : demandes en attente et page ouverte ou non ;
+  // null : ligne non affichée (employé, page jamais servie)
+  signups?: { count: number; open: boolean } | null;
 }) {
   const params = useParams<{ id?: string }>();
   const selectedId = params?.id;
@@ -400,7 +400,7 @@ export function CaseTree({
             />
           ) : (
             <>
-              {signupCount !== null && <SignupsTreeLink count={signupCount} />}
+              {signups && <SignupsTreeLink count={signups.count} open={signups.open} />}
               {shownCampaigns.length === 0 && (
                 <p className="px-3 py-2 text-sm text-muted-foreground">
                   Aucune campagne active.

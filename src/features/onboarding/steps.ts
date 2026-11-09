@@ -1,5 +1,6 @@
-// Guide « Bien démarrer » : les six étapes d'une nouvelle agence. Chacune se
-// coche d'après les vraies données (onboarding_progress, migration onboarding).
+// Guide « Bien démarrer » : les sept étapes d'une nouvelle agence. Chacune se
+// coche d'après les vraies données (onboarding_progress, migrations
+// onboarding et onboarding_signup).
 
 export type OnboardingProgress = {
   hasCampaign: boolean;
@@ -8,6 +9,9 @@ export type OnboardingProgress = {
   hasStudentAccess: boolean;
   hasTask: boolean;
   hasEmployee: boolean;
+  // Page d'inscription en ligne ouverte aux candidats (activée, avec une
+  // campagne active proposée)
+  hasSignupPage: boolean;
   // Dernier dossier créé : là où mènent les étapes qui en demandent un
   latestCaseId: string | null;
 };
@@ -45,6 +49,14 @@ export function buildSteps(p: OnboardingProgress): OnboardingStep[] {
       description: "Un dossier par candidat : identité, parcours et montant convenu.",
       done: p.hasCase,
       action: p.hasCampaign ? { label: "Nouveau dossier", href: "/cases/new" } : null,
+    },
+    {
+      id: "inscription",
+      title: "Ouvrir votre page d'inscription en ligne",
+      description:
+        "Une page à partager sur Facebook ou WhatsApp : vos candidats s'y inscrivent eux-mêmes, leurs demandes arrivent ici.",
+      done: p.hasSignupPage,
+      action: p.hasCampaign ? { label: "Ouvrir ma page", href: "/settings#inscription" } : null,
     },
     {
       id: "document",

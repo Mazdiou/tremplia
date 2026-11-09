@@ -27,6 +27,8 @@ export async function loadOnboarding(owner: Member): Promise<OnboardingProgress 
       has_student_access: boolean;
       has_task: boolean;
       has_employee: boolean;
+      // Absente tant que la migration onboarding_signup n'est pas appliquée
+      has_signup_page?: boolean;
       latest_case_id: string | null;
     }>();
   if (error) reportError("[onboarding read]", error.code);
@@ -38,6 +40,7 @@ export async function loadOnboarding(owner: Member): Promise<OnboardingProgress 
     hasStudentAccess: data.has_student_access,
     hasTask: data.has_task,
     hasEmployee: data.has_employee,
+    hasSignupPage: data.has_signup_page ?? false,
     latestCaseId: data.latest_case_id,
   };
 }

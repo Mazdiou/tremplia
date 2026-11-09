@@ -1,5 +1,5 @@
 begin;
-select plan(23);
+select plan(27);
 
 -- Agence A : patron (1111), employé (2222) ; agence B : patron (3333)
 insert into auth.users (id, email) values
@@ -94,7 +94,24 @@ select public.add_employee((select agency_a from ctx),
   '22222222-2222-2222-2222-222222222222', 'Employe', 'A');
 
 select is(pg_temp.progress(), 'f,t,t,t,t,t,t',
-  'un employé : toutes les étapes sont faites');
+  'un employé : sixième étape faite');
+
+-- Page d'inscription en ligne : faite seulement si elle est ouverte aux
+-- candidats (activée, avec une campagne active proposée)
+create function pg_temp.signup_page() returns boolean language sql as $$
+  select has_signup_page from public.onboarding_progress((select agency_a from ctx),
+    '11111111-1111-1111-1111-111111111111') $$;
+
+select is(pg_temp.signup_page(), false, 'page d''inscription jamais ouverte : à faire');
+select public.save_signup_settings((select agency_a from ctx),
+  '11111111-1111-1111-1111-111111111111', true, 'agence-a-onb', '{}');
+select is(pg_temp.signup_page(), false, 'page activée sans campagne proposée : à faire');
+select public.save_signup_settings((select agency_a from ctx),
+  '11111111-1111-1111-1111-111111111111', true, 'agence-a-onb', array[(select id from camp)]);
+select is(pg_temp.signup_page(), true, 'page ouverte avec une campagne : faite');
+select public.set_campaign_status((select id from camp), (select agency_a from ctx),
+  '11111111-1111-1111-1111-111111111111', 'archived');
+select is(pg_temp.signup_page(), false, 'sa seule campagne archivée : de nouveau à faire');
 
 -- 3. Cloisonnement
 

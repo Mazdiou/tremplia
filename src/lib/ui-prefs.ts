@@ -36,6 +36,8 @@ export type UiPrefs = {
   // En-tête de la fiche d'un dossier : réduit à une ligne ou complet ;
   // « auto » (pas encore choisi) = réduit sur téléphone, complet ailleurs
   caseHeader: "auto" | "collapsed" | "expanded";
+  // Encadré « inscription en ligne » de Nouveau dossier masqué pour de bon
+  signupHintHidden: boolean;
 };
 
 export const DEFAULT_PREFS: UiPrefs = {
@@ -57,6 +59,7 @@ export const DEFAULT_PREFS: UiPrefs = {
   overdue: false,
   filtersOpen: false,
   caseHeader: "auto",
+  signupHintHidden: false,
 };
 
 // Largeur du panneau des dossiers, en pixels
@@ -97,6 +100,7 @@ export function sanitize(raw: unknown): UiPrefs {
     filtersOpen: r.filtersOpen === true,
     caseHeader:
       r.caseHeader === "collapsed" || r.caseHeader === "expanded" ? r.caseHeader : "auto",
+    signupHintHidden: r.signupHintHidden === true,
   };
 }
 

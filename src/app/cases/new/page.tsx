@@ -5,7 +5,8 @@ import { EmptyState } from "@/components/empty-state";
 import { PageContainer, PageHeader } from "@/components/page-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { toCaseDraft } from "@/features/cases/case-record";
-import { getSignup } from "@/features/signup/server/agency";
+import { getSignup, signupPageState } from "@/features/signup/server/agency";
+import { SignupHint } from "@/features/signup/components/signup-hint";
 import { shortDateFormat } from "@/lib/dates";
 import { isUuid } from "@/lib/validation";
 import { createClient } from "@/lib/supabase/server";
@@ -65,7 +66,7 @@ export default async function NewCasePage({
   // Lecture via le RLS : seules les données de l'agence reviennent. Les
   // lectures indépendantes sont lancées ensemble.
   const supabase = await createClient();
-  const [campaigns, stats, platformSuggestions, membersRes] = await Promise.all([
+  const [campaigns, stats, platformSuggestions, membersRes, signupPage] = await Promise.all([
     listCampaigns(),
     // Nombre de dossiers par campagne (campagnes d'où importer un candidat)
     listCaseStats(),
@@ -79,6 +80,8 @@ export default async function NewCasePage({
           .eq("is_active", true)
           .order("first_name")
       : Promise.resolve({ data: null }),
+    // Encadré « inscription en ligne » : patron seulement, page fermée
+    member.isOwner && !signup ? signupPageState(member.agencyId) : Promise.resolve(null),
   ]);
   const active = campaigns.filter((c) => c.status === "active");
   const activeIds = active.map((c) => c.id);
@@ -141,6 +144,7 @@ export default async function NewCasePage({
         }
         title="Nouveau dossier"
       />
+      {signupPage && !signupPage.open && active.length > 0 && <SignupHint />}
       <CaseForm
         // Une autre demande ouverte ensuite repart de zéro
         key={signup?.id ?? "new"}

@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { buildSteps, firstOpenStep, type OnboardingProgress } from "../steps";
 
 // Guide « Bien démarrer » du tableau de bord (patron d'une nouvelle agence) :
-// six étapes qui se cochent d'après les données. Une seule est dépliée à la
+// sept étapes qui se cochent d'après les données. Une seule est dépliée à la
 // fois, la prochaine à faire au départ. La croix masque le guide pour toute
 // l'agence (réaffichable dans les réglages).
 export function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
