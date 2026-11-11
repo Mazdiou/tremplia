@@ -20,7 +20,7 @@ export default function ChangePasswordPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   // Erreur affichée sous le champ concerné
-  const [fieldErrors, setFieldErrors] = useState<{ password?: string; confirm?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ password?: string }>({});
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -29,12 +29,11 @@ export default function ChangePasswordPage() {
     const formEl = e.currentTarget;
     const form = new FormData(formEl);
     const password = String(form.get("password"));
-    const confirm = String(form.get("confirm"));
 
-    const local = newPasswordErrors(password, confirm);
+    const local = newPasswordErrors(password);
     setFieldErrors(local);
-    if (local.password || local.confirm) {
-      (formEl.elements.namedItem(local.password ? "password" : "confirm") as HTMLInputElement | null)?.focus();
+    if (local.password) {
+      (formEl.elements.namedItem("password") as HTMLInputElement | null)?.focus();
       return;
     }
 
@@ -70,7 +69,7 @@ export default function ChangePasswordPage() {
 
   return (
     <AuthShell>
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">
           Choisissez votre mot de passe
         </h1>
@@ -79,7 +78,7 @@ export default function ChangePasswordPage() {
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-5">
+      <form onSubmit={onSubmit} className="space-y-4">
         <FormError message={error} />
         <PasswordField
           label="Nouveau mot de passe"
@@ -95,24 +94,13 @@ export default function ChangePasswordPage() {
           required
           autoFocus
         />
-        <PasswordField
-          label="Confirmer le mot de passe"
-          name="confirm"
-          autoComplete="new-password"
-          error={fieldErrors.confirm}
-          onChange={() => {
-            if (fieldErrors.confirm) setFieldErrors({});
-          }}
-          maxLength={MAX_PASSWORD_LENGTH}
-          required
-        />
         <Button type="submit" size="lg" disabled={loading} className="w-full">
           {loading && <LoaderCircle className="animate-spin" />}
           {loading ? "Enregistrement…" : "Enregistrer"}
         </Button>
       </form>
 
-      <p className="mt-8 text-center text-sm text-muted-foreground">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Ce n&apos;est pas votre compte ?{" "}
         <button
           type="button"

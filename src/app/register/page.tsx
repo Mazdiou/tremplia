@@ -38,7 +38,6 @@ type Values = {
   lastName: string;
   email: string;
   password: string;
-  confirm: string;
 };
 
 const EMPTY: Values = {
@@ -49,7 +48,6 @@ const EMPTY: Values = {
   lastName: "",
   email: "",
   password: "",
-  confirm: "",
 };
 
 const STEPS = ["Votre agence", "Votre compte"];
@@ -59,7 +57,7 @@ const AGENCY_FIELDS: (keyof Values)[] = ["agencyName", "city", "phone"];
 
 function Stepper({ step }: { step: 0 | 1 }) {
   return (
-    <ol className="mb-8 flex items-center gap-3" aria-label="Progression">
+    <ol className="mb-6 flex items-center gap-3" aria-label="Progression">
       {STEPS.map((label, i) => {
         const done = i < step;
         const current = i === step;
@@ -135,24 +133,23 @@ export default function RegisterPage() {
     setError(null);
 
     const form = e.currentTarget;
-    const local = newPasswordErrors(values.password, values.confirm);
-    if (local.password || local.confirm) {
+    const local = newPasswordErrors(values.password);
+    if (local.password) {
       setFieldErrors(local);
-      (form.elements.namedItem(local.password ? "password" : "confirm") as HTMLInputElement | null)?.focus();
+      (form.elements.namedItem("password") as HTMLInputElement | null)?.focus();
       return;
     }
     setFieldErrors({});
 
     setLoading(true);
-    const { confirm, ...payload } = values;
-    void confirm;
+    const { email } = values;
     const res = await callApi<{ emailSent?: boolean }>("/api/auth/register", {
-      body: { ...payload, acceptTerms },
+      body: { ...values, acceptTerms },
     });
     if (res.ok) {
       // Le mot de passe n'a plus de raison de rester en mémoire
       setValues(EMPTY);
-      setDone({ email: payload.email.trim().toLowerCase(), emailSent: res.data.emailSent !== false });
+      setDone({ email: email.trim().toLowerCase(), emailSent: res.data.emailSent !== false });
       return;
     }
     setLoading(false);
@@ -165,7 +162,7 @@ export default function RegisterPage() {
 
   if (done) {
     return (
-      <AuthShell compact>
+      <AuthShell>
         <div className="text-center">
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-success-bg text-success">
             <MailCheck className="size-7" strokeWidth={1.8} />
@@ -202,7 +199,7 @@ export default function RegisterPage() {
           </div>
           <Link
             href="/login"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mt-8 w-full")}
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mt-6 w-full")}
           >
             Aller à la connexion
             <ArrowRight />
@@ -213,20 +210,20 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthShell compact>
+    <AuthShell>
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">
           Créez votre agence
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
-          7 jours d&apos;essai gratuit, sans carte bancaire. Deux étapes suffisent.
+          7 jours d&apos;essai gratuit, sans carte bancaire.
         </p>
       </div>
 
       <Stepper step={step} />
 
       {step === 0 ? (
-        <form onSubmit={nextStep} className="space-y-5">
+        <form onSubmit={nextStep} className="space-y-4">
           <AuthField
             label="Nom de l'agence"
             icon={Building2}
@@ -263,10 +260,10 @@ export default function RegisterPage() {
           </Button>
         </form>
       ) : (
-        <form onSubmit={onSubmit} className="space-y-5">
+        <form onSubmit={onSubmit} className="space-y-4">
           <FormError message={error} />
 
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <AuthField
               label="Prénom"
               autoComplete="given-name"
@@ -301,14 +298,6 @@ export default function RegisterPage() {
             maxLength={MAX_PASSWORD_LENGTH}
             required
             {...bind("password")}
-          />
-          <PasswordField
-            label="Confirmer le mot de passe"
-            autoComplete="new-password"
-            minLength={MIN_PASSWORD_LENGTH}
-            maxLength={MAX_PASSWORD_LENGTH}
-            required
-            {...bind("confirm")}
           />
 
           <label className="flex cursor-pointer items-start gap-2.5 text-sm">
@@ -365,7 +354,7 @@ export default function RegisterPage() {
         </form>
       )}
 
-      <p className="mt-8 text-center text-sm text-muted-foreground">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Vous avez déjà un compte ?{" "}
         <Link
           href="/login"

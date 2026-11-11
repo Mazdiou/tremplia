@@ -52,7 +52,7 @@ export default function LoginPage() {
   return (
     <AuthShell>
       <LoginSwitch active="agency" />
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">
           Content de vous revoir
         </h1>
@@ -61,15 +61,15 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-5">
+      <form onSubmit={onSubmit} className="space-y-4">
         <FormError message={error} />
         {unconfirmed && (
           <div
             role="alert"
-            className="space-y-3 rounded-lg border border-amber-300/60 bg-amber-100 px-3 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
+            className="space-y-2.5 rounded-lg border border-amber-300/60 bg-amber-100 px-3 py-2.5 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100"
           >
             <p>
-              Confirmez d&apos;abord votre adresse e-mail avec le lien reçu à l&apos;inscription. Pensez à regarder dans les courriers indésirables.
+              Confirmez d&apos;abord votre adresse avec le lien reçu à l&apos;inscription, au besoin dans les courriers indésirables.
             </p>
             <ResendConfirmation email={unconfirmed} />
           </div>
@@ -85,23 +85,21 @@ export default function LoginPage() {
           required
           autoFocus
         />
-        <div className="space-y-2">
-          <PasswordField
-            label="Mot de passe"
-            name="password"
-            autoComplete="current-password"
-            placeholder="Votre mot de passe"
-            required
-          />
-          <div className="flex justify-end">
+        <PasswordField
+          label="Mot de passe"
+          name="password"
+          autoComplete="current-password"
+          placeholder="Votre mot de passe"
+          required
+          labelAside={
             <Link
               href="/forgot-password"
               className="touch-target text-sm font-medium text-link hover:underline"
             >
               Mot de passe oublié ?
             </Link>
-          </div>
-        </div>
+          }
+        />
 
         <Button type="submit" size="lg" disabled={loading} className="w-full">
           {loading ? (
@@ -120,7 +118,7 @@ export default function LoginPage() {
 
       <GoogleLogin />
 
-      <p className="mt-8 text-center text-sm text-muted-foreground">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Nouvelle agence ?{" "}
         <Link
           href="/register"

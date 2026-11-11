@@ -62,7 +62,7 @@ export function ConfirmLink({ tokenHash, type }: { tokenHash: string | null; typ
         </p>
         <Link
           href={type === "recovery" ? "/forgot-password" : "/login"}
-          className={cn(buttonVariants({ size: "lg" }), "mt-8 w-full")}
+          className={cn(buttonVariants({ size: "lg" }), "mt-6 w-full")}
         >
           {type === "recovery" ? "Recevoir un nouveau lien" : "Aller à la connexion"}
           <ArrowRight />
@@ -79,7 +79,7 @@ export function ConfirmLink({ tokenHash, type }: { tokenHash: string | null; typ
       </span>
       <h1 className="mt-6 text-2xl font-semibold tracking-tight">{text.title}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{text.body}</p>
-      <Button size="lg" disabled={loading} onClick={confirm} className="mt-8 w-full">
+      <Button size="lg" disabled={loading} onClick={confirm} className="mt-6 w-full">
         {loading && <LoaderCircle className="animate-spin" />}
         {text.button}
         {!loading && <ArrowRight />}

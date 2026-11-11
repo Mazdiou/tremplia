@@ -44,6 +44,31 @@ test("une adresse inconnue répond « Page introuvable » (404), sans renvoyer v
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Page introuvable");
 });
 
+test("les pages de connexion tiennent sans barre de défilement sur un portable", async ({ browser }) => {
+  // Portable 1366 × 768, une fois retirées les barres du navigateur et de Windows
+  const laptop = await browser.newPage({ viewport: { width: 1366, height: 657 } });
+  // Hauteur qui dépasse de la colonne du formulaire (0 : pas de barre)
+  const overflow = () =>
+    laptop.evaluate(() => {
+      const main = document.querySelector("main")!;
+      return main.scrollHeight - main.clientHeight;
+    });
+
+  for (const path of ["/login", "/student/login", "/forgot-password", "/register"]) {
+    await laptop.goto(path);
+    await expect(laptop.getByRole("heading", { level: 1 })).toBeVisible();
+    expect(await overflow(), path).toBe(0);
+  }
+  // Seconde étape de l'inscription, la plus longue
+  await laptop.getByLabel("Nom de l'agence").fill("Agence");
+  await laptop.getByLabel("Ville").fill("Alger");
+  await laptop.getByLabel("Téléphone de l'agence").fill("0550 00 00 00");
+  await laptop.getByRole("button", { name: "Continuer" }).click();
+  await expect(laptop.getByLabel("Prénom")).toBeVisible();
+  expect(await overflow(), "/register, étape 2").toBe(0);
+  await laptop.close();
+});
+
 test("inscription d'une agence puis connexion du patron", async () => {
   await page.goto("/register");
   await page.getByLabel("Nom de l'agence").fill(`Agence E2E ${run}`);
@@ -55,7 +80,6 @@ test("inscription d'une agence puis connexion du patron", async () => {
   await page.getByLabel("Nom", { exact: true }).fill("Test");
   await page.getByLabel("Adresse e-mail").fill(owner.email);
   await page.getByLabel("Mot de passe", { exact: true }).fill(owner.password);
-  await page.getByLabel("Confirmer le mot de passe").fill(owner.password);
   await page.getByLabel(/J'accepte les conditions générales/).check();
   await page.getByRole("button", { name: "Démarrer l'essai gratuit" }).click();
   await expect(page.getByRole("heading", { name: "Confirmez votre adresse e-mail" })).toBeVisible();
@@ -67,7 +91,7 @@ test("inscription d'une agence puis connexion du patron", async () => {
   await page.getByLabel("Adresse e-mail").fill(owner.email);
   await page.getByLabel("Mot de passe", { exact: true }).fill(owner.password);
   await page.getByRole("button", { name: "Se connecter" }).click();
-  await expect(page.getByText(/Confirmez d'abord votre adresse e-mail/)).toBeVisible();
+  await expect(page.getByText(/Confirmez d'abord votre adresse/)).toBeVisible();
   await page.getByRole("button", { name: "Renvoyer l'e-mail de confirmation" }).click();
   await expect(page.getByText("Nouvel e-mail envoyé", { exact: false })).toBeVisible();
 
@@ -651,7 +675,6 @@ test("permissions d'un employé : caisse et campagnes", async ({ browser }) => {
   await employee.getByRole("button", { name: "Se connecter" }).click();
   await expect(employee).toHaveURL(/\/change-password$/);
   await employee.getByLabel("Nouveau mot de passe").fill("E2e-employe-mdp-1");
-  await employee.getByLabel("Confirmer le mot de passe").fill("E2e-employe-mdp-1");
   await employee.getByRole("button", { name: "Enregistrer" }).click();
   await expect(employee).toHaveURL(/\/dashboard$/);
 
@@ -755,7 +778,6 @@ test("un employé qui a un historique ne peut pas être supprimé", async ({ bro
   await employee.getByLabel("Mot de passe", { exact: true }).fill(temporaryPassword);
   await employee.getByRole("button", { name: "Se connecter" }).click();
   await employee.getByLabel("Nouveau mot de passe").fill("E2e-employe-mdp-2");
-  await employee.getByLabel("Confirmer le mot de passe").fill("E2e-employe-mdp-2");
   await employee.getByRole("button", { name: "Enregistrer" }).click();
   await expect(employee).toHaveURL(/\/dashboard$/);
   const caseId = caseUrl.split("/").pop();
@@ -821,7 +843,6 @@ test("mot de passe oublié : lien reçu par e-mail puis nouveau mot de passe", a
   await visitor.getByRole("button", { name: "Continuer" }).click();
   await expect(visitor).toHaveURL(/\/reset-password$/);
   await visitor.getByLabel("Nouveau mot de passe").fill(newPassword);
-  await visitor.getByLabel("Confirmer le mot de passe").fill(newPassword);
   await visitor.getByRole("button", { name: "Enregistrer et me connecter" }).click();
   await expect(visitor).toHaveURL(/\/dashboard$/);
 

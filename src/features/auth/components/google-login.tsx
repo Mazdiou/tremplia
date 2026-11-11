@@ -151,7 +151,7 @@ function GoogleButton({ clientId }: { clientId: string }) {
   if (unavailable) return null;
 
   return (
-    <div className="mt-6 space-y-4">
+    <div className="mt-5 space-y-3">
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <span className="h-px flex-1 bg-border" />
         ou

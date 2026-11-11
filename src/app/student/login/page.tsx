@@ -33,14 +33,14 @@ export default function StudentLoginPage() {
   return (
     <AuthShell>
       <LoginSwitch active="student" />
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">Espace candidat</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Entrez le code transmis par votre agence.
         </p>
       </div>
 
-      <form onSubmit={onSubmit} noValidate className="space-y-5">
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
         <FormError message={error} />
         <AuthField
           label="Code d'accès"
@@ -71,7 +71,7 @@ export default function StudentLoginPage() {
         </Button>
       </form>
 
-      <p className="mt-8 text-center text-sm text-muted-foreground">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Pas de code ? Demandez-le à votre agence.
       </p>
     </AuthShell>

@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
           </p>
           <Link
             href="/login"
-            className="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-link hover:underline"
+            className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-link hover:underline"
           >
             <ArrowLeft className="size-4" />
             Retour à la connexion
@@ -56,19 +56,19 @@ export default function ForgotPasswordPage() {
     <AuthShell>
       <Link
         href="/login"
-        className="touch-target mb-6 inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="touch-target mb-4 inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
         Retour à la connexion
       </Link>
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">Mot de passe oublié</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Recevez par e-mail un lien pour choisir un nouveau mot de passe.
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-5">
+      <form onSubmit={onSubmit} className="space-y-4">
         <FormError message={error} />
         <AuthField
           label="Adresse e-mail"

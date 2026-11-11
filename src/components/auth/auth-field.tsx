@@ -11,6 +11,10 @@ type FieldProps = Omit<React.ComponentProps<"input">, "id"> & {
   label: string;
   icon?: LucideIcon;
   trailing?: React.ReactNode;
+  // Affiché à droite du libellé (« Mot de passe oublié ? ») : une ligne de
+  // gagnée. Placé après le champ dans le document, il vient après lui avec
+  // la touche Tab, comme un lien sous le champ.
+  labelAside?: React.ReactNode;
   hint?: string;
   error?: string | null;
   id?: string;
@@ -21,6 +25,7 @@ export function AuthField({
   label,
   icon: Icon,
   trailing,
+  labelAside,
   hint,
   error,
   className,
@@ -36,9 +41,11 @@ export function AuthField({
       : undefined;
 
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={fieldId}>{label}</Label>
-      <div className="relative">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5">
+      <Label htmlFor={fieldId} className="row-start-1">
+        {label}
+      </Label>
+      <div className="relative col-span-2">
         {Icon && (
           <Icon
             aria-hidden
@@ -54,16 +61,17 @@ export function AuthField({
         />
         {trailing}
       </div>
+      {labelAside && <div className="col-start-2 row-start-1">{labelAside}</div>}
       {error ? (
         <p
           id={`${fieldId}-error`}
           role="alert"
-          className="text-sm text-destructive"
+          className="col-span-2 text-sm text-destructive"
         >
           {error}
         </p>
       ) : hint ? (
-        <p id={`${fieldId}-hint`} className="text-xs text-muted-foreground">
+        <p id={`${fieldId}-hint`} className="col-span-2 text-xs text-muted-foreground">
           {hint}
         </p>
       ) : null}

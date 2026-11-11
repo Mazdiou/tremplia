@@ -11,7 +11,7 @@ const TABS = [
 // passe) ou le candidat (code d'accès). Deux pages, même présentation.
 export function LoginSwitch({ active }: { active: "agency" | "student" }) {
   return (
-    <nav aria-label="Type de connexion" className="mb-8 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+    <nav aria-label="Type de connexion" className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
       {TABS.map((t) => (
         <Link
           key={t.key}

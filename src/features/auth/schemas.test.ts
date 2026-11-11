@@ -36,6 +36,11 @@ describe("newPasswordErrors", () => {
     expect(newPasswordErrors("court", "court")).toEqual({ password: PASSWORD_TOO_SHORT });
   });
 
+  it("sans champ de confirmation, ne vérifie que la longueur", () => {
+    expect(newPasswordErrors("mot-de-passe")).toEqual({});
+    expect(newPasswordErrors("court")).toEqual({ password: PASSWORD_TOO_SHORT });
+  });
+
   it("signale une confirmation différente sous son champ", () => {
     expect(newPasswordErrors("mot-de-passe", "mot-de-passe-2")).toEqual({ confirm: PASSWORDS_DIFFER });
   });

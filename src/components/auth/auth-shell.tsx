@@ -111,19 +111,30 @@ export function AppPreview() {
   );
 }
 
+// Liens vers les pages légales : sous le formulaire (téléphone, tablette) ou
+// en bas du panneau de gauche (écran large)
+function LegalNav({ className }: { className?: string }) {
+  return (
+    <nav aria-label="Pages légales" className={cn("flex flex-wrap gap-x-4 gap-y-1 text-xs", className)}>
+      {LEGAL_LINKS.map((l) => (
+        <Link key={l.href} href={l.href} className="touch-target">
+          {l.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 // Page d'authentification : panneau de présentation à gauche (écrans larges),
 // formulaire à droite. Sur mobile, seul le formulaire est affiché, calé en
 // haut de l'écran (centré, il flottait sous un grand vide et sautait à
 // l'ouverture du clavier).
-// Écrans larges : la page a exactement la hauteur de la fenêtre (jamais de
-// barre de défilement) ; seul le formulaire défile s'il est trop long.
-export function AuthShell({
-  children,
-  compact = false,
-}: {
-  children: ReactNode;
-  compact?: boolean;
-}) {
+// Écrans larges : la page a exactement la hauteur de la fenêtre. La colonne
+// du formulaire n'a ni barre du haut (le bouton de thème est posé dans le
+// coin) ni liens légaux (ils sont dans le panneau de gauche) : sur un
+// portable courant, tout tient sans barre de défilement. Elle ne défile
+// que sur une fenêtre trop basse.
+export function AuthShell({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:overflow-hidden">
       <aside className="relative hidden overflow-hidden border-r bg-decor p-8 text-decor-foreground lg:flex lg:flex-col xl:p-12 dark:border-transparent xl:[@media(max-height:800px)]:p-10">
@@ -151,52 +162,38 @@ export function AuthShell({
           </div>
         </div>
 
-        <div className="relative flex items-center justify-between gap-x-6 text-xs whitespace-nowrap text-decor-subtle">
-          <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="size-3.5" /> Données isolées par agence
+        <div className="relative space-y-2.5 text-xs whitespace-nowrap text-decor-subtle">
+          <div className="flex items-center justify-between gap-x-6">
+            <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="size-3.5" /> Données isolées par agence
+              </span>
+              <span className="flex items-center gap-1.5">
+                <LockKeyhole className="size-3.5" /> Identifiants chiffrés
+              </span>
             </span>
-            <span className="flex items-center gap-1.5">
-              <LockKeyhole className="size-3.5" /> Identifiants chiffrés
-            </span>
-          </span>
-          {/* Panneau étroit (petit portable) : les deux garanties suffisent */}
-          <span className="hidden xl:inline">© {new Date().getFullYear()} {BRAND.name}</span>
+            {/* Panneau étroit (petit portable) : les deux garanties suffisent */}
+            <span className="hidden xl:inline">© {new Date().getFullYear()} {BRAND.name}</span>
+          </div>
+          <LegalNav className="text-decor-subtle [&_a:hover]:text-decor-foreground" />
         </div>
       </aside>
 
-      <main
-        className={cn(
-          "relative flex min-h-dvh flex-col bg-background px-5 sm:px-10 lg:min-h-0 lg:overflow-y-auto",
-          compact ? "py-2" : "py-6",
-        )}
-      >
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:invisible">
+      <main className="relative flex min-h-dvh flex-col bg-background px-5 py-5 sm:px-10 lg:min-h-0 lg:overflow-y-auto lg:py-6">
+        {/* Téléphone et tablette : logo et thème en haut. Écran large : le
+            logo est dans le panneau de gauche, le thème passe dans le coin */}
+        <div className="flex items-center justify-between lg:absolute lg:top-4 lg:right-5 lg:z-10">
+          <Link href="/" className="flex items-center gap-2.5 rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:hidden">
             <LogoMark />
             <span className="font-brand text-lg font-bold tracking-tight">{BRAND.name}</span>
           </Link>
           <ThemeToggle className="size-9 rounded-xl text-muted-foreground" />
         </div>
 
-        <div
-          className={cn(
-            "mx-auto flex w-full max-w-100 flex-1 flex-col sm:justify-center",
-            compact ? "pt-6 pb-4 sm:py-2" : "pt-10 pb-8 sm:py-10",
-          )}
-        >
+        <div className="mx-auto flex w-full max-w-100 flex-1 flex-col pt-8 pb-6 sm:justify-center sm:py-8 lg:py-0">
           {children}
         </div>
-        <nav
-          aria-label="Pages légales"
-          className="flex flex-wrap justify-center gap-x-4 gap-y-1 pb-2 text-xs text-muted-foreground"
-        >
-          {LEGAL_LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className="touch-target hover:text-foreground">
-              {l.label}
-            </Link>
-          ))}
-        </nav>
+        <LegalNav className="justify-center pb-1 text-muted-foreground lg:hidden [&_a:hover]:text-foreground" />
       </main>
     </div>
   );

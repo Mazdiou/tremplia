@@ -200,7 +200,9 @@ La CI a trois tâches :
 `e2e/parcours.spec.ts` rejoue le parcours principal, chaque étape partant
 de la précédente :
 
-- redirection d'un visiteur vers la connexion ; inscription d'une agence,
+- redirection d'un visiteur vers la connexion ; page introuvable (404) ;
+  pages de connexion et d'inscription sans barre de défilement sur un
+  portable (1366 × 657, bouton Google compris) ; inscription d'une agence,
   connexion refusée tant que l'adresse n'est pas confirmée, lien de
   confirmation reçu par e-mail (Mailpit, `e2e/mailpit.ts`) ;
 - mot de bienvenue et guide de démarrage, qui coche ensuite les étapes faites ;
