@@ -12,7 +12,6 @@ import {
   MailCheck,
   MapPin,
   Phone,
-  User,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -27,8 +26,8 @@ import { cn } from "@/lib/utils";
 import {
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
-  PASSWORD_TOO_SHORT,
   UNCONFIRMED_DAYS,
+  newPasswordErrors,
 } from "@/features/auth/schemas";
 
 type Values = {
@@ -54,6 +53,9 @@ const EMPTY: Values = {
 };
 
 const STEPS = ["Votre agence", "Votre compte"];
+
+// Champs de la première étape : une erreur du serveur sur l'un d'eux y ramène
+const AGENCY_FIELDS: (keyof Values)[] = ["agencyName", "city", "phone"];
 
 function Stepper({ step }: { step: 0 | 1 }) {
   return (
@@ -102,6 +104,8 @@ export default function RegisterPage() {
   const [step, setStep] = useState<0 | 1>(0);
   const [values, setValues] = useState<Values>(EMPTY);
   const [error, setError] = useState<string | null>(null);
+  // Erreur de chaque champ, affichée sous celui-ci
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof Values, string>>>({});
   const [loading, setLoading] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   // Inscription réussie : adresse à confirmer, et l'e-mail est-il parti ?
@@ -111,8 +115,12 @@ export default function RegisterPage() {
     return {
       name,
       value: values[name],
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-        setValues((v) => ({ ...v, [name]: e.target.value })),
+      error: fieldErrors[name],
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+        setValues((v) => ({ ...v, [name]: e.target.value }));
+        // Le champ corrigé perd son message d'erreur
+        if (fieldErrors[name]) setFieldErrors((errs) => ({ ...errs, [name]: undefined }));
+      },
     };
   }
 
@@ -126,9 +134,14 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
 
-    if (values.password.length < MIN_PASSWORD_LENGTH) return setError(`${PASSWORD_TOO_SHORT}.`);
-    if (values.password !== values.confirm)
-      return setError("Les mots de passe ne correspondent pas.");
+    const form = e.currentTarget;
+    const local = newPasswordErrors(values.password, values.confirm);
+    if (local.password || local.confirm) {
+      setFieldErrors(local);
+      (form.elements.namedItem(local.password ? "password" : "confirm") as HTMLInputElement | null)?.focus();
+      return;
+    }
+    setFieldErrors({});
 
     setLoading(true);
     const { confirm, ...payload } = values;
@@ -142,8 +155,12 @@ export default function RegisterPage() {
       setDone({ email: payload.email.trim().toLowerCase(), emailSent: res.data.emailSent !== false });
       return;
     }
-    setError(res.error);
     setLoading(false);
+    // Erreur d'un champ : sous ce champ, à son étape ; sinon en haut
+    const fields = res.fieldErrors as Partial<Record<keyof Values, string>>;
+    if (Object.keys(fields).length === 0) return setError(res.error);
+    setFieldErrors(fields);
+    if (AGENCY_FIELDS.some((f) => fields[f])) setStep(0);
   }
 
   if (done) {
@@ -197,14 +214,6 @@ export default function RegisterPage() {
 
   return (
     <AuthShell compact>
-      <Link
-        href="/login"
-        className="touch-target mb-6 inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" />
-        Retour à la connexion
-      </Link>
-
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">
           Créez votre agence
@@ -232,6 +241,7 @@ export default function RegisterPage() {
             label="Ville"
             icon={MapPin}
             autoComplete="address-level2"
+            placeholder="Ex. : Tizi Ouzou"
             maxLength={100}
             required
             {...bind("city")}
@@ -241,6 +251,7 @@ export default function RegisterPage() {
             type="tel"
             icon={Phone}
             autoComplete="tel"
+            placeholder="Ex. : 05 50 12 34 56"
             minLength={6}
             maxLength={30}
             required
@@ -258,7 +269,6 @@ export default function RegisterPage() {
           <div className="grid gap-5 sm:grid-cols-2">
             <AuthField
               label="Prénom"
-              icon={User}
               autoComplete="given-name"
               maxLength={100}
               required
@@ -301,7 +311,7 @@ export default function RegisterPage() {
             {...bind("confirm")}
           />
 
-          <label className="flex items-start gap-2.5 text-sm">
+          <label className="flex cursor-pointer items-start gap-2.5 text-sm">
             <input
               type="checkbox"
               checked={acceptTerms}
@@ -348,7 +358,7 @@ export default function RegisterPage() {
                   Création…
                 </>
               ) : (
-                "Démarrer mon essai gratuit"
+                "Démarrer l'essai gratuit"
               )}
             </Button>
           </div>

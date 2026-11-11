@@ -11,7 +11,7 @@ import { forgetOtherPushDevices } from "@/features/notifications/push-client";
 import {
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
-  PASSWORD_TOO_SHORT,
+  newPasswordErrors,
 } from "@/features/auth/schemas";
 
 // Nouveau mot de passe, l'actuel à l'appui. Les autres appareils sont
@@ -37,12 +37,8 @@ export function PasswordForm({ email }: { email: string }) {
     if (!currentPassword) {
       return setErrors({ currentPassword: "Saisissez votre mot de passe actuel" });
     }
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      return setErrors({ password: PASSWORD_TOO_SHORT });
-    }
-    if (password !== confirm) {
-      return setErrors({ confirm: "Les mots de passe ne correspondent pas" });
-    }
+    const local = newPasswordErrors(password, confirm);
+    if (local.password || local.confirm) return setErrors(local);
 
     setSaving(true);
     const res = await callApi("/api/settings/password", {

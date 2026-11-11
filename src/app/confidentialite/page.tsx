@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function ConfidentialitePage() {
   const { editor } = LEGAL;
   return (
-    <LegalPage title="Politique de confidentialité">
+    <LegalPage title="Politique de confidentialité" path="/confidentialite">
       <LegalSection title="En bref">
         <LegalList
           items={[

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { BRAND } from "@/config/brand";
 import { LEGAL, LEGAL_LINKS } from "@/config/legal";
 import { LogoMark } from "@/components/logo-mark";
@@ -11,7 +10,18 @@ import { cn } from "@/lib/utils";
 // Mise en page des pages légales : texte long, lisible, ouvert à tous (avec
 // ou sans connexion).
 
-export function LegalPage({ title, children }: { title: string; children: ReactNode }) {
+type LegalPath = (typeof LEGAL_LINKS)[number]["href"];
+
+// `path` : la page affichée, marquée comme telle dans le pied de page
+export function LegalPage({
+  title,
+  path,
+  children,
+}: {
+  title: string;
+  path: LegalPath;
+  children: ReactNode;
+}) {
   return (
     <div className="min-h-dvh bg-background">
       <header className="border-b px-5 py-4 sm:px-8">
@@ -28,13 +38,6 @@ export function LegalPage({ title, children }: { title: string; children: ReactN
       </header>
 
       <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
-        <Link
-          href="/"
-          className="touch-target mb-6 inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Accueil
-        </Link>
         <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Dernière mise à jour : {formatLongDate(LEGAL.updatedAt)}
@@ -47,11 +50,17 @@ export function LegalPage({ title, children }: { title: string; children: ReactN
           aria-label="Pages légales"
           className="mx-auto flex max-w-3xl flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground"
         >
-          {LEGAL_LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className="py-1 hover:text-foreground">
-              {l.label}
-            </Link>
-          ))}
+          {LEGAL_LINKS.map((l) =>
+            l.href === path ? (
+              <span key={l.href} aria-current="page" className="py-1 font-medium text-foreground">
+                {l.label}
+              </span>
+            ) : (
+              <Link key={l.href} href={l.href} className="py-1 hover:text-foreground">
+                {l.label}
+              </Link>
+            ),
+          )}
           <a href={`mailto:${LEGAL.contact}`} className="py-1 hover:text-foreground">
             {LEGAL.contact}
           </a>

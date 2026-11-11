@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function ConditionsPage() {
   const { editor } = LEGAL;
   return (
-    <LegalPage title="Conditions générales d'utilisation et de vente">
+    <LegalPage title="Conditions générales d'utilisation et de vente" path="/conditions">
       <LegalSection title="1. Objet">
         <p>
           Ces conditions encadrent l&apos;utilisation de {BRAND.name}, logiciel en ligne de suivi

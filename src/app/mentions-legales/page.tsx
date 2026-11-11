@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function MentionsLegalesPage() {
   return (
-    <LegalPage title="Mentions légales">
+    <LegalPage title="Mentions légales" path="/mentions-legales">
       <LegalSection title="Éditeur">
         <p>
           {BRAND.name} est édité par <strong>{LEGAL.editor.name}</strong>, joignable à{" "}

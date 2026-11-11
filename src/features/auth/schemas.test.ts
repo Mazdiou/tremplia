@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { registerSchema } from "./schemas";
+import { PASSWORDS_DIFFER, PASSWORD_TOO_SHORT, newPasswordErrors, registerSchema } from "./schemas";
 
 const valid = {
   agencyName: "Agence Horizon",
@@ -24,5 +24,19 @@ describe("registerSchema", () => {
       expect(result.success).toBe(false);
       expect(result.error?.issues[0].message).toBe("Acceptez les conditions pour créer le compte");
     }
+  });
+});
+
+describe("newPasswordErrors", () => {
+  it("accepte deux mots de passe identiques et assez longs", () => {
+    expect(newPasswordErrors("mot-de-passe", "mot-de-passe")).toEqual({});
+  });
+
+  it("signale un mot de passe trop court sous son champ", () => {
+    expect(newPasswordErrors("court", "court")).toEqual({ password: PASSWORD_TOO_SHORT });
+  });
+
+  it("signale une confirmation différente sous son champ", () => {
+    expect(newPasswordErrors("mot-de-passe", "mot-de-passe-2")).toEqual({ confirm: PASSWORDS_DIFFER });
   });
 });

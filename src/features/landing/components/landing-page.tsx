@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { DecorLayers } from "@/components/decor";
 import { LandingHeader } from "./landing-header";
 import { SectionLink } from "./section-link";
-import { telHref } from "@/lib/phone";
+import { formatPhone, telHref } from "@/lib/phone";
 
 // Page d'accueil publique. Aucune affirmation inventée : pas de témoignage,
 // de chiffre client ni de prix (les tarifs ne sont pas encore fixés).
@@ -168,7 +168,7 @@ function TeamMock() {
         </div>
       ))}
       <div className="mt-1 flex items-center gap-2 border-t px-3 pt-3 pb-1 text-xs text-muted-foreground">
-        <span className="size-1.5 rounded-full bg-emerald-500" />
+        <span className="size-1.5 rounded-full bg-success" />
         Yasmine a ajouté un document il y a 2 min
       </div>
     </div>
@@ -239,7 +239,7 @@ function ContactButtons({ contact, onDecor = false }: { contact: LandingContact;
           onDecor && "border-decor-foreground/15 bg-card/80 text-decor-foreground hover:bg-card hover:text-decor-foreground dark:bg-decor-foreground/5 dark:hover:bg-decor-foreground/10",
         )}
       >
-        <Phone /> {contact.phone}
+        <Phone /> {formatPhone(contact.phone)}
       </a>
     </div>
   );
@@ -261,7 +261,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
           <section className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-10 pb-20 sm:px-8 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-32">
             <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
               <p className="inline-flex items-center gap-2 rounded-full border border-decor-foreground/15 bg-decor-foreground/5 px-3 py-1 text-xs font-medium text-decor-muted">
-                <span className="size-1.5 rounded-full bg-emerald-400" />
+                <span className="size-1.5 rounded-full bg-success" />
                 {BRAND.tagline}
               </p>
               <h1 className="mt-6 text-4xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
@@ -275,11 +275,12 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
                 <Link href="/register" className={cn(buttonVariants({ size: "lg" }), "h-12 sm:h-11")}>
                   Démarrer l&apos;essai gratuit <ArrowRight />
                 </Link>
+                {/* L'en-tête n'a « Se connecter » qu'à partir de la tablette */}
                 <Link
                   href="/login"
                   className={cn(
                     buttonVariants({ size: "lg", variant: "outline" }),
-                    "h-12 border-decor-foreground/15 bg-card/80 text-decor-foreground hover:bg-card hover:text-decor-foreground dark:bg-decor-foreground/5 dark:hover:bg-decor-foreground/10 sm:h-11",
+                    "h-12 border-decor-foreground/15 bg-card/80 text-decor-foreground hover:bg-card hover:text-decor-foreground sm:hidden dark:bg-decor-foreground/5 dark:hover:bg-decor-foreground/10",
                   )}
                 >
                   Se connecter
@@ -288,7 +289,7 @@ export function LandingPage({ contact }: { contact: LandingContact }) {
               <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-decor-muted">
                 {["7 jours gratuits", "Sans carte bancaire", "Sur ordinateur et téléphone"].map((t) => (
                   <li key={t} className="flex items-center gap-1.5">
-                    <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} aria-hidden />
+                    <Check className="size-3.5 text-success" strokeWidth={2.5} aria-hidden />
                     {t}
                   </li>
                 ))}

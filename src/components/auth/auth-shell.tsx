@@ -43,7 +43,7 @@ export function AppPreview() {
           <div className="min-w-0 flex-1 pr-24">
             <p className="flex items-center gap-2 font-semibold text-decor-foreground">
               <span className="truncate">MADIOU Amine</span>
-              <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[0.6875rem] font-medium text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
+              <span className="shrink-0 rounded-full bg-success/15 px-2 py-0.5 text-[0.6875rem] font-medium text-success">
                 Actif
               </span>
             </p>
@@ -81,7 +81,7 @@ export function AppPreview() {
           <div className="flex items-center gap-2 rounded-lg bg-glass-row px-2.5 py-1.5 text-decor-foreground/85">
             <FileText className="size-3.5 text-decor-subtle" />
             <span className="flex-1">Lettre de motivation</span>
-            <Check className="size-3.5 text-emerald-600 dark:text-emerald-300" />
+            <Check className="size-3.5 text-success" />
           </div>
         </div>
       </Glass>
@@ -112,7 +112,9 @@ export function AppPreview() {
 }
 
 // Page d'authentification : panneau de présentation à gauche (écrans larges),
-// formulaire à droite. Sur mobile, seul le formulaire est affiché.
+// formulaire à droite. Sur mobile, seul le formulaire est affiché, calé en
+// haut de l'écran (centré, il flottait sous un grand vide et sautait à
+// l'ouverture du clavier).
 // Écrans larges : la page a exactement la hauteur de la fenêtre (jamais de
 // barre de défilement) ; seul le formulaire défile s'il est trop long.
 export function AuthShell({
@@ -124,7 +126,7 @@ export function AuthShell({
 }) {
   return (
     <div className="grid min-h-dvh lg:h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:overflow-hidden">
-      <aside className="relative hidden overflow-hidden border-r bg-decor p-12 text-decor-foreground lg:flex lg:flex-col dark:border-transparent [@media(max-height:800px)]:p-10">
+      <aside className="relative hidden overflow-hidden border-r bg-decor p-8 text-decor-foreground lg:flex lg:flex-col xl:p-12 dark:border-transparent xl:[@media(max-height:800px)]:p-10">
         {/* Halo et quadrillage discret, estompés vers les bords */}
         <DecorLayers glowClassName="-top-64 size-[58rem]" />
 
@@ -149,7 +151,7 @@ export function AuthShell({
           </div>
         </div>
 
-        <div className="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-xs whitespace-nowrap text-decor-subtle">
+        <div className="relative flex items-center justify-between gap-x-6 text-xs whitespace-nowrap text-decor-subtle">
           <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="size-3.5" /> Données isolées par agence
@@ -158,7 +160,8 @@ export function AuthShell({
               <LockKeyhole className="size-3.5" /> Identifiants chiffrés
             </span>
           </span>
-          <span>© {new Date().getFullYear()} {BRAND.name}</span>
+          {/* Panneau étroit (petit portable) : les deux garanties suffisent */}
+          <span className="hidden xl:inline">© {new Date().getFullYear()} {BRAND.name}</span>
         </div>
       </aside>
 
@@ -178,8 +181,8 @@ export function AuthShell({
 
         <div
           className={cn(
-            "mx-auto flex w-full max-w-100 flex-1 flex-col justify-center",
-            compact ? "py-2" : "py-10",
+            "mx-auto flex w-full max-w-100 flex-1 flex-col sm:justify-center",
+            compact ? "pt-6 pb-4 sm:py-2" : "pt-10 pb-8 sm:py-10",
           )}
         >
           {children}

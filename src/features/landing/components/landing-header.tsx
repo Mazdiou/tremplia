@@ -69,9 +69,9 @@ export function LandingHeader({ heroId }: { heroId: string }) {
           <LogoMark className="shadow-none" />
           <span className="font-brand text-lg font-bold tracking-tight">{BRAND.name}</span>
         </Link>
-        <nav aria-label="Sections" className="hidden items-center gap-1 text-sm md:flex">
+        <nav aria-label="Sections" className="hidden items-center gap-1 text-sm lg:flex">
           {SECTIONS.map((s) => (
-            <SectionLink key={s.href} href={s.href} className={cn("rounded-lg px-3 py-2.5 transition-colors", link)}>
+            <SectionLink key={s.href} href={s.href} className={cn("rounded-lg px-3 py-2.5 whitespace-nowrap transition-colors", link)}>
               {s.label}
             </SectionLink>
           ))}
@@ -80,11 +80,11 @@ export function LandingHeader({ heroId }: { heroId: string }) {
           <ThemeToggle className={cn("size-9 rounded-xl", link)} />
           <Link
             href="/login"
-            className={cn("hidden rounded-lg px-3 py-2.5 text-sm font-medium transition-colors sm:block", link)}
+            className={cn("hidden rounded-lg px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors sm:block", link)}
           >
             Se connecter
           </Link>
-          <Link href="/register" className={buttonVariants()}>
+          <Link href="/register" className={cn(buttonVariants(), "whitespace-nowrap")}>
             Essai gratuit
           </Link>
         </div>

@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
-  PASSWORD_TOO_SHORT,
+  newPasswordErrors,
 } from "@/features/auth/schemas";
 
 // Première connexion d'un employé : le mot de passe temporaire donné par le
@@ -19,18 +19,24 @@ import {
 export default function ChangePasswordPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  // Erreur affichée sous le champ concerné
+  const [fieldErrors, setFieldErrors] = useState<{ password?: string; confirm?: string }>({});
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    const form = new FormData(e.currentTarget);
+    const formEl = e.currentTarget;
+    const form = new FormData(formEl);
     const password = String(form.get("password"));
     const confirm = String(form.get("confirm"));
 
-    if (password.length < MIN_PASSWORD_LENGTH) return setError(`${PASSWORD_TOO_SHORT}.`);
-    if (password !== confirm)
-      return setError("Les mots de passe ne correspondent pas.");
+    const local = newPasswordErrors(password, confirm);
+    setFieldErrors(local);
+    if (local.password || local.confirm) {
+      (formEl.elements.namedItem(local.password ? "password" : "confirm") as HTMLInputElement | null)?.focus();
+      return;
+    }
 
     setLoading(true);
     // Le changement ferme les sessions du compte côté serveur : on se
@@ -80,6 +86,10 @@ export default function ChangePasswordPage() {
           name="password"
           autoComplete="new-password"
           hint={`${MIN_PASSWORD_LENGTH} caractères minimum`}
+          error={fieldErrors.password}
+          onChange={() => {
+            if (fieldErrors.password) setFieldErrors({});
+          }}
           minLength={MIN_PASSWORD_LENGTH}
           maxLength={MAX_PASSWORD_LENGTH}
           required
@@ -89,6 +99,10 @@ export default function ChangePasswordPage() {
           label="Confirmer le mot de passe"
           name="confirm"
           autoComplete="new-password"
+          error={fieldErrors.confirm}
+          onChange={() => {
+            if (fieldErrors.confirm) setFieldErrors({});
+          }}
           maxLength={MAX_PASSWORD_LENGTH}
           required
         />

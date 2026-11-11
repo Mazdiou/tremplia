@@ -10,6 +10,18 @@ export const MAX_PASSWORD_LENGTH = 72;
 export const UNCONFIRMED_DAYS = 7;
 
 export const PASSWORD_TOO_SHORT = `Mot de passe trop court (${MIN_PASSWORD_LENGTH} caractères minimum)`;
+export const PASSWORDS_DIFFER = "Les mots de passe ne correspondent pas";
+
+// Nouveau mot de passe et sa confirmation, vérifiés dans le navigateur avant
+// l'envoi : l'erreur s'affiche sous le champ concerné.
+export function newPasswordErrors(password: string, confirm: string): {
+  password?: string;
+  confirm?: string;
+} {
+  if (password.length < MIN_PASSWORD_LENGTH) return { password: PASSWORD_TOO_SHORT };
+  if (password !== confirm) return { confirm: PASSWORDS_DIFFER };
+  return {};
+}
 
 export const passwordSchema = z
   .string()
